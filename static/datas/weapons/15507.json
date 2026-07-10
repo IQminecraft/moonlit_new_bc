@@ -4,7 +4,7 @@
   "rarity": 5,
   "icon": "UI_EquipIcon_Bow_Worldbane",
   "stats_modifier": {
-    "atk": 608.0745972,
-    "fight_prop_critical": 0.330768
+    "atk": 608.0746,
+    "fight_prop_critical": 0.3308
   }
 }

@@ -40,6 +40,7 @@ except Exception as e:
     print(f"[Warning] text_map.json の読み込みに失敗: {e}")
     text_map_data = {}
 
+
 def get_stat_japanese(append_prop_id: str) -> str:
     """
     appendPropId を日本語に変換する関数（手動のfallback_mapを最優先で適用）
@@ -55,22 +56,25 @@ def get_stat_japanese(append_prop_id: str) -> str:
         "FIGHT_PROP_DEFENSE_PERCENT": "防御力%",
         "FIGHT_PROP_ELEMENT_MASTERY": "熟知"
     }
-    
+
     if append_prop_id in fallback_map:
         return fallback_map[append_prop_id]
 
     # 2. fallback_map に登録がないステータス（元素ダメージバフなど）だけ、text_map.json から探す
     if append_prop_id in text_map_data:
         return text_map_data[append_prop_id]
-    
+
     if "ja" in text_map_data and append_prop_id in text_map_data["ja"]:
         return text_map_data["ja"][append_prop_id]
-    
+
     # 3. どこにもなければ、元のIDをそのまま返す
     return append_prop_id
 
+
 def formal_round(val):
     return int(val + 0.5) if val >= 0 else int(val - 0.5)
+
+
 # --------------------------------------------------------------------
 # Figma互換 描画関数システム (存在しないファイルを表示する警告機能付き)
 # --------------------------------------------------------------------
@@ -78,6 +82,7 @@ def draw_figma_text_right(draw, text, x, y, font, font_size=24, fill_color=(255,
     text_str = str(text)
     # 渡されたx座標を「右端の絶対的な壁」にして描画する
     draw.text((x, y), text_str, fill=fill_color, font=font, anchor="ra")
+
 
 def draw_figma_box(img, x, y, width, height, radius=15, fill_color=(60, 64, 72, 180)):
     x1, y1 = x, y
@@ -131,7 +136,7 @@ def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=(255, 255
 def draw_figma_text_with_shadow(draw, text, x, y, font, font_size=None, fill_color=(255, 255, 255), shadow_color=(0, 0, 0, 200), shadow_offset=(1.5, 1.5), align="left", box_width=None):
     text_str = str(text)
     actual_font = font
-    
+
     if font_size:
         if hasattr(font, "path") and font.path:
             if os.path.exists(font.path):
@@ -189,7 +194,7 @@ def draw_figma_text_with_shadow(draw, text, x, y, font, font_size=None, fill_col
 
     r, g, b = shadow_color[0], shadow_color[1], shadow_color[2]
     thick_alpha = 270
-    
+
     alpha_mask = blurred_shadow.split()[3].point(lambda p: int(p * (thick_alpha / 255.0)))
     final_shadow_piece = Image.new("RGBA", blurred_shadow.size, (r, g, b, 255))
     blurred_shadow = Image.composite(final_shadow_piece, Image.new("RGBA", blurred_shadow.size, (0, 0, 0, 0)), alpha_mask)
@@ -221,13 +226,13 @@ def draw_figma_circle(img, x, y, size, fill_color=(60, 64, 72, 180), outline_col
 
     overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
     draw_overlay = ImageDraw.Draw(overlay)
-    
+
     # 💡 引数の指定に合わせて ellipse に outline と width を渡す
     # outline_color が None の場合は、Pillow の仕様で枠線は描画されません
     draw_overlay.ellipse(
-        [x1, y1, x2, y2], 
-        fill=fill_color, 
-        outline=outline_color, 
+        [x1, y1, x2, y2],
+        fill=fill_color,
+        outline=outline_color,
         width=outline_width
     )
 
@@ -241,12 +246,12 @@ def paste_figma_image(base_img, img_path, box_x, box_y, box_width, box_height, r
     try:
         paste_img = Image.open(img_path).convert("RGBA")
         paste_img = paste_img.resize((box_width, box_height), Image.Resampling.LANCZOS)
-        
+
         overlay = Image.new("RGBA", base_img.size, (0, 0, 0, 0))
         mask = Image.new("L", (box_width, box_height), 0)
         mask_draw = ImageDraw.Draw(mask)
         mask_draw.rounded_rectangle([0, 0, box_width, box_height], radius=radius, fill=255)
-        
+
         overlay.paste(paste_img, (box_x, box_y), mask)
         base_img.paste(Image.alpha_composite(base_img.convert("RGBA"), overlay).convert("RGB"))
     except Exception as e:
@@ -255,50 +260,45 @@ def paste_figma_image(base_img, img_path, box_x, box_y, box_width, box_height, r
 
 def paste_mask_image(base_img, img_path, box_x, box_y, box_width, box_height, radius=15, zoom=1.0):
     if not img_path or not os.path.exists(img_path):
-        
+
         return
 
     try:
         paste_img = Image.open(img_path).convert("RGBA")
         orig_w, orig_h = paste_img.size
-        
+
         new_height = int(box_height * zoom)
         new_width = int(orig_w * (new_height / orig_h))
-        
+
         paste_img = paste_img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-        
+
         overlay = Image.new("RGBA", base_img.size, (0, 0, 0, 0))
         canvas = Image.new("RGBA", (box_width, box_height), (0, 0, 0, 0))
-        
+
         offset_x = (box_width - new_width) // 2
         offset_y = (box_height - new_height) // 2
-        
+
         canvas.paste(paste_img, (offset_x, offset_y), paste_img)
-        
+
         mask = Image.new("L", (box_width, box_height), 0)
         mask_draw = ImageDraw.Draw(mask)
         mask_draw.rounded_rectangle([0, 0, box_width, box_height], radius=radius, fill=255)
-        
+
         overlay.paste(canvas, (box_x, box_y), mask)
         base_img.paste(Image.alpha_composite(base_img.convert("RGBA"), overlay).convert("RGB"))
     except Exception as e:
         print(f"[Error] Failed to paste mask image: {img_path}. Reason: {e}")
 
-def score_calc(stat,critrate,critdmg,method):
-    display_map = {
-        "crit":"会心のみ",
-        "atk":"攻撃力%",
-        "hp":"HP%",
-        "def":"DEF%",
-        "em":"元素熟知",
-        "charge":"チャージ効率"
-    }
+
+def score_calc(stat, critrate, critdmg, method):
     scores = critrate * 2 + critdmg
     if method == "em":
         scores += stat * 0.25
     else:
         scores += stat
     return scores
+
+
 # --------------------------------------------------------------------
 # 1. トップページ（UID入力画面）
 # --------------------------------------------------------------------
@@ -310,31 +310,25 @@ async def index(request: Request):
 # --------------------------------------------------------------------
 # 2. UIDを受け取ってキャラクター一覧画面（build_card.html）を表示する
 # --------------------------------------------------------------------
-# --------------------------------------------------------------------
-# 2. UIDを受け取ってキャラクター一覧画面（build_card.html）を表示する
-# --------------------------------------------------------------------
-# --------------------------------------------------------------------
-# 2. UIDを受け取ってキャラクター一覧画面（build_card.html）を表示する
-# --------------------------------------------------------------------
 @app.get("/fetch_uid", response_class=HTMLResponse)
 async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False):
     print(f"[Info] Fetching characters via API for UID: {uid} (from_artifacter: {from_artifacter})")
-    
+
     if not uid.isdigit():
         return HTMLResponse(content="ユーザーUIDが不正です。数字のみ入力してください。", status_code=400)
-    
+
     uid_int = int(uid)
     json_path = os.path.join("static", "datas", "cache", f"showcase_{uid}.json")
-    
+
     # 💡 1. artifacterから直接来た場合、またはキャッシュファイルがまだ存在しない場合のみAPI取得を行う
     if from_artifacter or not os.path.exists(json_path):
         success, message = await get_info_state.update_uid_data(uid_int)
         if not success:
             print(f"[Warning] API Fetch failed or warning: {message}")
-    
+
     if not os.path.exists(json_path):
         raise HTTPException(status_code=404, detail=f"UID: {uid} のデータが見つかりませんでした。(APIエラーかつキャッシュなし)")
-        
+
     # 多段エンコード読み込みで文字化け・JSONデコードエラーを防ぐ安全仕様
     try:
         with open(json_path, 'r', encoding='utf-8') as f:
@@ -346,13 +340,13 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False):
     # 3. playerInfo -> showAvatarInfoList からキャラクターIDとレベル等を取り出す
     player_info = showcase_data.get("playerInfo", {})
     show_avatar_list = player_info.get("showAvatarInfoList", [])
-    
+
     char_list = []
     for index, avatar in enumerate(show_avatar_list):
         current_avatar_id = str(avatar.get("avatarId"))
         if not current_avatar_id:
             continue
-            
+
         # 主人公の4つのIDの時は後ろに -(そのキャラのenergyType) を追加する
         if current_avatar_id in ["10000005", "10000007", "10000117", "10000118"]:
             energy_type = avatar.get("energyType")
@@ -362,7 +356,7 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False):
                 current_avatar_id = f"{current_avatar_id}-4"
 
         json_path_char = f"static/datas/characters/{current_avatar_id}.json"
-        
+
         if os.path.exists(json_path_char):
             try:
                 with open(json_path_char, "r", encoding="utf-8") as f:
@@ -370,7 +364,7 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False):
             except (UnicodeDecodeError, json.JSONDecodeError):
                 with open(json_path_char, "r", encoding="cp932") as f:
                     jsondata = json.load(f)
-                    
+
             icon_suffix = str(jsondata["icon"])
             char_entry = {
                 "id": current_avatar_id,  # ハイフン付きのID
@@ -381,7 +375,7 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False):
         else:
             print(f"[Warning] キャラクターJSONが見つからないためスキップ: {json_path_char}")
             continue
-        
+
     if not char_list:
         return HTMLResponse(content=f"UID: {uid} のゲーム内プロフィールで『キャラクター詳細を公開』がオンになっていないか、ショーケースが空です。", status_code=400)
 
@@ -391,28 +385,26 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False):
         "uid": uid,
         "char_list": char_list
     })
+
+
 # --------------------------------------------------------------------
 # 3. PIL ビルドカード画像生成エンドポイント
 # --------------------------------------------------------------------
-
 @app.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")
 async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # 💡 引数をすべて str にしてハイフンと計算方法を受け取る
     # キャッシュキー用の文字列
     cache_key = f"{uid}_{avatar_id}_{calc_method}"
-    
-    # メモリキャッシュに画像があれば、それを返す"""
-    """
-    if cache_key in image_cache:
-        print(f"[Cache Hit] メモリキャッシュから画像を返します: {cache_key}")
-        return StreamingResponse(io.BytesIO(image_cache[cache_key]), media_type="image/png")
-    """
-        
     print(f"[Cache Miss] 初回生成のため、PILで気合を入れて画像を作ります...: UID:{uid} - CharID:{avatar_id} - Method:{calc_method}")
-    
-    # ─── 1. Showcase JSONの読み込みと特定 ───
+
+    # ================================================================
+    # ① 取得 / 変数定義（データ収集・計算ロジック）
+    #    ここではPILへの描画は一切行わず、必要な値をすべて揃えるだけ。
+    # ================================================================
+
+    # --- 1-1. Showcase JSONの読み込みと対象キャラの特定 ---
     target_avatar_info = None
     json_path = os.path.join("static", "datas", "cache", f"showcase_{uid}.json")
-    
+
     if os.path.exists(json_path):
         # 多段エンコード読み込みでJSONデコードエラーを防止
         try:
@@ -421,7 +413,7 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
         except (UnicodeDecodeError, json.JSONDecodeError):
             with open(json_path, "r", encoding="cp932") as f:
                 showcase_data = json.load(f)
-            
+
         avatar_list = showcase_data.get("avatarInfoList")
         if not avatar_list and "playerInfo" in showcase_data:
             player_info = showcase_data["playerInfo"]
@@ -431,7 +423,7 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
         if avatar_list:
             for avatar in avatar_list:
                 raw_id = str(avatar.get("avatarId"))
-                
+
                 # 比較用のIDを生成する
                 loop_avatar_id = raw_id
                 if raw_id in ["10000005", "10000007", "10000117", "10000118"]:
@@ -440,7 +432,7 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
                         loop_avatar_id = f"{raw_id}-{energy_type}"
                     else:
                         loop_avatar_id = f"{raw_id}-4"
-                
+
                 # 💡 両方を確実に str にして比較する（これで通常キャラも旅人も100%マッチします！）
                 if str(loop_avatar_id) == str(avatar_id):
                     target_avatar_info = avatar
@@ -450,12 +442,12 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
     if not target_avatar_info:
         raise HTTPException(status_code=404, detail=f"Avatar ID {avatar_id} not found in showcase.")
 
-    # ─── 2. キャラクター固有JSONの読み込み ───
+    # --- 1-2. キャラクター固有JSONの読み込み ---
     print(f"[Debug] 読み込もうとしているファイル名: {avatar_id}.json")
 
     # 確定した avatar_id を使って、キャラクターJSONを読み込みに行く
     json_path2 = os.path.join("static", "datas", "characters", f"{avatar_id}.json")
-    
+
     if os.path.exists(json_path2):
         try:
             with open(json_path2, "r", encoding="utf-8") as f:
@@ -477,10 +469,10 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
         else:
             raise HTTPException(status_code=404, detail=f"Character JSON file not found: {json_path2}")
 
-    # ─── 3. 画像とフォントの準備 ───
+    # --- 1-3. カードサイズ・元素カラー判定 ---
     card_width = 1741
     card_height = 1159
-    # ─── 💡 元素ごとの base_color 自動判定 ───
+
     # chardatas や元のデータから元素（Element）の文字列を取得します
     # ※お使いの chardatas の構造に合わせて調整してください。もし無ければ target_avatar_info の energyType などでも判定可能です。
     element_type = chardatas.get("element", "None")  # 例: "Pyr", "Hyd", "Anemo", "Elec", "Grass", "Cryo", "Rock"
@@ -503,188 +495,61 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
         "Electro": "雷元素",    # 🟣 雷: 淡いラベンダー
         "Dendro": "草元素",     # 🌿 草: 淡いパステルグリーン
         "Cryo": "氷元素",      # ❄️ 氷: 白っぽいペールブルー
-        "Geo": "岩元素",  
+        "Geo": "岩元素",
     }
     element_ja = element_ja_map.get(element_type, "なし")
 
     # 一致する元素がなかった場合のデフォルト色（今までの色など）
     base_color = element_colors.get(element_type, (121, 169, 239, 255))
-    
 
-    img = Image.new("RGB", (card_width, card_height), base_color)
-    draw = ImageDraw.Draw(img)
-
-    if os.path.exists(FONT_PATH):
-        try: font_stats = ImageFont.truetype(FONT_PATH, 28)
-        except: font_stats = ImageFont.load_default()
-    else: font_stats = ImageFont.load_default()
-
-    if os.path.exists(FONT_LIGHT_PATH):
-        try: font_stats_light = ImageFont.truetype(FONT_LIGHT_PATH, 28)
-        except: font_stats_light = font_stats
-    else: font_stats_light = font_stats
-
-    # レイアウト枠の描画
-    draw_figma_box(img, x=33, y=30, width=694, height=671)
-    draw_figma_box(img, x=753, y=30, width=549, height=671)
-    draw_figma_box(img, x=1332, y=30, width=386, height=164, radius=25)
-    draw_figma_box(img, x=1332, y=231, width=386, height=121, radius=25)
-    draw_figma_box(img, x=1332, y=389, width=386, height=312, radius=25)
-    
-    # スプラッシュ画像の貼り付け
+    # --- 1-4. スプラッシュ画像パス ---
     splash = f"static/datas/assets/splash/{chardatas['icon'].replace('AvatarIcon', 'Gacha_AvatarImg')}.webp"
-    paste_mask_image(img, splash, box_x=33, box_y=30, box_width=694, box_height=671, radius=15, zoom=1.1)
 
-    # ─── 4. テキスト情報（名前・レベル・好感度） ───
+    # --- 1-5. テキスト情報（名前・レベル・好感度） ---
     char_name = chardatas["name"]
-    draw_figma_text_with_shadow(draw, text=char_name, x=53, y=53, font=font_stats, font_size=50)
-    
+
     # 💡 特定した target_avatar_info からキャラレベルを取得
     char_level = target_avatar_info.get('propMap', {}).get('4001', {}).get('val', 1)
-    draw_figma_text_with_shadow(draw, text=f"Lv.{char_level}", x=53, y=117, font=font_stats, font_size=30)
-    
-    # 💡 好感度レベルを正しく取得して描画
-    friendship_lv = target_avatar_info.get("fetterInfo", {}).get("expLevel", 1)
-    draw_figma_text_with_shadow(draw, text=f"♥ {friendship_lv}", x=53, y=162, font=font_stats, font_size=30)
 
-    # ─── 5. 天賦スキルの描画 ───
+    # 💡 好感度レベルを正しく取得
+    friendship_lv = target_avatar_info.get("fetterInfo", {}).get("expLevel", 1)
+
+    # --- 1-6. 天賦スキル ---
     skill_map = target_avatar_info.get("skillLevelMap", {})
     skill_values = list(skill_map.values())
-    
+
     if len(skill_values) >= 3:
         normal, skill, burst = skill_values[0], skill_values[1], skill_values[2]
     else:
         normal, skill, burst = 1, 1, 1
-        
+
     skill_level = [normal, skill, burst]
     skill_icon = [chardatas["skills"][0]["icon"], chardatas["skills"][1]["icon"], chardatas["skills"][2]["icon"]]
-    
-    y_skill_base = 389
-    for i in range(3):
-        # サークルの中心X座標を計算する（x=49 で size=68 なので、中心は 49 + 34 = 83）
-        circle_center_x = 49 + 34
-        
-        draw_figma_circle(img, x=49, y=y_skill_base + 79*i, size=68, fill_color=(0, 0, 0, 150),outline_color=base_color, outline_width=4)
-        paste_figma_image(img, f"static/datas/assets/skill_icon/{skill_icon[i]}.webp", box_x=49+5, box_y=y_skill_base + 79*i+4, box_width=60, box_height=60, radius=15)
-        
-        # 💡 基準Xを「サークルの中心（circle_center_x）」にし、align="center" を指定します。
-        draw_figma_text_with_shadow(draw, text=f"Lv.{skill_level[i]}", x=48, y=y_skill_base + 79*i+45, font=font_stats, align="center", font_size=20, box_width=68)
 
-    # ─── 6. 命ノ星座の描画 ───
+    # --- 1-7. 命ノ星座 ---
     y_C_base = 139  # 元の基準Y座標
     circle_size = 68
-    
+
     # talentIdList の長さから凸数（0〜6）を取得
-    constellation_releas_num = len(target_avatar_info.get("talentIdList", []))  
+    constellation_releas_num = len(target_avatar_info.get("talentIdList", []))
 
     # 先に6箇所分すべての星座アイコンファイル名を取得
     Constellation_icon = []
     for i in range(6):
         Constellation_icon.append(chardatas["constellations"][i]["icon"])
 
-    # 1つのループで解放・未解放の描き分けを同時に行う
-    for i in range(6):
-        circle_x = 637
-        circle_y = y_C_base + i * 76
-        icon_name = Constellation_icon[i]
-
-        # 🔒 i が解放数以上 = 「未解放」の星座スロットの場合
-# 🔒 i が解放数以上 = 「未解放」の星座スロットの場合
-        if i >= constellation_releas_num:
-            # 1. 未解放用の暗い背景とグレーの枠線を描画
-            draw_figma_circle(
-                img, 
-                x=circle_x, 
-                y=circle_y, 
-                size=circle_size, 
-                fill_color=(0, 0, 0, 180),          # 背景をより暗く
-                outline_color=(80, 85, 95, 255),    # 枠線をダークグレーに
-                outline_width=2
-            )
-            
-            # 2. 星座アイコンを読み込んで「めっちゃ透明」にしてからペーストする
-            icon_path = f"static/datas/assets/skill_icon/{icon_name}.webp"
-            if os.path.exists(icon_path):
-                # アイコンを読み込んでRGBA（透明度あり）に変換
-                icon_img = Image.open(icon_path).convert("RGBA")
-                icon_img = icon_img.resize((60, 60), Image.Resampling.LANCZOS)
-                
-                # 💡 ここで透明度を調整します
-                # 255が通常。50にすると約20%の薄さ（めっちゃ透明）になります。
-                # 好みに合わせて 30（さらに薄く）〜 70 くらいで調整してください。
-                alpha_value = 45 
-                
-                # 既存のアルファチャンネル（透明度）に、一律でさらに透明にする計算をかける
-                alpha = icon_img.getchannel('A')
-                alpha = alpha.point(lambda p: int(p * (alpha_value / 255.0)))
-                icon_img.putalpha(alpha)
-                
-                # メイン画像に半透明で合成（マスクにもicon_img自身を指定することで透明度が維持されます）
-                img.paste(icon_img, (circle_x + 5, circle_y + 5), icon_img)
-            
-            # 3. 真ん中に鍵アイコン（またはコード描画の鍵）を重ねる
-            # （※前述の「方法B：コードだけで鍵マーク」などをここに記述）
-            
-            # 3. 真ん中に鍵アイコンを最前面に重ねてロック状態をアピール
-# 🔒 3. 真ん中にコードだけで鍵アイコンを描画（画像ファイル不要）
-            # 鍵全体の基準座標を計算（円の中央付近）
-            lock_w, lock_h = 24, 26
-            lx = circle_x + (circle_size - lock_w) // 2
-            ly = circle_y + (circle_size - lock_h) // 2 + 2 # 少し下に微調整
-
-            # 透過Overlayの上に描画して重ねる
-            lock_overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
-            draw_lock = ImageDraw.Draw(lock_overlay)
-
-            # ① 鍵の「アーチ（上の半円パーツ）」を描く
-            # arc([左, 上, 右, 下], 開始角度, 終了角度)
-            draw_lock.arc([lx + 4, ly, lx + lock_w - 4, ly + 16], start=180, end=0, fill=(255, 255, 255, 220), width=3)
-            # アーチの縦棒部分を少し下に伸ばす
-            draw_lock.line([lx + 4, ly + 8, lx + 4, ly + 12], fill=(255, 255, 255, 220), width=3)
-            draw_lock.line([lx + lock_w - 4, ly + 8, lx + lock_w - 4, ly + 12], fill=(255, 255, 255, 220), width=3)
-
-            # ② 鍵の「ボディ（下の四角パーツ）」を描く
-            # rounded_rectangle([左, 上, 右, 下], 角の丸み)
-            draw_lock.rounded_rectangle(
-                [lx, ly + 11, lx + lock_w, ly + lock_h], 
-                radius=4, 
-                fill=(20, 25, 35, 255),            # ボディの塗りつぶし（暗いグレー）
-                outline=(255, 255, 255, 220),       # ボディの枠線（白）
-                width=2
-            )
-
-            # ③ 鍵穴（中央のポッチ）を描く
-            draw_lock.ellipse([lx + 10, ly + 16, lx + 14, ly + 20], fill=(255, 255, 255, 220))
-
-            # メイン画像に合成
-            img.paste(Image.alpha_composite(img.convert("RGBA"), lock_overlay).convert("RGB"))
-        
-        # ✨ 解放済みの星座スロットの場合（通常通り綺麗に描画）
-        else:
-            # 1. 鮮やかな元素色（base_color）の太枠で円を描画
-            draw_figma_circle(
-                img, 
-                x=circle_x, 
-                y=circle_y, 
-                size=circle_size, 
-                fill_color=(0, 0, 0, 150), 
-                outline_color=base_color,  # クッキリ鮮やかな枠線
-                outline_width=4
-            )
-            # 2. 星座アイコンを綺麗に重ねる
-            paste_figma_image(img, f"static/datas/assets/skill_icon/{icon_name}.webp", box_x=circle_x+5, box_y=circle_y+5, box_width=60, box_height=60, radius=15)
-    # ─── 7. 武器・セット効果・スコア枠の描画（モックデータ） ───
+    # --- 1-8. 武器情報 ---
     # target_avatar_info["equipList"] から "weapon" キーを持っている辞書を1つだけ釣り上げる
     weapon_data = next((item for item in target_avatar_info.get("equipList", []) if "weapon" in item), None)
 
-    # 1. 武器の基本情報を取り出す
+    # 武器の基本情報を取り出す
     weapon_id = weapon_data["itemId"]
     weapon_icon = weapon_data["flat"]["icon"]                # アイコン名 (UI_EquipIcon_...)
     weapon_level = weapon_data["weapon"]["level"]            # 武器レベル
-    
+
     # 精錬ランク（凸数）を取得（ない場合は1凸扱い）
     weapon_affix = list(weapon_data["weapon"].get("affixMap", {}).values())[0] + 1 if weapon_data["weapon"].get("affixMap") else 1
-    
+
     try:
         with open(f"static/datas/weapons/{weapon_id}.json", "r", encoding="utf-8") as f:
             weapon_jsondata = json.load(f)
@@ -692,67 +557,53 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
     except Exception:
         weapon_name = "武器データなし"
 
-    # 武器画像・精錬・レベルの描画
-    paste_figma_image(img, f"static/datas/assets/weapons/{weapon_icon}.webp", box_x=1350, box_y=60, box_width=100, box_height=100, radius=15)
-    draw_figma_box(img, x=1340, y=47, width=60, height=30, radius=2)
-    
-    # 精錬ランク（R1 などの1を動的に反映）
-    draw_figma_text(draw, text=f"R{weapon_affix}", x=1357, y=48, font=font_stats, align="left", font_size=20)
-    draw_figma_text(draw, text=weapon_name, x=1462, y=60, font=font_stats, align="left", font_size=23)
-    draw_figma_text(draw, text=f"Lv.{weapon_level}", x=1462, y=90, font=font_stats, align="left", font_size=20)
-
-    # ─── 💡 ここからステータス自動変換＆出し分け ───
+    # 武器のサブステータス（最大2つ）を整形しておく
     weapon_stats_list = weapon_data["flat"].get("weaponStats", [])
 
+    weapon_stat1 = None
     if len(weapon_stats_list) >= 1:
         prop_id1 = weapon_stats_list[0]["appendPropId"]
-        stat_name1 = get_stat_japanese(prop_id1) # 日本語名に変換
+        stat_name1 = get_stat_japanese(prop_id1)  # 日本語名に変換
         stat_val1 = weapon_stats_list[0]["statValue"]
-        
+
         if "PERCENT" in prop_id1 or "CRITICAL" in prop_id1 or "CHARGE" in prop_id1:
             stat_val1_str = f"{stat_val1}%"
         else:
             stat_val1_str = f"{int(stat_val1)}"
-            
-        draw_figma_text(draw, text=stat_name1, x=1462, y=125, font=font_stats_light, align="left", font_size=18)
-        draw_figma_text(draw, text=stat_val1_str, x=1635, y=125, font=font_stats_light, align="left", font_size=21)
 
+        weapon_stat1 = (stat_name1, stat_val1_str)
+
+    weapon_stat2 = None
     if len(weapon_stats_list) == 2:
         prop_id2 = weapon_stats_list[1]["appendPropId"]
-        stat_name2 = get_stat_japanese(prop_id2) # 日本語名に変換
+        stat_name2 = get_stat_japanese(prop_id2)  # 日本語名に変換
         stat_val2 = weapon_stats_list[1]["statValue"]
-        
+
         if "PERCENT" in prop_id2 or "CRITICAL" in prop_id2 or "CHARGE" in prop_id2 or "HURT" in prop_id2:
             stat_val2_str = f"{stat_val2}%"
         else:
             stat_val2_str = f"{int(stat_val2)}"
-            
-        draw_figma_text(draw, text=stat_name2, x=1462, y=155, font=font_stats_light, align="left", font_size=18)
-        draw_figma_text(draw, text=stat_val2_str, x=1635, y=155, font=font_stats_light, align="left", font_size=21)
 
-    # ─── 8. ステータス詳細一覧 ───
-# ─── 8. ステータス詳細一覧 ───
-    # 💡 元素名に対応する「キャラ側ID」と「聖遺物側ID」をマッピング（元の仕様に合わせてすべて文字列で指定）
-# ─── 8. ステータス詳細一覧 ───
+        weapon_stat2 = (stat_name2, stat_val2_str)
+
+    # --- 1-9. ステータス詳細一覧（HP・攻撃力・防御力など） ---
     # 💡 元素名に対応する正確な「fightPropMap」の文字列IDをマッピング
-# ─── 💡 元素バフ自動検索ロジック ───
+    # ─── 💡 元素バフ自動検索ロジック ───
     # EnkaのfightPropMapに存在する、可能性のあるすべてのダメバフIDのリスト
     # (30:炎, 40:水, 41:風, 42:雷, 43:草, 45:岩, 46:氷, 44:物理)
     all_buff_ids = ['30', '40', '41', '42', '43', '44', '45', '46']
-    
+
     # キャラクターのデータ（あなたが元々お使いだった変数名に変えてください。例: target_avatar_info など）
-    # ここでは、あなたが元のコードで正常にHPなどを取得できている変数（target_avatar_infoなど）をそのまま使います。
-    # 一旦、提示いただいたコードのベースである target_avatar_info で記述します。
     prop_map = target_avatar_info.get('fightPropMap', {})
-    
+
     max_dmg_val = 0.0
-    
+
     # 1つずつ部屋を覗いて、一番大きい数値（バフ）が入っているところを探す
     for b_id in all_buff_ids:
         val = prop_map.get(b_id, 0.0)
         if val > max_dmg_val:
             max_dmg_val = val
-            
+
     # もし全部0だった場合は、最低限聖遺物の杯などのメインステータスが入る部屋（50〜57）もスキャンする
     if max_dmg_val == 0.0:
         relic_buff_ids = ['50', '51', '52', '53', '54', '55', '56', '57']
@@ -770,65 +621,15 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
         "攻撃力": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2001', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('4', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2001', 1)) - formal_round(target_avatar_info.get('fightPropMap', {}).get('4', 1))), "icon": "static/datas/assets/prot_icon/atk.png"},
         "防禦力": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2002', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('7', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2002', 1)) - formal_round(target_avatar_info.get('fightPropMap', {}).get('7', 1))), "icon": "static/datas/assets/prot_icon/def.png"},
         "元素熟知": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('28', 1)), "icon": "static/datas/assets/prot_icon/EM.png"},
-        "会心率": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('20', 1)*1000)/10)+"%", "icon": "static/datas/assets/prot_icon/rate.webp"},
-        "会心ダメージ": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('22', 1)*1000)/10)+"%", "icon": "static/datas/assets/prot_icon/dmg.webp"},
-        "元素チャージ効率": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('23', 1)*1000)/10)+"%", "icon": "static/datas/assets/prot_icon/ER.png"},
+        "会心率": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('20', 1) * 1000) / 10) + "%", "icon": "static/datas/assets/prot_icon/rate.webp"},
+        "会心ダメージ": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('22', 1) * 1000) / 10) + "%", "icon": "static/datas/assets/prot_icon/dmg.webp"},
+        "元素チャージ効率": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('23', 1) * 1000) / 10) + "%", "icon": "static/datas/assets/prot_icon/ER.png"},
         # 💡 固定表記だった部分を、上で正確に取得した文字列「dmg_buff_val」に差し替え
         f"{element_ja}ダメバフ": {"val": dmg_buff_val, "icon": f"static/datas/assets/prot_icon/{element_type}.png"},
     }
 
-    base_y = 73
-    max_y = 700
-    row_gap = (max_y - base_y) // len(stats_mock)
-    icon_size = 36
-    icon_offset_y = 2  
-
-    for i, (n, data) in enumerate(stats_mock.items()):
-        current_y = base_y + (i * row_gap)
-        icon_path = data["icon"]
-        icon_x = 840 - 60
-
-        if icon_path and os.path.exists(icon_path):
-            try:
-                icon_img = Image.open(icon_path).convert("RGBA")
-                icon_img = icon_img.resize((icon_size, icon_size), Image.Resampling.LANCZOS)
-                img.paste(icon_img, (icon_x, current_y + icon_offset_y), icon_img)
-            except Exception as e:
-                print(f"[Error] Failed to paste status icon: {icon_path}. Reason: {e}")
-        else:
-            print(f"[Warning] Status icon not found: {icon_path}")
-
-        draw_figma_text(draw, text=n, x=840, y=current_y, font=font_stats, align="left")
-        draw_figma_text(draw, text=data["val"], x=870, y=current_y, font=font_stats, align="right", box_width=450 - 60)
-
-        if n in ["HP", "攻撃力", "防禦力"] and data.get("base") and data.get("add"):
-            sub_y = current_y + 32  
-            green_text = data["add"]
-            gray_text = str(data["base"])
-            
-            try:
-                calc_font = ImageFont.truetype(font_stats.path, 20) if hasattr(font_stats, "path") and font_stats.path else font_stats
-            except:
-                calc_font = font_stats
-
-            green_w = draw.textlength(green_text, font=calc_font)
-            gray_w = draw.textlength(gray_text, font=calc_font)
-            
-            # 💡 基準の右端を 870 から 1260 に変更！
-            target_right_edge = 1260 
-            
-            green_x = target_right_edge - green_w
-            gray_x = green_x - 8 - gray_w
-            
-            # 緑色を描画
-            draw_figma_text(draw, text=green_text, x=green_x, y=sub_y, font=font_stats, font_size=20, fill_color=(0, 230, 115), align="left")
-            # 灰色を描画
-            draw_figma_text(draw, text=gray_text, x=gray_x, y=sub_y, font=font_stats, font_size=20, fill_color=(160, 165, 175), align="left")
-
-    # ─── 9. 聖遺物スロット (5箇所) ───
+    # --- 1-10. 聖遺物データ解析（スコア・ティア計算を含む） ---
     artifact_x_list = [33, 375, 718, 1061, 1404]
-    for x in artifact_x_list:
-        draw_figma_box(img, x=x, y=738, width=314, height=399, radius=25)
 
     # equipList から聖遺物（"reliquary"キーを持つもの）だけを抽出
     raw_artifacts = [item for item in target_avatar_info.get("equipList", []) if "reliquary" in item]
@@ -856,20 +657,29 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
             "icon": ""
         })
 
-    # 装備されている聖遺物データを解析し上書き
+    # 計算方法（calc_method）に対応するEnkaのステータスIDをマッピング
+    method_to_prop_id = {
+        "atk": "FIGHT_PROP_ATTACK_PERCENT",
+        "hp": "FIGHT_PROP_HP_PERCENT",
+        "def": "FIGHT_PROP_DEFENSE_PERCENT",
+        "em": "FIGHT_PROP_ELEMENT_MASTERY",
+        "charge": "FIGHT_PROP_CHARGE_EFFICIENCY"
+    }
+    target_prop_id = method_to_prop_id.get(calc_method, "")
+
     # 装備されている聖遺物データを解析し上書き
     score_sum = 0
     for art in raw_artifacts:
         flat = art.get("flat", {})
         reliquary = art.get("reliquary", {})
         icon_name = flat.get("icon", "")
-        
+
         if "_" not in icon_name:
             continue
         last_num = icon_name.split("_")[-1]
         if last_num not in slot_to_index:
             continue
-            
+
         target_idx = slot_to_index[last_num]
 
         name_hash = str(flat.get("nameTextMapHash", ""))
@@ -879,7 +689,7 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
         main_prop_id = main_stat_raw.get("mainPropId", "")
         main_name = get_stat_japanese(main_prop_id)
         main_val = main_stat_raw.get("statValue", 0)
-        
+
         if "PERCENT" in main_prop_id or "CRITICAL" in main_prop_id or "CHARGE" in main_prop_id or "HURT" in main_prop_id:
             main_value_str = f"{main_val}%"
         else:
@@ -890,26 +700,16 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
         crit_dmg = 0.0
         target_stat_val = 0.0
 
-        # 計算方法（calc_method）に対応するEnkaのステータスIDをマッピング
-        method_to_prop_id = {
-            "atk": "FIGHT_PROP_ATTACK_PERCENT",
-            "hp": "FIGHT_PROP_HP_PERCENT",
-            "def": "FIGHT_PROP_DEFENSE_PERCENT",
-            "em": "FIGHT_PROP_ELEMENT_MASTERY",
-            "charge": "FIGHT_PROP_CHARGE_EFFICIENCY"
-        }
-        target_prop_id = method_to_prop_id.get(calc_method, "")
-
         sub_stats_dict = {}
         sub_list = flat.get("reliquarySubstats", [])
-        
+
         for idx in range(4):
             if idx < len(sub_list):
                 sub_data = sub_list[idx]
                 sub_prop_id = sub_data.get("appendPropId", "")
                 sub_name = get_stat_japanese(sub_prop_id)
                 sub_val = sub_data.get("statValue", 0)
-                
+
                 # 💡 スコア計算用に数値をプールする
                 if sub_prop_id == "FIGHT_PROP_CRITICAL":
                     crit_rate = sub_val
@@ -926,21 +726,19 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
                 elif "HP" in sub_prop_id: icon_file = "hp_per.png" if "PERCENT" in sub_prop_id else "hp.png"
                 elif "ATTACK" in sub_prop_id: icon_file = "atk_per.png" if "PERCENT" in sub_prop_id else "atk.png"
                 elif "DEFENSE" in sub_prop_id: icon_file = "def_per.png" if "PERCENT" in sub_prop_id else "def.png"
-                
+
                 sub_icon_path = f"static/datas/assets/prot_icon/{icon_file}"
-                
+
                 if "PERCENT" in sub_prop_id or "CRITICAL" in sub_prop_id or "CHARGE" in sub_prop_id or "HURT" in sub_prop_id:
                     sub_value_str = f"{sub_val}%"
                 else:
                     sub_value_str = f"{int(sub_val)}"
-                    
+
                 sub_stats_dict[idx] = [sub_icon_path, sub_name, sub_value_str]
             else:
                 sub_stats_dict[idx] = ["static/datas/assets/prot_icon/atk_per.png", "-", "-"]
 
-        # 💡 1. 定義されている score_calc 関数を使ってリアルタイムに計算
-# 💡 定義されている score_calc 関数を使ってリアルタイムに計算
-# 💡 定義されている score_calc 関数を使ってリアルタイムに計算
+        # 💡 定義されている score_calc 関数を使ってリアルタイムに計算
         art_score = score_calc(stat=target_stat_val, critrate=crit_rate, critdmg=crit_dmg, method=calc_method)
         # 小数点第1位までに丸める
         art_score = round(art_score, 1)
@@ -988,14 +786,14 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
                 art_tier = "B"
         else:
             art_tier = "B"
-        
+
         artifacts_mock[target_idx] = {
             "set": str(flat.get("setId", "")),
             "name": artifact_name,
             "upgrade": reliquary.get("level", 1) - 1,
             "Main": [main_name, main_value_str],
             "stats": sub_stats_dict,
-            "score": art_score, 
+            "score": art_score,
             "tier": art_tier,   # 💡 新しい個別基準のティアが適用されます
             "icon": icon_name
         }
@@ -1009,34 +807,9 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
         }] * 5
     artifact_image_num = [4, 2, 5, 1, 3]
 
-    for i in range(5):  
-        box_x = artifact_x_list[i]
-        artifact_data = artifacts_mock[i]
-        artifact_img_num = artifact_image_num[i]
-
-        draw_figma_box(img, x=box_x + 14, y=754, width=90, height=90, radius=10)
-        draw_figma_box(img, x=box_x + 230, y=795, width=70, height=40, radius=10)
-        
-        paste_figma_image(img, f"static/datas/assets/artifacts/UI_RelicIcon_{artifact_data['set']}_{artifact_img_num}.webp", box_x=box_x + 14, box_y=754, box_width=90, box_height=90, radius=15)
-        
-        draw_figma_text(draw, text=artifact_data["Main"][0], x=box_x + 114, y=758, font=font_stats, align="left")
-        draw_figma_text(draw, text=artifact_data["Main"][1], x=box_x + 114, y=792, font=font_stats, align="left", font_size=30)
-        draw_figma_text(draw, text=f"+{artifact_data['upgrade']}", x=box_x + 237, y=793, font=font_stats, align="left")
-        
-        y_base = 855
-        for j in range(4):  
-            draw_figma_text(draw, text=artifact_data["stats"][j][1], x=box_x + 47, y=y_base + 50 * j, font=font_stats, font_size=25, align="left")
-            draw_figma_text(draw, text=artifact_data["stats"][j][2], x=box_x + 218, y=y_base + 50 * j, font=font_stats, font_size=25, align="left")
-            paste_figma_image(img, artifact_data["stats"][j][0], box_x=box_x + 12, box_y=y_base + 50 * j, box_width=30, box_height=30, radius=5)
-            
-        draw_figma_line(img, x1=box_x + 27, y1=1065, x2=box_x + 287, y2=1065, fill_color=(255, 255, 255, 50), width=1)
-        draw_figma_text(draw, text="スコア", x=box_x + 142, y=1090, font=font_stats_light, font_size=20, align="left")
-        draw_figma_text(draw, text=artifact_data["score"], x=box_x + 207, y=1070, font=font_stats, font_size=40, align="right")
-        paste_figma_image(img, f"static/datas/assets/tiers/{artifact_data['tier']}.png", box_x=box_x + 27, box_y=1070, box_width=60, box_height=60, radius=15)
-
-    # ---10. 聖遺物セット（動的判定・個数反映）
+    # --- 1-11. 聖遺物セット効果判定（動的判定・個数反映） ---
     from collections import Counter
-    
+
     set_ids = [art["set"] for art in artifacts_mock if art["set"] and art["set"] != "0"]
     set_counts = Counter(set_ids)
     active_sets = [(set_id, count) for set_id, count in set_counts.items() if count >= 2]
@@ -1065,43 +838,35 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
                     pass
         return f"セット {set_id_str}", "static/datas/assets/artifacts/UI_RelicIcon_15046_4.webp"
 
+    # 描画に必要な位置情報も含めて、表示すべきセットを事前にまとめておく
+    sets_display = []
+
     # 2個以上が「1種類」だけ発動している場合
     if len(active_sets) == 1:
         set_id, count = active_sets[0]
         set_name, set_icon = get_set_info(set_id)
-        num_text = str(count)
-        
-        center_y_img = 271 - 4
-        center_y_text = 281
-        center_y_box = 279
-        
-        paste_figma_image(img, set_icon, box_x=1360, box_y=center_y_img, box_width=60, box_height=60, radius=15)
-        draw_figma_text(draw, text=set_name, x=1435, y=center_y_text, font=font_stats, align="left", font_size=20)
-        draw_figma_box(img, x=1610, y=center_y_box, width=35, height=28, radius=8, fill_color=(255, 255, 255, 40))
-        draw_figma_text(draw, text=num_text, x=1623, y=center_y_text, font=font_stats, align="center", font_size=18, box_width=35)
+        sets_display.append({
+            "icon": set_icon, "name": set_name, "count": str(count),
+            "img_y": 271 - 4, "text_y": 281, "box_y": 279
+        })
 
     # 2個以上が「2種類」発動している場合
     elif len(active_sets) >= 2:
         set_id1, count1 = active_sets[0]
         set_name1, set_icon1 = get_set_info(set_id1)
-        
-        paste_figma_image(img, set_icon1, box_x=1360, box_y=242 - 4, box_width=60, box_height=60, radius=15)
-        draw_figma_text(draw, text=set_name1, x=1435, y=252, font=font_stats, align="left", font_size=20)
-        draw_figma_box(img, x=1610, y=250, width=35, height=28, radius=8, fill_color=(255, 255, 255, 40))
-        draw_figma_text(draw, text=str(count1), x=1623, y=252, font=font_stats, align="center", font_size=18, box_width=35)
+        sets_display.append({
+            "icon": set_icon1, "name": set_name1, "count": str(count1),
+            "img_y": 242 - 4, "text_y": 252, "box_y": 250
+        })
 
         set_id2, count2 = active_sets[1]
         set_name2, set_icon2 = get_set_info(set_id2)
-        
-        paste_figma_image(img, set_icon2, box_x=1360, box_y=301 - 4, box_width=60, box_height=60, radius=15)
-        draw_figma_text(draw, text=set_name2, x=1435, y=311, font=font_stats, align="left", font_size=20)
-        draw_figma_box(img, x=1610, y=309, width=35, height=28, radius=8, fill_color=(255, 255, 255, 40))
-        draw_figma_text(draw, text=str(count2), x=1623, y=311, font=font_stats, align="center", font_size=18, box_width=35)
+        sets_display.append({
+            "icon": set_icon2, "name": set_name2, "count": str(count2),
+            "img_y": 301 - 4, "text_y": 311, "box_y": 309
+        })
 
-    # 総合スコア
-    draw_figma_text(draw, text="総合スコア", x=1443, y=449, font=font_stats, align="left", font_size=30)   
-    draw_figma_text(draw, text=round(score_sum,1), x=1386, y=480, font=font_stats, align="left", font_size=90)   
-    draw_figma_line(img, x1=1380, y1=623, x2=1670, y2=623, fill_color=(255, 255, 255, 50), width=1)
+    # --- 1-12. 総合スコア・ティア・計算方法表示 ---
     if score_sum < 180:
         tier_sum_score = "B"
     elif 180 <= score_sum and score_sum < 200:
@@ -1110,28 +875,271 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
         tier_sum_score = "S"
     else:
         tier_sum_score = "SS"
-    paste_figma_image(img, f"static/datas/assets/tiers/{tier_sum_score}.png", box_x=1620, box_y=400, box_width=80, box_height=80, radius=15)
-    
-    # ─── 💡 計算方法の動的描画化 ───
-    draw_figma_text(draw, text="計算方法", x=1350, y=642, font=font_stats, align="left", font_size=30)  
+
     display_map = {
-        "crit":"会心のみ",
-        "atk":"攻撃力%",
-        "hp":"HP%",
-        "def":"DEF%",
-        "em":"元素熟知",
-        "charge":"チャージ効率"
+        "crit": "会心のみ",
+        "atk": "攻撃力%",
+        "hp": "HP%",
+        "def": "DEF%",
+        "em": "元素熟知",
+        "charge": "チャージ効率"
     }
-    display_score_way =display_map[calc_method]
-    draw_figma_text_right(draw, text=display_score_way, x=1680, y=645, font=font_stats, align="right", font_size=35)   
+    display_score_way = display_map[calc_method]
 
-    # ─── 10. 画像のキャッシュ保存とレスポンス ───
-    """img.save(cache_file_path, 'PNG', quality=95)"""
+    # ================================================================
+    # ② 描画（PIL 描画処理）
+    #    ここから先は①で用意した変数を使って描くだけ。
+    # ================================================================
 
+    # --- 2-0. キャンバス初期化・フォント読み込み ---
+    img = Image.new("RGB", (card_width, card_height), base_color)
+    draw = ImageDraw.Draw(img)
+
+    if os.path.exists(FONT_PATH):
+        try: font_stats = ImageFont.truetype(FONT_PATH, 28)
+        except: font_stats = ImageFont.load_default()
+    else: font_stats = ImageFont.load_default()
+
+    if os.path.exists(FONT_LIGHT_PATH):
+        try: font_stats_light = ImageFont.truetype(FONT_LIGHT_PATH, 28)
+        except: font_stats_light = font_stats
+    else: font_stats_light = font_stats
+
+    # --- 2-1. レイアウト枠の描画 ---
+    draw_figma_box(img, x=33, y=30, width=694, height=671)
+    draw_figma_box(img, x=753, y=30, width=549, height=671)
+    draw_figma_box(img, x=1332, y=30, width=386, height=164, radius=25)
+    draw_figma_box(img, x=1332, y=231, width=386, height=121, radius=25)
+    draw_figma_box(img, x=1332, y=389, width=386, height=312, radius=25)
+
+    # --- 2-2. スプラッシュ画像の貼り付け ---
+    paste_mask_image(img, splash, box_x=33, box_y=30, box_width=694, box_height=671, radius=15, zoom=1.1)
+
+    # --- 2-3. テキスト情報（名前・レベル・好感度） ---
+    draw_figma_text_with_shadow(draw, text=char_name, x=53, y=53, font=font_stats, font_size=50)
+    draw_figma_text_with_shadow(draw, text=f"Lv.{char_level}", x=53, y=117, font=font_stats, font_size=30)
+    draw_figma_text_with_shadow(draw, text=f"♥ {friendship_lv}", x=53, y=162, font=font_stats, font_size=30)
+
+    # --- 2-4. 天賦スキルの描画 ---
+    y_skill_base = 389
+    for i in range(3):
+        # サークルの中心X座標を計算する（x=49 で size=68 なので、中心は 49 + 34 = 83）
+        circle_center_x = 49 + 34
+
+        draw_figma_circle(img, x=49, y=y_skill_base + 79 * i, size=68, fill_color=(0, 0, 0, 150), outline_color=base_color, outline_width=4)
+        paste_figma_image(img, f"static/datas/assets/skill_icon/{skill_icon[i]}.webp", box_x=49 + 5, box_y=y_skill_base + 79 * i + 4, box_width=60, box_height=60, radius=15)
+
+        # 💡 基準Xを「サークルの中心（circle_center_x）」にし、align="center" を指定します。
+        draw_figma_text_with_shadow(draw, text=f"Lv.{skill_level[i]}", x=48, y=y_skill_base + 79 * i + 45, font=font_stats, align="center", font_size=20, box_width=68)
+
+    # --- 2-5. 命ノ星座の描画 ---
+    for i in range(6):
+        circle_x = 637
+        circle_y = y_C_base + i * 76
+        icon_name = Constellation_icon[i]
+
+        # 🔒 i が解放数以上 = 「未解放」の星座スロットの場合
+        if i >= constellation_releas_num:
+            # 1. 未解放用の暗い背景とグレーの枠線を描画
+            draw_figma_circle(
+                img,
+                x=circle_x,
+                y=circle_y,
+                size=circle_size,
+                fill_color=(0, 0, 0, 180),          # 背景をより暗く
+                outline_color=(80, 85, 95, 255),    # 枠線をダークグレーに
+                outline_width=2
+            )
+
+            # 2. 星座アイコンを読み込んで「めっちゃ透明」にしてからペーストする
+            icon_path = f"static/datas/assets/skill_icon/{icon_name}.webp"
+            if os.path.exists(icon_path):
+                # アイコンを読み込んでRGBA（透明度あり）に変換
+                icon_img = Image.open(icon_path).convert("RGBA")
+                icon_img = icon_img.resize((60, 60), Image.Resampling.LANCZOS)
+
+                # 💡 ここで透明度を調整します
+                # 255が通常。50にすると約20%の薄さ（めっちゃ透明）になります。
+                # 好みに合わせて 30（さらに薄く）〜 70 くらいで調整してください。
+                alpha_value = 45
+
+                # 既存のアルファチャンネル（透明度）に、一律でさらに透明にする計算をかける
+                alpha = icon_img.getchannel('A')
+                alpha = alpha.point(lambda p: int(p * (alpha_value / 255.0)))
+                icon_img.putalpha(alpha)
+
+                # メイン画像に半透明で合成（マスクにもicon_img自身を指定することで透明度が維持されます）
+                img.paste(icon_img, (circle_x + 5, circle_y + 5), icon_img)
+
+            # 3. 真ん中にコードだけで鍵アイコンを描画（画像ファイル不要）
+            # 鍵全体の基準座標を計算（円の中央付近）
+            lock_w, lock_h = 24, 26
+            lx = circle_x + (circle_size - lock_w) // 2
+            ly = circle_y + (circle_size - lock_h) // 2 + 2  # 少し下に微調整
+
+            # 透過Overlayの上に描画して重ねる
+            lock_overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
+            draw_lock = ImageDraw.Draw(lock_overlay)
+
+            # ① 鍵の「アーチ（上の半円パーツ）」を描く
+            # arc([左, 上, 右, 下], 開始角度, 終了角度)
+            draw_lock.arc([lx + 4, ly, lx + lock_w - 4, ly + 16], start=180, end=0, fill=(255, 255, 255, 220), width=3)
+            # アーチの縦棒部分を少し下に伸ばす
+            draw_lock.line([lx + 4, ly + 8, lx + 4, ly + 12], fill=(255, 255, 255, 220), width=3)
+            draw_lock.line([lx + lock_w - 4, ly + 8, lx + lock_w - 4, ly + 12], fill=(255, 255, 255, 220), width=3)
+
+            # ② 鍵の「ボディ（下の四角パーツ）」を描く
+            # rounded_rectangle([左, 上, 右, 下], 角の丸み)
+            draw_lock.rounded_rectangle(
+                [lx, ly + 11, lx + lock_w, ly + lock_h],
+                radius=4,
+                fill=(20, 25, 35, 255),            # ボディの塗りつぶし（暗いグレー）
+                outline=(255, 255, 255, 220),       # ボディの枠線（白）
+                width=2
+            )
+
+            # ③ 鍵穴（中央のポッチ）を描く
+            draw_lock.ellipse([lx + 10, ly + 16, lx + 14, ly + 20], fill=(255, 255, 255, 220))
+
+            # メイン画像に合成
+            img.paste(Image.alpha_composite(img.convert("RGBA"), lock_overlay).convert("RGB"))
+
+        # ✨ 解放済みの星座スロットの場合（通常通り綺麗に描画）
+        else:
+            # 1. 鮮やかな元素色（base_color）の太枠で円を描画
+            draw_figma_circle(
+                img,
+                x=circle_x,
+                y=circle_y,
+                size=circle_size,
+                fill_color=(0, 0, 0, 150),
+                outline_color=base_color,  # クッキリ鮮やかな枠線
+                outline_width=4
+            )
+            # 2. 星座アイコンを綺麗に重ねる
+            paste_figma_image(img, f"static/datas/assets/skill_icon/{icon_name}.webp", box_x=circle_x + 5, box_y=circle_y + 5, box_width=60, box_height=60, radius=15)
+
+    # --- 2-6. 武器の描画 ---
+    paste_figma_image(img, f"static/datas/assets/weapons/{weapon_icon}.webp", box_x=1350, box_y=60, box_width=100, box_height=100, radius=15)
+    draw_figma_box(img, x=1340, y=47, width=60, height=30, radius=2)
+
+    # 精錬ランク（R1 などの1を動的に反映）
+    draw_figma_text(draw, text=f"R{weapon_affix}", x=1357, y=48, font=font_stats, align="left", font_size=20)
+    draw_figma_text(draw, text=weapon_name, x=1462, y=60, font=font_stats, align="left", font_size=23)
+    draw_figma_text(draw, text=f"Lv.{weapon_level}", x=1462, y=90, font=font_stats, align="left", font_size=20)
+
+    if weapon_stat1:
+        stat_name1, stat_val1_str = weapon_stat1
+        draw_figma_text(draw, text=stat_name1, x=1462, y=125, font=font_stats_light, align="left", font_size=18)
+        draw_figma_text(draw, text=stat_val1_str, x=1635, y=125, font=font_stats_light, align="left", font_size=21)
+
+    if weapon_stat2:
+        stat_name2, stat_val2_str = weapon_stat2
+        draw_figma_text(draw, text=stat_name2, x=1462, y=155, font=font_stats_light, align="left", font_size=18)
+        draw_figma_text(draw, text=stat_val2_str, x=1635, y=155, font=font_stats_light, align="left", font_size=21)
+
+    # --- 2-7. ステータス詳細一覧の描画 ---
+    base_y = 73
+    max_y = 700
+    row_gap = (max_y - base_y) // len(stats_mock)
+    icon_size = 36
+    icon_offset_y = 2
+
+    for i, (n, data) in enumerate(stats_mock.items()):
+        current_y = base_y + (i * row_gap)
+        icon_path = data["icon"]
+        icon_x = 840 - 60
+
+        if icon_path and os.path.exists(icon_path):
+            try:
+                icon_img = Image.open(icon_path).convert("RGBA")
+                icon_img = icon_img.resize((icon_size, icon_size), Image.Resampling.LANCZOS)
+                img.paste(icon_img, (icon_x, current_y + icon_offset_y), icon_img)
+            except Exception as e:
+                print(f"[Error] Failed to paste status icon: {icon_path}. Reason: {e}")
+        else:
+            print(f"[Warning] Status icon not found: {icon_path}")
+
+        draw_figma_text(draw, text=n, x=840, y=current_y, font=font_stats, align="left")
+        draw_figma_text(draw, text=data["val"], x=870, y=current_y, font=font_stats, align="right", box_width=450 - 60)
+
+        if n in ["HP", "攻撃力", "防禦力"] and data.get("base") and data.get("add"):
+            sub_y = current_y + 32
+            green_text = data["add"]
+            gray_text = str(data["base"])
+
+            try:
+                calc_font = ImageFont.truetype(font_stats.path, 20) if hasattr(font_stats, "path") and font_stats.path else font_stats
+            except:
+                calc_font = font_stats
+
+            green_w = draw.textlength(green_text, font=calc_font)
+            gray_w = draw.textlength(gray_text, font=calc_font)
+
+            # 💡 基準の右端を 870 から 1260 に変更！
+            target_right_edge = 1260
+
+            green_x = target_right_edge - green_w
+            gray_x = green_x - 8 - gray_w
+
+            # 緑色を描画
+            draw_figma_text(draw, text=green_text, x=green_x, y=sub_y, font=font_stats, font_size=20, fill_color=(0, 230, 115), align="left")
+            # 灰色を描画
+            draw_figma_text(draw, text=gray_text, x=gray_x, y=sub_y, font=font_stats, font_size=20, fill_color=(160, 165, 175), align="left")
+
+    # --- 2-8. 聖遺物スロット枠の描画 ---
+    for x in artifact_x_list:
+        draw_figma_box(img, x=x, y=738, width=314, height=399, radius=25)
+
+    # --- 2-9. 聖遺物詳細の描画 ---
+    for i in range(5):
+        box_x = artifact_x_list[i]
+        artifact_data = artifacts_mock[i]
+        artifact_img_num = artifact_image_num[i]
+
+        draw_figma_box(img, x=box_x + 14, y=754, width=90, height=90, radius=10)
+        draw_figma_box(img, x=box_x + 230, y=795, width=70, height=40, radius=10)
+
+        paste_figma_image(img, f"static/datas/assets/artifacts/UI_RelicIcon_{artifact_data['set']}_{artifact_img_num}.webp", box_x=box_x + 14, box_y=754, box_width=90, box_height=90, radius=15)
+
+        draw_figma_text(draw, text=artifact_data["Main"][0], x=box_x + 114, y=758, font=font_stats, align="left")
+        draw_figma_text(draw, text=artifact_data["Main"][1], x=box_x + 114, y=792, font=font_stats, align="left", font_size=30)
+        draw_figma_text(draw, text=f"+{artifact_data['upgrade']}", x=box_x + 237, y=793, font=font_stats, align="left")
+
+        y_base = 855
+        for j in range(4):
+            draw_figma_text(draw, text=artifact_data["stats"][j][1], x=box_x + 47, y=y_base + 50 * j, font=font_stats, font_size=25, align="left")
+            draw_figma_text(draw, text=artifact_data["stats"][j][2], x=box_x + 218, y=y_base + 50 * j, font=font_stats, font_size=25, align="left")
+            paste_figma_image(img, artifact_data["stats"][j][0], box_x=box_x + 12, box_y=y_base + 50 * j, box_width=30, box_height=30, radius=5)
+
+        draw_figma_line(img, x1=box_x + 27, y1=1065, x2=box_x + 287, y2=1065, fill_color=(255, 255, 255, 50), width=1)
+        draw_figma_text(draw, text="スコア", x=box_x + 142, y=1090, font=font_stats_light, font_size=20, align="left")
+        draw_figma_text(draw, text=artifact_data["score"], x=box_x + 207, y=1070, font=font_stats, font_size=40, align="right")
+        paste_figma_image(img, f"static/datas/assets/tiers/{artifact_data['tier']}.png", box_x=box_x + 27, box_y=1070, box_width=60, box_height=60, radius=15)
+
+    # --- 2-10. 聖遺物セット効果の描画 ---
+    for s in sets_display:
+        paste_figma_image(img, s["icon"], box_x=1360, box_y=s["img_y"], box_width=60, box_height=60, radius=15)
+        draw_figma_text(draw, text=s["name"], x=1435, y=s["text_y"], font=font_stats, align="left", font_size=20)
+        draw_figma_box(img, x=1610, y=s["box_y"], width=35, height=28, radius=8, fill_color=(255, 255, 255, 40))
+        draw_figma_text(draw, text=s["count"], x=1623, y=s["text_y"], font=font_stats, align="center", font_size=18, box_width=35)
+
+    # --- 2-11. 総合スコア・ティアの描画 ---
+    draw_figma_text(draw, text="総合スコア", x=1443, y=449, font=font_stats, align="left", font_size=30)
+    draw_figma_text(draw, text=round(score_sum, 1), x=1386, y=480, font=font_stats, align="left", font_size=90)
+    draw_figma_line(img, x1=1380, y1=623, x2=1670, y2=623, fill_color=(255, 255, 255, 50), width=1)
+    paste_figma_image(img, f"static/datas/assets/tiers/{tier_sum_score}.png", box_x=1620, box_y=400, box_width=80, box_height=80, radius=15)
+
+    # --- 2-12. 計算方法の描画 ---
+    draw_figma_text(draw, text="計算方法", x=1350, y=642, font=font_stats, align="left", font_size=30)
+    draw_figma_text_right(draw, text=display_score_way, x=1680, y=645, font=font_stats, align="right", font_size=35)
+
+    # --- 2-13. 画像のレスポンス生成 ---
     img_io = io.BytesIO()
     img.save(img_io, 'PNG', quality=95)
     img_io.seek(0)
     return StreamingResponse(img_io, media_type="image/png")
+
 
 if __name__ == "__main__":
     uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)

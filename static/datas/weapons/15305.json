@@ -4,6 +4,7 @@
   "rarity": 3,
   "icon": "UI_EquipIcon_Bow_Msg",
   "stats_modifier": {
-    "atk": 448.2215814
+    "atk": 448.2216,
+    "fight_prop_critical_hurt": 0.3124
   }
 }

@@ -4,7 +4,7 @@
   "rarity": 5,
   "icon": "UI_EquipIcon_Claymore_RadianceSword",
   "stats_modifier": {
-    "atk": 740.5801544000001,
-    "fight_prop_critical": 0.110256
+    "atk": 740.5802,
+    "fight_prop_critical": 0.1103
   }
 }

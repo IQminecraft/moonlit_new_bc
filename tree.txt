@@ -1,0 +1,2820 @@
+D:.
+│  font-light.ttf
+│  font.ttf
+│  font_fixed.ttf
+│  get_info_state.py
+│  server.py
+│
+├─.enka_py
+│  └─assets
+│          characters.json
+│          consts.json
+│          namecards.json
+│          pfps.json
+│          talents.json
+│          text_map.json
+│
+├─get_data_flask
+│  │  gachabase_changelog.py
+│  │  server.py
+│  │
+│  ├─convert
+│  │  │  __init__.py
+│  │  │
+│  │  ├─artifacts
+│  │  │  │  from_lunaris.py
+│  │  │  │  from_nanoka.py
+│  │  │  │  __init__.py
+│  │  │  │
+│  │  │  └─__pycache__
+│  │  │          from_lunaris.cpython-312.pyc
+│  │  │          from_nanoka.cpython-312.pyc
+│  │  │          __init__.cpython-312.pyc
+│  │  │
+│  │  ├─characters
+│  │  │  │  from_lunaris.py
+│  │  │  │  from_nanoka.py
+│  │  │  │  __init__.py
+│  │  │  │
+│  │  │  └─__pycache__
+│  │  │          from_lunaris.cpython-312.pyc
+│  │  │          from_nanoka.cpython-312.pyc
+│  │  │          __init__.cpython-312.pyc
+│  │  │
+│  │  ├─characters_list
+│  │  │  │  from_lunaris.py
+│  │  │  │  from_nanoka.py
+│  │  │  │  __init__.py
+│  │  │  │
+│  │  │  └─__pycache__
+│  │  │          from_lunaris.cpython-312.pyc
+│  │  │          from_nanoka.cpython-312.pyc
+│  │  │          __init__.cpython-312.pyc
+│  │  │
+│  │  ├─weapons
+│  │  │  │  from_lunaris.py
+│  │  │  │  from_nanoka.py
+│  │  │  │  memo.txt
+│  │  │  │  __init__.py
+│  │  │  │
+│  │  │  └─__pycache__
+│  │  │          from_lunaris.cpython-312.pyc
+│  │  │          from_nanoka.cpython-312.pyc
+│  │  │          __init__.cpython-312.pyc
+│  │  │
+│  │  ├─weapons_list
+│  │  │  │  from_lunaris.py
+│  │  │  │  from_nanoka.py
+│  │  │  │  __init__.py
+│  │  │  │
+│  │  │  └─__pycache__
+│  │  │          from_lunaris.cpython-312.pyc
+│  │  │          from_nanoka.cpython-312.pyc
+│  │  │          __init__.cpython-312.pyc
+│  │  │
+│  │  └─__pycache__
+│  │          __init__.cpython-312.pyc
+│  │
+│  ├─templates
+│  │      index.html
+│  │
+│  └─__pycache__
+│          gachabase_changelog.cpython-312.pyc
+│
+├─PIL_test
+│  │  build_card_preview.png
+│  │  pil_test.py
+│  │
+│  └─__pycache__
+│          main.cpython-312.pyc
+│
+├─static
+│  │  favicon.png
+│  │
+│  ├─BETA
+│  │  ├─assets
+│  │  │  ├─artifacts
+│  │  │  │      UI_RelicIcon_15047_1.webp
+│  │  │  │      UI_RelicIcon_15047_2.webp
+│  │  │  │      UI_RelicIcon_15047_3.webp
+│  │  │  │      UI_RelicIcon_15047_4.webp
+│  │  │  │      UI_RelicIcon_15047_5.webp
+│  │  │  │      UI_RelicIcon_15048_1.webp
+│  │  │  │      UI_RelicIcon_15048_2.webp
+│  │  │  │      UI_RelicIcon_15048_3.webp
+│  │  │  │      UI_RelicIcon_15048_4.webp
+│  │  │  │      UI_RelicIcon_15048_5.webp
+│  │  │  │
+│  │  │  ├─characters
+│  │  │  │      UI_AvatarIcon_Alyosha.webp
+│  │  │  │      UI_AvatarIcon_MannequinBoy.webp
+│  │  │  │      UI_AvatarIcon_MannequinGirl.webp
+│  │  │  │      UI_AvatarIcon_Odette.webp
+│  │  │  │      UI_AvatarIcon_PlayerBoy.webp
+│  │  │  │      UI_AvatarIcon_PlayerGirl.webp
+│  │  │  │
+│  │  │  ├─skill_icon
+│  │  │  │      Skill_A_01.webp
+│  │  │  │      Skill_A_03.webp
+│  │  │  │      Skill_E_Alyosha_01.webp
+│  │  │  │      Skill_E_LittleIdol_01.webp
+│  │  │  │      Skill_E_Odette_01.webp
+│  │  │  │      Skill_E_PlayerIce_01.webp
+│  │  │  │      Skill_S_Alyosha_01.webp
+│  │  │  │      Skill_S_LittleIdol_01.webp
+│  │  │  │      Skill_S_Odette_01.webp
+│  │  │  │      Skill_S_PlayerIce_01.webp
+│  │  │  │      UI_AvatarIcon_Alyosha.webp
+│  │  │  │      UI_AvatarIcon_MannequinBoy.webp
+│  │  │  │      UI_AvatarIcon_MannequinGirl.webp
+│  │  │  │      UI_AvatarIcon_Odette.webp
+│  │  │  │      UI_AvatarIcon_PlayerBoy.webp
+│  │  │  │      UI_AvatarIcon_PlayerGirl.webp
+│  │  │  │      UI_Talent_S_Alyosha_01.webp
+│  │  │  │      UI_Talent_S_Alyosha_02.webp
+│  │  │  │      UI_Talent_S_Alyosha_03.webp
+│  │  │  │      UI_Talent_S_Alyosha_04.webp
+│  │  │  │      UI_Talent_S_Alyosha_05.webp
+│  │  │  │      UI_Talent_S_Alyosha_06.webp
+│  │  │  │      UI_Talent_S_Alyosha_07.webp
+│  │  │  │      UI_Talent_S_Alyosha_08.webp
+│  │  │  │      UI_Talent_S_LittleIdol_05.webp
+│  │  │  │      UI_Talent_S_LittleIdol_06.webp
+│  │  │  │      UI_Talent_S_LittleIdol_07.webp
+│  │  │  │      UI_Talent_S_Odette_01.webp
+│  │  │  │      UI_Talent_S_Odette_02.webp
+│  │  │  │      UI_Talent_S_Odette_03.webp
+│  │  │  │      UI_Talent_S_Odette_04.webp
+│  │  │  │      UI_Talent_S_Odette_05.webp
+│  │  │  │      UI_Talent_S_Odette_06.webp
+│  │  │  │      UI_Talent_S_Odette_07.webp
+│  │  │  │      UI_Talent_S_Odette_08.webp
+│  │  │  │      UI_Talent_S_PlayerIce_01.webp
+│  │  │  │      UI_Talent_S_PlayerIce_02.webp
+│  │  │  │      UI_Talent_S_PlayerIce_03.webp
+│  │  │  │      UI_Talent_S_PlayerIce_04.webp
+│  │  │  │      UI_Talent_S_PlayerIce_05.webp
+│  │  │  │      UI_Talent_S_PlayerIce_06.webp
+│  │  │  │      UI_Talent_S_PlayerIce_07.webp
+│  │  │  │      UI_Talent_U_Alyosha_01.webp
+│  │  │  │      UI_Talent_U_Alyosha_02.webp
+│  │  │  │      UI_Talent_U_Odette_01.webp
+│  │  │  │      UI_Talent_U_Odette_02.webp
+│  │  │  │      UI_Talent_U_PlayerIce_01.webp
+│  │  │  │      UI_Talent_U_PlayerIce_02.webp
+│  │  │  │
+│  │  │  ├─splash
+│  │  │  │      UI_Gacha_AvatarImg_Alyosha.webp
+│  │  │  │      UI_Gacha_AvatarImg_MannequinBoy.webp
+│  │  │  │      UI_Gacha_AvatarImg_MannequinGirl.webp
+│  │  │  │      UI_Gacha_AvatarImg_Odette.webp
+│  │  │  │      UI_Gacha_AvatarImg_PlayerBoy.webp
+│  │  │  │      UI_Gacha_AvatarImg_PlayerGirl.webp
+│  │  │  │
+│  │  │  └─weapons
+│  │  │          Sword_Template.webp
+│  │  │          UI_EquipIcon_AssaultRifle_Fulmen.webp
+│  │  │          UI_EquipIcon_AssaultRifle_Glacia.webp
+│  │  │          UI_EquipIcon_Bow_GlintstoneBow.webp
+│  │  │          UI_EquipIcon_Bow_ShatteredMirror.webp
+│  │  │          UI_EquipIcon_Catalyst_GlintstoneCatalyst.webp
+│  │  │          UI_EquipIcon_Catalyst_SandMemoria.webp
+│  │  │          UI_EquipIcon_Claymore_EscapeWheel.webp
+│  │  │          UI_EquipIcon_Claymore_GlintstoneClaymore.webp
+│  │  │          UI_EquipIcon_GrenadeLauncher_Ignis.webp
+│  │  │          UI_EquipIcon_Pole_FaesCrystalle.webp
+│  │  │          UI_EquipIcon_Pole_GlintstonePolearm.webp
+│  │  │          UI_EquipIcon_Sword_GlintstoneSword.webp
+│  │  │          UI_EquipIcon_Sword_Icecream.webp
+│  │  │          UI_EquipIcon_Sword_SerpentTooth.webp
+│  │  │          UI_EquipIcon_Sword_Swanlake.webp
+│  │  │          UI_EquipIcon_Sword_WeaponQuestSnezhnaya.webp
+│  │  │
+│  │  ├─characters
+│  │  │      10000005-5.json
+│  │  │      10000007-5.json
+│  │  │      10000117-5.json
+│  │  │      10000118-5.json
+│  │  │      10000134.json
+│  │  │      10000135.json
+│  │  │      10000148.json
+│  │  │      10000150.json
+│  │  │
+│  │  ├─lists
+│  │  │      artifacts.json
+│  │  │      characters.json
+│  │  │      weapons.json
+│  │  │
+│  │  └─weapons
+│  │          11435.json
+│  │          11436.json
+│  │          11520.json
+│  │          11521.json
+│  │          12435.json
+│  │          12436.json
+│  │          13435.json
+│  │          13436.json
+│  │          14435.json
+│  │          14436.json
+│  │          15435.json
+│  │          15436.json
+│  │          224001.json
+│  │          224002.json
+│  │          224003.json
+│  │          224004.json
+│  │          224005.json
+│  │          224006.json
+│  │          224007.json
+│  │          224008.json
+│  │          380003.json
+│  │
+│  └─datas
+│      ├─assets
+│      │  ├─artifacts
+│      │  │      UI_RelicIcon_10001_1.webp
+│      │  │      UI_RelicIcon_10001_2.webp
+│      │  │      UI_RelicIcon_10001_3.webp
+│      │  │      UI_RelicIcon_10001_4.webp
+│      │  │      UI_RelicIcon_10001_5.webp
+│      │  │      UI_RelicIcon_10002_1.webp
+│      │  │      UI_RelicIcon_10002_2.webp
+│      │  │      UI_RelicIcon_10002_3.webp
+│      │  │      UI_RelicIcon_10002_4.webp
+│      │  │      UI_RelicIcon_10002_5.webp
+│      │  │      UI_RelicIcon_10003_1.webp
+│      │  │      UI_RelicIcon_10003_2.webp
+│      │  │      UI_RelicIcon_10003_3.webp
+│      │  │      UI_RelicIcon_10003_4.webp
+│      │  │      UI_RelicIcon_10003_5.webp
+│      │  │      UI_RelicIcon_10004_1.webp
+│      │  │      UI_RelicIcon_10004_2.webp
+│      │  │      UI_RelicIcon_10004_3.webp
+│      │  │      UI_RelicIcon_10004_4.webp
+│      │  │      UI_RelicIcon_10004_5.webp
+│      │  │      UI_RelicIcon_10005_1.webp
+│      │  │      UI_RelicIcon_10005_2.webp
+│      │  │      UI_RelicIcon_10005_3.webp
+│      │  │      UI_RelicIcon_10005_4.webp
+│      │  │      UI_RelicIcon_10005_5.webp
+│      │  │      UI_RelicIcon_10006_1.webp
+│      │  │      UI_RelicIcon_10006_2.webp
+│      │  │      UI_RelicIcon_10006_3.webp
+│      │  │      UI_RelicIcon_10006_4.webp
+│      │  │      UI_RelicIcon_10006_5.webp
+│      │  │      UI_RelicIcon_10007_1.webp
+│      │  │      UI_RelicIcon_10007_2.webp
+│      │  │      UI_RelicIcon_10007_3.webp
+│      │  │      UI_RelicIcon_10007_4.webp
+│      │  │      UI_RelicIcon_10007_5.webp
+│      │  │      UI_RelicIcon_10008_1.webp
+│      │  │      UI_RelicIcon_10008_2.webp
+│      │  │      UI_RelicIcon_10008_3.webp
+│      │  │      UI_RelicIcon_10008_4.webp
+│      │  │      UI_RelicIcon_10008_5.webp
+│      │  │      UI_RelicIcon_10009_1.webp
+│      │  │      UI_RelicIcon_10009_2.webp
+│      │  │      UI_RelicIcon_10009_3.webp
+│      │  │      UI_RelicIcon_10009_4.webp
+│      │  │      UI_RelicIcon_10009_5.webp
+│      │  │      UI_RelicIcon_10010_1.webp
+│      │  │      UI_RelicIcon_10010_2.webp
+│      │  │      UI_RelicIcon_10010_3.webp
+│      │  │      UI_RelicIcon_10010_4.webp
+│      │  │      UI_RelicIcon_10010_5.webp
+│      │  │      UI_RelicIcon_10011_1.webp
+│      │  │      UI_RelicIcon_10011_2.webp
+│      │  │      UI_RelicIcon_10011_3.webp
+│      │  │      UI_RelicIcon_10011_4.webp
+│      │  │      UI_RelicIcon_10011_5.webp
+│      │  │      UI_RelicIcon_10012_1.webp
+│      │  │      UI_RelicIcon_10012_2.webp
+│      │  │      UI_RelicIcon_10012_3.webp
+│      │  │      UI_RelicIcon_10012_4.webp
+│      │  │      UI_RelicIcon_10012_5.webp
+│      │  │      UI_RelicIcon_10013_1.webp
+│      │  │      UI_RelicIcon_10013_2.webp
+│      │  │      UI_RelicIcon_10013_3.webp
+│      │  │      UI_RelicIcon_10013_4.webp
+│      │  │      UI_RelicIcon_10013_5.webp
+│      │  │      UI_RelicIcon_14001_1.webp
+│      │  │      UI_RelicIcon_14001_2.webp
+│      │  │      UI_RelicIcon_14001_3.webp
+│      │  │      UI_RelicIcon_14001_4.webp
+│      │  │      UI_RelicIcon_14001_5.webp
+│      │  │      UI_RelicIcon_14002_1.webp
+│      │  │      UI_RelicIcon_14002_2.webp
+│      │  │      UI_RelicIcon_14002_3.webp
+│      │  │      UI_RelicIcon_14002_4.webp
+│      │  │      UI_RelicIcon_14002_5.webp
+│      │  │      UI_RelicIcon_14003_1.webp
+│      │  │      UI_RelicIcon_14003_2.webp
+│      │  │      UI_RelicIcon_14003_3.webp
+│      │  │      UI_RelicIcon_14003_4.webp
+│      │  │      UI_RelicIcon_14003_5.webp
+│      │  │      UI_RelicIcon_14004_1.webp
+│      │  │      UI_RelicIcon_14004_2.webp
+│      │  │      UI_RelicIcon_14004_3.webp
+│      │  │      UI_RelicIcon_14004_4.webp
+│      │  │      UI_RelicIcon_14004_5.webp
+│      │  │      UI_RelicIcon_15001_1.webp
+│      │  │      UI_RelicIcon_15001_2.webp
+│      │  │      UI_RelicIcon_15001_3.webp
+│      │  │      UI_RelicIcon_15001_4.webp
+│      │  │      UI_RelicIcon_15001_5.webp
+│      │  │      UI_RelicIcon_15002_1.webp
+│      │  │      UI_RelicIcon_15002_2.webp
+│      │  │      UI_RelicIcon_15002_3.webp
+│      │  │      UI_RelicIcon_15002_4.webp
+│      │  │      UI_RelicIcon_15002_5.webp
+│      │  │      UI_RelicIcon_15003_1.webp
+│      │  │      UI_RelicIcon_15003_2.webp
+│      │  │      UI_RelicIcon_15003_3.webp
+│      │  │      UI_RelicIcon_15003_4.webp
+│      │  │      UI_RelicIcon_15003_5.webp
+│      │  │      UI_RelicIcon_15004_1.webp
+│      │  │      UI_RelicIcon_15004_2.webp
+│      │  │      UI_RelicIcon_15004_3.webp
+│      │  │      UI_RelicIcon_15004_4.webp
+│      │  │      UI_RelicIcon_15004_5.webp
+│      │  │      UI_RelicIcon_15005_1.webp
+│      │  │      UI_RelicIcon_15005_2.webp
+│      │  │      UI_RelicIcon_15005_3.webp
+│      │  │      UI_RelicIcon_15005_4.webp
+│      │  │      UI_RelicIcon_15005_5.webp
+│      │  │      UI_RelicIcon_15006_1.webp
+│      │  │      UI_RelicIcon_15006_2.webp
+│      │  │      UI_RelicIcon_15006_3.webp
+│      │  │      UI_RelicIcon_15006_4.webp
+│      │  │      UI_RelicIcon_15006_5.webp
+│      │  │      UI_RelicIcon_15007_1.webp
+│      │  │      UI_RelicIcon_15007_2.webp
+│      │  │      UI_RelicIcon_15007_3.webp
+│      │  │      UI_RelicIcon_15007_4.webp
+│      │  │      UI_RelicIcon_15007_5.webp
+│      │  │      UI_RelicIcon_15008_1.webp
+│      │  │      UI_RelicIcon_15008_2.webp
+│      │  │      UI_RelicIcon_15008_3.webp
+│      │  │      UI_RelicIcon_15008_4.webp
+│      │  │      UI_RelicIcon_15008_5.webp
+│      │  │      UI_RelicIcon_15009_3.webp
+│      │  │      UI_RelicIcon_15010_3.webp
+│      │  │      UI_RelicIcon_15011_3.webp
+│      │  │      UI_RelicIcon_15012_3.webp
+│      │  │      UI_RelicIcon_15013_3.webp
+│      │  │      UI_RelicIcon_15014_1.webp
+│      │  │      UI_RelicIcon_15014_2.webp
+│      │  │      UI_RelicIcon_15014_3.webp
+│      │  │      UI_RelicIcon_15014_4.webp
+│      │  │      UI_RelicIcon_15014_5.webp
+│      │  │      UI_RelicIcon_15015_1.webp
+│      │  │      UI_RelicIcon_15015_2.webp
+│      │  │      UI_RelicIcon_15015_3.webp
+│      │  │      UI_RelicIcon_15015_4.webp
+│      │  │      UI_RelicIcon_15015_5.webp
+│      │  │      UI_RelicIcon_15016_1.webp
+│      │  │      UI_RelicIcon_15016_2.webp
+│      │  │      UI_RelicIcon_15016_3.webp
+│      │  │      UI_RelicIcon_15016_4.webp
+│      │  │      UI_RelicIcon_15016_5.webp
+│      │  │      UI_RelicIcon_15017_1.webp
+│      │  │      UI_RelicIcon_15017_2.webp
+│      │  │      UI_RelicIcon_15017_3.webp
+│      │  │      UI_RelicIcon_15017_4.webp
+│      │  │      UI_RelicIcon_15017_5.webp
+│      │  │      UI_RelicIcon_15018_1.webp
+│      │  │      UI_RelicIcon_15018_2.webp
+│      │  │      UI_RelicIcon_15018_3.webp
+│      │  │      UI_RelicIcon_15018_4.webp
+│      │  │      UI_RelicIcon_15018_5.webp
+│      │  │      UI_RelicIcon_15019_1.webp
+│      │  │      UI_RelicIcon_15019_2.webp
+│      │  │      UI_RelicIcon_15019_3.webp
+│      │  │      UI_RelicIcon_15019_4.webp
+│      │  │      UI_RelicIcon_15019_5.webp
+│      │  │      UI_RelicIcon_15020_1.webp
+│      │  │      UI_RelicIcon_15020_2.webp
+│      │  │      UI_RelicIcon_15020_3.webp
+│      │  │      UI_RelicIcon_15020_4.webp
+│      │  │      UI_RelicIcon_15020_5.webp
+│      │  │      UI_RelicIcon_15021_1.webp
+│      │  │      UI_RelicIcon_15021_2.webp
+│      │  │      UI_RelicIcon_15021_3.webp
+│      │  │      UI_RelicIcon_15021_4.webp
+│      │  │      UI_RelicIcon_15021_5.webp
+│      │  │      UI_RelicIcon_15022_1.webp
+│      │  │      UI_RelicIcon_15022_2.webp
+│      │  │      UI_RelicIcon_15022_3.webp
+│      │  │      UI_RelicIcon_15022_4.webp
+│      │  │      UI_RelicIcon_15022_5.webp
+│      │  │      UI_RelicIcon_15023_1.webp
+│      │  │      UI_RelicIcon_15023_2.webp
+│      │  │      UI_RelicIcon_15023_3.webp
+│      │  │      UI_RelicIcon_15023_4.webp
+│      │  │      UI_RelicIcon_15023_5.webp
+│      │  │      UI_RelicIcon_15024_1.webp
+│      │  │      UI_RelicIcon_15024_2.webp
+│      │  │      UI_RelicIcon_15024_3.webp
+│      │  │      UI_RelicIcon_15024_4.webp
+│      │  │      UI_RelicIcon_15024_5.webp
+│      │  │      UI_RelicIcon_15025_1.webp
+│      │  │      UI_RelicIcon_15025_2.webp
+│      │  │      UI_RelicIcon_15025_3.webp
+│      │  │      UI_RelicIcon_15025_4.webp
+│      │  │      UI_RelicIcon_15025_5.webp
+│      │  │      UI_RelicIcon_15026_1.webp
+│      │  │      UI_RelicIcon_15026_2.webp
+│      │  │      UI_RelicIcon_15026_3.webp
+│      │  │      UI_RelicIcon_15026_4.webp
+│      │  │      UI_RelicIcon_15026_5.webp
+│      │  │      UI_RelicIcon_15027_1.webp
+│      │  │      UI_RelicIcon_15027_2.webp
+│      │  │      UI_RelicIcon_15027_3.webp
+│      │  │      UI_RelicIcon_15027_4.webp
+│      │  │      UI_RelicIcon_15027_5.webp
+│      │  │      UI_RelicIcon_15028_1.webp
+│      │  │      UI_RelicIcon_15028_2.webp
+│      │  │      UI_RelicIcon_15028_3.webp
+│      │  │      UI_RelicIcon_15028_4.webp
+│      │  │      UI_RelicIcon_15028_5.webp
+│      │  │      UI_RelicIcon_15029_1.webp
+│      │  │      UI_RelicIcon_15029_2.webp
+│      │  │      UI_RelicIcon_15029_3.webp
+│      │  │      UI_RelicIcon_15029_4.webp
+│      │  │      UI_RelicIcon_15029_5.webp
+│      │  │      UI_RelicIcon_15030_1.webp
+│      │  │      UI_RelicIcon_15030_2.webp
+│      │  │      UI_RelicIcon_15030_3.webp
+│      │  │      UI_RelicIcon_15030_4.webp
+│      │  │      UI_RelicIcon_15030_5.webp
+│      │  │      UI_RelicIcon_15031_1.webp
+│      │  │      UI_RelicIcon_15031_2.webp
+│      │  │      UI_RelicIcon_15031_3.webp
+│      │  │      UI_RelicIcon_15031_4.webp
+│      │  │      UI_RelicIcon_15031_5.webp
+│      │  │      UI_RelicIcon_15032_1.webp
+│      │  │      UI_RelicIcon_15032_2.webp
+│      │  │      UI_RelicIcon_15032_3.webp
+│      │  │      UI_RelicIcon_15032_4.webp
+│      │  │      UI_RelicIcon_15032_5.webp
+│      │  │      UI_RelicIcon_15033_1.webp
+│      │  │      UI_RelicIcon_15033_2.webp
+│      │  │      UI_RelicIcon_15033_3.webp
+│      │  │      UI_RelicIcon_15033_4.webp
+│      │  │      UI_RelicIcon_15033_5.webp
+│      │  │      UI_RelicIcon_15034_1.webp
+│      │  │      UI_RelicIcon_15034_2.webp
+│      │  │      UI_RelicIcon_15034_3.webp
+│      │  │      UI_RelicIcon_15034_4.webp
+│      │  │      UI_RelicIcon_15034_5.webp
+│      │  │      UI_RelicIcon_15035_1.webp
+│      │  │      UI_RelicIcon_15035_2.webp
+│      │  │      UI_RelicIcon_15035_3.webp
+│      │  │      UI_RelicIcon_15035_4.webp
+│      │  │      UI_RelicIcon_15035_5.webp
+│      │  │      UI_RelicIcon_15036_1.webp
+│      │  │      UI_RelicIcon_15036_2.webp
+│      │  │      UI_RelicIcon_15036_3.webp
+│      │  │      UI_RelicIcon_15036_4.webp
+│      │  │      UI_RelicIcon_15036_5.webp
+│      │  │      UI_RelicIcon_15037_1.webp
+│      │  │      UI_RelicIcon_15037_2.webp
+│      │  │      UI_RelicIcon_15037_3.webp
+│      │  │      UI_RelicIcon_15037_4.webp
+│      │  │      UI_RelicIcon_15037_5.webp
+│      │  │      UI_RelicIcon_15038_1.webp
+│      │  │      UI_RelicIcon_15038_2.webp
+│      │  │      UI_RelicIcon_15038_3.webp
+│      │  │      UI_RelicIcon_15038_4.webp
+│      │  │      UI_RelicIcon_15038_5.webp
+│      │  │      UI_RelicIcon_15039_1.webp
+│      │  │      UI_RelicIcon_15039_2.webp
+│      │  │      UI_RelicIcon_15039_3.webp
+│      │  │      UI_RelicIcon_15039_4.webp
+│      │  │      UI_RelicIcon_15039_5.webp
+│      │  │      UI_RelicIcon_15040_1.webp
+│      │  │      UI_RelicIcon_15040_2.webp
+│      │  │      UI_RelicIcon_15040_3.webp
+│      │  │      UI_RelicIcon_15040_4.webp
+│      │  │      UI_RelicIcon_15040_5.webp
+│      │  │      UI_RelicIcon_15041_1.webp
+│      │  │      UI_RelicIcon_15041_2.webp
+│      │  │      UI_RelicIcon_15041_3.webp
+│      │  │      UI_RelicIcon_15041_4.webp
+│      │  │      UI_RelicIcon_15041_5.webp
+│      │  │      UI_RelicIcon_15042_1.webp
+│      │  │      UI_RelicIcon_15042_2.webp
+│      │  │      UI_RelicIcon_15042_3.webp
+│      │  │      UI_RelicIcon_15042_4.webp
+│      │  │      UI_RelicIcon_15042_5.webp
+│      │  │      UI_RelicIcon_15043_1.webp
+│      │  │      UI_RelicIcon_15043_2.webp
+│      │  │      UI_RelicIcon_15043_3.webp
+│      │  │      UI_RelicIcon_15043_4.webp
+│      │  │      UI_RelicIcon_15043_5.webp
+│      │  │      UI_RelicIcon_15044_1.webp
+│      │  │      UI_RelicIcon_15044_2.webp
+│      │  │      UI_RelicIcon_15044_3.webp
+│      │  │      UI_RelicIcon_15044_4.webp
+│      │  │      UI_RelicIcon_15044_5.webp
+│      │  │      UI_RelicIcon_15045_1.webp
+│      │  │      UI_RelicIcon_15045_2.webp
+│      │  │      UI_RelicIcon_15045_3.webp
+│      │  │      UI_RelicIcon_15045_4.webp
+│      │  │      UI_RelicIcon_15045_5.webp
+│      │  │      UI_RelicIcon_15046_1.webp
+│      │  │      UI_RelicIcon_15046_2.webp
+│      │  │      UI_RelicIcon_15046_3.webp
+│      │  │      UI_RelicIcon_15046_4.webp
+│      │  │      UI_RelicIcon_15046_5.webp
+│      │  │
+│      │  ├─characters
+│      │  │      UI_AvatarIcon_Aino.webp
+│      │  │      UI_AvatarIcon_Albedo.webp
+│      │  │      UI_AvatarIcon_Alhatham.webp
+│      │  │      UI_AvatarIcon_Aloy.webp
+│      │  │      UI_AvatarIcon_Ambor.webp
+│      │  │      UI_AvatarIcon_Arlecchino.webp
+│      │  │      UI_AvatarIcon_Ayaka.webp
+│      │  │      UI_AvatarIcon_Ayato.webp
+│      │  │      UI_AvatarIcon_Baizhuer.webp
+│      │  │      UI_AvatarIcon_Barbara.webp
+│      │  │      UI_AvatarIcon_Beidou.webp
+│      │  │      UI_AvatarIcon_Bennett.webp
+│      │  │      UI_AvatarIcon_Candace.webp
+│      │  │      UI_AvatarIcon_Charlotte.webp
+│      │  │      UI_AvatarIcon_Chasca.webp
+│      │  │      UI_AvatarIcon_Chevreuse.webp
+│      │  │      UI_AvatarIcon_Chiori.webp
+│      │  │      UI_AvatarIcon_Chongyun.webp
+│      │  │      UI_AvatarIcon_Citlali.webp
+│      │  │      UI_AvatarIcon_Clorinde.webp
+│      │  │      UI_AvatarIcon_Collei.webp
+│      │  │      UI_AvatarIcon_Columbina.webp
+│      │  │      UI_AvatarIcon_Cyno.webp
+│      │  │      UI_AvatarIcon_Dahlia.webp
+│      │  │      UI_AvatarIcon_Dehya.webp
+│      │  │      UI_AvatarIcon_Diluc.webp
+│      │  │      UI_AvatarIcon_Diona.webp
+│      │  │      UI_AvatarIcon_Dori.webp
+│      │  │      UI_AvatarIcon_Durin.webp
+│      │  │      UI_AvatarIcon_Emilie.webp
+│      │  │      UI_AvatarIcon_Escoffier.webp
+│      │  │      UI_AvatarIcon_Eula.webp
+│      │  │      UI_AvatarIcon_Faruzan.webp
+│      │  │      UI_AvatarIcon_Feiyan.webp
+│      │  │      UI_AvatarIcon_Fischl.webp
+│      │  │      UI_AvatarIcon_Flins.webp
+│      │  │      UI_AvatarIcon_Freminet.webp
+│      │  │      UI_AvatarIcon_Furina.webp
+│      │  │      UI_AvatarIcon_Gaming.webp
+│      │  │      UI_AvatarIcon_Ganyu.webp
+│      │  │      UI_AvatarIcon_Gorou.webp
+│      │  │      UI_AvatarIcon_Heizo.webp
+│      │  │      UI_AvatarIcon_Hutao.webp
+│      │  │      UI_AvatarIcon_Iansan.webp
+│      │  │      UI_AvatarIcon_Ifa.webp
+│      │  │      UI_AvatarIcon_Illuga.webp
+│      │  │      UI_AvatarIcon_Ineffa.webp
+│      │  │      UI_AvatarIcon_Itto.webp
+│      │  │      UI_AvatarIcon_Jahoda.webp
+│      │  │      UI_AvatarIcon_Kachina.webp
+│      │  │      UI_AvatarIcon_Kaeya.webp
+│      │  │      UI_AvatarIcon_Kaveh.webp
+│      │  │      UI_AvatarIcon_Kazuha.webp
+│      │  │      UI_AvatarIcon_Keqing.webp
+│      │  │      UI_AvatarIcon_Kinich.webp
+│      │  │      UI_AvatarIcon_Klee.webp
+│      │  │      UI_AvatarIcon_Kokomi.webp
+│      │  │      UI_AvatarIcon_Lanyan.webp
+│      │  │      UI_AvatarIcon_Lauma.webp
+│      │  │      UI_AvatarIcon_Layla.webp
+│      │  │      UI_AvatarIcon_Linette.webp
+│      │  │      UI_AvatarIcon_Liney.webp
+│      │  │      UI_AvatarIcon_Linnea.webp
+│      │  │      UI_AvatarIcon_Lisa.webp
+│      │  │      UI_AvatarIcon_Liuyun.webp
+│      │  │      UI_AvatarIcon_Lohen.webp
+│      │  │      UI_AvatarIcon_MannequinBoy.webp
+│      │  │      UI_AvatarIcon_MannequinGirl.webp
+│      │  │      UI_AvatarIcon_MarionetteNew.webp
+│      │  │      UI_AvatarIcon_Mavuika.webp
+│      │  │      UI_AvatarIcon_Mika.webp
+│      │  │      UI_AvatarIcon_Mizuki.webp
+│      │  │      UI_AvatarIcon_Momoka.webp
+│      │  │      UI_AvatarIcon_Mona.webp
+│      │  │      UI_AvatarIcon_Mualani.webp
+│      │  │      UI_AvatarIcon_Nahida.webp
+│      │  │      UI_AvatarIcon_Navia.webp
+│      │  │      UI_AvatarIcon_Nefer.webp
+│      │  │      UI_AvatarIcon_Neuvillette.webp
+│      │  │      UI_AvatarIcon_Nicole.webp
+│      │  │      UI_AvatarIcon_Nilou.webp
+│      │  │      UI_AvatarIcon_Ningguang.webp
+│      │  │      UI_AvatarIcon_Noel.webp
+│      │  │      UI_AvatarIcon_Olorun.webp
+│      │  │      UI_AvatarIcon_PlayerBoy.webp
+│      │  │      UI_AvatarIcon_PlayerGirl.webp
+│      │  │      UI_AvatarIcon_Prune.webp
+│      │  │      UI_AvatarIcon_Qin.webp
+│      │  │      UI_AvatarIcon_Qiqi.webp
+│      │  │      UI_AvatarIcon_Razor.webp
+│      │  │      UI_AvatarIcon_Rosaria.webp
+│      │  │      UI_AvatarIcon_Sara.webp
+│      │  │      UI_AvatarIcon_Sayu.webp
+│      │  │      UI_AvatarIcon_Sethos.webp
+│      │  │      UI_AvatarIcon_Shenhe.webp
+│      │  │      UI_AvatarIcon_Shinobu.webp
+│      │  │      UI_AvatarIcon_Shougun.webp
+│      │  │      UI_AvatarIcon_Sigewinne.webp
+│      │  │      UI_AvatarIcon_SkirkNew.webp
+│      │  │      UI_AvatarIcon_Sucrose.webp
+│      │  │      UI_AvatarIcon_Tartaglia.webp
+│      │  │      UI_AvatarIcon_Tighnari.webp
+│      │  │      UI_AvatarIcon_Tohma.webp
+│      │  │      UI_AvatarIcon_Varesa.webp
+│      │  │      UI_AvatarIcon_Varka.webp
+│      │  │      UI_AvatarIcon_Venti.webp
+│      │  │      UI_AvatarIcon_Wanderer.webp
+│      │  │      UI_AvatarIcon_Wriothesley.webp
+│      │  │      UI_AvatarIcon_Xiangling.webp
+│      │  │      UI_AvatarIcon_Xiao.webp
+│      │  │      UI_AvatarIcon_Xilonen.webp
+│      │  │      UI_AvatarIcon_Xingqiu.webp
+│      │  │      UI_AvatarIcon_Xinyan.webp
+│      │  │      UI_AvatarIcon_Yae.webp
+│      │  │      UI_AvatarIcon_Yaoyao.webp
+│      │  │      UI_AvatarIcon_Yelan.webp
+│      │  │      UI_AvatarIcon_Yoimiya.webp
+│      │  │      UI_AvatarIcon_Yunjin.webp
+│      │  │      UI_AvatarIcon_Zhongli.webp
+│      │  │      UI_AvatarIcon_Zibai.webp
+│      │  │
+│      │  ├─prot_icon
+│      │  │      anemo.png
+│      │  │      atk.png
+│      │  │      atk_per.png
+│      │  │      cryo.png
+│      │  │      def.png
+│      │  │      def_per.png
+│      │  │      dendero.png
+│      │  │      dmg.webp
+│      │  │      electro.png
+│      │  │      EM.png
+│      │  │      ER.png
+│      │  │      geo.png
+│      │  │      healing.png
+│      │  │      hp.png
+│      │  │      hp_per.png
+│      │  │      Hydro.png
+│      │  │      physical.png
+│      │  │      pyro.png
+│      │  │      rate.webp
+│      │  │
+│      │  ├─skill_icon
+│      │  │      p_1172101.webp
+│      │  │      p_1172201.webp
+│      │  │      p_1172501.webp
+│      │  │      Skill_A_01.webp
+│      │  │      Skill_A_02.webp
+│      │  │      Skill_A_03.webp
+│      │  │      Skill_A_04.webp
+│      │  │      Skill_A_Catalyst_MD.webp
+│      │  │      Skill_E_Aino_01.webp
+│      │  │      Skill_E_Albedo_01.webp
+│      │  │      Skill_E_Alhatham_01.webp
+│      │  │      Skill_E_Aloy_01.webp
+│      │  │      Skill_E_Ambor.webp
+│      │  │      Skill_E_Arlecchino_01.webp
+│      │  │      Skill_E_Ayaka.webp
+│      │  │      Skill_E_Ayato_01.webp
+│      │  │      Skill_E_Baizhuer_01.webp
+│      │  │      Skill_E_Barbara_01.webp
+│      │  │      Skill_E_Bennett_01.webp
+│      │  │      Skill_E_Candace_01.webp
+│      │  │      Skill_E_Charlotte_01.webp
+│      │  │      Skill_E_Chasca_01.webp
+│      │  │      Skill_E_Chevreuse_01.webp
+│      │  │      Skill_E_Chiori_01.webp
+│      │  │      Skill_E_Chongyun_01.webp
+│      │  │      Skill_E_Citlali_01.webp
+│      │  │      Skill_E_Clorinde_01.webp
+│      │  │      Skill_E_Collei_01.webp
+│      │  │      Skill_E_Columbina_01.webp
+│      │  │      Skill_E_Cyno_01.webp
+│      │  │      Skill_E_Dahlia_01.webp
+│      │  │      Skill_E_Dehya_01.webp
+│      │  │      Skill_E_Diluc_01.webp
+│      │  │      Skill_E_Diona_01.webp
+│      │  │      Skill_E_Dori_01.webp
+│      │  │      Skill_E_Durin_01.webp
+│      │  │      Skill_E_Emilie_01.webp
+│      │  │      Skill_E_Escoffier_01.webp
+│      │  │      Skill_E_Eula_01.webp
+│      │  │      Skill_E_Faruzan_01.webp
+│      │  │      Skill_E_Feiyan_01.webp
+│      │  │      Skill_E_Fischl_01.webp
+│      │  │      Skill_E_Flins_01.webp
+│      │  │      Skill_E_Freminet_01.webp
+│      │  │      Skill_E_Furina_01.webp
+│      │  │      Skill_E_Gaming_01.webp
+│      │  │      Skill_E_Ganyu_01.webp
+│      │  │      Skill_E_Gorou_01.webp
+│      │  │      Skill_E_Heizo_01.webp
+│      │  │      Skill_E_Hutao_01.webp
+│      │  │      Skill_E_Iansan_01.webp
+│      │  │      Skill_E_Ifa_01.webp
+│      │  │      Skill_E_Illuga_01.webp
+│      │  │      Skill_E_Ineffa_01.webp
+│      │  │      Skill_E_Itto_01.webp
+│      │  │      Skill_E_Jahoda_01.webp
+│      │  │      Skill_E_Kachina_01.webp
+│      │  │      Skill_E_Kaeya_01.webp
+│      │  │      Skill_E_Kaveh_01.webp
+│      │  │      Skill_E_Kazuha_01.webp
+│      │  │      Skill_E_Keqing_01.webp
+│      │  │      Skill_E_Kinich_01.webp
+│      │  │      Skill_E_Klee_01.webp
+│      │  │      Skill_E_Kokomi_01.webp
+│      │  │      Skill_E_Lanyan_01.webp
+│      │  │      Skill_E_Lauma_01.webp
+│      │  │      Skill_E_Layla_01.webp
+│      │  │      Skill_E_Linette_01.webp
+│      │  │      Skill_E_Liney_01.webp
+│      │  │      Skill_E_Linnea_01.webp
+│      │  │      Skill_E_Lisa_01.webp
+│      │  │      Skill_E_Liuyun_01.webp
+│      │  │      Skill_E_Lohen_01.webp
+│      │  │      Skill_E_MarionetteNew_01.webp
+│      │  │      Skill_E_Mavuika_01.webp
+│      │  │      Skill_E_Mika_01.webp
+│      │  │      Skill_E_Mizuki_01.webp
+│      │  │      Skill_E_Momoka_01.webp
+│      │  │      Skill_E_Mona_01.webp
+│      │  │      Skill_E_Mualani_01.webp
+│      │  │      Skill_E_Nahida_01.webp
+│      │  │      Skill_E_Navia_01.webp
+│      │  │      Skill_E_Nefer_01.webp
+│      │  │      Skill_E_Neuvillette_01.webp
+│      │  │      Skill_E_Nicole_01.webp
+│      │  │      Skill_E_Nilou_01.webp
+│      │  │      Skill_E_Ningguang_01.webp
+│      │  │      Skill_E_Noel_01.webp
+│      │  │      Skill_E_Olorun_01.webp
+│      │  │      Skill_E_PlayerElectric_01.webp
+│      │  │      Skill_E_PlayerFire_01.webp
+│      │  │      Skill_E_PlayerGrass_01.webp
+│      │  │      Skill_E_PlayerRock_01.webp
+│      │  │      Skill_E_PlayerWater_01.webp
+│      │  │      Skill_E_PlayerWind_01.webp
+│      │  │      Skill_E_Prune_01.webp
+│      │  │      Skill_E_Qin_01.webp
+│      │  │      Skill_E_Qiqi_01.webp
+│      │  │      Skill_E_Rosaria_01.webp
+│      │  │      Skill_E_Sara_01.webp
+│      │  │      Skill_E_Sayu_01.webp
+│      │  │      Skill_E_Sethos_01.webp
+│      │  │      Skill_E_Shenhe_01.webp
+│      │  │      Skill_E_Shinobu_01.webp
+│      │  │      Skill_E_Shougun_01.webp
+│      │  │      Skill_E_Sigewinne_01.webp
+│      │  │      Skill_E_SkirkNew_01.webp
+│      │  │      Skill_E_Sucrose_01.webp
+│      │  │      Skill_E_Tartaglia_01.webp
+│      │  │      Skill_E_Tighnari_01.webp
+│      │  │      Skill_E_Tohma_01.webp
+│      │  │      Skill_E_Varesa_01.webp
+│      │  │      Skill_E_Varka_01.webp
+│      │  │      Skill_E_Venti_01.webp
+│      │  │      Skill_E_Wanderer_01.webp
+│      │  │      Skill_E_Wriothesley_01.webp
+│      │  │      Skill_E_Xiangling_01.webp
+│      │  │      Skill_E_Xiao_01.webp
+│      │  │      Skill_E_Xilonen_01.webp
+│      │  │      Skill_E_Xingqiu_01.webp
+│      │  │      Skill_E_Xinyan_01.webp
+│      │  │      Skill_E_Yae_01.webp
+│      │  │      Skill_E_Yaoyao_01.webp
+│      │  │      Skill_E_Yelan_01.webp
+│      │  │      Skill_E_Yoimiya_01.webp
+│      │  │      Skill_E_Yunjin_01.webp
+│      │  │      Skill_E_Zhongli_01.webp
+│      │  │      Skill_E_Zibai_01.webp
+│      │  │      Skill_S_Albedo_01.webp
+│      │  │      Skill_S_Alhatham_01.webp
+│      │  │      Skill_S_Aloy_01.webp
+│      │  │      Skill_S_Ambor_01.webp
+│      │  │      Skill_S_Arlecchino_01.webp
+│      │  │      Skill_S_Ayaka_01.webp
+│      │  │      Skill_S_Ayato_01.webp
+│      │  │      Skill_S_Baizhuer_01.webp
+│      │  │      Skill_S_Barbara_01.webp
+│      │  │      Skill_S_Beidou_01.webp
+│      │  │      Skill_S_Bennett_01.webp
+│      │  │      Skill_S_Candace_01.webp
+│      │  │      Skill_S_Charlotte_01.webp
+│      │  │      Skill_S_Chasca_01.webp
+│      │  │      Skill_S_Chevreuse_01.webp
+│      │  │      Skill_S_Chiori_01.webp
+│      │  │      Skill_S_Chongyun_01.webp
+│      │  │      Skill_S_Citlali_01.webp
+│      │  │      Skill_S_Clorinde_01.webp
+│      │  │      Skill_S_Collei_01.webp
+│      │  │      Skill_S_Columbina_01.webp
+│      │  │      Skill_S_Cyno_01.webp
+│      │  │      Skill_S_Dahlia_01.webp
+│      │  │      Skill_S_Dehya_01.webp
+│      │  │      Skill_S_Diluc_01_01.webp
+│      │  │      Skill_S_Diona_01.webp
+│      │  │      Skill_S_Dori_01.webp
+│      │  │      Skill_S_Durin_01.webp
+│      │  │      Skill_S_Emilie_01.webp
+│      │  │      Skill_S_Escoffier_01.webp
+│      │  │      Skill_S_Eula_01.webp
+│      │  │      Skill_S_Faruzan_01.webp
+│      │  │      Skill_S_Feiyan_01.webp
+│      │  │      Skill_S_Fischl_01.webp
+│      │  │      Skill_S_Flins_01.webp
+│      │  │      Skill_S_Freminet_01.webp
+│      │  │      Skill_S_Furina_01.webp
+│      │  │      Skill_S_Gaming_01.webp
+│      │  │      Skill_S_Ganyu_01.webp
+│      │  │      Skill_S_Gorou_01.webp
+│      │  │      Skill_S_Heizo_01.webp
+│      │  │      Skill_S_Hutao_01.webp
+│      │  │      Skill_S_Iansan_01.webp
+│      │  │      Skill_S_Ifa_01.webp
+│      │  │      Skill_S_Illuga_01.webp
+│      │  │      Skill_S_Ineffa_01.webp
+│      │  │      Skill_S_Itto_01.webp
+│      │  │      Skill_S_Jahoda_01.webp
+│      │  │      Skill_S_Kachina_01.webp
+│      │  │      Skill_S_Kaeya_01.webp
+│      │  │      Skill_S_Kaveh_01.webp
+│      │  │      Skill_S_Kazuha_01.webp
+│      │  │      Skill_S_Keqing_01.webp
+│      │  │      Skill_S_Kinich_01.webp
+│      │  │      Skill_S_Klee_01.webp
+│      │  │      Skill_S_Kokomi_01.webp
+│      │  │      Skill_S_Lanyan_01.webp
+│      │  │      Skill_S_Lauma_01.webp
+│      │  │      Skill_S_Layla_01.webp
+│      │  │      Skill_S_Linette_01.webp
+│      │  │      Skill_S_Liney_01.webp
+│      │  │      Skill_S_Linnea_01.webp
+│      │  │      Skill_S_Lisa_01.webp
+│      │  │      Skill_S_Liuyun_01.webp
+│      │  │      Skill_S_Lohen_01.webp
+│      │  │      Skill_S_MarionetteNew_01.webp
+│      │  │      Skill_S_Mavuika_01.webp
+│      │  │      Skill_S_Mika_01.webp
+│      │  │      Skill_S_Mizuki_01.webp
+│      │  │      Skill_S_Momoka_01.webp
+│      │  │      Skill_S_Mona_01.webp
+│      │  │      Skill_S_Mualani_01.webp
+│      │  │      Skill_S_Nahida_01.webp
+│      │  │      Skill_S_Navia_01.webp
+│      │  │      Skill_S_Nefer_01.webp
+│      │  │      Skill_S_Neuvillette_01.webp
+│      │  │      Skill_S_Nicole_01.webp
+│      │  │      Skill_S_Nilou_01.webp
+│      │  │      Skill_S_Ningguang_01.webp
+│      │  │      Skill_S_Noel_01.webp
+│      │  │      Skill_S_Olorun_01.webp
+│      │  │      Skill_S_PlayerElectric_01.webp
+│      │  │      Skill_S_PlayerFire_01.webp
+│      │  │      Skill_S_PlayerGrass_01.webp
+│      │  │      Skill_S_PlayerRock_01.webp
+│      │  │      Skill_S_PlayerWater_01.webp
+│      │  │      Skill_S_PlayerWind_01.webp
+│      │  │      Skill_S_Prune_01.webp
+│      │  │      Skill_S_Qin_02.webp
+│      │  │      Skill_S_Qiqi_01.webp
+│      │  │      Skill_S_Razor_01.webp
+│      │  │      Skill_S_Rosaria_01.webp
+│      │  │      Skill_S_Sara_01.webp
+│      │  │      Skill_S_Sayu_01.webp
+│      │  │      Skill_S_Sethos_01.webp
+│      │  │      Skill_S_Shenhe_01.webp
+│      │  │      Skill_S_Shinobu_01.webp
+│      │  │      Skill_S_Shougun_01.webp
+│      │  │      Skill_S_Sigewinne_01.webp
+│      │  │      Skill_S_SkirkNew_01.webp
+│      │  │      Skill_S_Sucrose_01.webp
+│      │  │      Skill_S_Tartaglia_01.webp
+│      │  │      Skill_S_Tighnari_01.webp
+│      │  │      Skill_S_Tohma_01.webp
+│      │  │      Skill_S_Varesa_01.webp
+│      │  │      Skill_S_Varka_01.webp
+│      │  │      Skill_S_Venti_01.webp
+│      │  │      Skill_S_Wanderer_01.webp
+│      │  │      Skill_S_Wriothesley_01.webp
+│      │  │      Skill_S_Xiangling_01.webp
+│      │  │      Skill_S_Xiao_01.webp
+│      │  │      Skill_S_Xilonen_01.webp
+│      │  │      Skill_S_Xingqiu_01.webp
+│      │  │      Skill_S_Xinyan_01.webp
+│      │  │      Skill_S_Yae_01.webp
+│      │  │      Skill_S_Yaoyao_01.webp
+│      │  │      Skill_S_Yelan_01.webp
+│      │  │      Skill_S_Yoimiya_01.webp
+│      │  │      Skill_S_Yunjin_01.webp
+│      │  │      Skill_S_Zhongli_01.webp
+│      │  │      Skill_S_Zibai_01.webp
+│      │  │      s_1173101.webp
+│      │  │      s_1173201.webp
+│      │  │      s_1173901.webp
+│      │  │      UI_Talent_Collect_Local_Liyue.webp
+│      │  │      UI_Talent_Collect_Local_Mengde.webp
+│      │  │      UI_Talent_Collect_Ore.webp
+│      │  │      UI_Talent_Combine_Material.webp
+│      │  │      UI_Talent_Combine_Talent.webp
+│      │  │      UI_Talent_Combine_Weapon.webp
+│      │  │      UI_Talent_Combine_Weapon_Double.webp
+│      │  │      UI_Talent_Cook_Attack.webp
+│      │  │      UI_Talent_Cook_Defense.webp
+│      │  │      UI_Talent_Cook_ExtraFailedItem.webp
+│      │  │      UI_Talent_Cook_Heal.webp
+│      │  │      UI_Talent_Eula_Combine.webp
+│      │  │      UI_Talent_Expedition_Liyue.webp
+│      │  │      UI_Talent_Expedition_Mengde.webp
+│      │  │      UI_Talent_Explosion_Climb.webp
+│      │  │      UI_Talent_Explosion_Glide.webp
+│      │  │      UI_Talent_Explosion_Sprint.webp
+│      │  │      UI_Talent_Explosion_Swim.webp
+│      │  │      UI_Talent_Forge_Bow.webp
+│      │  │      UI_Talent_Forge_Claymore.webp
+│      │  │      UI_Talent_Forge_Pole.webp
+│      │  │      UI_Talent_Rosaria_NightRunner.webp
+│      │  │      UI_Talent_S_Aino_01.webp
+│      │  │      UI_Talent_S_Aino_02.webp
+│      │  │      UI_Talent_S_Aino_03.webp
+│      │  │      UI_Talent_S_Aino_04.webp
+│      │  │      UI_Talent_S_Aino_05.webp
+│      │  │      UI_Talent_S_Aino_06.webp
+│      │  │      UI_Talent_S_Aino_07.webp
+│      │  │      UI_Talent_S_Aino_08.webp
+│      │  │      UI_Talent_S_Albedo_01.webp
+│      │  │      UI_Talent_S_Albedo_02.webp
+│      │  │      UI_Talent_S_Albedo_03.webp
+│      │  │      UI_Talent_S_Albedo_04.webp
+│      │  │      UI_Talent_S_Albedo_05.webp
+│      │  │      UI_Talent_S_Albedo_06.webp
+│      │  │      UI_Talent_S_Albedo_07.webp
+│      │  │      UI_Talent_S_Alhatham_01.webp
+│      │  │      UI_Talent_S_Alhatham_02.webp
+│      │  │      UI_Talent_S_Alhatham_03.webp
+│      │  │      UI_Talent_S_Alhatham_04.webp
+│      │  │      UI_Talent_S_Alhatham_05.webp
+│      │  │      UI_Talent_S_Alhatham_06.webp
+│      │  │      UI_Talent_S_Alhatham_07.webp
+│      │  │      UI_Talent_S_Aloy_05.webp
+│      │  │      UI_Talent_S_Aloy_06.webp
+│      │  │      UI_Talent_S_Aloy_07.webp
+│      │  │      UI_Talent_S_Aloy_Lock.webp
+│      │  │      UI_Talent_S_Ambor_01.webp
+│      │  │      UI_Talent_S_Ambor_02.webp
+│      │  │      UI_Talent_S_Ambor_03.webp
+│      │  │      UI_Talent_S_Ambor_04.webp
+│      │  │      UI_Talent_S_Ambor_05.webp
+│      │  │      UI_Talent_S_Ambor_06.webp
+│      │  │      UI_Talent_S_Arlecchino_01.webp
+│      │  │      UI_Talent_S_Arlecchino_02.webp
+│      │  │      UI_Talent_S_Arlecchino_03.webp
+│      │  │      UI_Talent_S_Arlecchino_04.webp
+│      │  │      UI_Talent_S_Arlecchino_05.webp
+│      │  │      UI_Talent_S_Arlecchino_06.webp
+│      │  │      UI_Talent_S_Arlecchino_07.webp
+│      │  │      UI_Talent_S_Ayaka_01.webp
+│      │  │      UI_Talent_S_Ayaka_02.webp
+│      │  │      UI_Talent_S_Ayaka_03.webp
+│      │  │      UI_Talent_S_Ayaka_04.webp
+│      │  │      UI_Talent_S_Ayaka_05.webp
+│      │  │      UI_Talent_S_Ayaka_06.webp
+│      │  │      UI_Talent_S_Ayato_01.webp
+│      │  │      UI_Talent_S_Ayato_02.webp
+│      │  │      UI_Talent_S_Ayato_03.webp
+│      │  │      UI_Talent_S_Ayato_04.webp
+│      │  │      UI_Talent_S_Ayato_05.webp
+│      │  │      UI_Talent_S_Ayato_06.webp
+│      │  │      UI_Talent_S_Ayato_07.webp
+│      │  │      UI_Talent_S_Baizhuer_01.webp
+│      │  │      UI_Talent_S_Baizhuer_02.webp
+│      │  │      UI_Talent_S_Baizhuer_03.webp
+│      │  │      UI_Talent_S_Baizhuer_04.webp
+│      │  │      UI_Talent_S_Baizhuer_05.webp
+│      │  │      UI_Talent_S_Baizhuer_06.webp
+│      │  │      UI_Talent_S_Baizhuer_07.webp
+│      │  │      UI_Talent_S_Barbara_01.webp
+│      │  │      UI_Talent_S_Barbara_02.webp
+│      │  │      UI_Talent_S_Barbara_03.webp
+│      │  │      UI_Talent_S_Barbara_04.webp
+│      │  │      UI_Talent_S_Barbara_05.webp
+│      │  │      UI_Talent_S_Barbara_06.webp
+│      │  │      UI_Talent_S_Beidou_01.webp
+│      │  │      UI_Talent_S_Beidou_02.webp
+│      │  │      UI_Talent_S_Beidou_03.webp
+│      │  │      UI_Talent_S_Beidou_04.webp
+│      │  │      UI_Talent_S_Beidou_05.webp
+│      │  │      UI_Talent_S_Beidou_06.webp
+│      │  │      UI_Talent_S_Bennett_01.webp
+│      │  │      UI_Talent_S_Bennett_02.webp
+│      │  │      UI_Talent_S_Bennett_03.webp
+│      │  │      UI_Talent_S_Bennett_04.webp
+│      │  │      UI_Talent_S_Bennett_05.webp
+│      │  │      UI_Talent_S_Bennett_06.webp
+│      │  │      UI_Talent_S_Candace_01.webp
+│      │  │      UI_Talent_S_Candace_02.webp
+│      │  │      UI_Talent_S_Candace_03.webp
+│      │  │      UI_Talent_S_Candace_04.webp
+│      │  │      UI_Talent_S_Candace_05.webp
+│      │  │      UI_Talent_S_Candace_06.webp
+│      │  │      UI_Talent_S_Charlotte_01.webp
+│      │  │      UI_Talent_S_Charlotte_02.webp
+│      │  │      UI_Talent_S_Charlotte_03.webp
+│      │  │      UI_Talent_S_Charlotte_04.webp
+│      │  │      UI_Talent_S_Charlotte_05.webp
+│      │  │      UI_Talent_S_Charlotte_06.webp
+│      │  │      UI_Talent_S_Charlotte_07.webp
+│      │  │      UI_Talent_S_Chasca_01.webp
+│      │  │      UI_Talent_S_Chasca_02.webp
+│      │  │      UI_Talent_S_Chasca_03.webp
+│      │  │      UI_Talent_S_Chasca_04.webp
+│      │  │      UI_Talent_S_Chasca_05.webp
+│      │  │      UI_Talent_S_Chasca_06.webp
+│      │  │      UI_Talent_S_Chasca_07.webp
+│      │  │      UI_Talent_S_Chasca_08.webp
+│      │  │      UI_Talent_S_Chevreuse_01.webp
+│      │  │      UI_Talent_S_Chevreuse_02.webp
+│      │  │      UI_Talent_S_Chevreuse_03.webp
+│      │  │      UI_Talent_S_Chevreuse_04.webp
+│      │  │      UI_Talent_S_Chevreuse_05.webp
+│      │  │      UI_Talent_S_Chevreuse_06.webp
+│      │  │      UI_Talent_S_Chiori_01.webp
+│      │  │      UI_Talent_S_Chiori_02.webp
+│      │  │      UI_Talent_S_Chiori_03.webp
+│      │  │      UI_Talent_S_Chiori_04.webp
+│      │  │      UI_Talent_S_Chiori_05.webp
+│      │  │      UI_Talent_S_Chiori_06.webp
+│      │  │      UI_Talent_S_Chiori_07.webp
+│      │  │      UI_Talent_S_Chongyun_01.webp
+│      │  │      UI_Talent_S_Chongyun_02.webp
+│      │  │      UI_Talent_S_Chongyun_03.webp
+│      │  │      UI_Talent_S_Chongyun_04.webp
+│      │  │      UI_Talent_S_Chongyun_05.webp
+│      │  │      UI_Talent_S_Chongyun_06.webp
+│      │  │      UI_Talent_S_Citlali_01.webp
+│      │  │      UI_Talent_S_Citlali_02.webp
+│      │  │      UI_Talent_S_Citlali_03.webp
+│      │  │      UI_Talent_S_Citlali_04.webp
+│      │  │      UI_Talent_S_Citlali_05.webp
+│      │  │      UI_Talent_S_Citlali_06.webp
+│      │  │      UI_Talent_S_Citlali_07.webp
+│      │  │      UI_Talent_S_Citlali_08.webp
+│      │  │      UI_Talent_S_Clorinde_01.webp
+│      │  │      UI_Talent_S_Clorinde_02.webp
+│      │  │      UI_Talent_S_Clorinde_03.webp
+│      │  │      UI_Talent_S_Clorinde_04.webp
+│      │  │      UI_Talent_S_Clorinde_05.webp
+│      │  │      UI_Talent_S_Clorinde_06.webp
+│      │  │      UI_Talent_S_Collei_01.webp
+│      │  │      UI_Talent_S_Collei_02.webp
+│      │  │      UI_Talent_S_Collei_03.webp
+│      │  │      UI_Talent_S_Collei_04.webp
+│      │  │      UI_Talent_S_Collei_05.webp
+│      │  │      UI_Talent_S_Collei_06.webp
+│      │  │      UI_Talent_S_Columbina_01.webp
+│      │  │      UI_Talent_S_Columbina_02.webp
+│      │  │      UI_Talent_S_Columbina_03.webp
+│      │  │      UI_Talent_S_Columbina_04.webp
+│      │  │      UI_Talent_S_Columbina_05.webp
+│      │  │      UI_Talent_S_Columbina_06.webp
+│      │  │      UI_Talent_S_Columbina_07.webp
+│      │  │      UI_Talent_S_Columbina_08.webp
+│      │  │      UI_Talent_S_Cyno_01.webp
+│      │  │      UI_Talent_S_Cyno_02.webp
+│      │  │      UI_Talent_S_Cyno_03.webp
+│      │  │      UI_Talent_S_Cyno_04.webp
+│      │  │      UI_Talent_S_Cyno_05.webp
+│      │  │      UI_Talent_S_Cyno_06.webp
+│      │  │      UI_Talent_S_Cyno_07.webp
+│      │  │      UI_Talent_S_Dahlia_01.webp
+│      │  │      UI_Talent_S_Dahlia_02.webp
+│      │  │      UI_Talent_S_Dahlia_03.webp
+│      │  │      UI_Talent_S_Dahlia_04.webp
+│      │  │      UI_Talent_S_Dahlia_05.webp
+│      │  │      UI_Talent_S_Dahlia_06.webp
+│      │  │      UI_Talent_S_Dehya_01.webp
+│      │  │      UI_Talent_S_Dehya_02.webp
+│      │  │      UI_Talent_S_Dehya_03.webp
+│      │  │      UI_Talent_S_Dehya_04.webp
+│      │  │      UI_Talent_S_Dehya_05.webp
+│      │  │      UI_Talent_S_Dehya_06.webp
+│      │  │      UI_Talent_S_Dehya_07.webp
+│      │  │      UI_Talent_S_Diluc_01.webp
+│      │  │      UI_Talent_S_Diluc_02.webp
+│      │  │      UI_Talent_S_Diluc_03.webp
+│      │  │      UI_Talent_S_Diluc_04.webp
+│      │  │      UI_Talent_S_Diluc_05.webp
+│      │  │      UI_Talent_S_Diluc_06.webp
+│      │  │      UI_Talent_S_Diona_01.webp
+│      │  │      UI_Talent_S_Diona_02.webp
+│      │  │      UI_Talent_S_Diona_03.webp
+│      │  │      UI_Talent_S_Diona_04.webp
+│      │  │      UI_Talent_S_Diona_05.webp
+│      │  │      UI_Talent_S_Diona_06.webp
+│      │  │      UI_Talent_S_Dori_01.webp
+│      │  │      UI_Talent_S_Dori_02.webp
+│      │  │      UI_Talent_S_Dori_03.webp
+│      │  │      UI_Talent_S_Dori_04.webp
+│      │  │      UI_Talent_S_Dori_05.webp
+│      │  │      UI_Talent_S_Dori_06.webp
+│      │  │      UI_Talent_S_Dori_07.webp
+│      │  │      UI_Talent_S_Durin_01.webp
+│      │  │      UI_Talent_S_Durin_02.webp
+│      │  │      UI_Talent_S_Durin_03.webp
+│      │  │      UI_Talent_S_Durin_04.webp
+│      │  │      UI_Talent_S_Durin_05.webp
+│      │  │      UI_Talent_S_Durin_06.webp
+│      │  │      UI_Talent_S_Durin_07.webp
+│      │  │      UI_Talent_S_Emilie_01.webp
+│      │  │      UI_Talent_S_Emilie_02.webp
+│      │  │      UI_Talent_S_Emilie_03.webp
+│      │  │      UI_Talent_S_Emilie_04.webp
+│      │  │      UI_Talent_S_Emilie_05.webp
+│      │  │      UI_Talent_S_Emilie_06.webp
+│      │  │      UI_Talent_S_Emilie_07.webp
+│      │  │      UI_Talent_S_Escoffier_01.webp
+│      │  │      UI_Talent_S_Escoffier_02.webp
+│      │  │      UI_Talent_S_Escoffier_03.webp
+│      │  │      UI_Talent_S_Escoffier_04.webp
+│      │  │      UI_Talent_S_Escoffier_05.webp
+│      │  │      UI_Talent_S_Escoffier_06.webp
+│      │  │      UI_Talent_S_Escoffier_08.webp
+│      │  │      UI_Talent_S_Eula_01.webp
+│      │  │      UI_Talent_S_Eula_02.webp
+│      │  │      UI_Talent_S_Eula_03.webp
+│      │  │      UI_Talent_S_Eula_04.webp
+│      │  │      UI_Talent_S_Eula_05.webp
+│      │  │      UI_Talent_S_Eula_06.webp
+│      │  │      UI_Talent_S_Faruzan_01.webp
+│      │  │      UI_Talent_S_Faruzan_02.webp
+│      │  │      UI_Talent_S_Faruzan_03.webp
+│      │  │      UI_Talent_S_Faruzan_04.webp
+│      │  │      UI_Talent_S_Faruzan_05.webp
+│      │  │      UI_Talent_S_Faruzan_06.webp
+│      │  │      UI_Talent_S_Feiyan_01.webp
+│      │  │      UI_Talent_S_Feiyan_02.webp
+│      │  │      UI_Talent_S_Feiyan_03.webp
+│      │  │      UI_Talent_S_Feiyan_04.webp
+│      │  │      UI_Talent_S_Feiyan_05.webp
+│      │  │      UI_Talent_S_Feiyan_06.webp
+│      │  │      UI_Talent_S_Fischl_01.webp
+│      │  │      UI_Talent_S_Fischl_02.webp
+│      │  │      UI_Talent_S_Fischl_03.webp
+│      │  │      UI_Talent_S_Fischl_04.webp
+│      │  │      UI_Talent_S_Fischl_05.webp
+│      │  │      UI_Talent_S_Fischl_06.webp
+│      │  │      UI_Talent_S_Fischl_07.webp
+│      │  │      UI_Talent_S_Flins_01.webp
+│      │  │      UI_Talent_S_Flins_02.webp
+│      │  │      UI_Talent_S_Flins_03.webp
+│      │  │      UI_Talent_S_Flins_04.webp
+│      │  │      UI_Talent_S_Flins_05.webp
+│      │  │      UI_Talent_S_Flins_06.webp
+│      │  │      UI_Talent_S_Flins_07.webp
+│      │  │      UI_Talent_S_Flins_08.webp
+│      │  │      UI_Talent_S_Freminet_01.webp
+│      │  │      UI_Talent_S_Freminet_02.webp
+│      │  │      UI_Talent_S_Freminet_03.webp
+│      │  │      UI_Talent_S_Freminet_04.webp
+│      │  │      UI_Talent_S_Freminet_05.webp
+│      │  │      UI_Talent_S_Freminet_06.webp
+│      │  │      UI_Talent_S_Freminet_07.webp
+│      │  │      UI_Talent_S_Furina_01.webp
+│      │  │      UI_Talent_S_Furina_02.webp
+│      │  │      UI_Talent_S_Furina_03.webp
+│      │  │      UI_Talent_S_Furina_04.webp
+│      │  │      UI_Talent_S_Furina_05.webp
+│      │  │      UI_Talent_S_Furina_06.webp
+│      │  │      UI_Talent_S_Furina_07.webp
+│      │  │      UI_Talent_S_Gaming_01.webp
+│      │  │      UI_Talent_S_Gaming_02.webp
+│      │  │      UI_Talent_S_Gaming_03.webp
+│      │  │      UI_Talent_S_Gaming_04.webp
+│      │  │      UI_Talent_S_Gaming_05.webp
+│      │  │      UI_Talent_S_Gaming_06.webp
+│      │  │      UI_Talent_S_Ganyu_01.webp
+│      │  │      UI_Talent_S_Ganyu_02.webp
+│      │  │      UI_Talent_S_Ganyu_03.webp
+│      │  │      UI_Talent_S_Ganyu_04.webp
+│      │  │      UI_Talent_S_Ganyu_05.webp
+│      │  │      UI_Talent_S_Ganyu_06.webp
+│      │  │      UI_Talent_S_Gorou_01.webp
+│      │  │      UI_Talent_S_Gorou_02.webp
+│      │  │      UI_Talent_S_Gorou_03.webp
+│      │  │      UI_Talent_S_Gorou_04.webp
+│      │  │      UI_Talent_S_Gorou_05.webp
+│      │  │      UI_Talent_S_Gorou_06.webp
+│      │  │      UI_Talent_S_Gorou_07.webp
+│      │  │      UI_Talent_S_Heizo_01.webp
+│      │  │      UI_Talent_S_Heizo_02.webp
+│      │  │      UI_Talent_S_Heizo_03.webp
+│      │  │      UI_Talent_S_Heizo_04.webp
+│      │  │      UI_Talent_S_Heizo_05.webp
+│      │  │      UI_Talent_S_Heizo_06.webp
+│      │  │      UI_Talent_S_Hutao_01.webp
+│      │  │      UI_Talent_S_Hutao_02.webp
+│      │  │      UI_Talent_S_Hutao_03.webp
+│      │  │      UI_Talent_S_Hutao_04.webp
+│      │  │      UI_Talent_S_Hutao_05.webp
+│      │  │      UI_Talent_S_Hutao_06.webp
+│      │  │      UI_Talent_S_Iansan_01.webp
+│      │  │      UI_Talent_S_Iansan_02.webp
+│      │  │      UI_Talent_S_Iansan_03.webp
+│      │  │      UI_Talent_S_Iansan_04.webp
+│      │  │      UI_Talent_S_Iansan_05.webp
+│      │  │      UI_Talent_S_Iansan_06.webp
+│      │  │      UI_Talent_S_Iansan_08.webp
+│      │  │      UI_Talent_S_Ifa_01.webp
+│      │  │      UI_Talent_S_Ifa_02.webp
+│      │  │      UI_Talent_S_Ifa_03.webp
+│      │  │      UI_Talent_S_Ifa_04.webp
+│      │  │      UI_Talent_S_Ifa_05.webp
+│      │  │      UI_Talent_S_Ifa_06.webp
+│      │  │      UI_Talent_S_Ifa_07.webp
+│      │  │      UI_Talent_S_Ifa_08.webp
+│      │  │      UI_Talent_S_Illuga_01.webp
+│      │  │      UI_Talent_S_Illuga_02.webp
+│      │  │      UI_Talent_S_Illuga_03.webp
+│      │  │      UI_Talent_S_Illuga_04.webp
+│      │  │      UI_Talent_S_Illuga_05.webp
+│      │  │      UI_Talent_S_Illuga_06.webp
+│      │  │      UI_Talent_S_Illuga_07.webp
+│      │  │      UI_Talent_S_Illuga_08.webp
+│      │  │      UI_Talent_S_Ineffa_01.webp
+│      │  │      UI_Talent_S_Ineffa_02.webp
+│      │  │      UI_Talent_S_Ineffa_03.webp
+│      │  │      UI_Talent_S_Ineffa_04.webp
+│      │  │      UI_Talent_S_Ineffa_05.webp
+│      │  │      UI_Talent_S_Ineffa_06.webp
+│      │  │      UI_Talent_S_Ineffa_07.webp
+│      │  │      UI_Talent_S_Ineffa_08.webp
+│      │  │      UI_Talent_S_Itto_01.webp
+│      │  │      UI_Talent_S_Itto_02.webp
+│      │  │      UI_Talent_S_Itto_03.webp
+│      │  │      UI_Talent_S_Itto_04.webp
+│      │  │      UI_Talent_S_Itto_05.webp
+│      │  │      UI_Talent_S_Itto_06.webp
+│      │  │      UI_Talent_S_Itto_07.webp
+│      │  │      UI_Talent_S_Jahoda_01.webp
+│      │  │      UI_Talent_S_Jahoda_02.webp
+│      │  │      UI_Talent_S_Jahoda_03.webp
+│      │  │      UI_Talent_S_Jahoda_04.webp
+│      │  │      UI_Talent_S_Jahoda_05.webp
+│      │  │      UI_Talent_S_Jahoda_06.webp
+│      │  │      UI_Talent_S_Jahoda_07.webp
+│      │  │      UI_Talent_S_Jahoda_08.webp
+│      │  │      UI_Talent_S_Kachina_01.webp
+│      │  │      UI_Talent_S_Kachina_02.webp
+│      │  │      UI_Talent_S_Kachina_03.webp
+│      │  │      UI_Talent_S_Kachina_04.webp
+│      │  │      UI_Talent_S_Kachina_05.webp
+│      │  │      UI_Talent_S_Kachina_06.webp
+│      │  │      UI_Talent_S_Kachina_07.webp
+│      │  │      UI_Talent_S_Kachina_08.webp
+│      │  │      UI_Talent_S_Kaeya_01.webp
+│      │  │      UI_Talent_S_Kaeya_02.webp
+│      │  │      UI_Talent_S_Kaeya_03.webp
+│      │  │      UI_Talent_S_Kaeya_04.webp
+│      │  │      UI_Talent_S_Kaeya_05.webp
+│      │  │      UI_Talent_S_Kaeya_06.webp
+│      │  │      UI_Talent_S_Kaveh_01.webp
+│      │  │      UI_Talent_S_Kaveh_02.webp
+│      │  │      UI_Talent_S_Kaveh_03.webp
+│      │  │      UI_Talent_S_Kaveh_04.webp
+│      │  │      UI_Talent_S_Kaveh_05.webp
+│      │  │      UI_Talent_S_Kaveh_06.webp
+│      │  │      UI_Talent_S_Kazuha_01.webp
+│      │  │      UI_Talent_S_Kazuha_02.webp
+│      │  │      UI_Talent_S_Kazuha_03.webp
+│      │  │      UI_Talent_S_Kazuha_04.webp
+│      │  │      UI_Talent_S_Kazuha_05.webp
+│      │  │      UI_Talent_S_Kazuha_06.webp
+│      │  │      UI_Talent_S_Keqing_01.webp
+│      │  │      UI_Talent_S_Keqing_02.webp
+│      │  │      UI_Talent_S_Keqing_03.webp
+│      │  │      UI_Talent_S_Keqing_04.webp
+│      │  │      UI_Talent_S_Keqing_05.webp
+│      │  │      UI_Talent_S_Keqing_06.webp
+│      │  │      UI_Talent_S_Kinich_01.webp
+│      │  │      UI_Talent_S_Kinich_02.webp
+│      │  │      UI_Talent_S_Kinich_03.webp
+│      │  │      UI_Talent_S_Kinich_04.webp
+│      │  │      UI_Talent_S_Kinich_05.webp
+│      │  │      UI_Talent_S_Kinich_06.webp
+│      │  │      UI_Talent_S_Kinich_08.webp
+│      │  │      UI_Talent_S_Klee_01.webp
+│      │  │      UI_Talent_S_Klee_02.webp
+│      │  │      UI_Talent_S_Klee_03.webp
+│      │  │      UI_Talent_S_Klee_04.webp
+│      │  │      UI_Talent_S_Klee_05.webp
+│      │  │      UI_Talent_S_Klee_06.webp
+│      │  │      UI_Talent_S_Klee_07.webp
+│      │  │      UI_Talent_S_Kokomi_01.webp
+│      │  │      UI_Talent_S_Kokomi_02.webp
+│      │  │      UI_Talent_S_Kokomi_03.webp
+│      │  │      UI_Talent_S_Kokomi_04.webp
+│      │  │      UI_Talent_S_Kokomi_05.webp
+│      │  │      UI_Talent_S_Kokomi_06.webp
+│      │  │      UI_Talent_S_Kokomi_07.webp
+│      │  │      UI_Talent_S_Lanyan_01.webp
+│      │  │      UI_Talent_S_Lanyan_02.webp
+│      │  │      UI_Talent_S_Lanyan_03.webp
+│      │  │      UI_Talent_S_Lanyan_04.webp
+│      │  │      UI_Talent_S_Lanyan_05.webp
+│      │  │      UI_Talent_S_Lanyan_06.webp
+│      │  │      UI_Talent_S_Lauma_01.webp
+│      │  │      UI_Talent_S_Lauma_02.webp
+│      │  │      UI_Talent_S_Lauma_03.webp
+│      │  │      UI_Talent_S_Lauma_04.webp
+│      │  │      UI_Talent_S_Lauma_05.webp
+│      │  │      UI_Talent_S_Lauma_06.webp
+│      │  │      UI_Talent_S_Lauma_07.webp
+│      │  │      UI_Talent_S_Lauma_08.webp
+│      │  │      UI_Talent_S_Layla_01.webp
+│      │  │      UI_Talent_S_Layla_02.webp
+│      │  │      UI_Talent_S_Layla_03.webp
+│      │  │      UI_Talent_S_Layla_04.webp
+│      │  │      UI_Talent_S_Layla_05.webp
+│      │  │      UI_Talent_S_Layla_06.webp
+│      │  │      UI_Talent_S_Linette_01.webp
+│      │  │      UI_Talent_S_Linette_02.webp
+│      │  │      UI_Talent_S_Linette_03.webp
+│      │  │      UI_Talent_S_Linette_04.webp
+│      │  │      UI_Talent_S_Linette_05.webp
+│      │  │      UI_Talent_S_Linette_06.webp
+│      │  │      UI_Talent_S_Linette_07.webp
+│      │  │      UI_Talent_S_Liney_01.webp
+│      │  │      UI_Talent_S_Liney_02.webp
+│      │  │      UI_Talent_S_Liney_03.webp
+│      │  │      UI_Talent_S_Liney_04.webp
+│      │  │      UI_Talent_S_Liney_05.webp
+│      │  │      UI_Talent_S_Liney_06.webp
+│      │  │      UI_Talent_S_Liney_07.webp
+│      │  │      UI_Talent_S_Linnea_01.webp
+│      │  │      UI_Talent_S_Linnea_02.webp
+│      │  │      UI_Talent_S_Linnea_03.webp
+│      │  │      UI_Talent_S_Linnea_04.webp
+│      │  │      UI_Talent_S_Linnea_05.webp
+│      │  │      UI_Talent_S_Linnea_06.webp
+│      │  │      UI_Talent_S_Linnea_07.webp
+│      │  │      UI_Talent_S_Linnea_08.webp
+│      │  │      UI_Talent_S_Lisa_01.webp
+│      │  │      UI_Talent_S_Lisa_02.webp
+│      │  │      UI_Talent_S_Lisa_03.webp
+│      │  │      UI_Talent_S_Lisa_04.webp
+│      │  │      UI_Talent_S_LittleIdol_05.webp
+│      │  │      UI_Talent_S_LittleIdol_06.webp
+│      │  │      UI_Talent_S_LittleIdol_07.webp
+│      │  │      UI_Talent_S_Liuyun_01.webp
+│      │  │      UI_Talent_S_Liuyun_02.webp
+│      │  │      UI_Talent_S_Liuyun_03.webp
+│      │  │      UI_Talent_S_Liuyun_04.webp
+│      │  │      UI_Talent_S_Liuyun_05.webp
+│      │  │      UI_Talent_S_Liuyun_06.webp
+│      │  │      UI_Talent_S_Liuyun_07.webp
+│      │  │      UI_Talent_S_Lohen_01.webp
+│      │  │      UI_Talent_S_Lohen_02.webp
+│      │  │      UI_Talent_S_Lohen_03.webp
+│      │  │      UI_Talent_S_Lohen_04.webp
+│      │  │      UI_Talent_S_Lohen_05.webp
+│      │  │      UI_Talent_S_Lohen_06.webp
+│      │  │      UI_Talent_S_Lohen_07.webp
+│      │  │      UI_Talent_S_Lohen_08.webp
+│      │  │      UI_Talent_S_MarionetteNew_01.webp
+│      │  │      UI_Talent_S_MarionetteNew_02.webp
+│      │  │      UI_Talent_S_MarionetteNew_03.webp
+│      │  │      UI_Talent_S_MarionetteNew_04.webp
+│      │  │      UI_Talent_S_MarionetteNew_05.webp
+│      │  │      UI_Talent_S_MarionetteNew_06.webp
+│      │  │      UI_Talent_S_MarionetteNew_08.webp
+│      │  │      UI_Talent_S_Mavuika_01.webp
+│      │  │      UI_Talent_S_Mavuika_02.webp
+│      │  │      UI_Talent_S_Mavuika_03.webp
+│      │  │      UI_Talent_S_Mavuika_04.webp
+│      │  │      UI_Talent_S_Mavuika_05.webp
+│      │  │      UI_Talent_S_Mavuika_06.webp
+│      │  │      UI_Talent_S_Mavuika_07.webp
+│      │  │      UI_Talent_S_Mavuika_08.webp
+│      │  │      UI_Talent_S_Mika_01.webp
+│      │  │      UI_Talent_S_Mika_02.webp
+│      │  │      UI_Talent_S_Mika_03.webp
+│      │  │      UI_Talent_S_Mika_04.webp
+│      │  │      UI_Talent_S_Mika_05.webp
+│      │  │      UI_Talent_S_Mika_06.webp
+│      │  │      UI_Talent_S_Mizuki_01.webp
+│      │  │      UI_Talent_S_Mizuki_02.webp
+│      │  │      UI_Talent_S_Mizuki_03.webp
+│      │  │      UI_Talent_S_Mizuki_04.webp
+│      │  │      UI_Talent_S_Mizuki_05.webp
+│      │  │      UI_Talent_S_Mizuki_06.webp
+│      │  │      UI_Talent_S_Mizuki_07.webp
+│      │  │      UI_Talent_S_Momoka_01.webp
+│      │  │      UI_Talent_S_Momoka_02.webp
+│      │  │      UI_Talent_S_Momoka_03.webp
+│      │  │      UI_Talent_S_Momoka_04.webp
+│      │  │      UI_Talent_S_Momoka_05.webp
+│      │  │      UI_Talent_S_Momoka_06.webp
+│      │  │      UI_Talent_S_Mona_01.webp
+│      │  │      UI_Talent_S_Mona_02.webp
+│      │  │      UI_Talent_S_Mona_03.webp
+│      │  │      UI_Talent_S_Mona_04.webp
+│      │  │      UI_Talent_S_Mona_05.webp
+│      │  │      UI_Talent_S_Mona_06.webp
+│      │  │      UI_Talent_S_Mona_07.webp
+│      │  │      UI_Talent_S_Mualani_01.webp
+│      │  │      UI_Talent_S_Mualani_02.webp
+│      │  │      UI_Talent_S_Mualani_03.webp
+│      │  │      UI_Talent_S_Mualani_04.webp
+│      │  │      UI_Talent_S_Mualani_05.webp
+│      │  │      UI_Talent_S_Mualani_06.webp
+│      │  │      UI_Talent_S_Mualani_07.webp
+│      │  │      UI_Talent_S_Nahida_01.webp
+│      │  │      UI_Talent_S_Nahida_02.webp
+│      │  │      UI_Talent_S_Nahida_03.webp
+│      │  │      UI_Talent_S_Nahida_04.webp
+│      │  │      UI_Talent_S_Nahida_05.webp
+│      │  │      UI_Talent_S_Nahida_06.webp
+│      │  │      UI_Talent_S_Nahida_07.webp
+│      │  │      UI_Talent_S_Navia_01.webp
+│      │  │      UI_Talent_S_Navia_02.webp
+│      │  │      UI_Talent_S_Navia_03.webp
+│      │  │      UI_Talent_S_Navia_04.webp
+│      │  │      UI_Talent_S_Navia_05.webp
+│      │  │      UI_Talent_S_Navia_06.webp
+│      │  │      UI_Talent_S_Navia_07.webp
+│      │  │      UI_Talent_S_Nefer_01.webp
+│      │  │      UI_Talent_S_Nefer_02.webp
+│      │  │      UI_Talent_S_Nefer_03.webp
+│      │  │      UI_Talent_S_Nefer_04.webp
+│      │  │      UI_Talent_S_Nefer_05.webp
+│      │  │      UI_Talent_S_Nefer_06.webp
+│      │  │      UI_Talent_S_Nefer_07.webp
+│      │  │      UI_Talent_S_Nefer_08.webp
+│      │  │      UI_Talent_S_Neuvillette_01.webp
+│      │  │      UI_Talent_S_Neuvillette_02.webp
+│      │  │      UI_Talent_S_Neuvillette_03.webp
+│      │  │      UI_Talent_S_Neuvillette_04.webp
+│      │  │      UI_Talent_S_Neuvillette_05.webp
+│      │  │      UI_Talent_S_Neuvillette_06.webp
+│      │  │      UI_Talent_S_Neuvillette_07.webp
+│      │  │      UI_Talent_S_Nicole_01.webp
+│      │  │      UI_Talent_S_Nicole_02.webp
+│      │  │      UI_Talent_S_Nicole_03.webp
+│      │  │      UI_Talent_S_Nicole_04.webp
+│      │  │      UI_Talent_S_Nicole_05.webp
+│      │  │      UI_Talent_S_Nicole_06.webp
+│      │  │      UI_Talent_S_Nicole_07.webp
+│      │  │      UI_Talent_S_Nicole_08.webp
+│      │  │      UI_Talent_S_Nilou_01.webp
+│      │  │      UI_Talent_S_Nilou_02.webp
+│      │  │      UI_Talent_S_Nilou_03.webp
+│      │  │      UI_Talent_S_Nilou_04.webp
+│      │  │      UI_Talent_S_Nilou_05.webp
+│      │  │      UI_Talent_S_Nilou_06.webp
+│      │  │      UI_Talent_S_Ningguang_01.webp
+│      │  │      UI_Talent_S_Ningguang_02.webp
+│      │  │      UI_Talent_S_Ningguang_03.webp
+│      │  │      UI_Talent_S_Ningguang_04.webp
+│      │  │      UI_Talent_S_Ningguang_05.webp
+│      │  │      UI_Talent_S_Ningguang_06.webp
+│      │  │      UI_Talent_S_Noel_01.webp
+│      │  │      UI_Talent_S_Noel_02.webp
+│      │  │      UI_Talent_S_Noel_03.webp
+│      │  │      UI_Talent_S_Noel_04.webp
+│      │  │      UI_Talent_S_Noel_05.webp
+│      │  │      UI_Talent_S_Noel_06.webp
+│      │  │      UI_Talent_S_Olorun_01.webp
+│      │  │      UI_Talent_S_Olorun_02.webp
+│      │  │      UI_Talent_S_Olorun_03.webp
+│      │  │      UI_Talent_S_Olorun_04.webp
+│      │  │      UI_Talent_S_Olorun_05.webp
+│      │  │      UI_Talent_S_Olorun_06.webp
+│      │  │      UI_Talent_S_Olorun_07.webp
+│      │  │      UI_Talent_S_Olorun_08.webp
+│      │  │      UI_Talent_S_PlayerElectric_01.webp
+│      │  │      UI_Talent_S_PlayerElectric_02.webp
+│      │  │      UI_Talent_S_PlayerElectric_03.webp
+│      │  │      UI_Talent_S_PlayerElectric_04.webp
+│      │  │      UI_Talent_S_PlayerElectric_05.webp
+│      │  │      UI_Talent_S_PlayerElectric_06.webp
+│      │  │      UI_Talent_S_PlayerElectric_07.webp
+│      │  │      UI_Talent_S_PlayerFire_01.webp
+│      │  │      UI_Talent_S_PlayerFire_02.webp
+│      │  │      UI_Talent_S_PlayerFire_03.webp
+│      │  │      UI_Talent_S_PlayerFire_04.webp
+│      │  │      UI_Talent_S_PlayerFire_05.webp
+│      │  │      UI_Talent_S_PlayerFire_06.webp
+│      │  │      UI_Talent_S_PlayerFire_07.webp
+│      │  │      UI_Talent_S_PlayerGrass_01.webp
+│      │  │      UI_Talent_S_PlayerGrass_02.webp
+│      │  │      UI_Talent_S_PlayerGrass_03.webp
+│      │  │      UI_Talent_S_PlayerGrass_04.webp
+│      │  │      UI_Talent_S_PlayerGrass_05.webp
+│      │  │      UI_Talent_S_PlayerGrass_06.webp
+│      │  │      UI_Talent_S_PlayerRock_01.webp
+│      │  │      UI_Talent_S_PlayerRock_02.webp
+│      │  │      UI_Talent_S_PlayerRock_03.webp
+│      │  │      UI_Talent_S_PlayerRock_04.webp
+│      │  │      UI_Talent_S_PlayerRock_05.webp
+│      │  │      UI_Talent_S_PlayerRock_06.webp
+│      │  │      UI_Talent_S_PlayerRock_07.webp
+│      │  │      UI_Talent_S_PlayerWater_01.webp
+│      │  │      UI_Talent_S_PlayerWater_02.webp
+│      │  │      UI_Talent_S_PlayerWater_03.webp
+│      │  │      UI_Talent_S_PlayerWater_04.webp
+│      │  │      UI_Talent_S_PlayerWater_05.webp
+│      │  │      UI_Talent_S_PlayerWater_06.webp
+│      │  │      UI_Talent_S_PlayerWater_07.webp
+│      │  │      UI_Talent_S_PlayerWind_01.webp
+│      │  │      UI_Talent_S_PlayerWind_02.webp
+│      │  │      UI_Talent_S_PlayerWind_03.webp
+│      │  │      UI_Talent_S_PlayerWind_04.webp
+│      │  │      UI_Talent_S_PlayerWind_05.webp
+│      │  │      UI_Talent_S_PlayerWind_06.webp
+│      │  │      UI_Talent_S_PlayerWind_07.webp
+│      │  │      UI_Talent_S_Prune_01.webp
+│      │  │      UI_Talent_S_Prune_02.webp
+│      │  │      UI_Talent_S_Prune_03.webp
+│      │  │      UI_Talent_S_Prune_04.webp
+│      │  │      UI_Talent_S_Prune_05.webp
+│      │  │      UI_Talent_S_Prune_06.webp
+│      │  │      UI_Talent_S_Prune_07.webp
+│      │  │      UI_Talent_S_Prune_08.webp
+│      │  │      UI_Talent_S_Qin_01.webp
+│      │  │      UI_Talent_S_Qin_02.webp
+│      │  │      UI_Talent_S_Qin_03.webp
+│      │  │      UI_Talent_S_Qin_04.webp
+│      │  │      UI_Talent_S_Qin_05.webp
+│      │  │      UI_Talent_S_Qin_06.webp
+│      │  │      UI_Talent_S_Qiqi_01.webp
+│      │  │      UI_Talent_S_Qiqi_02.webp
+│      │  │      UI_Talent_S_Qiqi_03.webp
+│      │  │      UI_Talent_S_Qiqi_04.webp
+│      │  │      UI_Talent_S_Qiqi_05.webp
+│      │  │      UI_Talent_S_Qiqi_06.webp
+│      │  │      UI_Talent_S_Razor_01.webp
+│      │  │      UI_Talent_S_Razor_02.webp
+│      │  │      UI_Talent_S_Razor_03.webp
+│      │  │      UI_Talent_S_Razor_04.webp
+│      │  │      UI_Talent_S_Razor_05.webp
+│      │  │      UI_Talent_S_Razor_06.webp
+│      │  │      UI_Talent_S_Razor_07.webp
+│      │  │      UI_Talent_S_Rosaria_01.webp
+│      │  │      UI_Talent_S_Rosaria_02.webp
+│      │  │      UI_Talent_S_Rosaria_03.webp
+│      │  │      UI_Talent_S_Rosaria_04.webp
+│      │  │      UI_Talent_S_Rosaria_05.webp
+│      │  │      UI_Talent_S_Rosaria_06.webp
+│      │  │      UI_Talent_S_Sara_01.webp
+│      │  │      UI_Talent_S_Sara_02.webp
+│      │  │      UI_Talent_S_Sara_03.webp
+│      │  │      UI_Talent_S_Sara_04.webp
+│      │  │      UI_Talent_S_Sara_05.webp
+│      │  │      UI_Talent_S_Sara_06.webp
+│      │  │      UI_Talent_S_Sara_07.webp
+│      │  │      UI_Talent_S_Sayu_01.webp
+│      │  │      UI_Talent_S_Sayu_02.webp
+│      │  │      UI_Talent_S_Sayu_03.webp
+│      │  │      UI_Talent_S_Sayu_04.webp
+│      │  │      UI_Talent_S_Sayu_05.webp
+│      │  │      UI_Talent_S_Sayu_06.webp
+│      │  │      UI_Talent_S_Sayu_07.webp
+│      │  │      UI_Talent_S_Sethos_01.webp
+│      │  │      UI_Talent_S_Sethos_02.webp
+│      │  │      UI_Talent_S_Sethos_03.webp
+│      │  │      UI_Talent_S_Sethos_04.webp
+│      │  │      UI_Talent_S_Sethos_05.webp
+│      │  │      UI_Talent_S_Sethos_06.webp
+│      │  │      UI_Talent_S_Shenhe_01.webp
+│      │  │      UI_Talent_S_Shenhe_02.webp
+│      │  │      UI_Talent_S_Shenhe_03.webp
+│      │  │      UI_Talent_S_Shenhe_04.webp
+│      │  │      UI_Talent_S_Shenhe_05.webp
+│      │  │      UI_Talent_S_Shenhe_06.webp
+│      │  │      UI_Talent_S_Shinobu_01.webp
+│      │  │      UI_Talent_S_Shinobu_02.webp
+│      │  │      UI_Talent_S_Shinobu_03.webp
+│      │  │      UI_Talent_S_Shinobu_04.webp
+│      │  │      UI_Talent_S_Shinobu_05.webp
+│      │  │      UI_Talent_S_Shinobu_06.webp
+│      │  │      UI_Talent_S_Shinobu_07.webp
+│      │  │      UI_Talent_S_Shougun_01.webp
+│      │  │      UI_Talent_S_Shougun_02.webp
+│      │  │      UI_Talent_S_Shougun_03.webp
+│      │  │      UI_Talent_S_Shougun_04.webp
+│      │  │      UI_Talent_S_Shougun_05.webp
+│      │  │      UI_Talent_S_Shougun_06.webp
+│      │  │      UI_Talent_S_Shougun_07.webp
+│      │  │      UI_Talent_S_Sigewinne_01.webp
+│      │  │      UI_Talent_S_Sigewinne_02.webp
+│      │  │      UI_Talent_S_Sigewinne_03.webp
+│      │  │      UI_Talent_S_Sigewinne_04.webp
+│      │  │      UI_Talent_S_Sigewinne_05.webp
+│      │  │      UI_Talent_S_Sigewinne_06.webp
+│      │  │      UI_Talent_S_Sigewinne_07.webp
+│      │  │      UI_Talent_S_SkirkNew_01.webp
+│      │  │      UI_Talent_S_SkirkNew_02.webp
+│      │  │      UI_Talent_S_SkirkNew_03.webp
+│      │  │      UI_Talent_S_SkirkNew_04.webp
+│      │  │      UI_Talent_S_SkirkNew_05.webp
+│      │  │      UI_Talent_S_SkirkNew_06.webp
+│      │  │      UI_Talent_S_SkirkNew_08.webp
+│      │  │      UI_Talent_S_Sucrose_01.webp
+│      │  │      UI_Talent_S_Sucrose_02.webp
+│      │  │      UI_Talent_S_Sucrose_03.webp
+│      │  │      UI_Talent_S_Sucrose_04.webp
+│      │  │      UI_Talent_S_Sucrose_05.webp
+│      │  │      UI_Talent_S_Sucrose_06.webp
+│      │  │      UI_Talent_S_Sucrose_07.webp
+│      │  │      UI_Talent_S_Tartaglia_01.webp
+│      │  │      UI_Talent_S_Tartaglia_02.webp
+│      │  │      UI_Talent_S_Tartaglia_03.webp
+│      │  │      UI_Talent_S_Tartaglia_04.webp
+│      │  │      UI_Talent_S_Tartaglia_05.webp
+│      │  │      UI_Talent_S_Tartaglia_06.webp
+│      │  │      UI_Talent_S_Tartaglia_07.webp
+│      │  │      UI_Talent_S_Tighnari_01.webp
+│      │  │      UI_Talent_S_Tighnari_02.webp
+│      │  │      UI_Talent_S_Tighnari_03.webp
+│      │  │      UI_Talent_S_Tighnari_04.webp
+│      │  │      UI_Talent_S_Tighnari_05.webp
+│      │  │      UI_Talent_S_Tighnari_06.webp
+│      │  │      UI_Talent_S_Tighnari_07.webp
+│      │  │      UI_Talent_S_Tohma_01.webp
+│      │  │      UI_Talent_S_Tohma_02.webp
+│      │  │      UI_Talent_S_Tohma_03.webp
+│      │  │      UI_Talent_S_Tohma_04.webp
+│      │  │      UI_Talent_S_Tohma_05.webp
+│      │  │      UI_Talent_S_Tohma_06.webp
+│      │  │      UI_Talent_S_Tohma_07.webp
+│      │  │      UI_Talent_S_Varesa_01.webp
+│      │  │      UI_Talent_S_Varesa_02.webp
+│      │  │      UI_Talent_S_Varesa_03.webp
+│      │  │      UI_Talent_S_Varesa_04.webp
+│      │  │      UI_Talent_S_Varesa_05.webp
+│      │  │      UI_Talent_S_Varesa_06.webp
+│      │  │      UI_Talent_S_Varesa_07.webp
+│      │  │      UI_Talent_S_Varesa_08.webp
+│      │  │      UI_Talent_S_Varka_01.webp
+│      │  │      UI_Talent_S_Varka_02.webp
+│      │  │      UI_Talent_S_Varka_03.webp
+│      │  │      UI_Talent_S_Varka_04.webp
+│      │  │      UI_Talent_S_Varka_05.webp
+│      │  │      UI_Talent_S_Varka_06.webp
+│      │  │      UI_Talent_S_Varka_07.webp
+│      │  │      UI_Talent_S_Varka_08.webp
+│      │  │      UI_Talent_S_Venti_01.webp
+│      │  │      UI_Talent_S_Venti_02.webp
+│      │  │      UI_Talent_S_Venti_03.webp
+│      │  │      UI_Talent_S_Venti_04.webp
+│      │  │      UI_Talent_S_Venti_05.webp
+│      │  │      UI_Talent_S_Venti_06.webp
+│      │  │      UI_Talent_S_Venti_07.webp
+│      │  │      UI_Talent_S_Wanderer_01.webp
+│      │  │      UI_Talent_S_Wanderer_02.webp
+│      │  │      UI_Talent_S_Wanderer_03.webp
+│      │  │      UI_Talent_S_Wanderer_04.webp
+│      │  │      UI_Talent_S_Wanderer_05.webp
+│      │  │      UI_Talent_S_Wanderer_06.webp
+│      │  │      UI_Talent_S_Wanderer_07.webp
+│      │  │      UI_Talent_S_Wriothesley_01.webp
+│      │  │      UI_Talent_S_Wriothesley_02.webp
+│      │  │      UI_Talent_S_Wriothesley_03.webp
+│      │  │      UI_Talent_S_Wriothesley_04.webp
+│      │  │      UI_Talent_S_Wriothesley_05.webp
+│      │  │      UI_Talent_S_Wriothesley_06.webp
+│      │  │      UI_Talent_S_Xiangling_01.webp
+│      │  │      UI_Talent_S_Xiangling_02.webp
+│      │  │      UI_Talent_S_Xiangling_03.webp
+│      │  │      UI_Talent_S_Xiangling_04.webp
+│      │  │      UI_Talent_S_Xiangling_05.webp
+│      │  │      UI_Talent_S_Xiangling_06.webp
+│      │  │      UI_Talent_S_Xiao_01.webp
+│      │  │      UI_Talent_S_Xiao_02.webp
+│      │  │      UI_Talent_S_Xiao_03.webp
+│      │  │      UI_Talent_S_Xiao_04.webp
+│      │  │      UI_Talent_S_Xiao_05.webp
+│      │  │      UI_Talent_S_Xiao_06.webp
+│      │  │      UI_Talent_S_Xilonen_01.webp
+│      │  │      UI_Talent_S_Xilonen_02.webp
+│      │  │      UI_Talent_S_Xilonen_03.webp
+│      │  │      UI_Talent_S_Xilonen_04.webp
+│      │  │      UI_Talent_S_Xilonen_05.webp
+│      │  │      UI_Talent_S_Xilonen_06.webp
+│      │  │      UI_Talent_S_Xilonen_07.webp
+│      │  │      UI_Talent_S_Xilonen_08.webp
+│      │  │      UI_Talent_S_Xingqiu_01.webp
+│      │  │      UI_Talent_S_Xingqiu_02.webp
+│      │  │      UI_Talent_S_Xingqiu_03.webp
+│      │  │      UI_Talent_S_Xingqiu_04.webp
+│      │  │      UI_Talent_S_Xingqiu_05.webp
+│      │  │      UI_Talent_S_Xingqiu_06.webp
+│      │  │      UI_Talent_S_Xinyan_01.webp
+│      │  │      UI_Talent_S_Xinyan_02.webp
+│      │  │      UI_Talent_S_Xinyan_03.webp
+│      │  │      UI_Talent_S_Xinyan_04.webp
+│      │  │      UI_Talent_S_Xinyan_05.webp
+│      │  │      UI_Talent_S_Xinyan_06.webp
+│      │  │      UI_Talent_S_Yae_01.webp
+│      │  │      UI_Talent_S_Yae_02.webp
+│      │  │      UI_Talent_S_Yae_03.webp
+│      │  │      UI_Talent_S_Yae_04.webp
+│      │  │      UI_Talent_S_Yae_05.webp
+│      │  │      UI_Talent_S_Yae_06.webp
+│      │  │      UI_Talent_S_Yae_07.webp
+│      │  │      UI_Talent_S_Yaoyao_01.webp
+│      │  │      UI_Talent_S_Yaoyao_02.webp
+│      │  │      UI_Talent_S_Yaoyao_03.webp
+│      │  │      UI_Talent_S_Yaoyao_04.webp
+│      │  │      UI_Talent_S_Yaoyao_05.webp
+│      │  │      UI_Talent_S_Yaoyao_06.webp
+│      │  │      UI_Talent_S_Yaoyao_07.webp
+│      │  │      UI_Talent_S_Yelan_01.webp
+│      │  │      UI_Talent_S_Yelan_02.webp
+│      │  │      UI_Talent_S_Yelan_03.webp
+│      │  │      UI_Talent_S_Yelan_04.webp
+│      │  │      UI_Talent_S_Yelan_05.webp
+│      │  │      UI_Talent_S_Yelan_06.webp
+│      │  │      UI_Talent_S_Yoimiya_01.webp
+│      │  │      UI_Talent_S_Yoimiya_02.webp
+│      │  │      UI_Talent_S_Yoimiya_03.webp
+│      │  │      UI_Talent_S_Yoimiya_04.webp
+│      │  │      UI_Talent_S_Yoimiya_05.webp
+│      │  │      UI_Talent_S_Yoimiya_06.webp
+│      │  │      UI_Talent_S_Yoimiya_07.webp
+│      │  │      UI_Talent_S_Yunjin_01.webp
+│      │  │      UI_Talent_S_Yunjin_02.webp
+│      │  │      UI_Talent_S_Yunjin_03.webp
+│      │  │      UI_Talent_S_Yunjin_04.webp
+│      │  │      UI_Talent_S_Yunjin_05.webp
+│      │  │      UI_Talent_S_Yunjin_06.webp
+│      │  │      UI_Talent_S_Yunjin_07.webp
+│      │  │      UI_Talent_S_Zhongli_01.webp
+│      │  │      UI_Talent_S_Zhongli_02.webp
+│      │  │      UI_Talent_S_Zhongli_03.webp
+│      │  │      UI_Talent_S_Zhongli_04.webp
+│      │  │      UI_Talent_S_Zhongli_05.webp
+│      │  │      UI_Talent_S_Zhongli_06.webp
+│      │  │      UI_Talent_S_Zibai_01.webp
+│      │  │      UI_Talent_S_Zibai_02.webp
+│      │  │      UI_Talent_S_Zibai_03.webp
+│      │  │      UI_Talent_S_Zibai_04.webp
+│      │  │      UI_Talent_S_Zibai_05.webp
+│      │  │      UI_Talent_S_Zibai_06.webp
+│      │  │      UI_Talent_S_Zibai_07.webp
+│      │  │      UI_Talent_S_Zibai_08.webp
+│      │  │      UI_Talent_U_Aino_01.webp
+│      │  │      UI_Talent_U_Aino_02.webp
+│      │  │      UI_Talent_U_Albedo_01.webp
+│      │  │      UI_Talent_U_Albedo_02.webp
+│      │  │      UI_Talent_U_Alhatham_01.webp
+│      │  │      UI_Talent_U_Alhatham_02.webp
+│      │  │      UI_Talent_U_Ambor_01.webp
+│      │  │      UI_Talent_U_Ambor_02.webp
+│      │  │      UI_Talent_U_Arlecchino_01.webp
+│      │  │      UI_Talent_U_Arlecchino_02.webp
+│      │  │      UI_Talent_U_Ayaka_01.webp
+│      │  │      UI_Talent_U_Ayaka_02.webp
+│      │  │      UI_Talent_U_Ayato_01.webp
+│      │  │      UI_Talent_U_Ayato_02.webp
+│      │  │      UI_Talent_U_Baizhuer_01.webp
+│      │  │      UI_Talent_U_Baizhuer_02.webp
+│      │  │      UI_Talent_U_Barbara_01.webp
+│      │  │      UI_Talent_U_Barbara_02.webp
+│      │  │      UI_Talent_U_Beidou_01.webp
+│      │  │      UI_Talent_U_Beidou_02.webp
+│      │  │      UI_Talent_U_Bennett_01.webp
+│      │  │      UI_Talent_U_Bennett_02.webp
+│      │  │      UI_Talent_U_Candace_01.webp
+│      │  │      UI_Talent_U_Candace_02.webp
+│      │  │      UI_Talent_U_Charlotte_01.webp
+│      │  │      UI_Talent_U_Charlotte_02.webp
+│      │  │      UI_Talent_U_Chasca_01.webp
+│      │  │      UI_Talent_U_Chasca_02.webp
+│      │  │      UI_Talent_U_Chevreuse_01.webp
+│      │  │      UI_Talent_U_Chevreuse_02.webp
+│      │  │      UI_Talent_U_Chiori_01.webp
+│      │  │      UI_Talent_U_Chiori_02.webp
+│      │  │      UI_Talent_U_Chongyun_01.webp
+│      │  │      UI_Talent_U_Chongyun_02.webp
+│      │  │      UI_Talent_U_Citlali_01.webp
+│      │  │      UI_Talent_U_Citlali_02.webp
+│      │  │      UI_Talent_U_Clorinde_01.webp
+│      │  │      UI_Talent_U_Clorinde_02.webp
+│      │  │      UI_Talent_U_Collei_01.webp
+│      │  │      UI_Talent_U_Collei_02.webp
+│      │  │      UI_Talent_U_Columbina_01.webp
+│      │  │      UI_Talent_U_Columbina_02.webp
+│      │  │      UI_Talent_U_Cyno_01.webp
+│      │  │      UI_Talent_U_Cyno_02.webp
+│      │  │      UI_Talent_U_Dahlia_01.webp
+│      │  │      UI_Talent_U_Dahlia_02.webp
+│      │  │      UI_Talent_U_Dehya_01.webp
+│      │  │      UI_Talent_U_Dehya_02.webp
+│      │  │      UI_Talent_U_Diluc_01.webp
+│      │  │      UI_Talent_U_Diluc_02.webp
+│      │  │      UI_Talent_U_Diona_01.webp
+│      │  │      UI_Talent_U_Diona_02.webp
+│      │  │      UI_Talent_U_Dori_01.webp
+│      │  │      UI_Talent_U_Dori_02.webp
+│      │  │      UI_Talent_U_Durin_01.webp
+│      │  │      UI_Talent_U_Durin_02.webp
+│      │  │      UI_Talent_U_Emilie_01.webp
+│      │  │      UI_Talent_U_Emilie_02.webp
+│      │  │      UI_Talent_U_Escoffier_01.webp
+│      │  │      UI_Talent_U_Escoffier_02.webp
+│      │  │      UI_Talent_U_Eula_01.webp
+│      │  │      UI_Talent_U_Eula_02.webp
+│      │  │      UI_Talent_U_Faruzan_01.webp
+│      │  │      UI_Talent_U_Faruzan_02.webp
+│      │  │      UI_Talent_U_Feiyan_01.webp
+│      │  │      UI_Talent_U_Feiyan_02.webp
+│      │  │      UI_Talent_U_Fischl_01.webp
+│      │  │      UI_Talent_U_Fischl_02.webp
+│      │  │      UI_Talent_U_Flins_01.webp
+│      │  │      UI_Talent_U_Flins_02.webp
+│      │  │      UI_Talent_U_Freminet_01.webp
+│      │  │      UI_Talent_U_Freminet_02.webp
+│      │  │      UI_Talent_U_Furina_01.webp
+│      │  │      UI_Talent_U_Furina_02.webp
+│      │  │      UI_Talent_U_Gaming_01.webp
+│      │  │      UI_Talent_U_Gaming_02.webp
+│      │  │      UI_Talent_U_Ganyu_01.webp
+│      │  │      UI_Talent_U_Ganyu_02.webp
+│      │  │      UI_Talent_U_Gorou_01.webp
+│      │  │      UI_Talent_U_Gorou_02.webp
+│      │  │      UI_Talent_U_Heizo_01.webp
+│      │  │      UI_Talent_U_Heizo_02.webp
+│      │  │      UI_Talent_U_Hutao_01.webp
+│      │  │      UI_Talent_U_Hutao_02.webp
+│      │  │      UI_Talent_U_Iansan_01.webp
+│      │  │      UI_Talent_U_Iansan_02.webp
+│      │  │      UI_Talent_U_Ifa_01.webp
+│      │  │      UI_Talent_U_Ifa_02.webp
+│      │  │      UI_Talent_U_Illuga_01.webp
+│      │  │      UI_Talent_U_Illuga_02.webp
+│      │  │      UI_Talent_U_Ineffa_01.webp
+│      │  │      UI_Talent_U_Ineffa_02.webp
+│      │  │      UI_Talent_U_Itto_01.webp
+│      │  │      UI_Talent_U_Itto_02.webp
+│      │  │      UI_Talent_U_Jahoda_01.webp
+│      │  │      UI_Talent_U_Jahoda_02.webp
+│      │  │      UI_Talent_U_Kachina_01.webp
+│      │  │      UI_Talent_U_Kachina_02.webp
+│      │  │      UI_Talent_U_Kaeya_01.webp
+│      │  │      UI_Talent_U_Kaeya_02.webp
+│      │  │      UI_Talent_U_Kaveh_01.webp
+│      │  │      UI_Talent_U_Kaveh_02.webp
+│      │  │      UI_Talent_U_Kazuha_01.webp
+│      │  │      UI_Talent_U_Kazuha_02.webp
+│      │  │      UI_Talent_U_Keqing_01.webp
+│      │  │      UI_Talent_U_Keqing_02.webp
+│      │  │      UI_Talent_U_Kinich_01.webp
+│      │  │      UI_Talent_U_Kinich_02.webp
+│      │  │      UI_Talent_U_Klee_01.webp
+│      │  │      UI_Talent_U_Klee_02.webp
+│      │  │      UI_Talent_U_Kokomi_01.webp
+│      │  │      UI_Talent_U_Kokomi_02.webp
+│      │  │      UI_Talent_U_Lanyan_01.webp
+│      │  │      UI_Talent_U_Lanyan_02.webp
+│      │  │      UI_Talent_U_Lauma_01.webp
+│      │  │      UI_Talent_U_Lauma_02.webp
+│      │  │      UI_Talent_U_Layla_01.webp
+│      │  │      UI_Talent_U_Layla_02.webp
+│      │  │      UI_Talent_U_Linette_01.webp
+│      │  │      UI_Talent_U_Linette_02.webp
+│      │  │      UI_Talent_U_Liney_01.webp
+│      │  │      UI_Talent_U_Liney_02.webp
+│      │  │      UI_Talent_U_Linnea_01.webp
+│      │  │      UI_Talent_U_Linnea_02.webp
+│      │  │      UI_Talent_U_Lisa_01.webp
+│      │  │      UI_Talent_U_Lisa_02.webp
+│      │  │      UI_Talent_U_Liuyun_01.webp
+│      │  │      UI_Talent_U_Liuyun_02.webp
+│      │  │      UI_Talent_U_Lohen_01.webp
+│      │  │      UI_Talent_U_Lohen_02.webp
+│      │  │      UI_Talent_U_MarionetteNew_01.webp
+│      │  │      UI_Talent_U_MarionetteNew_02.webp
+│      │  │      UI_Talent_U_Mavuika_01.webp
+│      │  │      UI_Talent_U_Mavuika_02.webp
+│      │  │      UI_Talent_U_Mika_01.webp
+│      │  │      UI_Talent_U_Mika_02.webp
+│      │  │      UI_Talent_U_Mizuki_01.webp
+│      │  │      UI_Talent_U_Mizuki_02.webp
+│      │  │      UI_Talent_U_Momoka_01.webp
+│      │  │      UI_Talent_U_Momoka_02.webp
+│      │  │      UI_Talent_U_Mona_01.webp
+│      │  │      UI_Talent_U_Mona_02.webp
+│      │  │      UI_Talent_U_Mualani_01.webp
+│      │  │      UI_Talent_U_Mualani_02.webp
+│      │  │      UI_Talent_U_Nahida_01.webp
+│      │  │      UI_Talent_U_Nahida_02.webp
+│      │  │      UI_Talent_U_Navia_01.webp
+│      │  │      UI_Talent_U_Navia_02.webp
+│      │  │      UI_Talent_U_Nefer_01.webp
+│      │  │      UI_Talent_U_Nefer_02.webp
+│      │  │      UI_Talent_U_Neuvillette_01.webp
+│      │  │      UI_Talent_U_Neuvillette_02.webp
+│      │  │      UI_Talent_U_Nicole_01.webp
+│      │  │      UI_Talent_U_Nicole_02.webp
+│      │  │      UI_Talent_U_Nilou_01.webp
+│      │  │      UI_Talent_U_Nilou_02.webp
+│      │  │      UI_Talent_U_Ningguang_01.webp
+│      │  │      UI_Talent_U_Ningguang_02.webp
+│      │  │      UI_Talent_U_Noel_01.webp
+│      │  │      UI_Talent_U_Noel_02.webp
+│      │  │      UI_Talent_U_Olorun_01.webp
+│      │  │      UI_Talent_U_Olorun_02.webp
+│      │  │      UI_Talent_U_PlayerElectric_01.webp
+│      │  │      UI_Talent_U_PlayerElectric_02.webp
+│      │  │      UI_Talent_U_PlayerFire_01.webp
+│      │  │      UI_Talent_U_PlayerFire_02.webp
+│      │  │      UI_Talent_U_PlayerGrass_01.webp
+│      │  │      UI_Talent_U_PlayerGrass_02.webp
+│      │  │      UI_Talent_U_PlayerGrass_03.webp
+│      │  │      UI_Talent_U_PlayerRock_01.webp
+│      │  │      UI_Talent_U_PlayerRock_02.webp
+│      │  │      UI_Talent_U_PlayerWater_01.webp
+│      │  │      UI_Talent_U_PlayerWater_02.webp
+│      │  │      UI_Talent_U_PlayerWind_01.webp
+│      │  │      UI_Talent_U_PlayerWind_02.webp
+│      │  │      UI_Talent_U_Prune_01.webp
+│      │  │      UI_Talent_U_Prune_02.webp
+│      │  │      UI_Talent_U_Qin_01.webp
+│      │  │      UI_Talent_U_Qin_02.webp
+│      │  │      UI_Talent_U_Qiqi_01.webp
+│      │  │      UI_Talent_U_Qiqi_02.webp
+│      │  │      UI_Talent_U_Razor_01.webp
+│      │  │      UI_Talent_U_Razor_02.webp
+│      │  │      UI_Talent_U_Rosaria_01.webp
+│      │  │      UI_Talent_U_Rosaria_02.webp
+│      │  │      UI_Talent_U_Sara_01.webp
+│      │  │      UI_Talent_U_Sara_02.webp
+│      │  │      UI_Talent_U_Sayu_01.webp
+│      │  │      UI_Talent_U_Sayu_02.webp
+│      │  │      UI_Talent_U_Sethos_01.webp
+│      │  │      UI_Talent_U_Sethos_02.webp
+│      │  │      UI_Talent_U_Shenhe_01.webp
+│      │  │      UI_Talent_U_Shenhe_02.webp
+│      │  │      UI_Talent_U_Shinobu_01.webp
+│      │  │      UI_Talent_U_Shinobu_02.webp
+│      │  │      UI_Talent_U_Shougun_01.webp
+│      │  │      UI_Talent_U_Shougun_02.webp
+│      │  │      UI_Talent_U_Sigewinne_01.webp
+│      │  │      UI_Talent_U_Sigewinne_02.webp
+│      │  │      UI_Talent_U_SkirkNew_01.webp
+│      │  │      UI_Talent_U_SkirkNew_02.webp
+│      │  │      UI_Talent_U_Sucrose_01.webp
+│      │  │      UI_Talent_U_Sucrose_02.webp
+│      │  │      UI_Talent_U_Tartaglia_01.webp
+│      │  │      UI_Talent_U_Tartaglia_02.webp
+│      │  │      UI_Talent_U_Tighnari_01.webp
+│      │  │      UI_Talent_U_Tighnari_02.webp
+│      │  │      UI_Talent_U_Tohma_01.webp
+│      │  │      UI_Talent_U_Tohma_02.webp
+│      │  │      UI_Talent_U_Varesa_01.webp
+│      │  │      UI_Talent_U_Varesa_02.webp
+│      │  │      UI_Talent_U_Varka_01.webp
+│      │  │      UI_Talent_U_Varka_02.webp
+│      │  │      UI_Talent_U_Venti_01.webp
+│      │  │      UI_Talent_U_Venti_02.webp
+│      │  │      UI_Talent_U_Wanderer_01.webp
+│      │  │      UI_Talent_U_Wanderer_02.webp
+│      │  │      UI_Talent_U_Wriothesley_01.webp
+│      │  │      UI_Talent_U_Wriothesley_02.webp
+│      │  │      UI_Talent_U_Xiangling_01.webp
+│      │  │      UI_Talent_U_Xiangling_02.webp
+│      │  │      UI_Talent_U_Xiao_01.webp
+│      │  │      UI_Talent_U_Xiao_02.webp
+│      │  │      UI_Talent_U_Xilonen_01.webp
+│      │  │      UI_Talent_U_Xilonen_02.webp
+│      │  │      UI_Talent_U_Xingqiu_01.webp
+│      │  │      UI_Talent_U_Xingqiu_02.webp
+│      │  │      UI_Talent_U_Xinyan_01.webp
+│      │  │      UI_Talent_U_Xinyan_02.webp
+│      │  │      UI_Talent_U_Yae_01.webp
+│      │  │      UI_Talent_U_Yae_02.webp
+│      │  │      UI_Talent_U_Yaoyao_01.webp
+│      │  │      UI_Talent_U_Yaoyao_02.webp
+│      │  │      UI_Talent_U_Yelan_01.webp
+│      │  │      UI_Talent_U_Yelan_02.webp
+│      │  │      UI_Talent_U_Yoimiya_01.webp
+│      │  │      UI_Talent_U_Yoimiya_02.webp
+│      │  │      UI_Talent_U_Yunjin_01.webp
+│      │  │      UI_Talent_U_Yunjin_02.webp
+│      │  │      UI_Talent_U_Zhongli_01.webp
+│      │  │      UI_Talent_U_Zhongli_02.webp
+│      │  │      UI_Talent_U_Zibai_01.webp
+│      │  │      UI_Talent_U_Zibai_02.webp
+│      │  │
+│      │  ├─splash
+│      │  │      UI_Gacha_AvatarImg_Aino.webp
+│      │  │      UI_Gacha_AvatarImg_Albedo.webp
+│      │  │      UI_Gacha_AvatarImg_Alhatham.webp
+│      │  │      UI_Gacha_AvatarImg_Aloy.webp
+│      │  │      UI_Gacha_AvatarImg_Ambor.webp
+│      │  │      UI_Gacha_AvatarImg_Arlecchino.webp
+│      │  │      UI_Gacha_AvatarImg_Ayaka.webp
+│      │  │      UI_Gacha_AvatarImg_Ayato.webp
+│      │  │      UI_Gacha_AvatarImg_Baizhuer.webp
+│      │  │      UI_Gacha_AvatarImg_Barbara.webp
+│      │  │      UI_Gacha_AvatarImg_Beidou.webp
+│      │  │      UI_Gacha_AvatarImg_Bennett.webp
+│      │  │      UI_Gacha_AvatarImg_Candace.webp
+│      │  │      UI_Gacha_AvatarImg_Charlotte.webp
+│      │  │      UI_Gacha_AvatarImg_Chasca.webp
+│      │  │      UI_Gacha_AvatarImg_Chevreuse.webp
+│      │  │      UI_Gacha_AvatarImg_Chiori.webp
+│      │  │      UI_Gacha_AvatarImg_Chongyun.webp
+│      │  │      UI_Gacha_AvatarImg_Citlali.webp
+│      │  │      UI_Gacha_AvatarImg_Clorinde.webp
+│      │  │      UI_Gacha_AvatarImg_Collei.webp
+│      │  │      UI_Gacha_AvatarImg_Columbina.webp
+│      │  │      UI_Gacha_AvatarImg_Cyno.webp
+│      │  │      UI_Gacha_AvatarImg_Dahlia.webp
+│      │  │      UI_Gacha_AvatarImg_Dehya.webp
+│      │  │      UI_Gacha_AvatarImg_Diluc.webp
+│      │  │      UI_Gacha_AvatarImg_Diona.webp
+│      │  │      UI_Gacha_AvatarImg_Dori.webp
+│      │  │      UI_Gacha_AvatarImg_Durin.webp
+│      │  │      UI_Gacha_AvatarImg_Emilie.webp
+│      │  │      UI_Gacha_AvatarImg_Escoffier.webp
+│      │  │      UI_Gacha_AvatarImg_Eula.webp
+│      │  │      UI_Gacha_AvatarImg_Faruzan.webp
+│      │  │      UI_Gacha_AvatarImg_Feiyan.webp
+│      │  │      UI_Gacha_AvatarImg_Fischl.webp
+│      │  │      UI_Gacha_AvatarImg_Flins.webp
+│      │  │      UI_Gacha_AvatarImg_Freminet.webp
+│      │  │      UI_Gacha_AvatarImg_Furina.webp
+│      │  │      UI_Gacha_AvatarImg_Gaming.webp
+│      │  │      UI_Gacha_AvatarImg_Ganyu.webp
+│      │  │      UI_Gacha_AvatarImg_Gorou.webp
+│      │  │      UI_Gacha_AvatarImg_Heizo.webp
+│      │  │      UI_Gacha_AvatarImg_Hutao.webp
+│      │  │      UI_Gacha_AvatarImg_Iansan.webp
+│      │  │      UI_Gacha_AvatarImg_Ifa.webp
+│      │  │      UI_Gacha_AvatarImg_Illuga.webp
+│      │  │      UI_Gacha_AvatarImg_Ineffa.webp
+│      │  │      UI_Gacha_AvatarImg_Itto.webp
+│      │  │      UI_Gacha_AvatarImg_Jahoda.webp
+│      │  │      UI_Gacha_AvatarImg_Kachina.webp
+│      │  │      UI_Gacha_AvatarImg_Kaeya.webp
+│      │  │      UI_Gacha_AvatarImg_Kaveh.webp
+│      │  │      UI_Gacha_AvatarImg_Kazuha.webp
+│      │  │      UI_Gacha_AvatarImg_Keqing.webp
+│      │  │      UI_Gacha_AvatarImg_Kinich.webp
+│      │  │      UI_Gacha_AvatarImg_Klee.webp
+│      │  │      UI_Gacha_AvatarImg_Kokomi.webp
+│      │  │      UI_Gacha_AvatarImg_Lanyan.webp
+│      │  │      UI_Gacha_AvatarImg_Lauma.webp
+│      │  │      UI_Gacha_AvatarImg_Layla.webp
+│      │  │      UI_Gacha_AvatarImg_Linette.webp
+│      │  │      UI_Gacha_AvatarImg_Liney.webp
+│      │  │      UI_Gacha_AvatarImg_Linnea.webp
+│      │  │      UI_Gacha_AvatarImg_Lisa.webp
+│      │  │      UI_Gacha_AvatarImg_Liuyun.webp
+│      │  │      UI_Gacha_AvatarImg_Lohen.webp
+│      │  │      UI_Gacha_AvatarImg_MannequinBoy.webp
+│      │  │      UI_Gacha_AvatarImg_MannequinGirl.webp
+│      │  │      UI_Gacha_AvatarImg_MarionetteNew.webp
+│      │  │      UI_Gacha_AvatarImg_Mavuika.webp
+│      │  │      UI_Gacha_AvatarImg_Mika.webp
+│      │  │      UI_Gacha_AvatarImg_Mizuki.webp
+│      │  │      UI_Gacha_AvatarImg_Momoka.webp
+│      │  │      UI_Gacha_AvatarImg_Mona.webp
+│      │  │      UI_Gacha_AvatarImg_Mualani.webp
+│      │  │      UI_Gacha_AvatarImg_Nahida.webp
+│      │  │      UI_Gacha_AvatarImg_Navia.webp
+│      │  │      UI_Gacha_AvatarImg_Nefer.webp
+│      │  │      UI_Gacha_AvatarImg_Neuvillette.webp
+│      │  │      UI_Gacha_AvatarImg_Nicole.webp
+│      │  │      UI_Gacha_AvatarImg_Nilou.webp
+│      │  │      UI_Gacha_AvatarImg_Ningguang.webp
+│      │  │      UI_Gacha_AvatarImg_Noel.webp
+│      │  │      UI_Gacha_AvatarImg_Olorun.webp
+│      │  │      UI_Gacha_AvatarImg_PlayerBoy.webp
+│      │  │      UI_Gacha_AvatarImg_PlayerGirl.webp
+│      │  │      UI_Gacha_AvatarImg_Prune.webp
+│      │  │      UI_Gacha_AvatarImg_Qin.webp
+│      │  │      UI_Gacha_AvatarImg_Qiqi.webp
+│      │  │      UI_Gacha_AvatarImg_Razor.webp
+│      │  │      UI_Gacha_AvatarImg_Rosaria.webp
+│      │  │      UI_Gacha_AvatarImg_Sara.webp
+│      │  │      UI_Gacha_AvatarImg_Sayu.webp
+│      │  │      UI_Gacha_AvatarImg_Sethos.webp
+│      │  │      UI_Gacha_AvatarImg_Shenhe.webp
+│      │  │      UI_Gacha_AvatarImg_Shinobu.webp
+│      │  │      UI_Gacha_AvatarImg_Shougun.webp
+│      │  │      UI_Gacha_AvatarImg_Sigewinne.webp
+│      │  │      UI_Gacha_AvatarImg_SkirkNew.webp
+│      │  │      UI_Gacha_AvatarImg_Sucrose.webp
+│      │  │      UI_Gacha_AvatarImg_Tartaglia.webp
+│      │  │      UI_Gacha_AvatarImg_Tighnari.webp
+│      │  │      UI_Gacha_AvatarImg_Tohma.webp
+│      │  │      UI_Gacha_AvatarImg_Varesa.webp
+│      │  │      UI_Gacha_AvatarImg_Varka.webp
+│      │  │      UI_Gacha_AvatarImg_Venti.webp
+│      │  │      UI_Gacha_AvatarImg_Wanderer.webp
+│      │  │      UI_Gacha_AvatarImg_Wriothesley.webp
+│      │  │      UI_Gacha_AvatarImg_Xiangling.webp
+│      │  │      UI_Gacha_AvatarImg_Xiao.webp
+│      │  │      UI_Gacha_AvatarImg_Xilonen.webp
+│      │  │      UI_Gacha_AvatarImg_Xingqiu.webp
+│      │  │      UI_Gacha_AvatarImg_Xinyan.webp
+│      │  │      UI_Gacha_AvatarImg_Yae.webp
+│      │  │      UI_Gacha_AvatarImg_Yaoyao.webp
+│      │  │      UI_Gacha_AvatarImg_Yelan.webp
+│      │  │      UI_Gacha_AvatarImg_Yoimiya.webp
+│      │  │      UI_Gacha_AvatarImg_Yunjin.webp
+│      │  │      UI_Gacha_AvatarImg_Zhongli.webp
+│      │  │      UI_Gacha_AvatarImg_Zibai.webp
+│      │  │
+│      │  ├─tiers
+│      │  │      A.png
+│      │  │      B.png
+│      │  │      S.png
+│      │  │      SS.png
+│      │  │
+│      │  ├─weapons
+│      │  │      UI_EquipIcon_Bow_Alkonost.webp
+│      │  │      UI_EquipIcon_Bow_Amos.webp
+│      │  │      UI_EquipIcon_Bow_Arakalari.webp
+│      │  │      UI_EquipIcon_Bow_Arcdange.webp
+│      │  │      UI_EquipIcon_Bow_Arianna.webp
+│      │  │      UI_EquipIcon_Bow_Arjuna.webp
+│      │  │      UI_EquipIcon_Bow_Ayus.webp
+│      │  │      UI_EquipIcon_Bow_Bakufu.webp
+│      │  │      UI_EquipIcon_Bow_Blackrock.webp
+│      │  │      UI_EquipIcon_Bow_Crowfeather.webp
+│      │  │      UI_EquipIcon_Bow_Curve.webp
+│      │  │      UI_EquipIcon_Bow_Dvalin.webp
+│      │  │      UI_EquipIcon_Bow_ElegguaBow.webp
+│      │  │      UI_EquipIcon_Bow_Exotic.webp
+│      │  │      UI_EquipIcon_Bow_Fallensun.webp
+│      │  │      UI_EquipIcon_Bow_Fin.webp
+│      │  │      UI_EquipIcon_Bow_Fleurfair.webp
+│      │  │      UI_EquipIcon_Bow_Fossil.webp
+│      │  │      UI_EquipIcon_Bow_Gurabad.webp
+│      │  │      UI_EquipIcon_Bow_Hunters.webp
+│      │  │      UI_EquipIcon_Bow_Ibis.webp
+│      │  │      UI_EquipIcon_Bow_Ilmarinen.webp
+│      │  │      UI_EquipIcon_Bow_Isikhulu.webp
+│      │  │      UI_EquipIcon_Bow_Kirin.webp
+│      │  │      UI_EquipIcon_Bow_Maria.webp
+│      │  │      UI_EquipIcon_Bow_Mechanic.webp
+│      │  │      UI_EquipIcon_Bow_MorphChrod_Great_{0}.webp
+│      │  │      UI_EquipIcon_Bow_MorphChrod_{0}.webp
+│      │  │      UI_EquipIcon_Bow_Msg.webp
+│      │  │      UI_EquipIcon_Bow_Nachtblind.webp
+│      │  │      UI_EquipIcon_Bow_Narukami.webp
+│      │  │      UI_EquipIcon_Bow_Old.webp
+│      │  │      UI_EquipIcon_Bow_Outlaw.webp
+│      │  │      UI_EquipIcon_Bow_Pledge.webp
+│      │  │      UI_EquipIcon_Bow_Predator.webp
+│      │  │      UI_EquipIcon_Bow_Proto.webp
+│      │  │      UI_EquipIcon_Bow_Qoyllorsnova.webp
+│      │  │      UI_EquipIcon_Bow_Recluse.webp
+│      │  │      UI_EquipIcon_Bow_Sling.webp
+│      │  │      UI_EquipIcon_Bow_Stinger.webp
+│      │  │      UI_EquipIcon_Bow_Theocrat.webp
+│      │  │      UI_EquipIcon_Bow_Troupe.webp
+│      │  │      UI_EquipIcon_Bow_Ultimatum.webp
+│      │  │      UI_EquipIcon_Bow_Umpakati.webp
+│      │  │      UI_EquipIcon_Bow_Viridescent.webp
+│      │  │      UI_EquipIcon_Bow_Vorpal.webp
+│      │  │      UI_EquipIcon_Bow_Widsith.webp
+│      │  │      UI_EquipIcon_Bow_Worldbane.webp
+│      │  │      UI_EquipIcon_Bow_Zephyrus.webp
+│      │  │      UI_EquipIcon_Catalyst_Alaya.webp
+│      │  │      UI_EquipIcon_Catalyst_Apprentice.webp
+│      │  │      UI_EquipIcon_Catalyst_Arakalari.webp
+│      │  │      UI_EquipIcon_Catalyst_Ayus.webp
+│      │  │      UI_EquipIcon_Catalyst_Bakufu.webp
+│      │  │      UI_EquipIcon_Catalyst_Blackrock.webp
+│      │  │      UI_EquipIcon_Catalyst_Brisingamen.webp
+│      │  │      UI_EquipIcon_Catalyst_ConchSprayer.webp
+│      │  │      UI_EquipIcon_Catalyst_DandelionPoem.webp
+│      │  │      UI_EquipIcon_Catalyst_Dvalin.webp
+│      │  │      UI_EquipIcon_Catalyst_Everfrost.webp
+│      │  │      UI_EquipIcon_Catalyst_Exotic.webp
+│      │  │      UI_EquipIcon_Catalyst_FairyGarden.webp
+│      │  │      UI_EquipIcon_Catalyst_Figurines.webp
+│      │  │      UI_EquipIcon_Catalyst_Fossil.webp
+│      │  │      UI_EquipIcon_Catalyst_Fourwinds.webp
+│      │  │      UI_EquipIcon_Catalyst_Ilmarinen.webp
+│      │  │      UI_EquipIcon_Catalyst_Intro.webp
+│      │  │      UI_EquipIcon_Catalyst_Isikhulu.webp
+│      │  │      UI_EquipIcon_Catalyst_Iudex.webp
+│      │  │      UI_EquipIcon_Catalyst_Jade.webp
+│      │  │      UI_EquipIcon_Catalyst_Jyanome.webp
+│      │  │      UI_EquipIcon_Catalyst_Kaleido.webp
+│      │  │      UI_EquipIcon_Catalyst_Kristall.webp
+│      │  │      UI_EquipIcon_Catalyst_Kunwu.webp
+│      │  │      UI_EquipIcon_Catalyst_Lightnov.webp
+│      │  │      UI_EquipIcon_Catalyst_Ludiharpastum.webp
+│      │  │      UI_EquipIcon_Catalyst_MechaPufferfish.webp
+│      │  │      UI_EquipIcon_Catalyst_MenulisRing.webp
+│      │  │      UI_EquipIcon_Catalyst_Morax.webp
+│      │  │      UI_EquipIcon_Catalyst_MorphIlia_Great_{0}.webp
+│      │  │      UI_EquipIcon_Catalyst_MorphIlia_{0}.webp
+│      │  │      UI_EquipIcon_Catalyst_MountainGale.webp
+│      │  │      UI_EquipIcon_Catalyst_Narukami.webp
+│      │  │      UI_EquipIcon_Catalyst_Outlaw.webp
+│      │  │      UI_EquipIcon_Catalyst_Phoney.webp
+│      │  │      UI_EquipIcon_Catalyst_Pleroma.webp
+│      │  │      UI_EquipIcon_Catalyst_Pocket.webp
+│      │  │      UI_EquipIcon_Catalyst_Proto.webp
+│      │  │      UI_EquipIcon_Catalyst_Pulpfic.webp
+│      │  │      UI_EquipIcon_Catalyst_Resurrection.webp
+│      │  │      UI_EquipIcon_Catalyst_SakuraFan.webp
+│      │  │      UI_EquipIcon_Catalyst_SeeliesLute.webp
+│      │  │      UI_EquipIcon_Catalyst_Sistrum.webp
+│      │  │      UI_EquipIcon_Catalyst_Theocrat.webp
+│      │  │      UI_EquipIcon_Catalyst_Troupe.webp
+│      │  │      UI_EquipIcon_Catalyst_Truelens.webp
+│      │  │      UI_EquipIcon_Catalyst_Umpakati.webp
+│      │  │      UI_EquipIcon_Catalyst_VaresaTransformer.webp
+│      │  │      UI_EquipIcon_Catalyst_Vorpal.webp
+│      │  │      UI_EquipIcon_Catalyst_Wheatley.webp
+│      │  │      UI_EquipIcon_Catalyst_Yue.webp
+│      │  │      UI_EquipIcon_Catalyst_Zephyrus.webp
+│      │  │      UI_EquipIcon_Catalyst_Ziedas.webp
+│      │  │      UI_EquipIcon_Claymore_Aniki.webp
+│      │  │      UI_EquipIcon_Claymore_Arakalari.webp
+│      │  │      UI_EquipIcon_Claymore_Bakufu.webp
+│      │  │      UI_EquipIcon_Claymore_BeastTamer.webp
+│      │  │      UI_EquipIcon_Claymore_Blackrock.webp
+│      │  │      UI_EquipIcon_Claymore_Champion.webp
+│      │  │      UI_EquipIcon_Claymore_CrystallineSword.webp
+│      │  │      UI_EquipIcon_Claymore_Deshret.webp
+│      │  │      UI_EquipIcon_Claymore_Dragonfell.webp
+│      │  │      UI_EquipIcon_Claymore_Dvalin.webp
+│      │  │      UI_EquipIcon_Claymore_EmeraldSword.webp
+│      │  │      UI_EquipIcon_Claymore_EnsisAquilonis.webp
+│      │  │      UI_EquipIcon_Claymore_Exotic.webp
+│      │  │      UI_EquipIcon_Claymore_Fleurfair.webp
+│      │  │      UI_EquipIcon_Claymore_Fossil.webp
+│      │  │      UI_EquipIcon_Claymore_Glaive.webp
+│      │  │      UI_EquipIcon_Claymore_GoldenVerdict.webp
+│      │  │      UI_EquipIcon_Claymore_Ilmarinen.webp
+│      │  │      UI_EquipIcon_Claymore_Isikhulu.webp
+│      │  │      UI_EquipIcon_Claymore_Itadorimaru.webp
+│      │  │      UI_EquipIcon_Claymore_Kione.webp
+│      │  │      UI_EquipIcon_Claymore_Kunwu.webp
+│      │  │      UI_EquipIcon_Claymore_Lapis.webp
+│      │  │      UI_EquipIcon_Claymore_LoliFriend.webp
+│      │  │      UI_EquipIcon_Claymore_Maria.webp
+│      │  │      UI_EquipIcon_Claymore_Mechanic.webp
+│      │  │      UI_EquipIcon_Claymore_MillenniaTuna.webp
+│      │  │      UI_EquipIcon_Claymore_Mitsurugi.webp
+│      │  │      UI_EquipIcon_Claymore_MorphGravitas_Great_{0}.webp
+│      │  │      UI_EquipIcon_Claymore_MorphGravitas_{0}.webp
+│      │  │      UI_EquipIcon_Claymore_Oyaji.webp
+│      │  │      UI_EquipIcon_Claymore_Perdue.webp
+│      │  │      UI_EquipIcon_Claymore_Pleroma.webp
+│      │  │      UI_EquipIcon_Claymore_Polilith.webp
+│      │  │      UI_EquipIcon_Claymore_Proto.webp
+│      │  │      UI_EquipIcon_Claymore_RadianceSword.webp
+│      │  │      UI_EquipIcon_Claymore_Reasoning.webp
+│      │  │      UI_EquipIcon_Claymore_Siegfry.webp
+│      │  │      UI_EquipIcon_Claymore_Theocrat.webp
+│      │  │      UI_EquipIcon_Claymore_Tin.webp
+│      │  │      UI_EquipIcon_Claymore_Troupe.webp
+│      │  │      UI_EquipIcon_Claymore_Umpakati.webp
+│      │  │      UI_EquipIcon_Claymore_VarkaTunkeldegen.webp
+│      │  │      UI_EquipIcon_Claymore_Vorpal.webp
+│      │  │      UI_EquipIcon_Claymore_Widsith.webp
+│      │  │      UI_EquipIcon_Claymore_Wolfmound.webp
+│      │  │      UI_EquipIcon_Claymore_Zephyrus.webp
+│      │  │      UI_EquipIcon_Pole_Aoandon.webp
+│      │  │      UI_EquipIcon_Pole_Arakalari.webp
+│      │  │      UI_EquipIcon_Pole_Bakufu.webp
+│      │  │      UI_EquipIcon_Pole_Blackrock.webp
+│      │  │      UI_EquipIcon_Pole_BloodMoon.webp
+│      │  │      UI_EquipIcon_Pole_Caduceus.webp
+│      │  │      UI_EquipIcon_Pole_Carbine.webp
+│      │  │      UI_EquipIcon_Pole_Deshret.webp
+│      │  │      UI_EquipIcon_Pole_Dvalin.webp
+│      │  │      UI_EquipIcon_Pole_Everfrost.webp
+│      │  │      UI_EquipIcon_Pole_Exotic.webp
+│      │  │      UI_EquipIcon_Pole_Gewalt.webp
+│      │  │      UI_EquipIcon_Pole_Gladiator.webp
+│      │  │      UI_EquipIcon_Pole_Halberd.webp
+│      │  │      UI_EquipIcon_Pole_Homa.webp
+│      │  │      UI_EquipIcon_Pole_Ilmarinen.webp
+│      │  │      UI_EquipIcon_Pole_Isikhulu.webp
+│      │  │      UI_EquipIcon_Pole_Krivule.webp
+│      │  │      UI_EquipIcon_Pole_Kunwu.webp
+│      │  │      UI_EquipIcon_Pole_Lapis.webp
+│      │  │      UI_EquipIcon_Pole_Maria.webp
+│      │  │      UI_EquipIcon_Pole_Mechanic.webp
+│      │  │      UI_EquipIcon_Pole_Morax.webp
+│      │  │      UI_EquipIcon_Pole_Mori.webp
+│      │  │      UI_EquipIcon_Pole_MorphSpinifer_Great_{0}.webp
+│      │  │      UI_EquipIcon_Pole_MorphSpinifer_{0}.webp
+│      │  │      UI_EquipIcon_Pole_Muguet.webp
+│      │  │      UI_EquipIcon_Pole_Narukami.webp
+│      │  │      UI_EquipIcon_Pole_Noire.webp
+│      │  │      UI_EquipIcon_Pole_Perdix.webp
+│      │  │      UI_EquipIcon_Pole_Proto.webp
+│      │  │      UI_EquipIcon_Pole_Rod.webp
+│      │  │      UI_EquipIcon_Pole_Ruby.webp
+│      │  │      UI_EquipIcon_Pole_Santika.webp
+│      │  │      UI_EquipIcon_Pole_Shanty.webp
+│      │  │      UI_EquipIcon_Pole_Stardust.webp
+│      │  │      UI_EquipIcon_Pole_Theocrat.webp
+│      │  │      UI_EquipIcon_Pole_Trident.webp
+│      │  │      UI_EquipIcon_Pole_TummaLyhty.webp
+│      │  │      UI_EquipIcon_Pole_Umpakati.webp
+│      │  │      UI_EquipIcon_Pole_Vorpal.webp
+│      │  │      UI_EquipIcon_Pole_Windvane.webp
+│      │  │      UI_EquipIcon_Pole_Zephyrus.webp
+│      │  │      UI_EquipIcon_Sword_Amenoma.webp
+│      │  │      UI_EquipIcon_Sword_Arakalari.webp
+│      │  │      UI_EquipIcon_Sword_Ayus.webp
+│      │  │      UI_EquipIcon_Sword_Bakufu.webp
+│      │  │      UI_EquipIcon_Sword_Blackrock.webp
+│      │  │      UI_EquipIcon_Sword_Bloodstained.webp
+│      │  │      UI_EquipIcon_Sword_Blunt.webp
+│      │  │      UI_EquipIcon_Sword_Boreas.webp
+│      │  │      UI_EquipIcon_Sword_Darker.webp
+│      │  │      UI_EquipIcon_Sword_Dawn.webp
+│      │  │      UI_EquipIcon_Sword_Deshret.webp
+│      │  │      UI_EquipIcon_Sword_Dvalin.webp
+│      │  │      UI_EquipIcon_Sword_Estoc.webp
+│      │  │      UI_EquipIcon_Sword_Exotic.webp
+│      │  │      UI_EquipIcon_Sword_Falcon.webp
+│      │  │      UI_EquipIcon_Sword_Fossil.webp
+│      │  │      UI_EquipIcon_Sword_Ilmarinen.webp
+│      │  │      UI_EquipIcon_Sword_Isikhulu.webp
+│      │  │      UI_EquipIcon_Sword_Kasabouzu.webp
+│      │  │      UI_EquipIcon_Sword_Kunwu.webp
+│      │  │      UI_EquipIcon_Sword_Machination.webp
+│      │  │      UI_EquipIcon_Sword_Magnum.webp
+│      │  │      UI_EquipIcon_Sword_Mechanic.webp
+│      │  │      UI_EquipIcon_Sword_Miekka.webp
+│      │  │      UI_EquipIcon_Sword_Mitsurugi.webp
+│      │  │      UI_EquipIcon_Sword_Morax.webp
+│      │  │      UI_EquipIcon_Sword_MorphVinces_Great_{0}.webp
+│      │  │      UI_EquipIcon_Sword_MorphVinces_{0}.webp
+│      │  │      UI_EquipIcon_Sword_Motsognir.webp
+│      │  │      UI_EquipIcon_Sword_Narukami.webp
+│      │  │      UI_EquipIcon_Sword_Needle.webp
+│      │  │      UI_EquipIcon_Sword_Opus.webp
+│      │  │      UI_EquipIcon_Sword_OuterSword.webp
+│      │  │      UI_EquipIcon_Sword_Outlaw.webp
+│      │  │      UI_EquipIcon_Sword_Pleroma.webp
+│      │  │      UI_EquipIcon_Sword_Proto.webp
+│      │  │      UI_EquipIcon_Sword_Psalmus.webp
+│      │  │      UI_EquipIcon_Sword_Purewill.webp
+│      │  │      UI_EquipIcon_Sword_Regalis.webp
+│      │  │      UI_EquipIcon_Sword_Rockkiller.webp
+│      │  │      UI_EquipIcon_Sword_SacrificialNgombe.webp
+│      │  │      UI_EquipIcon_Sword_Sashimi.webp
+│      │  │      UI_EquipIcon_Sword_Silver.webp
+│      │  │      UI_EquipIcon_Sword_SilverwareSaw.webp
+│      │  │      UI_EquipIcon_Sword_Steel.webp
+│      │  │      UI_EquipIcon_Sword_Theocrat.webp
+│      │  │      UI_EquipIcon_Sword_Traveler.webp
+│      │  │      UI_EquipIcon_Sword_Troupe.webp
+│      │  │      UI_EquipIcon_Sword_Umpakati.webp
+│      │  │      UI_EquipIcon_Sword_Vorpal.webp
+│      │  │      UI_EquipIcon_Sword_Widsith.webp
+│      │  │      UI_EquipIcon_Sword_XochitlsTube.webp
+│      │  │      UI_EquipIcon_Sword_Youtou.webp
+│      │  │      UI_EquipIcon_Sword_Zephyrus.webp
+│      │  │
+│      │  └─weapon_icon
+│      │          WEAPON_BOW.webp
+│      │          WEAPON_CATALYST.webp
+│      │          WEAPON_CLAYMORE.webp
+│      │          WEAPON_POLE.webp
+│      │          WEAPON_SWORD_ONE_HAND.webp
+│      │
+│      ├─cache
+│      │      showcase_1812256644.json
+│      │      showcase_1816239104.json
+│      │      showcase_825024420.json
+│      │
+│      ├─characters
+│      │      10000002.json
+│      │      10000003.json
+│      │      10000005-2.json
+│      │      10000005-3.json
+│      │      10000005-4.json
+│      │      10000005-6.json
+│      │      10000005-7.json
+│      │      10000005-8.json
+│      │      10000006.json
+│      │      10000007-2.json
+│      │      10000007-3.json
+│      │      10000007-4.json
+│      │      10000007-6.json
+│      │      10000007-7.json
+│      │      10000007-8.json
+│      │      10000014.json
+│      │      10000015.json
+│      │      10000016.json
+│      │      10000020.json
+│      │      10000021.json
+│      │      10000022.json
+│      │      10000023.json
+│      │      10000024.json
+│      │      10000025.json
+│      │      10000026.json
+│      │      10000027.json
+│      │      10000029.json
+│      │      10000030.json
+│      │      10000031.json
+│      │      10000032.json
+│      │      10000033.json
+│      │      10000034.json
+│      │      10000035.json
+│      │      10000036.json
+│      │      10000037.json
+│      │      10000038.json
+│      │      10000039.json
+│      │      10000041.json
+│      │      10000042.json
+│      │      10000043.json
+│      │      10000044.json
+│      │      10000045.json
+│      │      10000046.json
+│      │      10000047.json
+│      │      10000048.json
+│      │      10000049.json
+│      │      10000050.json
+│      │      10000051.json
+│      │      10000052.json
+│      │      10000053.json
+│      │      10000054.json
+│      │      10000055.json
+│      │      10000056.json
+│      │      10000057.json
+│      │      10000058.json
+│      │      10000059.json
+│      │      10000060.json
+│      │      10000061.json
+│      │      10000062.json
+│      │      10000063.json
+│      │      10000064.json
+│      │      10000065.json
+│      │      10000066.json
+│      │      10000067.json
+│      │      10000068.json
+│      │      10000069.json
+│      │      10000070.json
+│      │      10000071.json
+│      │      10000072.json
+│      │      10000073.json
+│      │      10000074.json
+│      │      10000075.json
+│      │      10000076.json
+│      │      10000077.json
+│      │      10000078.json
+│      │      10000079.json
+│      │      10000080.json
+│      │      10000081.json
+│      │      10000082.json
+│      │      10000083.json
+│      │      10000084.json
+│      │      10000085.json
+│      │      10000086.json
+│      │      10000087.json
+│      │      10000088.json
+│      │      10000089.json
+│      │      10000090.json
+│      │      10000091.json
+│      │      10000092.json
+│      │      10000093.json
+│      │      10000094.json
+│      │      10000095.json
+│      │      10000096.json
+│      │      10000097.json
+│      │      10000098.json
+│      │      10000099.json
+│      │      10000100.json
+│      │      10000101.json
+│      │      10000102.json
+│      │      10000103.json
+│      │      10000104.json
+│      │      10000105.json
+│      │      10000106.json
+│      │      10000107.json
+│      │      10000108.json
+│      │      10000109.json
+│      │      10000110.json
+│      │      10000111.json
+│      │      10000112.json
+│      │      10000113.json
+│      │      10000114.json
+│      │      10000115.json
+│      │      10000116.json
+│      │      10000117-2.json
+│      │      10000117-3.json
+│      │      10000117-4.json
+│      │      10000117-6.json
+│      │      10000117-7.json
+│      │      10000117-8.json
+│      │      10000118-2.json
+│      │      10000118-3.json
+│      │      10000118-4.json
+│      │      10000118-6.json
+│      │      10000118-7.json
+│      │      10000118-8.json
+│      │      10000119.json
+│      │      10000120.json
+│      │      10000121.json
+│      │      10000122.json
+│      │      10000123.json
+│      │      10000124.json
+│      │      10000125.json
+│      │      10000126.json
+│      │      10000127.json
+│      │      10000128.json
+│      │      10000129.json
+│      │      10000130.json
+│      │      10000131.json
+│      │      10000132.json
+│      │      10000133.json
+│      │
+│      ├─generated_cards
+│      │      1812256644_10000104.png
+│      │      1812256644_10000116.png
+│      │      1812256644_10000123.png
+│      │      1812256644_10000125.png
+│      │      1812256644_10000130.png
+│      │      1812256644_10000133.png
+│      │
+│      ├─lists
+│      │      artifacts.json
+│      │      characters.json
+│      │      weapons.json
+│      │
+│      └─weapons
+│              11101.json
+│              11201.json
+│              11301.json
+│              11302.json
+│              11303.json
+│              11304.json
+│              11305.json
+│              11306.json
+│              11401.json
+│              11402.json
+│              11403.json
+│              11404.json
+│              11405.json
+│              11406.json
+│              11407.json
+│              11408.json
+│              11409.json
+│              11410.json
+│              11412.json
+│              11413.json
+│              11414.json
+│              11415.json
+│              11416.json
+│              11417.json
+│              11418.json
+│              11422.json
+│              11424.json
+│              11425.json
+│              11426.json
+│              11427.json
+│              11428.json
+│              11430.json
+│              11431.json
+│              11432.json
+│              11433.json
+│              11434.json
+│              11501.json
+│              11502.json
+│              11503.json
+│              11504.json
+│              11505.json
+│              11509.json
+│              11510.json
+│              11511.json
+│              11512.json
+│              11513.json
+│              11514.json
+│              11515.json
+│              11516.json
+│              11517.json
+│              11518.json
+│              11519.json
+│              12101.json
+│              12201.json
+│              12301.json
+│              12302.json
+│              12303.json
+│              12305.json
+│              12306.json
+│              12401.json
+│              12402.json
+│              12403.json
+│              12404.json
+│              12405.json
+│              12406.json
+│              12407.json
+│              12408.json
+│              12409.json
+│              12410.json
+│              12411.json
+│              12412.json
+│              12414.json
+│              12415.json
+│              12416.json
+│              12417.json
+│              12418.json
+│              12424.json
+│              12425.json
+│              12426.json
+│              12427.json
+│              12430.json
+│              12431.json
+│              12432.json
+│              12433.json
+│              12501.json
+│              12502.json
+│              12503.json
+│              12504.json
+│              12510.json
+│              12511.json
+│              12512.json
+│              12513.json
+│              12514.json
+│              12515.json
+│              12516.json
+│              13101.json
+│              13201.json
+│              13301.json
+│              13302.json
+│              13303.json
+│              13401.json
+│              13402.json
+│              13403.json
+│              13404.json
+│              13405.json
+│              13406.json
+│              13407.json
+│              13408.json
+│              13409.json
+│              13414.json
+│              13415.json
+│              13416.json
+│              13417.json
+│              13419.json
+│              13424.json
+│              13425.json
+│              13426.json
+│              13427.json
+│              13430.json
+│              13431.json
+│              13432.json
+│              13433.json
+│              13434.json
+│              13501.json
+│              13502.json
+│              13504.json
+│              13505.json
+│              13507.json
+│              13509.json
+│              13511.json
+│              13512.json
+│              13513.json
+│              13514.json
+│              13515.json
+│              13516.json
+│              13517.json
+│              14101.json
+│              14201.json
+│              14301.json
+│              14302.json
+│              14303.json
+│              14304.json
+│              14305.json
+│              14401.json
+│              14402.json
+│              14403.json
+│              14404.json
+│              14405.json
+│              14406.json
+│              14407.json
+│              14408.json
+│              14409.json
+│              14410.json
+│              14412.json
+│              14413.json
+│              14414.json
+│              14415.json
+│              14416.json
+│              14417.json
+│              14424.json
+│              14425.json
+│              14426.json
+│              14427.json
+│              14430.json
+│              14431.json
+│              14432.json
+│              14433.json
+│              14434.json
+│              14501.json
+│              14502.json
+│              14504.json
+│              14505.json
+│              14506.json
+│              14509.json
+│              14511.json
+│              14512.json
+│              14513.json
+│              14514.json
+│              14515.json
+│              14516.json
+│              14517.json
+│              14518.json
+│              14519.json
+│              14520.json
+│              14521.json
+│              14522.json
+│              14523.json
+│              15101.json
+│              15201.json
+│              15301.json
+│              15302.json
+│              15303.json
+│              15304.json
+│              15305.json
+│              15401.json
+│              15402.json
+│              15403.json
+│              15404.json
+│              15405.json
+│              15406.json
+│              15407.json
+│              15408.json
+│              15409.json
+│              15410.json
+│              15411.json
+│              15412.json
+│              15413.json
+│              15414.json
+│              15415.json
+│              15416.json
+│              15417.json
+│              15418.json
+│              15419.json
+│              15424.json
+│              15425.json
+│              15426.json
+│              15427.json
+│              15430.json
+│              15431.json
+│              15432.json
+│              15433.json
+│              15434.json
+│              15501.json
+│              15502.json
+│              15503.json
+│              15507.json
+│              15508.json
+│              15509.json
+│              15511.json
+│              15512.json
+│              15513.json
+│              15514.json
+│              15515.json
+│              15516.json
+│              310001.json
+│              310002.json
+│              320001.json
+│              320002.json
+│              330001.json
+│              330002.json
+│              340001.json
+│              340002.json
+│              350001.json
+│              350002.json
+│              380001.json
+│              380002.json
+│              390001.json
+│
+├─templates
+│      artifacter.html
+│      build_card.html
+│
+└─__pycache__
+        get_info_state.cpython-312.pyc
+        server.cpython-312.pyc

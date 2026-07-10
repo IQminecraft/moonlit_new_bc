@@ -1,9 +1,10 @@
 {
-  "name": "鍛造武器",
+  "name": "導炎の源JP0D",
   "weapon_type": "WEAPON_SWORD_ONE_HAND",
   "rarity": 4,
   "icon": "UI_EquipIcon_Sword_GlintstoneSword",
   "stats_modifier": {
-    "atk": 509.605949
+    "atk": 509.6059,
+    "fight_prop_element_mastery": 165.384
   }
 }

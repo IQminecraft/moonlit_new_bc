@@ -4,6 +4,7 @@
   "rarity": 3,
   "icon": "UI_EquipIcon_Claymore_Siegfry",
   "stats_modifier": {
-    "atk": 354.37940000000003
+    "atk": 354.3794,
+    "fight_prop_element_mastery": 187.4352
   }
 }

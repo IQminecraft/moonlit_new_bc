@@ -4,6 +4,7 @@
   "rarity": 3,
   "icon": "UI_EquipIcon_Pole_Noire",
   "stats_modifier": {
-    "atk": 354.37940000000003
+    "atk": 354.3794,
+    "fight_prop_hp_percent": 0.4692
   }
 }

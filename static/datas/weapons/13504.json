@@ -4,6 +4,7 @@
   "rarity": 5,
   "icon": "UI_EquipIcon_Pole_Kunwu",
   "stats_modifier": {
-    "atk": 608.0745972
+    "atk": 608.0746,
+    "fight_prop_attack_percent": 0.4962
   }
 }

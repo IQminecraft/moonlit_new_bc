@@ -4,6 +4,7 @@
   "rarity": 5,
   "icon": "UI_EquipIcon_Catalyst_FairyGarden",
   "stats_modifier": {
-    "atk": 740.5801544000001
+    "atk": 740.5802,
+    "fight_prop_attack_percent": 0.1654
   }
 }

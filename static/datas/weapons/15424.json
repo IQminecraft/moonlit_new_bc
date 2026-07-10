@@ -4,7 +4,7 @@
   "rarity": 4,
   "icon": "UI_EquipIcon_Bow_Gurabad",
   "stats_modifier": {
-    "atk": 564.7837244,
-    "fight_prop_critical": 0.18376
+    "atk": 564.7837,
+    "fight_prop_critical": 0.1838
   }
 }

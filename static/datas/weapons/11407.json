@@ -4,6 +4,7 @@
   "rarity": 4,
   "icon": "UI_EquipIcon_Sword_Exotic",
   "stats_modifier": {
-    "atk": 509.605949
+    "atk": 509.6059,
+    "fight_prop_element_mastery": 165.384
   }
 }

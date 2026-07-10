@@ -4,6 +4,7 @@
   "rarity": 3,
   "icon": "UI_EquipIcon_Pole_Halberd",
   "stats_modifier": {
-    "atk": 448.2215814
+    "atk": 448.2216,
+    "fight_prop_attack_percent": 0.2346
   }
 }

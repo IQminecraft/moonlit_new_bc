@@ -4,6 +4,7 @@
   "rarity": 5,
   "icon": "UI_EquipIcon_Sword_Needle",
   "stats_modifier": {
-    "atk": 541.829758
+    "atk": 541.8298,
+    "fight_prop_critical_hurt": 0.882
   }
 }
