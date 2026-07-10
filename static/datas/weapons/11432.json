@@ -1,0 +1,9 @@
+{
+  "name": "厄水の災い",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Sword_SacrificialNgombe",
+  "stats_modifier": {
+    "atk": 564.7837244
+  }
+}

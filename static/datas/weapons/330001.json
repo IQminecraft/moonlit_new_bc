@@ -1,0 +1,7 @@
+{
+  "name": "砕月",
+  "weapon_type": "WEAPON_POLE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Pole_MorphSpinifer_{0}",
+  "stats_modifier": {}
+}

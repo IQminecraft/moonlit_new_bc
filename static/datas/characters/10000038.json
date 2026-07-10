@@ -1,0 +1,66 @@
+{
+  "name": "アルベド",
+  "desc": "西風騎士団の首席錬金術師兼調査小隊隊長。「白亜の申し子」と呼ばれる天才。",
+  "weapon": "WEAPON_SWORD_ONE_HAND",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Geo",
+  "icon": "UI_AvatarIcon_Albedo",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 13226,
+  "atk": 251,
+  "def": 876,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_01"
+    },
+    {
+      "icon": "Skill_S_Albedo_01"
+    },
+    {
+      "icon": "Skill_E_Albedo_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Albedo_05"
+    },
+    {
+      "icon": "UI_Talent_S_Albedo_06"
+    },
+    {
+      "icon": "UI_Talent_Combine_Weapon_Double"
+    },
+    {
+      "icon": "UI_Talent_S_Albedo_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Albedo_01"
+    },
+    {
+      "icon": "UI_Talent_S_Albedo_02"
+    },
+    {
+      "icon": "UI_Talent_U_Albedo_01"
+    },
+    {
+      "icon": "UI_Talent_S_Albedo_03"
+    },
+    {
+      "icon": "UI_Talent_U_Albedo_02"
+    },
+    {
+      "icon": "UI_Talent_S_Albedo_04"
+    }
+  ]
+}

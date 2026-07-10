@@ -1,0 +1,63 @@
+{
+  "name": "香菱",
+  "desc": "璃月出身で、ちょっと有名な料理人。料理に対する情熱を持っており、激辛料理が大の得意。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Pyro",
+  "icon": "UI_AvatarIcon_Xiangling",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10875,
+  "atk": 225,
+  "def": 669,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Xiangling_01"
+    },
+    {
+      "icon": "Skill_E_Xiangling_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Xiangling_05"
+    },
+    {
+      "icon": "UI_Talent_S_Xiangling_06"
+    },
+    {
+      "icon": "UI_Talent_Cook_Attack"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Xiangling_01"
+    },
+    {
+      "icon": "UI_Talent_S_Xiangling_02"
+    },
+    {
+      "icon": "UI_Talent_U_Xiangling_02"
+    },
+    {
+      "icon": "UI_Talent_S_Xiangling_03"
+    },
+    {
+      "icon": "UI_Talent_U_Xiangling_01"
+    },
+    {
+      "icon": "UI_Talent_S_Xiangling_04"
+    }
+  ]
+}

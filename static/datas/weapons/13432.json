@@ -1,0 +1,9 @@
+{
+  "name": "玉響停の御噺",
+  "weapon_type": "WEAPON_POLE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Pole_Aoandon",
+  "stats_modifier": {
+    "atk": 564.7837244
+  }
+}

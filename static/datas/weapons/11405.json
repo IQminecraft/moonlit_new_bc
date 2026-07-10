@@ -1,0 +1,9 @@
+{
+  "name": "匣中龍吟",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Sword_Rockkiller",
+  "stats_modifier": {
+    "atk": 509.605949
+  }
+}

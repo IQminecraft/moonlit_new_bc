@@ -1,0 +1,9 @@
+{
+  "name": "祭礼の大剣",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Claymore_Fossil",
+  "stats_modifier": {
+    "atk": 564.7837244
+  }
+}

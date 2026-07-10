@@ -1,0 +1,9 @@
+{
+  "name": "ヤシュチェの環",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Catalyst_Isikhulu",
+  "stats_modifier": {
+    "atk": 509.605949
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "name": "ゴロー",
+  "desc": "海祇島軍隊の大将で、部下から厚く信頼されている。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Geo",
+  "icon": "UI_AvatarIcon_Gorou",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 9570,
+  "atk": 183,
+  "def": 648,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Gorou_01"
+    },
+    {
+      "icon": "Skill_E_Gorou_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Gorou_05"
+    },
+    {
+      "icon": "UI_Talent_S_Gorou_06"
+    },
+    {
+      "icon": "UI_Talent_S_Gorou_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Gorou_01"
+    },
+    {
+      "icon": "UI_Talent_S_Gorou_02"
+    },
+    {
+      "icon": "UI_Talent_U_Gorou_01"
+    },
+    {
+      "icon": "UI_Talent_S_Gorou_03"
+    },
+    {
+      "icon": "UI_Talent_U_Gorou_02"
+    },
+    {
+      "icon": "UI_Talent_S_Gorou_04"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "聖祭者の輝杖",
+  "weapon_type": "WEAPON_POLE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Pole_Krivule",
+  "stats_modifier": {
+    "atk": 620.0329535,
+    "fight_prop_critical": 0.09188
+  }
+}

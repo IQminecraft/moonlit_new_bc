@@ -1,0 +1,63 @@
+{
+  "name": "魈",
+  "desc": "璃月を守る仙人·「夜叉」。またの名を「降魔大聖」、「護法夜叉大将」。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Anemo",
+  "icon": "UI_AvatarIcon_Xiao",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12736,
+  "atk": 349,
+  "def": 799,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Xiao_01"
+    },
+    {
+      "icon": "Skill_E_Xiao_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Xiao_05"
+    },
+    {
+      "icon": "UI_Talent_S_Xiao_06"
+    },
+    {
+      "icon": "UI_Talent_Explosion_Climb"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Xiao_01"
+    },
+    {
+      "icon": "UI_Talent_S_Xiao_02"
+    },
+    {
+      "icon": "UI_Talent_U_Xiao_01"
+    },
+    {
+      "icon": "UI_Talent_S_Xiao_03"
+    },
+    {
+      "icon": "UI_Talent_U_Xiao_02"
+    },
+    {
+      "icon": "UI_Talent_S_Xiao_04"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "name": "夢見月瑞希",
+  "desc": "「秋沙銭湯」の大株主で、夢喰い獏の心理療法士。人々の悪夢を追い払って安らぎを与えるために奮闘している。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Anemo",
+  "icon": "UI_AvatarIcon_Mizuki",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12736,
+  "atk": 215,
+  "def": 757,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Mizuki_01"
+    },
+    {
+      "icon": "Skill_E_Mizuki_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Mizuki_05"
+    },
+    {
+      "icon": "UI_Talent_S_Mizuki_06"
+    },
+    {
+      "icon": "UI_Talent_S_Mizuki_07"
+    },
+    {
+      "icon": "UI_Talent_S_Mizuki_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Mizuki_01"
+    },
+    {
+      "icon": "UI_Talent_S_Mizuki_02"
+    },
+    {
+      "icon": "UI_Talent_U_Mizuki_01"
+    },
+    {
+      "icon": "UI_Talent_S_Mizuki_03"
+    },
+    {
+      "icon": "UI_Talent_U_Mizuki_02"
+    },
+    {
+      "icon": "UI_Talent_S_Mizuki_04"
+    }
+  ]
+}

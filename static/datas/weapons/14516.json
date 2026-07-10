@@ -1,0 +1,9 @@
+{
+  "name": "サーフィンタイム",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Catalyst_MechaPufferfish",
+  "stats_modifier": {
+    "atk": 541.829758
+  }
+}

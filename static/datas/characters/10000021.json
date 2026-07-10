@@ -1,0 +1,63 @@
+{
+  "name": "アンバー",
+  "desc": "元気満々な女の子、騎士団で最も優秀で、最後の偵察騎士である。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Pyro",
+  "icon": "UI_AvatarIcon_Ambor",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 9461,
+  "atk": 223,
+  "def": 601,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Ambor_01"
+    },
+    {
+      "icon": "Skill_E_Ambor"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Ambor_05"
+    },
+    {
+      "icon": "UI_Talent_S_Ambor_06"
+    },
+    {
+      "icon": "UI_Talent_Explosion_Glide"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Ambor_01"
+    },
+    {
+      "icon": "UI_Talent_S_Ambor_02"
+    },
+    {
+      "icon": "UI_Talent_U_Ambor_02"
+    },
+    {
+      "icon": "UI_Talent_S_Ambor_03"
+    },
+    {
+      "icon": "UI_Talent_U_Ambor_01"
+    },
+    {
+      "icon": "UI_Talent_S_Ambor_04"
+    }
+  ]
+}

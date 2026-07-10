@@ -1,0 +1,9 @@
+{
+  "name": "レンジゲージ",
+  "weapon_type": "WEAPON_BOW",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Bow_Mechanic",
+  "stats_modifier": {
+    "atk": 564.7837244
+  }
+}

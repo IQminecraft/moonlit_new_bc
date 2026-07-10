@@ -1,0 +1,63 @@
+{
+  "name": "バーバラ",
+  "desc": "モンド城のみんなはバーバラが大好き。ちなみに「アイドル」という言葉は彼女が雑誌で見たものらしい。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Hydro",
+  "icon": "UI_AvatarIcon_Barbara",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 9787,
+  "atk": 159,
+  "def": 669,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Barbara_01"
+    },
+    {
+      "icon": "Skill_E_Barbara_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Barbara_05"
+    },
+    {
+      "icon": "UI_Talent_S_Barbara_06"
+    },
+    {
+      "icon": "UI_Talent_Cook_Heal"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Barbara_01"
+    },
+    {
+      "icon": "UI_Talent_S_Barbara_02"
+    },
+    {
+      "icon": "UI_Talent_U_Barbara_02"
+    },
+    {
+      "icon": "UI_Talent_S_Barbara_03"
+    },
+    {
+      "icon": "UI_Talent_U_Barbara_01"
+    },
+    {
+      "icon": "UI_Talent_S_Barbara_04"
+    }
+  ]
+}

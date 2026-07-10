@@ -1,0 +1,66 @@
+{
+  "name": "雷電将軍",
+  "desc": "御建鳴神主尊大御所様。永劫不変の「永遠」を稲妻の民に約束する。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Electro",
+  "icon": "UI_AvatarIcon_Shougun",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12907,
+  "atk": 337,
+  "def": 789,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Shougun_01"
+    },
+    {
+      "icon": "Skill_E_Shougun_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Shougun_05"
+    },
+    {
+      "icon": "UI_Talent_S_Shougun_06"
+    },
+    {
+      "icon": ""
+    },
+    {
+      "icon": "UI_Talent_S_Shougun_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Shougun_01"
+    },
+    {
+      "icon": "UI_Talent_S_Shougun_03"
+    },
+    {
+      "icon": "UI_Talent_U_Shougun_02"
+    },
+    {
+      "icon": "UI_Talent_S_Shougun_02"
+    },
+    {
+      "icon": "UI_Talent_U_Shougun_01"
+    },
+    {
+      "icon": "UI_Talent_S_Shougun_04"
+    }
+  ]
+}

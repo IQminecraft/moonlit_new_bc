@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原神ビルドカードジェネレーター</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0c0f1d;
+            color: #ffffff;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .history-item:hover {
+            background-color: #2c3147;
+            color: #f1c40f;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="w-full max-w-md p-8 bg-[#161a2e] rounded-2xl shadow-2xl border border-[#252a42]">
+        <h1 class="text-2xl font-bold text-center text-yellow-400 mb-6 flex items-center justify-center gap-2">
+            ✨ ビルドカードジェネレーター
+        </h1>
+        
+        <form id="searchForm" action="/fetch_uid" method="GET" class="space-y-4">
+            <input type="hidden" name="from_artifacter" value="true">
+            
+            <div class="relative">
+                <input type="text" id="uidInput" name="uid" placeholder="UIDを入力 (9桁)" required maxlength="10" 
+                       class="w-full px-5 py-3.5 bg-[#1f243f] border-2 border-[#2c3147] rounded-xl text-white text-lg text-center font-mono focus:outline-none focus:border-yellow-400 transition-all placeholder-gray-500">
+            </div>
+            
+            <button type="submit" class="w-full py-3.5 bg-yellow-400 hover:bg-yellow-500 text-[#12141c] font-bold text-lg rounded-xl shadow-lg shadow-yellow-400/10 active:scale-[0.99] transition-all">
+                データを見に行く 🚀
+            </button>
+        </form>
+
+        <div id="historySection" class="mt-6 pt-5 border-t border-[#252a42] hidden">
+            <h3 class="text-sm font-semibold text-gray-400 mb-3 flex justify-between items-center">
+                <span>🕒 最近の検索履歴</span>
+                <button id="clearHistory" class="text-xs text-red-400 hover:underline">すべて削除</button>
+            </h3>
+            <div id="historyList" class="grid grid-cols-2 gap-2"></div>
+        </div>
+    </div>
+
+    <script>
+        const uidInput = document.getElementById('uidInput');
+        const searchForm = document.getElementById('searchForm');
+        const historySection = document.getElementById('historySection');
+        const historyList = document.getElementById('historyList');
+        const clearHistory = document.getElementById('clearHistory');
+
+        // 履歴をローカルストレージから取得
+        function getHistory() {
+            return JSON.parse(localStorage.getItem('uid_history') || '[]');
+        }
+
+        // 履歴を表示
+        function renderHistory() {
+            const history = getHistory();
+            if (history.length === 0) {
+                historySection.classList.add('hidden');
+                return;
+            }
+            historySection.classList.remove('hidden');
+            historyList.innerHTML = '';
+            
+            history.forEach(uid => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'history-item px-3 py-2 bg-[#1f243f] border border-[#2c3147] rounded-lg text-sm text-gray-300 font-mono transition-all text-center truncate';
+                btn.textContent = uid;
+                btn.addEventListener('click', () => {
+                    uidInput.value = uid;
+                    searchForm.submit();
+                });
+                historyList.appendChild(btn);
+            });
+        }
+
+        // フォーム送信時に履歴に追加
+        searchForm.addEventListener('submit', (e) => {
+            const uid = uidInput.value.trim();
+            if (!uid) return;
+            
+            let history = getHistory();
+            history = history.filter(item => item !== uid); // 重複を削除
+            history.unshift(uid); // 先頭に追加
+            history = history.slice(0, 6); // 最大6件
+            
+            localStorage.setItem('uid_history', JSON.stringify(history));
+        });
+
+        // 履歴の全削除
+        clearHistory.addEventListener('click', () => {
+            localStorage.removeItem('uid_history');
+            renderHistory();
+        });
+
+        // 初期表示
+        renderHistory();
+    </script>
+</body>
+</html>

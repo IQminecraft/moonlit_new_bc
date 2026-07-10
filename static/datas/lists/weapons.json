@@ -1,0 +1,1484 @@
+{
+  "11101": {
+    "enName": "Dull Blade",
+    "jaName": "無鋒の剣",
+    "qualityType": "QUALITY_GREEN",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11201": {
+    "enName": "Silver Sword",
+    "jaName": "銀の剣",
+    "qualityType": "QUALITY_GREEN",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11301": {
+    "enName": "Cool Steel",
+    "jaName": "冷刃",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11302": {
+    "enName": "Harbinger of Dawn",
+    "jaName": "黎明の神剣",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11303": {
+    "enName": "Traveler's Handy Sword",
+    "jaName": "旅道の剣",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11304": {
+    "enName": "Dark Iron Sword",
+    "jaName": "暗鉄剣",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11305": {
+    "enName": "Fillet Blade",
+    "jaName": "チ虎魚の刀",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11306": {
+    "enName": "Skyrider Sword",
+    "jaName": "飛天御剣",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11401": {
+    "enName": "Favonius Sword",
+    "jaName": "西風剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11402": {
+    "enName": "The Flute",
+    "jaName": "笛の剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11403": {
+    "enName": "Sacrificial Sword",
+    "jaName": "祭礼の剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11404": {
+    "enName": "Royal Longsword",
+    "jaName": "旧貴族長剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11405": {
+    "enName": "Lion's Roar",
+    "jaName": "匣中龍吟",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11406": {
+    "enName": "Prototype Rancour",
+    "jaName": "斬岩·試作",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11407": {
+    "enName": "Iron Sting",
+    "jaName": "鉄蜂の刺し",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11408": {
+    "enName": "Blackcliff Longsword",
+    "jaName": "黒岩の長剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11409": {
+    "enName": "The Black Sword",
+    "jaName": "黒剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11410": {
+    "enName": "The Alley Flash",
+    "jaName": "ダークアレイの閃光",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11412": {
+    "enName": "Sword of Descension",
+    "jaName": "降臨の剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11413": {
+    "enName": "Festering Desire",
+    "jaName": "腐植の剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11414": {
+    "enName": "Amenoma Kageuchi",
+    "jaName": "天目影打",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11415": {
+    "enName": "Cinnabar Spindle",
+    "jaName": "シナバースピンドル",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11416": {
+    "enName": "Kagotsurube Isshin",
+    "jaName": "籠釣瓶一心",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11417": {
+    "enName": "Sapwood Blade",
+    "jaName": "原木刀",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11418": {
+    "enName": "Xiphos' Moonlight",
+    "jaName": "サイフォスの月明かり",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11422": {
+    "enName": "Toukabou Shigure",
+    "jaName": "東花坊時雨",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11424": {
+    "enName": "Wolf-Fang",
+    "jaName": "狼牙",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11425": {
+    "enName": "Finale of the Deep",
+    "jaName": "海淵のフィナーレ",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11426": {
+    "enName": "Fleuve Cendre Ferryman",
+    "jaName": "サーンドルの渡し守",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11427": {
+    "enName": "The Dockhand's Assistant",
+    "jaName": "船渠剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11428": {
+    "enName": "Sword of Narzissenkreuz",
+    "jaName": "水仙十字の剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11430": {
+    "enName": "Sturdy Bone",
+    "jaName": "ストロング・ボーン",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11431": {
+    "enName": "Flute of Ezpitzal",
+    "jaName": "エズピツァルの笛",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11432": {
+    "enName": "Calamity of Eshu",
+    "jaName": "厄水の災い",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11433": {
+    "enName": "Serenity's Call",
+    "jaName": "静謐の笛",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11434": {
+    "enName": "Moonweaver's Dawn",
+    "jaName": "月紡ぎの曙光",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11501": {
+    "enName": "Aquila Favonia",
+    "jaName": "風鷹剣",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11502": {
+    "enName": "Skyward Blade",
+    "jaName": "天空の刃",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11503": {
+    "enName": "Freedom-Sworn",
+    "jaName": "蒼古なる自由への誓い",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11504": {
+    "enName": "Summit Shaper",
+    "jaName": "斬山の刃",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11505": {
+    "enName": "Primordial Jade Cutter",
+    "jaName": "磐岩結緑",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11509": {
+    "enName": "Mistsplitter Reforged",
+    "jaName": "霧切の廻光",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11510": {
+    "enName": "Haran Geppaku Futsu",
+    "jaName": "波乱月白経津",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11511": {
+    "enName": "Key of Khaj-Nisut",
+    "jaName": "聖顕の鍵",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11512": {
+    "enName": "Light of Foliar Incision",
+    "jaName": "萃光の裁葉",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11513": {
+    "enName": "Splendor of Tranquil Waters",
+    "jaName": "静水流転の輝き",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11514": {
+    "enName": "Uraku Misugiri",
+    "jaName": "有楽御簾切",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11515": {
+    "enName": "Absolution",
+    "jaName": "赦罪",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11516": {
+    "enName": "Peak Patrol Song",
+    "jaName": "岩峰を巡る歌",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11517": {
+    "enName": "Azurelight",
+    "jaName": "蒼耀",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11518": {
+    "enName": "Athame Artis",
+    "jaName": "黒蝕",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11519": {
+    "enName": "Lightbearing Moonshard",
+    "jaName": "三日月の含光",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "12101": {
+    "enName": "Waster Greatsword",
+    "jaName": "訓練用大剣",
+    "qualityType": "QUALITY_GREEN",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12201": {
+    "enName": "Old Merc's Pal",
+    "jaName": "傭兵の重剣",
+    "qualityType": "QUALITY_GREEN",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12301": {
+    "enName": "Ferrous Shadow",
+    "jaName": "鉄影段平",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12302": {
+    "enName": "Bloodtainted Greatsword",
+    "jaName": "龍血を浴びた剣",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12303": {
+    "enName": "White Iron Greatsword",
+    "jaName": "白鉄の大剣",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12305": {
+    "enName": "Debate Club",
+    "jaName": "理屈責め",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12306": {
+    "enName": "Skyrider Greatsword",
+    "jaName": "飛天大御剣",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12401": {
+    "enName": "Favonius Greatsword",
+    "jaName": "西風大剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12402": {
+    "enName": "The Bell",
+    "jaName": "鐘の剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12403": {
+    "enName": "Sacrificial Greatsword",
+    "jaName": "祭礼の大剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12404": {
+    "enName": "Royal Greatsword",
+    "jaName": "旧貴族大剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12405": {
+    "enName": "Rainslasher",
+    "jaName": "雨裁",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12406": {
+    "enName": "Prototype Archaic",
+    "jaName": "古華·試作",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12407": {
+    "enName": "Whiteblind",
+    "jaName": "白影の剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12408": {
+    "enName": "Blackcliff Slasher",
+    "jaName": "黒岩の斬刀",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12409": {
+    "enName": "Serpent Spine",
+    "jaName": "螭龍の剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12410": {
+    "enName": "Lithic Blade",
+    "jaName": "千岩古剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12411": {
+    "enName": "Snow-Tombed Starsilver",
+    "jaName": "雪葬の星銀",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12412": {
+    "enName": "Luxurious Sea-Lord",
+    "jaName": "銜玉の海皇",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12414": {
+    "enName": "Katsuragikiri Nagamasa",
+    "jaName": "桂木斬長正",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12415": {
+    "enName": "Makhaira Aquamarine",
+    "jaName": "マカイラの水色",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12416": {
+    "enName": "Akuoumaru",
+    "jaName": "惡王丸",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12417": {
+    "enName": "Forest Regalia",
+    "jaName": "森林のレガリア",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12418": {
+    "enName": "Mailed Flower",
+    "jaName": "鉄彩の花",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12424": {
+    "enName": "Talking Stick",
+    "jaName": "話死合い棒",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12425": {
+    "enName": "Tidal Shadow",
+    "jaName": "タイダル·シャドー",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12426": {
+    "enName": "\"Ultimate Overlord's Mega Magic Sword\"",
+    "jaName": "「スーパーアルティメット覇王魔剣」",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12427": {
+    "enName": "Portable Power Saw",
+    "jaName": "携帯型チェーンソー",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12430": {
+    "enName": "Fruitful Hook",
+    "jaName": "実りの鉤鉈",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12431": {
+    "enName": "Earth Shaker",
+    "jaName": "アースシェイカー",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12432": {
+    "enName": "Flame-Forged Insight",
+    "jaName": "知恵の溶炎",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12433": {
+    "enName": "Master Key",
+    "jaName": "万能の鍵",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12501": {
+    "enName": "Skyward Pride",
+    "jaName": "天空の傲",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12502": {
+    "enName": "Wolf's Gravestone",
+    "jaName": "狼の末路",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12503": {
+    "enName": "Song of Broken Pines",
+    "jaName": "松韻の響く頃",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12504": {
+    "enName": "The Unforged",
+    "jaName": "無工の剣",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12510": {
+    "enName": "Redhorn Stonethresher",
+    "jaName": "赤角石塵滅砕",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12511": {
+    "enName": "Beacon of the Reed Sea",
+    "jaName": "葦海の標",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12512": {
+    "enName": "Verdict",
+    "jaName": "裁断",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12513": {
+    "enName": "Fang of the Mountain King",
+    "jaName": "山の王の長牙",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12514": {
+    "enName": "A Thousand Blazing Suns",
+    "jaName": "千烈の日輪",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12515": {
+    "enName": "Gest of the Mighty Wolf",
+    "jaName": "狼の武勲詩",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12516": {
+    "enName": "A Teaspoon of Transcendence",
+    "jaName": "超越の鍵",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "13101": {
+    "enName": "Beginner's Protector",
+    "jaName": "新米の長槍",
+    "qualityType": "QUALITY_GREEN",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13201": {
+    "enName": "Iron Point",
+    "jaName": "鉄尖槍",
+    "qualityType": "QUALITY_GREEN",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13301": {
+    "enName": "White Tassel",
+    "jaName": "白纓槍",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13302": {
+    "enName": "Halberd",
+    "jaName": "鉾槍",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13303": {
+    "enName": "Black Tassel",
+    "jaName": "黒纓槍",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13401": {
+    "enName": "Dragon's Bane",
+    "jaName": "匣中滅龍",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13402": {
+    "enName": "Prototype Starglitter",
+    "jaName": "星鎌·試作",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13403": {
+    "enName": "Crescent Pike",
+    "jaName": "流月の針",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13404": {
+    "enName": "Blackcliff Pole",
+    "jaName": "黒岩の突槍",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13405": {
+    "enName": "Deathmatch",
+    "jaName": "死闘の槍",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13406": {
+    "enName": "Lithic Spear",
+    "jaName": "千岩長槍",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13407": {
+    "enName": "Favonius Lance",
+    "jaName": "西風長槍",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13408": {
+    "enName": "Royal Spear",
+    "jaName": "旧貴族猟槍",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13409": {
+    "enName": "Dragonspine Spear",
+    "jaName": "ドラゴンスピア",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13414": {
+    "enName": "Kitain Cross Spear",
+    "jaName": "喜多院十文字槍",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13415": {
+    "enName": "\"The Catch\"",
+    "jaName": "「漁獲」",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13416": {
+    "enName": "Wavebreaker's Fin",
+    "jaName": "斬波のひれ長",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13417": {
+    "enName": "Moonpiercer",
+    "jaName": "ムーンピアサー",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13419": {
+    "enName": "Missive Windspear",
+    "jaName": "風信の矛",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13424": {
+    "enName": "Ballad of the Fjords",
+    "jaName": "フィヨルドの歌",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13425": {
+    "enName": "Rightful Reward",
+    "jaName": "正義の報酬",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13426": {
+    "enName": "Dialogues of the Desert Sages",
+    "jaName": "砂中の賢者達の問答",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13427": {
+    "enName": "Prospector's Drill",
+    "jaName": "プロスペクタードリル",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13430": {
+    "enName": "Mountain-Bracing Bolt",
+    "jaName": "鎮山の釘",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13431": {
+    "enName": "Footprint of the Rainbow",
+    "jaName": "虹の行方",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13432": {
+    "enName": "Tamayuratei no Ohanashi",
+    "jaName": "玉響停の御噺",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13433": {
+    "enName": "Prospector's Shovel",
+    "jaName": "金掘りのシャベル",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13434": {
+    "enName": "Sacrificer's Staff",
+    "jaName": "聖祭者の輝杖",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13501": {
+    "enName": "Staff of Homa",
+    "jaName": "護摩の杖",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13502": {
+    "enName": "Skyward Spine",
+    "jaName": "天空の脊",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13504": {
+    "enName": "Vortex Vanquisher",
+    "jaName": "破天の槍",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13505": {
+    "enName": "Primordial Jade Winged-Spear",
+    "jaName": "和璞鳶",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13507": {
+    "enName": "Calamity Queller",
+    "jaName": "息災",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13509": {
+    "enName": "Engulfing Lightning",
+    "jaName": "草薙の稲光",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13511": {
+    "enName": "Staff of the Scarlet Sands",
+    "jaName": "赤砂の杖",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13512": {
+    "enName": "Crimson Moon's Semblance",
+    "jaName": "赤月のシルエット",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13513": {
+    "enName": "Lumidouce Elegy",
+    "jaName": "ルミドゥースの挽歌",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13514": {
+    "enName": "Symphonist of Scents",
+    "jaName": "香りのシンフォニスト",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13515": {
+    "enName": "Fractured Halo",
+    "jaName": "砕け散る光輪",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13516": {
+    "enName": "Bloodsoaked Ruins",
+    "jaName": "血染めの荒れ地",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13517": {
+    "enName": "Disaster and Remorse",
+    "jaName": "災憾",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "14101": {
+    "enName": "Apprentice's Notes",
+    "jaName": "生徒ノート",
+    "qualityType": "QUALITY_GREEN",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14201": {
+    "enName": "Pocket Grimoire",
+    "jaName": "ポケット魔導書",
+    "qualityType": "QUALITY_GREEN",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14301": {
+    "enName": "Magic Guide",
+    "jaName": "魔導緒論",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14302": {
+    "enName": "Thrilling Tales of Dragon Slayers",
+    "jaName": "龍殺しの英傑譚",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14303": {
+    "enName": "Otherworldly Story",
+    "jaName": "異世界旅行記",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14304": {
+    "enName": "Emerald Orb",
+    "jaName": "翡玉法珠",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14305": {
+    "enName": "Twin Nephrite",
+    "jaName": "特級の宝玉",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14401": {
+    "enName": "Favonius Codex",
+    "jaName": "西風秘典",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14402": {
+    "enName": "The Widsith",
+    "jaName": "流浪楽章",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14403": {
+    "enName": "Sacrificial Fragments",
+    "jaName": "祭礼の断片",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14404": {
+    "enName": "Royal Grimoire",
+    "jaName": "旧貴族秘法録",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14405": {
+    "enName": "Solar Pearl",
+    "jaName": "匣中日月",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14406": {
+    "enName": "Prototype Amber",
+    "jaName": "金珀·試作",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14407": {
+    "enName": "Mappa Mare",
+    "jaName": "万国諸海の図譜",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14408": {
+    "enName": "Blackcliff Agate",
+    "jaName": "黒岩の緋玉",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14409": {
+    "enName": "Eye of Perception",
+    "jaName": "昭心",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14410": {
+    "enName": "Wine and Song",
+    "jaName": "ダークアレイの酒と詩",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14412": {
+    "enName": "Frostbearer",
+    "jaName": "冬忍びの実",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14413": {
+    "enName": "Dodoco Tales",
+    "jaName": "ドドコの物語",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14414": {
+    "enName": "Hakushin Ring",
+    "jaName": "白辰の輪",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14415": {
+    "enName": "Oathsworn Eye",
+    "jaName": "誓いの明瞳",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14416": {
+    "enName": "Wandering Evenstar",
+    "jaName": "彷徨える星",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14417": {
+    "enName": "Fruit of Fulfillment",
+    "jaName": "満悦の実",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14424": {
+    "enName": "Sacrificial Jade",
+    "jaName": "古祠の瓏",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14425": {
+    "enName": "Flowing Purity",
+    "jaName": "純水流華",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14426": {
+    "enName": "Ballad of the Boundless Blue",
+    "jaName": "果てなき紺碧の唄",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14427": {
+    "enName": "Ash-Graven Drinking Horn",
+    "jaName": "蒼紋の角杯",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14430": {
+    "enName": "Waveriding Whirl",
+    "jaName": "波乗りの旋回",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14431": {
+    "enName": "Ring of Yaxche",
+    "jaName": "ヤシュチェの環",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14432": {
+    "enName": "Etherlight Spindlelute",
+    "jaName": "天光のリュート",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14433": {
+    "enName": "Blackmarrow Lantern",
+    "jaName": "烏髄の孤灯",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14434": {
+    "enName": "Dawning Frost",
+    "jaName": "霜辰",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14501": {
+    "enName": "Skyward Atlas",
+    "jaName": "天空の巻",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14502": {
+    "enName": "Lost Prayer to the Sacred Winds",
+    "jaName": "四風原典",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14504": {
+    "enName": "Memory of Dust",
+    "jaName": "浮世の錠",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14505": {
+    "enName": "Jadefall's Splendor",
+    "jaName": "碧落の瓏",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14506": {
+    "enName": "Everlasting Moonglow",
+    "jaName": "不滅の月華",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14509": {
+    "enName": "Kagura's Verity",
+    "jaName": "神楽の真意",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14511": {
+    "enName": "A Thousand Floating Dreams",
+    "jaName": "千夜に浮かぶ夢",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14512": {
+    "enName": "Tulaytullah's Remembrance",
+    "jaName": "トゥライトゥーラの記憶",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14513": {
+    "enName": "Cashflow Supervision",
+    "jaName": "凛流の監視者",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14514": {
+    "enName": "Tome of the Eternal Flow",
+    "jaName": "久遠流転の大典",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14515": {
+    "enName": "Crane's Echoing Call",
+    "jaName": "鶴鳴の余韻",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14516": {
+    "enName": "Surf's Up",
+    "jaName": "サーフィンタイム",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14517": {
+    "enName": "Starcaller's Watch",
+    "jaName": "祭星者の眺め",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14518": {
+    "enName": "Sunny Morning Sleep-In",
+    "jaName": "寝正月の初晴",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14519": {
+    "enName": "Vivid Notions",
+    "jaName": "ヴィヴィッド・ハート",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14520": {
+    "enName": "Nightweaver's Looking Glass",
+    "jaName": "夜を紡ぐ天鏡",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14521": {
+    "enName": "Reliquary of Truth",
+    "jaName": "真言の匣",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14522": {
+    "enName": "Nocturne's Curtain Call",
+    "jaName": "帳の夜曲",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14523": {
+    "enName": "Angelos' Heptades",
+    "jaName": "塵と光の七つの誓約",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "15101": {
+    "enName": "Hunter's Bow",
+    "jaName": "狩猟弓",
+    "qualityType": "QUALITY_GREEN",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15201": {
+    "enName": "Seasoned Hunter's Bow",
+    "jaName": "歴戦の狩猟弓",
+    "qualityType": "QUALITY_GREEN",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15301": {
+    "enName": "Raven Bow",
+    "jaName": "鴉羽の弓",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15302": {
+    "enName": "Sharpshooter's Oath",
+    "jaName": "シャープシューターの誓い",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15303": {
+    "enName": "Recurve Bow",
+    "jaName": "リカーブボウ",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15304": {
+    "enName": "Slingshot",
+    "jaName": "弾弓",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15305": {
+    "enName": "Messenger",
+    "jaName": "文使い",
+    "qualityType": "QUALITY_BLUE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15401": {
+    "enName": "Favonius Warbow",
+    "jaName": "西風猟弓",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15402": {
+    "enName": "The Stringless",
+    "jaName": "絶弦",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15403": {
+    "enName": "Sacrificial Bow",
+    "jaName": "祭礼の弓",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15404": {
+    "enName": "Royal Bow",
+    "jaName": "旧貴族長弓",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15405": {
+    "enName": "Rust",
+    "jaName": "弓蔵",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15406": {
+    "enName": "Prototype Crescent",
+    "jaName": "澹月·試作",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15407": {
+    "enName": "Compound Bow",
+    "jaName": "リングボウ",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15408": {
+    "enName": "Blackcliff Warbow",
+    "jaName": "黒岩の戦弓",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15409": {
+    "enName": "The Viridescent Hunt",
+    "jaName": "蒼翠の狩猟弓",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15410": {
+    "enName": "Alley Hunter",
+    "jaName": "ダークアレイの狩人",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15411": {
+    "enName": "Fading Twilight",
+    "jaName": "落霞",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15412": {
+    "enName": "Mitternachts Waltz",
+    "jaName": "幽夜のワルツ",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15413": {
+    "enName": "Windblume Ode",
+    "jaName": "風花の頌歌",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15414": {
+    "enName": "Hamayumi",
+    "jaName": "破魔の弓",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15415": {
+    "enName": "Predator",
+    "jaName": "プレデター",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15416": {
+    "enName": "Mouun's Moon",
+    "jaName": "曚雲の月",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15417": {
+    "enName": "King's Squire",
+    "jaName": "王の近侍",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15418": {
+    "enName": "End of the Line",
+    "jaName": "竭沢",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15419": {
+    "enName": "Ibis Piercer",
+    "jaName": "トキの嘴",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15424": {
+    "enName": "Scion of the Blazing Sun",
+    "jaName": "烈日の後嗣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15425": {
+    "enName": "Song of Stillness",
+    "jaName": "静寂の唄",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15426": {
+    "enName": "Cloudforged",
+    "jaName": "築雲",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15427": {
+    "enName": "Range Gauge",
+    "jaName": "レンジゲージ",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15430": {
+    "enName": "Flower-Wreathed Feathers",
+    "jaName": "花飾りの羽",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15431": {
+    "enName": "Chain Breaker",
+    "jaName": "チェーンブレイカー",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15432": {
+    "enName": "Sequence of Solitude",
+    "jaName": "冷寂の音",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15433": {
+    "enName": "Snare Hook",
+    "jaName": "羅網の針",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15434": {
+    "enName": "Rainbow Serpent's Rain Bow",
+    "jaName": "虹蛇の雨弦",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15501": {
+    "enName": "Skyward Harp",
+    "jaName": "天空の翼",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15502": {
+    "enName": "Amos' Bow",
+    "jaName": "アモスの弓",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15503": {
+    "enName": "Elegy for the End",
+    "jaName": "終焉を嘆く詩",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15507": {
+    "enName": "Polar Star",
+    "jaName": "冬極の白星",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15508": {
+    "enName": "Aqua Simulacra",
+    "jaName": "若水",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15509": {
+    "enName": "Thundering Pulse",
+    "jaName": "飛雷の鳴弦",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15511": {
+    "enName": "Hunter's Path",
+    "jaName": "狩人の道",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15512": {
+    "enName": "The First Great Magic",
+    "jaName": "始まりの大魔術",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15513": {
+    "enName": "Silvershower Heartstrings",
+    "jaName": "白雨心弦",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15514": {
+    "enName": "Astral Vulture's Crimson Plumage",
+    "jaName": "星鷲の紅き羽",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15515": {
+    "enName": "The Daybreak Chronicles",
+    "jaName": "暁を告げる歴史",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15516": {
+    "enName": "Golden Frostbound Oath",
+    "jaName": "霜契の金枝",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "310001": {
+    "enName": "Serpent Devourer",
+    "jaName": "呑蛇",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "310002": {
+    "enName": "Serpent Devourer - Sublimation",
+    "jaName": "呑蛇・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "320001": {
+    "enName": "Ardent Storm",
+    "jaName": "煌烈",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "320002": {
+    "enName": "Ardent Storm - Sublimation",
+    "jaName": "煌烈・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "330001": {
+    "enName": "Shattered Moon",
+    "jaName": "砕月",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "330002": {
+    "enName": "Shattered Moon - Sublimation",
+    "jaName": "砕月・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "340001": {
+    "enName": "Hallowed Fetters",
+    "jaName": "聖縛",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "340002": {
+    "enName": "Hallowed Fetters - Sublimation",
+    "jaName": "聖縛・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "350001": {
+    "enName": "Starpiercer",
+    "jaName": "貫星",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "350002": {
+    "enName": "Starpiercer - Sublimation",
+    "jaName": "貫星・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "380001": {
+    "enName": "Phantasmal Gift: Star Omen",
+    "jaName": "幻のギフト・スターオーメン",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "380002": {
+    "enName": "Super Awesome Magic Key",
+    "jaName": "「マジカルマジックキー」",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "390001": {
+    "enName": "Unbreakable: Durandarte",
+    "jaName": "無毀・デュランガルド",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  }
+}

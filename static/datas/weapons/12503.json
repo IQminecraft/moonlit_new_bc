@@ -1,0 +1,9 @@
+{
+  "name": "松韻の響く頃",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Claymore_Widsith",
+  "stats_modifier": {
+    "atk": 740.5801544000001
+  }
+}

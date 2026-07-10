@@ -1,0 +1,9 @@
+{
+  "name": "黒岩の緋玉",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Catalyst_Blackrock",
+  "stats_modifier": {
+    "atk": 509.605949
+  }
+}

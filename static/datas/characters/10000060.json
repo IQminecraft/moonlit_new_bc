@@ -1,0 +1,63 @@
+{
+  "name": "夜蘭",
+  "desc": "総務司所属を称する謎の人物。しかし、総務司の名簿上では「存在しない人」となっている。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Hydro",
+  "icon": "UI_AvatarIcon_Yelan",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 14450,
+  "atk": 244,
+  "def": 548,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Yelan_01"
+    },
+    {
+      "icon": "Skill_E_Yelan_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Yelan_05"
+    },
+    {
+      "icon": "UI_Talent_S_Yelan_06"
+    },
+    {
+      "icon": "UI_Talent_Expedition_Liyue"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Yelan_01"
+    },
+    {
+      "icon": "UI_Talent_S_Yelan_02"
+    },
+    {
+      "icon": "UI_Talent_U_Yelan_01"
+    },
+    {
+      "icon": "UI_Talent_S_Yelan_03"
+    },
+    {
+      "icon": "UI_Talent_U_Yelan_02"
+    },
+    {
+      "icon": "UI_Talent_S_Yelan_04"
+    }
+  ]
+}

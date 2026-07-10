@@ -1,0 +1,63 @@
+{
+  "name": "スカーク",
+  "desc": "かつて深淵の裂け目や原始胎海に足を踏み入れた来訪者であり、タルタリヤに武芸を仕込んだ師。孤独に戦う。",
+  "weapon": "WEAPON_SWORD_ONE_HAND",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Cryo",
+  "icon": "UI_AvatarIcon_SkirkNew",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12417,
+  "atk": 359,
+  "def": 806,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0.384
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_01"
+    },
+    {
+      "icon": "Skill_S_SkirkNew_01"
+    },
+    {
+      "icon": "Skill_E_SkirkNew_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_SkirkNew_05"
+    },
+    {
+      "icon": "UI_Talent_S_SkirkNew_06"
+    },
+    {
+      "icon": "UI_Talent_S_SkirkNew_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_SkirkNew_01"
+    },
+    {
+      "icon": "UI_Talent_S_SkirkNew_02"
+    },
+    {
+      "icon": "UI_Talent_U_SkirkNew_01"
+    },
+    {
+      "icon": "UI_Talent_S_SkirkNew_03"
+    },
+    {
+      "icon": "UI_Talent_U_SkirkNew_02"
+    },
+    {
+      "icon": "UI_Talent_S_SkirkNew_04"
+    }
+  ]
+}

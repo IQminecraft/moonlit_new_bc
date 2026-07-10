@@ -1,0 +1,63 @@
+{
+  "name": "フレミネ",
+  "desc": "潜水の道を極めた寡黙な少年。氷のように近づきがたい外見の下に、一点の瑕もない純粋な心を秘めている。",
+  "weapon": "WEAPON_CLAYMORE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Cryo",
+  "icon": "UI_AvatarIcon_Freminet",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12071,
+  "atk": 255,
+  "def": 708,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_04"
+    },
+    {
+      "icon": "Skill_S_Freminet_01"
+    },
+    {
+      "icon": "Skill_E_Freminet_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Freminet_05"
+    },
+    {
+      "icon": "UI_Talent_S_Freminet_06"
+    },
+    {
+      "icon": "UI_Talent_S_Freminet_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Freminet_01"
+    },
+    {
+      "icon": "UI_Talent_S_Freminet_02"
+    },
+    {
+      "icon": "UI_Talent_U_Freminet_01"
+    },
+    {
+      "icon": "UI_Talent_S_Freminet_03"
+    },
+    {
+      "icon": "UI_Talent_U_Freminet_02"
+    },
+    {
+      "icon": "UI_Talent_S_Freminet_04"
+    }
+  ]
+}

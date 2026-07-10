@@ -1,0 +1,9 @@
+{
+  "name": "千夜に浮かぶ夢",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Catalyst_Ayus",
+  "stats_modifier": {
+    "atk": 541.829758
+  }
+}

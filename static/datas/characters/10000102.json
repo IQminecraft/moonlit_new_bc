@@ -1,0 +1,66 @@
+{
+  "name": "ムアラニ",
+  "desc": "ナタ中に名を馳せるガイドであり、マリングッズ店の経営者でもある、さまざまな水上スポーツに精通した波追い人。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Hydro",
+  "icon": "UI_AvatarIcon_Mualani",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 15185,
+  "atk": 182,
+  "def": 570,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Mualani_01"
+    },
+    {
+      "icon": "Skill_E_Mualani_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Mualani_05"
+    },
+    {
+      "icon": "UI_Talent_S_Mualani_06"
+    },
+    {
+      "icon": "UI_Talent_S_Mualani_07"
+    },
+    {
+      "icon": "UI_Talent_S_Kachina_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Mualani_01"
+    },
+    {
+      "icon": "UI_Talent_S_Mualani_02"
+    },
+    {
+      "icon": "UI_Talent_U_Mualani_01"
+    },
+    {
+      "icon": "UI_Talent_S_Mualani_03"
+    },
+    {
+      "icon": "UI_Talent_U_Mualani_02"
+    },
+    {
+      "icon": "UI_Talent_S_Mualani_04"
+    }
+  ]
+}

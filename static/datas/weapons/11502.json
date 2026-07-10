@@ -1,0 +1,9 @@
+{
+  "name": "天空の刃",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Sword_Dvalin",
+  "stats_modifier": {
+    "atk": 608.0745972
+  }
+}

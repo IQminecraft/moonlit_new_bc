@@ -1,0 +1,66 @@
+{
+  "name": "イネファ",
+  "desc": "各国のパーツを使って組み立てられた万能型ロボット。胸部の秘源コアは、かなり古いもののようだ…",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Electro",
+  "icon": "UI_AvatarIcon_Ineffa",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12613,
+  "atk": 330,
+  "def": 828,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Ineffa_01"
+    },
+    {
+      "icon": "Skill_E_Ineffa_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Ineffa_05"
+    },
+    {
+      "icon": "UI_Talent_S_Ineffa_06"
+    },
+    {
+      "icon": "UI_Talent_S_Ineffa_07"
+    },
+    {
+      "icon": "UI_Talent_S_Ineffa_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Ineffa_01"
+    },
+    {
+      "icon": "UI_Talent_S_Ineffa_02"
+    },
+    {
+      "icon": "UI_Talent_U_Ineffa_01"
+    },
+    {
+      "icon": "UI_Talent_S_Ineffa_03"
+    },
+    {
+      "icon": "UI_Talent_U_Ineffa_02"
+    },
+    {
+      "icon": "UI_Talent_S_Ineffa_04"
+    }
+  ]
+}

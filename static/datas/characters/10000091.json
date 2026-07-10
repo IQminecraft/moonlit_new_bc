@@ -1,0 +1,63 @@
+{
+  "name": "ナヴィア",
+  "desc": "棘薔薇の会の現会長。愛らしく、強い責任感を持った素晴らしいボス。",
+  "weapon": "WEAPON_CLAYMORE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Geo",
+  "icon": "UI_AvatarIcon_Navia",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12650,
+  "atk": 352,
+  "def": 793,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0.384
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_04"
+    },
+    {
+      "icon": "Skill_S_Navia_01"
+    },
+    {
+      "icon": "Skill_E_Navia_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Navia_05"
+    },
+    {
+      "icon": "UI_Talent_S_Navia_06"
+    },
+    {
+      "icon": "UI_Talent_S_Navia_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Navia_01"
+    },
+    {
+      "icon": "UI_Talent_S_Navia_02"
+    },
+    {
+      "icon": "UI_Talent_U_Navia_01"
+    },
+    {
+      "icon": "UI_Talent_S_Navia_03"
+    },
+    {
+      "icon": "UI_Talent_U_Navia_02"
+    },
+    {
+      "icon": "UI_Talent_S_Navia_04"
+    }
+  ]
+}

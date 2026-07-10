@@ -1,0 +1,66 @@
+{
+  "name": "クレー",
+  "desc": "西風騎士団反省室の常連で、モンドの爆破スペシャリスト。人呼んで「逃げ回る太陽」。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Pyro",
+  "icon": "UI_AvatarIcon_Klee",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10287,
+  "atk": 311,
+  "def": 615,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Klee_01"
+    },
+    {
+      "icon": "Skill_E_Klee_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Klee_05"
+    },
+    {
+      "icon": "UI_Talent_S_Klee_06"
+    },
+    {
+      "icon": "UI_Talent_Collect_Local_Mengde"
+    },
+    {
+      "icon": "UI_Talent_S_Klee_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Klee_01"
+    },
+    {
+      "icon": "UI_Talent_S_Klee_02"
+    },
+    {
+      "icon": "UI_Talent_U_Klee_01"
+    },
+    {
+      "icon": "UI_Talent_S_Klee_03"
+    },
+    {
+      "icon": "UI_Talent_U_Klee_02"
+    },
+    {
+      "icon": "UI_Talent_S_Klee_04"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "name": "マーヴィカ",
+  "desc": "「キオンゴズィ」の古名を受け継いだナタの指導者。聖火で戦争の国を照らせることを願っている。",
+  "weapon": "WEAPON_CLAYMORE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Pyro",
+  "icon": "UI_AvatarIcon_Mavuika",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12552,
+  "atk": 359,
+  "def": 792,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0.384
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_04"
+    },
+    {
+      "icon": "Skill_S_Mavuika_01"
+    },
+    {
+      "icon": "Skill_E_Mavuika_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Mavuika_05"
+    },
+    {
+      "icon": "UI_Talent_S_Mavuika_06"
+    },
+    {
+      "icon": "UI_Talent_S_Mavuika_07"
+    },
+    {
+      "icon": "UI_Talent_S_Citlali_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Mavuika_01"
+    },
+    {
+      "icon": "UI_Talent_S_Mavuika_02"
+    },
+    {
+      "icon": "UI_Talent_U_Mavuika_01"
+    },
+    {
+      "icon": "UI_Talent_S_Mavuika_03"
+    },
+    {
+      "icon": "UI_Talent_U_Mavuika_02"
+    },
+    {
+      "icon": "UI_Talent_S_Mavuika_04"
+    }
+  ]
+}

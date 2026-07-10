@@ -1,0 +1,60 @@
+{
+  "name": "旅人",
+  "desc": "世界の外から漂流してきた旅人。肉親が見知らぬ神に連れ去られたため、七神を探す旅に出た。",
+  "weapon": "WEAPON_SWORD_ONE_HAND",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Anemo",
+  "icon": "UI_AvatarIcon_PlayerGirl",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10875,
+  "atk": 212,
+  "def": 683,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_01"
+    },
+    {
+      "icon": "Skill_S_PlayerWind_01"
+    },
+    {
+      "icon": "Skill_E_PlayerWind_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_PlayerWind_05"
+    },
+    {
+      "icon": "UI_Talent_S_PlayerWind_06"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_PlayerWind_01"
+    },
+    {
+      "icon": "UI_Talent_S_PlayerWind_02"
+    },
+    {
+      "icon": "UI_Talent_U_PlayerWind_02"
+    },
+    {
+      "icon": "UI_Talent_S_PlayerWind_03"
+    },
+    {
+      "icon": "UI_Talent_U_PlayerWind_01"
+    },
+    {
+      "icon": "UI_Talent_S_PlayerWind_04"
+    }
+  ]
+}

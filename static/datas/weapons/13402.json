@@ -1,0 +1,9 @@
+{
+  "name": "星鎌·試作",
+  "weapon_type": "WEAPON_POLE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Pole_Proto",
+  "stats_modifier": {
+    "atk": 509.605949
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "name": "ニコ",
+  "desc": "沈黙の「魔女」、声を捨てた「天の使い」。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Pyro",
+  "icon": "UI_AvatarIcon_Nicole",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10409,
+  "atk": 342,
+  "def": 563,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Nicole_01"
+    },
+    {
+      "icon": "Skill_E_Nicole_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Nicole_05"
+    },
+    {
+      "icon": "UI_Talent_S_Nicole_06"
+    },
+    {
+      "icon": "UI_Talent_S_Nicole_08"
+    },
+    {
+      "icon": "UI_Talent_S_Nicole_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Nicole_01"
+    },
+    {
+      "icon": "UI_Talent_S_Nicole_02"
+    },
+    {
+      "icon": "UI_Talent_U_Nicole_01"
+    },
+    {
+      "icon": "UI_Talent_S_Nicole_03"
+    },
+    {
+      "icon": "UI_Talent_U_Nicole_02"
+    },
+    {
+      "icon": "UI_Talent_S_Nicole_04"
+    }
+  ]
+}

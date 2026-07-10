@@ -1,0 +1,10 @@
+{
+  "name": "白纓槍",
+  "weapon_type": "WEAPON_POLE",
+  "rarity": 3,
+  "icon": "UI_EquipIcon_Pole_Ruby",
+  "stats_modifier": {
+    "atk": 401.2935898,
+    "fight_prop_critical": 0.234294
+  }
+}

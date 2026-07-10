@@ -1,0 +1,9 @@
+{
+  "name": "碧落の瓏",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Catalyst_Morax",
+  "stats_modifier": {
+    "atk": 608.0745972
+  }
+}

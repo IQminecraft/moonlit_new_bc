@@ -1,0 +1,9 @@
+{
+  "name": "翡玉法珠",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 3,
+  "icon": "UI_EquipIcon_Catalyst_Jade",
+  "stats_modifier": {
+    "atk": 448.2215814
+  }
+}

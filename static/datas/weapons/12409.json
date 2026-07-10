@@ -1,0 +1,10 @@
+{
+  "name": "螭龍の剣",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Claymore_Kione",
+  "stats_modifier": {
+    "atk": 509.605949,
+    "fight_prop_critical": 0.27564
+  }
+}

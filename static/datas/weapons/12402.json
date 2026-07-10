@@ -1,0 +1,9 @@
+{
+  "name": "鐘の剣",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Claymore_Troupe",
+  "stats_modifier": {
+    "atk": 509.605949
+  }
+}

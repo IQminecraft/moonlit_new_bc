@@ -1,0 +1,9 @@
+{
+  "name": "静水流転の輝き",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Sword_Regalis",
+  "stats_modifier": {
+    "atk": 541.829758
+  }
+}

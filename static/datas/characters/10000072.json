@@ -1,0 +1,63 @@
+{
+  "name": "キャンディス",
+  "desc": "琥珀色の左目を持つ、キングデシェレトの末裔。アアル村のガーディアンをしている。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Hydro",
+  "icon": "UI_AvatarIcon_Candace",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10875,
+  "atk": 212,
+  "def": 683,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Candace_01"
+    },
+    {
+      "icon": "Skill_E_Candace_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Candace_05"
+    },
+    {
+      "icon": "UI_Talent_S_Candace_06"
+    },
+    {
+      "icon": "UI_Talent_Explosion_Climb"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Candace_01"
+    },
+    {
+      "icon": "UI_Talent_S_Candace_02"
+    },
+    {
+      "icon": "UI_Talent_U_Candace_01"
+    },
+    {
+      "icon": "UI_Talent_S_Candace_03"
+    },
+    {
+      "icon": "UI_Talent_U_Candace_02"
+    },
+    {
+      "icon": "UI_Talent_S_Candace_04"
+    }
+  ]
+}

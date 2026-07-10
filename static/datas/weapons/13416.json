@@ -1,0 +1,9 @@
+{
+  "name": "斬波のひれ長",
+  "weapon_type": "WEAPON_POLE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Pole_Maria",
+  "stats_modifier": {
+    "atk": 620.0329535
+  }
+}

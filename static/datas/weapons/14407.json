@@ -1,0 +1,9 @@
+{
+  "name": "万国諸海の図譜",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Catalyst_Exotic",
+  "stats_modifier": {
+    "atk": 564.7837244
+  }
+}

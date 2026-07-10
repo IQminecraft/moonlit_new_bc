@@ -1,0 +1,9 @@
+{
+  "name": "岩峰を巡る歌",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Sword_XochitlsTube",
+  "stats_modifier": {
+    "atk": 541.829758
+  }
+}

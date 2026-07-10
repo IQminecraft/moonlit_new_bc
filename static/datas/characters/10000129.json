@@ -1,0 +1,66 @@
+{
+  "name": "ローエン",
+  "desc": "西風騎士団遠距離小隊副隊長。型破りな行動を取り、常軌を逸した戦術を好む騎士。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Cryo",
+  "icon": "UI_AvatarIcon_Lohen",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12858,
+  "atk": 344,
+  "def": 784,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0.384
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Lohen_01"
+    },
+    {
+      "icon": "Skill_E_Lohen_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Lohen_05"
+    },
+    {
+      "icon": "UI_Talent_S_Lohen_06"
+    },
+    {
+      "icon": "UI_Talent_S_Lohen_08"
+    },
+    {
+      "icon": "UI_Talent_S_Lohen_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Lohen_01"
+    },
+    {
+      "icon": "UI_Talent_S_Lohen_02"
+    },
+    {
+      "icon": "UI_Talent_U_Lohen_01"
+    },
+    {
+      "icon": "UI_Talent_S_Lohen_03"
+    },
+    {
+      "icon": "UI_Talent_U_Lohen_02"
+    },
+    {
+      "icon": "UI_Talent_S_Lohen_04"
+    }
+  ]
+}

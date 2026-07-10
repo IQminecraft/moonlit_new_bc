@@ -1,0 +1,66 @@
+{
+  "name": "北斗",
+  "desc": "武装船隊「南十字」の頭領。豪快な姉貴。",
+  "weapon": "WEAPON_CLAYMORE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Electro",
+  "icon": "UI_AvatarIcon_Beidou",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 13050,
+  "atk": 225,
+  "def": 648,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_04"
+    },
+    {
+      "icon": "Skill_S_Beidou_01"
+    },
+    {
+      "icon": "Skill_E_Beidou_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Beidou_05"
+    },
+    {
+      "icon": "UI_Talent_S_Beidou_06"
+    },
+    {
+      "icon": "UI_Talent_Explosion_Swim"
+    },
+    {
+      "icon": "UI_Talent_S_Beidou_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Beidou_02"
+    },
+    {
+      "icon": "UI_Talent_S_Beidou_01"
+    },
+    {
+      "icon": "UI_Talent_U_Beidou_01"
+    },
+    {
+      "icon": "UI_Talent_S_Beidou_03"
+    },
+    {
+      "icon": "UI_Talent_U_Beidou_02"
+    },
+    {
+      "icon": "UI_Talent_S_Beidou_04"
+    }
+  ]
+}

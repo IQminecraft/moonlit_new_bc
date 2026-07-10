@@ -1,0 +1,66 @@
+{
+  "name": "スクロース",
+  "desc": "この世界のありとあらゆるものに強い好奇心を抱く錬金術師。研究分野は「生物錬金」。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Anemo",
+  "icon": "UI_AvatarIcon_Sucrose",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 9244,
+  "atk": 170,
+  "def": 703,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Sucrose_01"
+    },
+    {
+      "icon": "Skill_E_Sucrose_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Sucrose_05"
+    },
+    {
+      "icon": "UI_Talent_S_Sucrose_06"
+    },
+    {
+      "icon": "UI_Talent_Combine_Material"
+    },
+    {
+      "icon": "UI_Talent_S_Sucrose_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Sucrose_01"
+    },
+    {
+      "icon": "UI_Talent_S_Sucrose_02"
+    },
+    {
+      "icon": "UI_Talent_U_Sucrose_01"
+    },
+    {
+      "icon": "UI_Talent_S_Sucrose_03"
+    },
+    {
+      "icon": "UI_Talent_U_Sucrose_02"
+    },
+    {
+      "icon": "UI_Talent_S_Sucrose_04"
+    }
+  ]
+}

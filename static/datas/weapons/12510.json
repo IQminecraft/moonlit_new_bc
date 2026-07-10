@@ -1,0 +1,9 @@
+{
+  "name": "赤角石塵滅砕",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Claymore_Itadorimaru",
+  "stats_modifier": {
+    "atk": 541.829758
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "黒纓槍",
+  "weapon_type": "WEAPON_POLE",
+  "rarity": 3,
+  "icon": "UI_EquipIcon_Pole_Noire",
+  "stats_modifier": {
+    "atk": 354.37940000000003
+  }
+}

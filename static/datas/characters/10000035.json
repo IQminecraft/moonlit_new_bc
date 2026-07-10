@@ -1,0 +1,66 @@
+{
+  "name": "七七",
+  "desc": "薬舗「不卜廬」の薬採り兼弟子、紙のように白い顔色で不死身。口数が少なく、あまり表情がない。",
+  "weapon": "WEAPON_SWORD_ONE_HAND",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Cryo",
+  "icon": "UI_AvatarIcon_Qiqi",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12368,
+  "atk": 287,
+  "def": 922,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_01"
+    },
+    {
+      "icon": "Skill_S_Qiqi_01"
+    },
+    {
+      "icon": "Skill_E_Qiqi_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Qiqi_05"
+    },
+    {
+      "icon": "UI_Talent_S_Qiqi_06"
+    },
+    {
+      "icon": "UI_Talent_Collect_Local_Liyue"
+    },
+    {
+      "icon": "UI_Talent_S_Qiqi_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Qiqi_01"
+    },
+    {
+      "icon": "UI_Talent_S_Qiqi_02"
+    },
+    {
+      "icon": "UI_Talent_U_Qiqi_01"
+    },
+    {
+      "icon": "UI_Talent_S_Qiqi_03"
+    },
+    {
+      "icon": "UI_Talent_U_Qiqi_02"
+    },
+    {
+      "icon": "UI_Talent_S_Qiqi_04"
+    }
+  ]
+}

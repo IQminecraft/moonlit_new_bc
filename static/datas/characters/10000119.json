@@ -1,0 +1,66 @@
+{
+  "name": "ラウマ",
+  "desc": "月光と森の祝福を受けて、「霜月の子」に生まれた聖女。民にとっての希望である。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Dendro",
+  "icon": "UI_AvatarIcon_Lauma",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 200,
+  "hp": 10654,
+  "atk": 255,
+  "def": 669,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Lauma_01"
+    },
+    {
+      "icon": "Skill_E_Lauma_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Lauma_05"
+    },
+    {
+      "icon": "UI_Talent_S_Lauma_06"
+    },
+    {
+      "icon": "UI_Talent_S_Lauma_07"
+    },
+    {
+      "icon": "UI_Talent_S_Lauma_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Lauma_01"
+    },
+    {
+      "icon": "UI_Talent_S_Lauma_02"
+    },
+    {
+      "icon": "UI_Talent_U_Lauma_01"
+    },
+    {
+      "icon": "UI_Talent_S_Lauma_03"
+    },
+    {
+      "icon": "UI_Talent_U_Lauma_02"
+    },
+    {
+      "icon": "UI_Talent_S_Lauma_04"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "サーンドルの渡し守",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Sword_Machination",
+  "stats_modifier": {
+    "atk": 509.605949
+  }
+}

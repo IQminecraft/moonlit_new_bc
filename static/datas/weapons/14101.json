@@ -1,0 +1,9 @@
+{
+  "name": "生徒ノート",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 1,
+  "icon": "UI_EquipIcon_Catalyst_Apprentice",
+  "stats_modifier": {
+    "atk": 170.75777000000002
+  }
+}

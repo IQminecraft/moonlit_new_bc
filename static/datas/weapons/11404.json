@@ -1,0 +1,9 @@
+{
+  "name": "旧貴族長剣",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Sword_Theocrat",
+  "stats_modifier": {
+    "atk": 509.605949
+  }
+}

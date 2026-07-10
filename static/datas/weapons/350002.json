@@ -1,0 +1,7 @@
+{
+  "name": "貫星・真化",
+  "weapon_type": "WEAPON_BOW",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Bow_MorphChrod_Great_{0}",
+  "stats_modifier": {}
+}

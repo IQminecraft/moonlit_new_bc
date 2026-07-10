@@ -1,0 +1,63 @@
+{
+  "name": "ディシア",
+  "desc": "スメールの砂漠を気の赴くままに渡り歩く傭兵集団「エルマイト旅団」のメンバー。屈強で勇敢な戦士。「エルマイト旅団」ではかなり名が通っている。",
+  "weapon": "WEAPON_CLAYMORE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Pyro",
+  "icon": "UI_AvatarIcon_Dehya",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 15675,
+  "atk": 265,
+  "def": 628,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_04"
+    },
+    {
+      "icon": "Skill_S_Dehya_01"
+    },
+    {
+      "icon": "Skill_E_Dehya_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Dehya_05"
+    },
+    {
+      "icon": "UI_Talent_S_Dehya_06"
+    },
+    {
+      "icon": "UI_Talent_S_Dehya_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Dehya_01"
+    },
+    {
+      "icon": "UI_Talent_S_Dehya_02"
+    },
+    {
+      "icon": "UI_Talent_U_Dehya_01"
+    },
+    {
+      "icon": "UI_Talent_S_Dehya_03"
+    },
+    {
+      "icon": "UI_Talent_U_Dehya_02"
+    },
+    {
+      "icon": "UI_Talent_S_Dehya_04"
+    }
+  ]
+}

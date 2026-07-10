@@ -1,0 +1,10 @@
+{
+  "name": "BP武器",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Claymore_EscapeWheel",
+  "stats_modifier": {
+    "atk": 454.36315250000007,
+    "fight_prop_critical": 0.36752
+  }
+}

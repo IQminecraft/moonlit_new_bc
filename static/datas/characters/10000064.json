@@ -1,0 +1,63 @@
+{
+  "name": "雲菫",
+  "desc": "演技と創作の二つの才を持つ璃月劇の看板役者。雲菫の演じる姿は優雅でたおやかであり、まるで彼女の風格を表しているかのようである。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Geo",
+  "icon": "UI_AvatarIcon_Yunjin",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10657,
+  "atk": 191,
+  "def": 734,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Yunjin_01"
+    },
+    {
+      "icon": "Skill_E_Yunjin_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Yunjin_05"
+    },
+    {
+      "icon": "UI_Talent_S_Yunjin_06"
+    },
+    {
+      "icon": "UI_Talent_S_Yunjin_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Yunjin_01"
+    },
+    {
+      "icon": "UI_Talent_S_Yunjin_02"
+    },
+    {
+      "icon": "UI_Talent_U_Yunjin_01"
+    },
+    {
+      "icon": "UI_Talent_S_Yunjin_03"
+    },
+    {
+      "icon": "UI_Talent_U_Yunjin_02"
+    },
+    {
+      "icon": "UI_Talent_S_Yunjin_04"
+    }
+  ]
+}

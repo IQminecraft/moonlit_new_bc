@@ -1,0 +1,63 @@
+{
+  "name": "ミカ",
+  "desc": "平凡な家庭に生まれた若い騎士。小隊では「前進測量士」を担当している。控えめで慎重な性格の持ち主。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Cryo",
+  "icon": "UI_AvatarIcon_Mika",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12506,
+  "atk": 223,
+  "def": 713,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Mika_01"
+    },
+    {
+      "icon": "Skill_E_Mika_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Mika_05"
+    },
+    {
+      "icon": "UI_Talent_S_Mika_06"
+    },
+    {
+      "icon": "UI_Talent_Collect_Local_Mengde"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Mika_01"
+    },
+    {
+      "icon": "UI_Talent_S_Mika_02"
+    },
+    {
+      "icon": "UI_Talent_U_Mika_01"
+    },
+    {
+      "icon": "UI_Talent_S_Mika_03"
+    },
+    {
+      "icon": "UI_Talent_U_Mika_02"
+    },
+    {
+      "icon": "UI_Talent_S_Mika_04"
+    }
+  ]
+}

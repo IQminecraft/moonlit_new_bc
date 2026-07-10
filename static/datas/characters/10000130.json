@@ -1,0 +1,66 @@
+{
+  "name": "リンネア",
+  "desc": "冒険者協会（ナド・クライ支部）顧問＆博物学者。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Geo",
+  "icon": "UI_AvatarIcon_Linnea",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 9895,
+  "atk": 144,
+  "def": 907,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Linnea_01"
+    },
+    {
+      "icon": "Skill_E_Linnea_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Linnea_05"
+    },
+    {
+      "icon": "UI_Talent_S_Linnea_06"
+    },
+    {
+      "icon": "UI_Talent_S_Linnea_07"
+    },
+    {
+      "icon": "UI_Talent_S_Linnea_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Linnea_01"
+    },
+    {
+      "icon": "UI_Talent_S_Linnea_02"
+    },
+    {
+      "icon": "UI_Talent_U_Linnea_01"
+    },
+    {
+      "icon": "UI_Talent_S_Linnea_03"
+    },
+    {
+      "icon": "UI_Talent_U_Linnea_02"
+    },
+    {
+      "icon": "UI_Talent_S_Linnea_04"
+    }
+  ]
+}

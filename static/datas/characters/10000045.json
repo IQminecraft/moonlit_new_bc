@@ -1,0 +1,63 @@
+{
+  "name": "ロサリア",
+  "desc": "身にまとう服装以外、何ひとつとして聖職者とは思えないシスター。冷たい言動の中には、相手を見透かす鋭さが隠されている。また、いつも一人で行動をしている。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Cryo",
+  "icon": "UI_AvatarIcon_Rosaria",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12289,
+  "atk": 240,
+  "def": 710,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Rosaria_01"
+    },
+    {
+      "icon": "Skill_E_Rosaria_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Rosaria_05"
+    },
+    {
+      "icon": "UI_Talent_S_Rosaria_06"
+    },
+    {
+      "icon": "UI_Talent_Rosaria_NightRunner"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Rosaria_01"
+    },
+    {
+      "icon": "UI_Talent_S_Rosaria_02"
+    },
+    {
+      "icon": "UI_Talent_U_Rosaria_01"
+    },
+    {
+      "icon": "UI_Talent_S_Rosaria_03"
+    },
+    {
+      "icon": "UI_Talent_U_Rosaria_02"
+    },
+    {
+      "icon": "UI_Talent_S_Rosaria_04"
+    }
+  ]
+}

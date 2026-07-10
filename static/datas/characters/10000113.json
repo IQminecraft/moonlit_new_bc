@@ -1,0 +1,66 @@
+{
+  "name": "イファ",
+  "desc": "花翼の集の竜医。人や動物、その他の生き物と共に過ごす生活を心から愛している。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Anemo",
+  "icon": "UI_AvatarIcon_Ifa",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10081,
+  "atk": 178,
+  "def": 605,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Ifa_01"
+    },
+    {
+      "icon": "Skill_E_Ifa_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Ifa_05"
+    },
+    {
+      "icon": "UI_Talent_S_Ifa_06"
+    },
+    {
+      "icon": "UI_Talent_S_Ifa_07"
+    },
+    {
+      "icon": "UI_Talent_S_Ifa_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Ifa_01"
+    },
+    {
+      "icon": "UI_Talent_S_Ifa_02"
+    },
+    {
+      "icon": "UI_Talent_U_Ifa_01"
+    },
+    {
+      "icon": "UI_Talent_S_Ifa_03"
+    },
+    {
+      "icon": "UI_Talent_U_Ifa_02"
+    },
+    {
+      "icon": "UI_Talent_S_Ifa_04"
+    }
+  ]
+}

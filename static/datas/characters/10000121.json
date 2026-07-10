@@ -1,0 +1,66 @@
+{
+  "name": "アイノ",
+  "desc": "ナド・クライの天才機械技師。面白い機械とお菓子が大好き。",
+  "weapon": "WEAPON_CLAYMORE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Hydro",
+  "icon": "UI_AvatarIcon_Aino",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 11201,
+  "atk": 242,
+  "def": 607,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_04"
+    },
+    {
+      "icon": "Skill_S_Aino_01"
+    },
+    {
+      "icon": "Skill_E_Aino_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Aino_05"
+    },
+    {
+      "icon": "UI_Talent_S_Aino_06"
+    },
+    {
+      "icon": "UI_Talent_S_Aino_07"
+    },
+    {
+      "icon": "UI_Talent_S_Aino_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Aino_03"
+    },
+    {
+      "icon": "UI_Talent_S_Aino_02"
+    },
+    {
+      "icon": "UI_Talent_U_Aino_01"
+    },
+    {
+      "icon": "UI_Talent_S_Aino_01"
+    },
+    {
+      "icon": "UI_Talent_U_Aino_02"
+    },
+    {
+      "icon": "UI_Talent_S_Aino_04"
+    }
+  ]
+}

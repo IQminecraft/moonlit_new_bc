@@ -1,0 +1,9 @@
+{
+  "name": "鉾槍",
+  "weapon_type": "WEAPON_POLE",
+  "rarity": 3,
+  "icon": "UI_EquipIcon_Pole_Halberd",
+  "stats_modifier": {
+    "atk": 448.2215814
+  }
+}

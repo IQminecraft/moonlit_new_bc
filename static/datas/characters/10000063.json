@@ -1,0 +1,63 @@
+{
+  "name": "申鶴",
+  "desc": "仙人の弟子であり、気品溢れる女性。璃月の山奥にひっそりと住み、その気質は仙人のように孤独で淡々としている。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Cryo",
+  "icon": "UI_AvatarIcon_Shenhe",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12993,
+  "atk": 304,
+  "def": 830,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Shenhe_01"
+    },
+    {
+      "icon": "Skill_E_Shenhe_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Shenhe_05"
+    },
+    {
+      "icon": "UI_Talent_S_Shenhe_06"
+    },
+    {
+      "icon": "UI_Talent_Expedition_Liyue"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Shenhe_02"
+    },
+    {
+      "icon": "UI_Talent_S_Shenhe_01"
+    },
+    {
+      "icon": "UI_Talent_U_Shenhe_01"
+    },
+    {
+      "icon": "UI_Talent_S_Shenhe_03"
+    },
+    {
+      "icon": "UI_Talent_U_Shenhe_02"
+    },
+    {
+      "icon": "UI_Talent_S_Shenhe_04"
+    }
+  ]
+}

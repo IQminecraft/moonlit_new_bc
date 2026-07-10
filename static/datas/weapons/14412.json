@@ -1,0 +1,9 @@
+{
+  "name": "冬忍びの実",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Catalyst_Everfrost",
+  "stats_modifier": {
+    "atk": 509.605949
+  }
+}

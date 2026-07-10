@@ -1,0 +1,66 @@
+{
+  "name": "ヴァレサ",
+  "desc": "のんびりまったりした「豊穣の邦」の戦士で、果樹園のお世話係。強い英雄に憧れており、食べることが大好き。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Electro",
+  "icon": "UI_AvatarIcon_Varesa",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12699,
+  "atk": 356,
+  "def": 782,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Varesa_01"
+    },
+    {
+      "icon": "Skill_E_Varesa_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Varesa_05"
+    },
+    {
+      "icon": "UI_Talent_S_Varesa_06"
+    },
+    {
+      "icon": "UI_Talent_S_Varesa_07"
+    },
+    {
+      "icon": "UI_Talent_S_Varesa_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Varesa_01"
+    },
+    {
+      "icon": "UI_Talent_S_Varesa_02"
+    },
+    {
+      "icon": "UI_Talent_U_Varesa_01"
+    },
+    {
+      "icon": "UI_Talent_S_Varesa_03"
+    },
+    {
+      "icon": "UI_Talent_U_Varesa_02"
+    },
+    {
+      "icon": "UI_Talent_S_Varesa_04"
+    }
+  ]
+}

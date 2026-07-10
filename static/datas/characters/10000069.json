@@ -1,0 +1,63 @@
+{
+  "name": "ティナリ",
+  "desc": "植物学に精通している若き学者、アビディアの森のレンジャー長を務めている。まっすぐな性格で熱意があり、考えなしに行動してしまう者を指導するのが得意。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Dendro",
+  "icon": "UI_AvatarIcon_Tighnari",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10850,
+  "atk": 268,
+  "def": 630,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Tighnari_01"
+    },
+    {
+      "icon": "Skill_E_Tighnari_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Tighnari_05"
+    },
+    {
+      "icon": "UI_Talent_S_Tighnari_06"
+    },
+    {
+      "icon": "UI_Talent_S_Tighnari_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Tighnari_01"
+    },
+    {
+      "icon": "UI_Talent_S_Tighnari_02"
+    },
+    {
+      "icon": "UI_Talent_U_Tighnari_01"
+    },
+    {
+      "icon": "UI_Talent_S_Tighnari_03"
+    },
+    {
+      "icon": "UI_Talent_U_Tighnari_02"
+    },
+    {
+      "icon": "UI_Talent_S_Tighnari_04"
+    }
+  ]
+}

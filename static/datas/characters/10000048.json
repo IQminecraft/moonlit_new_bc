@@ -1,0 +1,63 @@
+{
+  "name": "煙緋",
+  "desc": "仙獣の血が流れる聡明な少女。璃月港で有名な法律家として活躍している。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Pyro",
+  "icon": "UI_AvatarIcon_Feiyan",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 9352,
+  "atk": 240,
+  "def": 587,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Feiyan_01"
+    },
+    {
+      "icon": "Skill_E_Feiyan_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Feiyan_05"
+    },
+    {
+      "icon": "UI_Talent_S_Feiyan_06"
+    },
+    {
+      "icon": "UI_Talent_Collect_Local_Liyue"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Feiyan_01"
+    },
+    {
+      "icon": "UI_Talent_S_Feiyan_02"
+    },
+    {
+      "icon": "UI_Talent_U_Feiyan_01"
+    },
+    {
+      "icon": "UI_Talent_S_Feiyan_03"
+    },
+    {
+      "icon": "UI_Talent_U_Feiyan_02"
+    },
+    {
+      "icon": "UI_Talent_S_Feiyan_04"
+    }
+  ]
+}

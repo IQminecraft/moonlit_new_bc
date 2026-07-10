@@ -1,0 +1,9 @@
+{
+  "name": "寝正月の初晴",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Catalyst_SakuraFan",
+  "stats_modifier": {
+    "atk": 541.829758
+  }
+}

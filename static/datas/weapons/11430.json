@@ -1,0 +1,9 @@
+{
+  "name": "ストロング・ボーン",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Sword_Umpakati",
+  "stats_modifier": {
+    "atk": 564.7837244
+  }
+}

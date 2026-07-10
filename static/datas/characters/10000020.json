@@ -1,0 +1,66 @@
+{
+  "name": "レザー",
+  "desc": "人間の町から離れた、モンド地域の奔狼領で狼と暮らす少年。勘が鋭く、動きが俊敏。",
+  "weapon": "WEAPON_CLAYMORE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Electro",
+  "icon": "UI_AvatarIcon_Razor",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 11962,
+  "atk": 234,
+  "def": 751,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_04"
+    },
+    {
+      "icon": "Skill_S_Razor_01"
+    },
+    {
+      "icon": "Skill_E_Razor_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Razor_05"
+    },
+    {
+      "icon": "UI_Talent_S_Razor_06"
+    },
+    {
+      "icon": "UI_Talent_Explosion_Sprint"
+    },
+    {
+      "icon": "UI_Talent_S_Razor_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Razor_01"
+    },
+    {
+      "icon": "UI_Talent_S_Razor_02"
+    },
+    {
+      "icon": "UI_Talent_U_Razor_02"
+    },
+    {
+      "icon": "UI_Talent_S_Razor_03"
+    },
+    {
+      "icon": "UI_Talent_U_Razor_01"
+    },
+    {
+      "icon": "UI_Talent_S_Razor_04"
+    }
+  ]
+}

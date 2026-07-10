@@ -1,0 +1,9 @@
+{
+  "name": "「スーパーアルティメット覇王魔剣」",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Claymore_Champion",
+  "stats_modifier": {
+    "atk": 564.7837244
+  }
+}

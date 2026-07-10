@@ -1,0 +1,63 @@
+{
+  "name": "重雲",
+  "desc": "妖魔退治一族の少年方士。自身の「純陽の体」を抑えるために色々と苦労している。",
+  "weapon": "WEAPON_CLAYMORE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Cryo",
+  "icon": "UI_AvatarIcon_Chongyun",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10984,
+  "atk": 223,
+  "def": 648,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_04"
+    },
+    {
+      "icon": "Skill_S_Chongyun_01"
+    },
+    {
+      "icon": "Skill_E_Chongyun_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Chongyun_05"
+    },
+    {
+      "icon": "UI_Talent_S_Chongyun_06"
+    },
+    {
+      "icon": "UI_Talent_Expedition_Liyue"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Chongyun_01"
+    },
+    {
+      "icon": "UI_Talent_S_Chongyun_02"
+    },
+    {
+      "icon": "UI_Talent_U_Chongyun_01"
+    },
+    {
+      "icon": "UI_Talent_S_Chongyun_03"
+    },
+    {
+      "icon": "UI_Talent_U_Chongyun_02"
+    },
+    {
+      "icon": "UI_Talent_S_Chongyun_04"
+    }
+  ]
+}

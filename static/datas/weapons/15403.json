@@ -1,0 +1,9 @@
+{
+  "name": "祭礼の弓",
+  "weapon_type": "WEAPON_BOW",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Bow_Fossil",
+  "stats_modifier": {
+    "atk": 564.7837244
+  }
+}

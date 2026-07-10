@@ -1,0 +1,9 @@
+{
+  "name": "雪葬の星銀",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Claymore_Dragonfell",
+  "stats_modifier": {
+    "atk": 564.7837244
+  }
+}

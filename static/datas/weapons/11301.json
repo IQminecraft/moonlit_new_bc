@@ -1,0 +1,9 @@
+{
+  "name": "冷刃",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 3,
+  "icon": "UI_EquipIcon_Sword_Steel",
+  "stats_modifier": {
+    "atk": 401.2935898
+  }
+}

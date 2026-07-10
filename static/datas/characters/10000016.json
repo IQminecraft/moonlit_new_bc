@@ -1,0 +1,63 @@
+{
+  "name": "ディルック",
+  "desc": "モンドの大半の酒造を掌握する貴公子。財力も人望も実力も、見くびってはならない。",
+  "weapon": "WEAPON_CLAYMORE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Pyro",
+  "icon": "UI_AvatarIcon_Diluc",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12981,
+  "atk": 335,
+  "def": 784,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_04"
+    },
+    {
+      "icon": "Skill_S_Diluc_01_01"
+    },
+    {
+      "icon": "Skill_E_Diluc_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Diluc_05"
+    },
+    {
+      "icon": "UI_Talent_S_Diluc_06"
+    },
+    {
+      "icon": "UI_Talent_Forge_Claymore"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Diluc_01"
+    },
+    {
+      "icon": "UI_Talent_S_Diluc_02"
+    },
+    {
+      "icon": "UI_Talent_U_Diluc_01"
+    },
+    {
+      "icon": "UI_Talent_S_Diluc_03"
+    },
+    {
+      "icon": "UI_Talent_U_Diluc_02"
+    },
+    {
+      "icon": "UI_Talent_S_Diluc_04"
+    }
+  ]
+}

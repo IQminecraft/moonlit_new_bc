@@ -1,0 +1,63 @@
+{
+  "name": "アルレッキーノ",
+  "desc": "ファデュイ執行官第四位「召使」。冷静かつ冷徹な外交官。「壁炉の家」の子供たちがみな畏れ、頼りにする「お父様」。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Pyro",
+  "icon": "UI_AvatarIcon_Arlecchino",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 13103,
+  "atk": 342,
+  "def": 765,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0.384
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Arlecchino_01"
+    },
+    {
+      "icon": "Skill_E_Arlecchino_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Arlecchino_05"
+    },
+    {
+      "icon": "UI_Talent_S_Arlecchino_06"
+    },
+    {
+      "icon": "UI_Talent_S_Arlecchino_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Arlecchino_01"
+    },
+    {
+      "icon": "UI_Talent_S_Arlecchino_02"
+    },
+    {
+      "icon": "UI_Talent_U_Arlecchino_01"
+    },
+    {
+      "icon": "UI_Talent_S_Arlecchino_03"
+    },
+    {
+      "icon": "UI_Talent_U_Arlecchino_02"
+    },
+    {
+      "icon": "UI_Talent_S_Arlecchino_04"
+    }
+  ]
+}

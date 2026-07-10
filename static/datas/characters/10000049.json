@@ -1,0 +1,63 @@
+{
+  "name": "宵宮",
+  "desc": "「長野原花火屋」の店主。才ある花火職人で、人々の願いを花火へと託す。「夏祭りの女王」と呼ばれている。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Pyro",
+  "icon": "UI_AvatarIcon_Yoimiya",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10164,
+  "atk": 323,
+  "def": 615,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Yoimiya_01"
+    },
+    {
+      "icon": "Skill_E_Yoimiya_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Yoimiya_05"
+    },
+    {
+      "icon": "UI_Talent_S_Yoimiya_06"
+    },
+    {
+      "icon": "UI_Talent_S_Yoimiya_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Yoimiya_01"
+    },
+    {
+      "icon": "UI_Talent_S_Yoimiya_02"
+    },
+    {
+      "icon": "UI_Talent_U_Yoimiya_01"
+    },
+    {
+      "icon": "UI_Talent_S_Yoimiya_03"
+    },
+    {
+      "icon": "UI_Talent_U_Yoimiya_02"
+    },
+    {
+      "icon": "UI_Talent_S_Yoimiya_04"
+    }
+  ]
+}

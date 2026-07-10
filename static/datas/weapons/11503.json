@@ -1,0 +1,9 @@
+{
+  "name": "蒼古なる自由への誓い",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Sword_Widsith",
+  "stats_modifier": {
+    "atk": 608.0745972
+  }
+}

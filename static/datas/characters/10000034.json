@@ -1,0 +1,63 @@
+{
+  "name": "ノエル",
+  "desc": "「西風騎士団」の頼もしいメイド。いつか本当の騎士になることを夢見ている。",
+  "weapon": "WEAPON_CLAYMORE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Geo",
+  "icon": "UI_AvatarIcon_Noel",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12071,
+  "atk": 191,
+  "def": 799,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_04"
+    },
+    {
+      "icon": "Skill_S_Noel_01"
+    },
+    {
+      "icon": "Skill_E_Noel_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Noel_05"
+    },
+    {
+      "icon": "UI_Talent_S_Noel_06"
+    },
+    {
+      "icon": "UI_Talent_Cook_Defense"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Noel_01"
+    },
+    {
+      "icon": "UI_Talent_S_Noel_02"
+    },
+    {
+      "icon": "UI_Talent_U_Noel_01"
+    },
+    {
+      "icon": "UI_Talent_S_Noel_03"
+    },
+    {
+      "icon": "UI_Talent_U_Noel_02"
+    },
+    {
+      "icon": "UI_Talent_S_Noel_04"
+    }
+  ]
+}

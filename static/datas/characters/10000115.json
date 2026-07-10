@@ -1,0 +1,63 @@
+{
+  "name": "ダリア",
+  "desc": "西風教会の助祭にして、教会における風神の代理人。",
+  "weapon": "WEAPON_SWORD_ONE_HAND",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Hydro",
+  "icon": "UI_AvatarIcon_Dahlia",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12506,
+  "atk": 189,
+  "def": 560,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_01"
+    },
+    {
+      "icon": "Skill_S_Dahlia_01"
+    },
+    {
+      "icon": "Skill_E_Dahlia_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Dahlia_05"
+    },
+    {
+      "icon": "UI_Talent_S_Dahlia_06"
+    },
+    {
+      "icon": "UI_Talent_S_Dehya_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Dahlia_01"
+    },
+    {
+      "icon": "UI_Talent_S_Dahlia_02"
+    },
+    {
+      "icon": "UI_Talent_U_Dahlia_01"
+    },
+    {
+      "icon": "UI_Talent_S_Dahlia_03"
+    },
+    {
+      "icon": "UI_Talent_U_Dahlia_02"
+    },
+    {
+      "icon": "UI_Talent_S_Dahlia_04"
+    }
+  ]
+}

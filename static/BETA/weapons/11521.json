@@ -1,0 +1,10 @@
+{
+  "name": "星鋒の剣JP0D",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Sword_WeaponQuestSnezhnaya",
+  "stats_modifier": {
+    "atk": 608.0745972,
+    "fight_prop_critical": 0.330768
+  }
+}

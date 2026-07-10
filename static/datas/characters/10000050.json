@@ -1,0 +1,63 @@
+{
+  "name": "トーマ",
+  "desc": "神里家の家司。稲妻で活躍する「顔役」でもある。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Pyro",
+  "icon": "UI_AvatarIcon_Tohma",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10331,
+  "atk": 202,
+  "def": 751,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Tohma_01"
+    },
+    {
+      "icon": "Skill_E_Tohma_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Tohma_05"
+    },
+    {
+      "icon": "UI_Talent_S_Tohma_06"
+    },
+    {
+      "icon": "UI_Talent_S_Tohma_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Tohma_01"
+    },
+    {
+      "icon": "UI_Talent_S_Tohma_02"
+    },
+    {
+      "icon": "UI_Talent_U_Tohma_01"
+    },
+    {
+      "icon": "UI_Talent_S_Tohma_03"
+    },
+    {
+      "icon": "UI_Talent_U_Tohma_02"
+    },
+    {
+      "icon": "UI_Talent_S_Tohma_04"
+    }
+  ]
+}

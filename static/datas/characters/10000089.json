@@ -1,0 +1,63 @@
+{
+  "name": "フリーナ",
+  "desc": "審判の舞台で、誰よりもスポットライトを浴びる存在——拍手が鳴り響き、その幕が閉じられるまで。",
+  "weapon": "WEAPON_SWORD_ONE_HAND",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Hydro",
+  "icon": "UI_AvatarIcon_Furina",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 15307,
+  "atk": 244,
+  "def": 696,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_01"
+    },
+    {
+      "icon": "Skill_S_Furina_01"
+    },
+    {
+      "icon": "Skill_E_Furina_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Furina_05"
+    },
+    {
+      "icon": "UI_Talent_S_Furina_06"
+    },
+    {
+      "icon": "UI_Talent_S_Furina_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Furina_01"
+    },
+    {
+      "icon": "UI_Talent_S_Furina_04"
+    },
+    {
+      "icon": "UI_Talent_U_Furina_02"
+    },
+    {
+      "icon": "UI_Talent_S_Furina_03"
+    },
+    {
+      "icon": "UI_Talent_U_Furina_01"
+    },
+    {
+      "icon": "UI_Talent_S_Furina_02"
+    }
+  ]
+}

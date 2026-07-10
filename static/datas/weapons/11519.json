@@ -1,0 +1,9 @@
+{
+  "name": "三日月の含光",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Sword_SilverwareSaw",
+  "stats_modifier": {
+    "atk": 541.829758
+  }
+}

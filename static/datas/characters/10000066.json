@@ -1,0 +1,63 @@
+{
+  "name": "神里綾人",
+  "desc": "若く有能な社奉行神里家の現当主。穏やかで礼儀正しく、物事をそつなく処理する。",
+  "weapon": "WEAPON_SWORD_ONE_HAND",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Hydro",
+  "icon": "UI_AvatarIcon_Ayato",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 13715,
+  "atk": 299,
+  "def": 769,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0.384
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_01"
+    },
+    {
+      "icon": "Skill_S_Ayato_01"
+    },
+    {
+      "icon": "Skill_E_Ayato_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Ayato_05"
+    },
+    {
+      "icon": "UI_Talent_S_Ayato_06"
+    },
+    {
+      "icon": "UI_Talent_S_Ayato_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Ayato_01"
+    },
+    {
+      "icon": "UI_Talent_S_Ayato_02"
+    },
+    {
+      "icon": "UI_Talent_U_Ayato_02"
+    },
+    {
+      "icon": "UI_Talent_S_Ayato_03"
+    },
+    {
+      "icon": "UI_Talent_U_Ayato_01"
+    },
+    {
+      "icon": "UI_Talent_S_Ayato_04"
+    }
+  ]
+}

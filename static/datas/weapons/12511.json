@@ -1,0 +1,10 @@
+{
+  "name": "葦海の標",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Claymore_Deshret",
+  "stats_modifier": {
+    "atk": 608.0745972,
+    "fight_prop_critical": 0.330768
+  }
+}

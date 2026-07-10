@@ -1,0 +1,66 @@
+{
+  "name": "チャスカ",
+  "desc": "トラロカンの「調停者」。幾千万の争いを終結させる者。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Anemo",
+  "icon": "UI_AvatarIcon_Chasca",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 9797,
+  "atk": 347,
+  "def": 615,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Chasca_01"
+    },
+    {
+      "icon": "Skill_E_Chasca_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Chasca_05"
+    },
+    {
+      "icon": "UI_Talent_S_Chasca_06"
+    },
+    {
+      "icon": "UI_Talent_S_Chasca_07"
+    },
+    {
+      "icon": "UI_Talent_S_Chasca_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Chasca_01"
+    },
+    {
+      "icon": "UI_Talent_S_Chasca_02"
+    },
+    {
+      "icon": "UI_Talent_U_Chasca_01"
+    },
+    {
+      "icon": "UI_Talent_S_Chasca_03"
+    },
+    {
+      "icon": "UI_Talent_U_Chasca_02"
+    },
+    {
+      "icon": "UI_Talent_S_Chasca_04"
+    }
+  ]
+}

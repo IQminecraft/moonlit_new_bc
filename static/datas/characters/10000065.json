@@ -1,0 +1,63 @@
+{
+  "name": "久岐忍",
+  "desc": "有能で信頼できる「荒瀧派」の二番手——注：「有能」と「信頼できる」は「荒瀧派」ではなく、二番手のことを表している。",
+  "weapon": "WEAPON_SWORD_ONE_HAND",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Electro",
+  "icon": "UI_AvatarIcon_Shinobu",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12289,
+  "atk": 212,
+  "def": 751,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_01"
+    },
+    {
+      "icon": "Skill_S_Shinobu_01"
+    },
+    {
+      "icon": "Skill_E_Shinobu_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Shinobu_05"
+    },
+    {
+      "icon": "UI_Talent_S_Shinobu_06"
+    },
+    {
+      "icon": "UI_Talent_S_Shinobu_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Shinobu_01"
+    },
+    {
+      "icon": "UI_Talent_S_Shinobu_02"
+    },
+    {
+      "icon": "UI_Talent_U_Shinobu_01"
+    },
+    {
+      "icon": "UI_Talent_S_Shinobu_03"
+    },
+    {
+      "icon": "UI_Talent_U_Shinobu_02"
+    },
+    {
+      "icon": "UI_Talent_S_Shinobu_04"
+    }
+  ]
+}

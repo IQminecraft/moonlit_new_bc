@@ -1,0 +1,63 @@
+{
+  "name": "放浪者",
+  "desc": "正体が謎に包まれた放浪者。修験者のような身なりをしているが、それらしき言動は見られない。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Anemo",
+  "icon": "UI_AvatarIcon_Wanderer",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10164,
+  "atk": 328,
+  "def": 607,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Wanderer_01"
+    },
+    {
+      "icon": "Skill_E_Wanderer_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Wanderer_05"
+    },
+    {
+      "icon": "UI_Talent_S_Wanderer_06"
+    },
+    {
+      "icon": "UI_Talent_S_Wanderer_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Wanderer_01"
+    },
+    {
+      "icon": "UI_Talent_S_Wanderer_02"
+    },
+    {
+      "icon": "UI_Talent_U_Wanderer_02"
+    },
+    {
+      "icon": "UI_Talent_S_Wanderer_03"
+    },
+    {
+      "icon": "UI_Talent_U_Wanderer_01"
+    },
+    {
+      "icon": "UI_Talent_S_Wanderer_04"
+    }
+  ]
+}

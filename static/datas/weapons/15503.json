@@ -1,0 +1,9 @@
+{
+  "name": "終焉を嘆く詩",
+  "weapon_type": "WEAPON_BOW",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Bow_Widsith",
+  "stats_modifier": {
+    "atk": 608.0745972
+  }
+}

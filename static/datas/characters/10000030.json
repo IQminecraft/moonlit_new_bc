@@ -1,0 +1,63 @@
+{
+  "name": "鍾離",
+  "desc": "「往生堂」に招かれた謎の客卿。博識であり、あらゆることに精通している。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Geo",
+  "icon": "UI_AvatarIcon_Zhongli",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 14695,
+  "atk": 251,
+  "def": 738,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Zhongli_01"
+    },
+    {
+      "icon": "Skill_E_Zhongli_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Zhongli_05"
+    },
+    {
+      "icon": "UI_Talent_S_Zhongli_06"
+    },
+    {
+      "icon": "UI_Talent_Forge_Pole"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Zhongli_01"
+    },
+    {
+      "icon": "UI_Talent_S_Zhongli_02"
+    },
+    {
+      "icon": "UI_Talent_U_Zhongli_01"
+    },
+    {
+      "icon": "UI_Talent_S_Zhongli_03"
+    },
+    {
+      "icon": "UI_Talent_U_Zhongli_02"
+    },
+    {
+      "icon": "UI_Talent_S_Zhongli_04"
+    }
+  ]
+}

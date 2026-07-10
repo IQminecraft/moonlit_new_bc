@@ -1,0 +1,9 @@
+{
+  "name": "チェーンブレイカー",
+  "weapon_type": "WEAPON_BOW",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Bow_Isikhulu",
+  "stats_modifier": {
+    "atk": 564.7837244
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "狼の末路",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Claymore_Wolfmound",
+  "stats_modifier": {
+    "atk": 608.0745972
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "砂中の賢者達の問答",
+  "weapon_type": "WEAPON_POLE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Pole_Caduceus",
+  "stats_modifier": {
+    "atk": 509.605949
+  }
+}

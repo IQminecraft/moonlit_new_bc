@@ -1,0 +1,9 @@
+{
+  "name": "ダークアレイの酒と詩",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Catalyst_Outlaw",
+  "stats_modifier": {
+    "atk": 564.7837244
+  }
+}

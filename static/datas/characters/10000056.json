@@ -1,0 +1,63 @@
+{
+  "name": "九条裟羅",
+  "desc": "「天領奉行」の大将。果敢かつ勇猛である。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Electro",
+  "icon": "UI_AvatarIcon_Sara",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 9570,
+  "atk": 195,
+  "def": 628,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Sara_01"
+    },
+    {
+      "icon": "Skill_E_Sara_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Sara_01"
+    },
+    {
+      "icon": "UI_Talent_S_Sara_06"
+    },
+    {
+      "icon": "UI_Talent_S_Sara_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Sara_05"
+    },
+    {
+      "icon": "UI_Talent_S_Sara_02"
+    },
+    {
+      "icon": "UI_Talent_U_Sara_02"
+    },
+    {
+      "icon": "UI_Talent_S_Sara_03"
+    },
+    {
+      "icon": "UI_Talent_U_Sara_01"
+    },
+    {
+      "icon": "UI_Talent_S_Sara_04"
+    }
+  ]
+}

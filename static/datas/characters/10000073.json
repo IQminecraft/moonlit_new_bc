@@ -1,0 +1,63 @@
+{
+  "name": "ナヒーダ",
+  "desc": "スラサタンナ聖処に幽棲する籠の中の鳥。夢の中でしか世界を眺めることができない。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Dendro",
+  "icon": "UI_AvatarIcon_Nahida",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10360,
+  "atk": 299,
+  "def": 630,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Nahida_01"
+    },
+    {
+      "icon": "Skill_E_Nahida_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Nahida_05"
+    },
+    {
+      "icon": "UI_Talent_S_Nahida_06"
+    },
+    {
+      "icon": "UI_Talent_S_Nahida_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Nahida_01"
+    },
+    {
+      "icon": "UI_Talent_S_Nahida_02"
+    },
+    {
+      "icon": "UI_Talent_U_Nahida_01"
+    },
+    {
+      "icon": "UI_Talent_S_Nahida_03"
+    },
+    {
+      "icon": "UI_Talent_U_Nahida_02"
+    },
+    {
+      "icon": "UI_Talent_S_Nahida_04"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "name": "アーロイ",
+  "desc": "かつては異端者であったが、今は機敏で腕の立つ狩人。いついかなる時も、正確無比な矢を放つことができる。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_ORANGE_SP",
+  "element": "Cryo",
+  "icon": "UI_AvatarIcon_Aloy",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10899,
+  "atk": 234,
+  "def": 676,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Aloy_01"
+    },
+    {
+      "icon": "Skill_E_Aloy_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Aloy_05"
+    },
+    {
+      "icon": "UI_Talent_S_Aloy_06"
+    },
+    {
+      "icon": "UI_Talent_S_Aloy_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Aloy_Lock"
+    },
+    {
+      "icon": "UI_Talent_S_Aloy_Lock"
+    },
+    {
+      "icon": "UI_Talent_S_Aloy_Lock"
+    },
+    {
+      "icon": "UI_Talent_S_Aloy_Lock"
+    },
+    {
+      "icon": "UI_Talent_S_Aloy_Lock"
+    },
+    {
+      "icon": "UI_Talent_S_Aloy_Lock"
+    }
+  ]
+}

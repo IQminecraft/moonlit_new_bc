@@ -1,0 +1,66 @@
+{
+  "name": "シトラリ",
+  "desc": "謎煙の主の大シャーマン。一族の誰もが敬う「黒曜石の老婆」。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Cryo",
+  "icon": "UI_AvatarIcon_Citlali",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 11634,
+  "atk": 127,
+  "def": 763,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Citlali_01"
+    },
+    {
+      "icon": "Skill_E_Citlali_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Citlali_05"
+    },
+    {
+      "icon": "UI_Talent_S_Citlali_06"
+    },
+    {
+      "icon": "UI_Talent_S_Citlali_08"
+    },
+    {
+      "icon": "UI_Talent_S_Mavuika_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Citlali_01"
+    },
+    {
+      "icon": "UI_Talent_S_Citlali_02"
+    },
+    {
+      "icon": "UI_Talent_U_Citlali_01"
+    },
+    {
+      "icon": "UI_Talent_S_Citlali_03"
+    },
+    {
+      "icon": "UI_Talent_U_Citlali_02"
+    },
+    {
+      "icon": "UI_Talent_S_Citlali_04"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "赦罪",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Sword_Estoc",
+  "stats_modifier": {
+    "atk": 674.3345459999999
+  }
+}

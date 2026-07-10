@@ -1,0 +1,9 @@
+{
+  "name": "鉄彩の花",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Claymore_Fleurfair",
+  "stats_modifier": {
+    "atk": 564.7837244
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "聖縛",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Catalyst_MorphIlia_{0}",
+  "stats_modifier": {}
+}

@@ -1,0 +1,812 @@
+{
+  "10000002": {
+    "element": "Cryo",
+    "enName": "Kamisato Ayaka",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000003": {
+    "element": "Anemo",
+    "enName": "Jean",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000005_ANEMO": {
+    "element": "Anemo",
+    "enName": "Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000005_CRYO": {
+    "element": "Cryo",
+    "enName": "Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000005_DENDRO": {
+    "element": "Dendro",
+    "enName": "Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000005_ELECTRO": {
+    "element": "Electro",
+    "enName": "Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000005_GEO": {
+    "element": "Geo",
+    "enName": "Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000005_HYDRO": {
+    "element": "Hydro",
+    "enName": "Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000005_PYRO": {
+    "element": "Pyro",
+    "enName": "Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000006": {
+    "element": "Electro",
+    "enName": "Lisa",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000007_ANEMO": {
+    "element": "Anemo",
+    "enName": "Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000007_CRYO": {
+    "element": "Cryo",
+    "enName": "Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000007_DENDRO": {
+    "element": "Dendro",
+    "enName": "Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000007_ELECTRO": {
+    "element": "Electro",
+    "enName": "Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000007_GEO": {
+    "element": "Geo",
+    "enName": "Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000007_HYDRO": {
+    "element": "Hydro",
+    "enName": "Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000007_PYRO": {
+    "element": "Pyro",
+    "enName": "Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000014": {
+    "element": "Hydro",
+    "enName": "Barbara",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000015": {
+    "element": "Cryo",
+    "enName": "Kaeya",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000016": {
+    "element": "Pyro",
+    "enName": "Diluc",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000020": {
+    "element": "Electro",
+    "enName": "Razor",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000021": {
+    "element": "Pyro",
+    "enName": "Amber",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000022": {
+    "element": "Anemo",
+    "enName": "Venti",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000023": {
+    "element": "Pyro",
+    "enName": "Xiangling",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000024": {
+    "element": "Electro",
+    "enName": "Beidou",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000025": {
+    "element": "Hydro",
+    "enName": "Xingqiu",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000026": {
+    "element": "Anemo",
+    "enName": "Xiao",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000027": {
+    "element": "Geo",
+    "enName": "Ningguang",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000029": {
+    "element": "Pyro",
+    "enName": "Klee",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000030": {
+    "element": "Geo",
+    "enName": "Zhongli",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000031": {
+    "element": "Electro",
+    "enName": "Fischl",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000032": {
+    "element": "Pyro",
+    "enName": "Bennett",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000033": {
+    "element": "Hydro",
+    "enName": "Tartaglia",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000034": {
+    "element": "Geo",
+    "enName": "Noelle",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000035": {
+    "element": "Cryo",
+    "enName": "Qiqi",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000036": {
+    "element": "Cryo",
+    "enName": "Chongyun",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000037": {
+    "element": "Cryo",
+    "enName": "Ganyu",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000038": {
+    "element": "Geo",
+    "enName": "Albedo",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000039": {
+    "element": "Cryo",
+    "enName": "Diona",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000041": {
+    "element": "Hydro",
+    "enName": "Mona",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000042": {
+    "element": "Electro",
+    "enName": "Keqing",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000043": {
+    "element": "Anemo",
+    "enName": "Sucrose",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000044": {
+    "element": "Pyro",
+    "enName": "Xinyan",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000045": {
+    "element": "Cryo",
+    "enName": "Rosaria",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000046": {
+    "element": "Pyro",
+    "enName": "Hu Tao",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000047": {
+    "element": "Anemo",
+    "enName": "Kaedehara Kazuha",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000048": {
+    "element": "Pyro",
+    "enName": "Yanfei",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000049": {
+    "element": "Pyro",
+    "enName": "Yoimiya",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000050": {
+    "element": "Pyro",
+    "enName": "Thoma",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000051": {
+    "element": "Cryo",
+    "enName": "Eula",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000052": {
+    "element": "Electro",
+    "enName": "Raiden Shogun",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000053": {
+    "element": "Anemo",
+    "enName": "Sayu",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000054": {
+    "element": "Hydro",
+    "enName": "Sangonomiya Kokomi",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000055": {
+    "element": "Geo",
+    "enName": "Gorou",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000056": {
+    "element": "Electro",
+    "enName": "Kujou Sara",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000057": {
+    "element": "Geo",
+    "enName": "Arataki Itto",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000058": {
+    "element": "Electro",
+    "enName": "Yae Miko",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000059": {
+    "element": "Anemo",
+    "enName": "Shikanoin Heizou",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000060": {
+    "element": "Hydro",
+    "enName": "Yelan",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000061": {
+    "element": "Dendro",
+    "enName": "Kirara",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000062": {
+    "element": "Cryo",
+    "enName": "Aloy",
+    "qualityType": "QUALITY_ORANGE_SP",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000063": {
+    "element": "Cryo",
+    "enName": "Shenhe",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000064": {
+    "element": "Geo",
+    "enName": "Yun Jin",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000065": {
+    "element": "Electro",
+    "enName": "Kuki Shinobu",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000066": {
+    "element": "Hydro",
+    "enName": "Kamisato Ayato",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000067": {
+    "element": "Dendro",
+    "enName": "Collei",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000068": {
+    "element": "Electro",
+    "enName": "Dori",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000069": {
+    "element": "Dendro",
+    "enName": "Tighnari",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000070": {
+    "element": "Hydro",
+    "enName": "Nilou",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000071": {
+    "element": "Electro",
+    "enName": "Cyno",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000072": {
+    "element": "Hydro",
+    "enName": "Candace",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000073": {
+    "element": "Dendro",
+    "enName": "Nahida",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000074": {
+    "element": "Cryo",
+    "enName": "Layla",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000075": {
+    "element": "Anemo",
+    "enName": "Wanderer",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000076": {
+    "element": "Anemo",
+    "enName": "Faruzan",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000077": {
+    "element": "Dendro",
+    "enName": "Yaoyao",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000078": {
+    "element": "Dendro",
+    "enName": "Alhaitham",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000079": {
+    "element": "Pyro",
+    "enName": "Dehya",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000080": {
+    "element": "Cryo",
+    "enName": "Mika",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000081": {
+    "element": "Dendro",
+    "enName": "Kaveh",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000082": {
+    "element": "Dendro",
+    "enName": "Baizhu",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000083": {
+    "element": "Anemo",
+    "enName": "Lynette",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000084": {
+    "element": "Pyro",
+    "enName": "Lyney",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000085": {
+    "element": "Cryo",
+    "enName": "Freminet",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000086": {
+    "element": "Cryo",
+    "enName": "Wriothesley",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000087": {
+    "element": "Hydro",
+    "enName": "Neuvillette",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000088": {
+    "element": "Cryo",
+    "enName": "Charlotte",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000089": {
+    "element": "Hydro",
+    "enName": "Furina",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000090": {
+    "element": "Pyro",
+    "enName": "Chevreuse",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000091": {
+    "element": "Geo",
+    "enName": "Navia",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000092": {
+    "element": "Pyro",
+    "enName": "Gaming",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000093": {
+    "element": "Anemo",
+    "enName": "Xianyun",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000094": {
+    "element": "Geo",
+    "enName": "Chiori",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000095": {
+    "element": "Hydro",
+    "enName": "Sigewinne",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000096": {
+    "element": "Pyro",
+    "enName": "Arlecchino",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000097": {
+    "element": "Electro",
+    "enName": "Sethos",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000098": {
+    "element": "Electro",
+    "enName": "Clorinde",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000099": {
+    "element": "Dendro",
+    "enName": "Emilie",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000100": {
+    "element": "Geo",
+    "enName": "Kachina",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000101": {
+    "element": "Dendro",
+    "enName": "Kinich",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000102": {
+    "element": "Hydro",
+    "enName": "Mualani",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000103": {
+    "element": "Geo",
+    "enName": "Xilonen",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000104": {
+    "element": "Anemo",
+    "enName": "Chasca",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000105": {
+    "element": "Electro",
+    "enName": "Ororon",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000106": {
+    "element": "Pyro",
+    "enName": "Mavuika",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000107": {
+    "element": "Cryo",
+    "enName": "Citlali",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000108": {
+    "element": "Anemo",
+    "enName": "Lan Yan",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000109": {
+    "element": "Anemo",
+    "enName": "Yumemizuki Mizuki",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000110": {
+    "element": "Electro",
+    "enName": "Iansan",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000111": {
+    "element": "Electro",
+    "enName": "Varesa",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000112": {
+    "element": "Cryo",
+    "enName": "Escoffier",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000113": {
+    "element": "Anemo",
+    "enName": "Ifa",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000114": {
+    "element": "Cryo",
+    "enName": "Skirk",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000115": {
+    "element": "Hydro",
+    "enName": "Dahlia",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000116": {
+    "element": "Electro",
+    "enName": "Ineffa",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000117": {
+    "element": "Unknown",
+    "enName": "Manekin",
+    "qualityType": "QUALITY_ORANGE_SP",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000118": {
+    "element": "Unknown",
+    "enName": "Manekina",
+    "qualityType": "QUALITY_ORANGE_SP",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000119": {
+    "element": "Dendro",
+    "enName": "Lauma",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000120": {
+    "element": "Electro",
+    "enName": "Flins",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000121": {
+    "element": "Hydro",
+    "enName": "Aino",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000122": {
+    "element": "Dendro",
+    "enName": "Nefer",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000123": {
+    "element": "Pyro",
+    "enName": "Durin",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000124": {
+    "element": "Anemo",
+    "enName": "Jahoda",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000125": {
+    "element": "Hydro",
+    "enName": "Columbina",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000126": {
+    "element": "Geo",
+    "enName": "Zibai",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000127": {
+    "element": "Geo",
+    "enName": "Illuga",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000128": {
+    "element": "Anemo",
+    "enName": "Varka",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000129": {
+    "element": "Cryo",
+    "enName": "Lohen",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000130": {
+    "element": "Geo",
+    "enName": "Linnea",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "10000131": {
+    "element": "Pyro",
+    "enName": "Nicole",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000132": {
+    "element": "Anemo",
+    "enName": "Prune",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000133": {
+    "element": "Cryo",
+    "enName": "Sandrone",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000134": {
+    "element": "Unknown",
+    "enName": "TPS Traveler",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CROSSBOW"
+  },
+  "10000148": {
+    "element": "Electro",
+    "enName": "Alyosha",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000150": {
+    "element": "Cryo",
+    "enName": "Odette",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  }
+}

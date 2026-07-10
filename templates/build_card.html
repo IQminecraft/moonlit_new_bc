@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genshin Build Card - Showcase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0a0a0c; color: white; font-family: 'Inter', sans-serif; }
+        .drag-none { user-drag: none; -webkit-user-drag: none; }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+
+    <div class="max-w-6xl mx-auto">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <h1 class="text-xl font-bold text-yellow-400">UID: <span id="currentUid">{{ uid }}</span> のキャラクター一覧</h1>
+            <a href="/" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-sm rounded-lg transition-all border border-zinc-700">← 戻る</a>
+        </div>
+        
+        <div class="grid gap-[5px] grid-cols-4 sm:grid-cols-6 md:grid-cols-12 mb-6 bg-zinc-900/60 p-4 rounded-xl border border-zinc-800">
+            {% for char in char_list %}
+            <div class="relative aspect-square cursor-pointer char-thumb" data-char-id="{{ char.id }}">
+                <img src="{{ char.icon }}" 
+                     class="w-full h-full bg-gradient-to-tr from-[rgba(49,43,71,0.53)] to-[rgba(102,115,150,0.42)] rounded-lg object-cover opacity-50 grayscale-[0.3] transition-all hover:opacity-100 drag-none">
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-6 p-4 bg-zinc-900/80 rounded-xl border border-zinc-800 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <label for="scoreCalcSelect" class="text-sm font-semibold text-gray-300">計算方法:</label>
+                <select id="scoreCalcSelect" class="bg-zinc-800 border border-zinc-700 text-white px-3 py-1.5 rounded-lg focus:outline-none focus:border-yellow-400 transition-all text-sm cursor-pointer">
+                    <option value="crit">会心のみ</option>
+                    <option value="atk">攻撃力%</option>
+                    <option value="hp">HP%</option>
+                    <option value="def">防御%</option>
+                    <option value="em">元素熟知</option>
+                    <option value="charge">チャージ効率</option>
+                </select> </div>
+            
+            <button id="regenerateApiBtn" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-cyan-600/10 transition-all flex items-center gap-1.5">
+                再取得 + 再生成
+            </button>
+        </div>
+
+        <div class="flex justify-center bg-zinc-950 p-4 md:p-8 rounded-2xl border border-zinc-900 min-h-[400px] items-center relative">
+            <div id="loadingSpinner" class="hidden absolute inset-0 bg-black/50 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
+                <div class="animate-spin h-10 w-10 border-4 border-yellow-400 border-t-transparent rounded-full"></div>
+            </div>
+            <img id="cardImage" src="" class="max-w-full h-auto rounded-lg shadow-2xl drag-none hidden">
+            <div id="placeholderText" class="text-zinc-500 text-sm">キャラクターを選択してください</div>
+        </div>
+    </div>
+
+    <script>
+        const uid = document.getElementById('currentUid').textContent.trim();
+        const scoreCalcSelect = document.getElementById('scoreCalcSelect');
+        const regenerateApiBtn = document.getElementById('regenerateApiBtn');
+        const cardImage = document.getElementById('cardImage');
+        const placeholderText = document.getElementById('placeholderText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        
+        let currentSelectedCharId = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('from_artifacter')) {
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?uid=${uid}`;
+                window.history.replaceState({ path: newUrl }, '', newUrl);
+            }
+
+            // 初期選択キャラの設定
+            const defaultActive = document.querySelector('.char-thumb img.ring-2');
+            if(!defaultActive) {
+                const firstThumb = document.querySelector('.char-thumb');
+                if(firstThumb) firstThumb.click();
+            }
+        });
+
+        function getSavedCalcMethod(charId) {
+            return localStorage.getItem(`calc_method_${uid}_${charId}`) || "crit";
+        }
+        function saveCalcMethod(charId, method) {
+            localStorage.setItem(`calc_method_${uid}_${charId}`, method);
+        }
+
+        // 💡 3. カード画像の読み込み処理（サーバーのURL形式に完全一致させました）
+        function loadCardImage(charId, forceFetch = false) {
+            if(!charId) return;
+            currentSelectedCharId = charId;
+
+            const currentMethod = getSavedCalcMethod(charId);
+            scoreCalcSelect.value = currentMethod;
+
+            // 生成中の演出（スピナー表示・画像を一時的に隠す）
+            loadingSpinner.classList.remove('hidden');
+            placeholderText.classList.add('hidden');
+            cardImage.classList.add('hidden');
+
+            const timestamp = new Date().getTime();
+            // 💡 Python側の `@app.get("/generate_card_image/{uid}/{avatar_id}")` に形を合わせました
+            cardImage.src = `/generate_card_image/${uid}/${charId}/${currentMethod}`;
+        }
+
+        // 画像の読み込みが完了したらスピナーを消して表示
+        cardImage.onload = function() {
+            loadingSpinner.classList.add('hidden');
+            cardImage.classList.remove('hidden');
+        };
+
+        // サムネイルクリックイベント
+        document.querySelectorAll('.char-thumb').forEach(thumb => {
+            thumb.addEventListener('click', function() {
+                document.querySelectorAll('.char-thumb img').forEach(img => {
+                    img.classList.remove('opacity-100', 'ring-2', 'ring-yellow-400');
+                    img.classList.add('opacity-50', 'grayscale-[0.3]');
+                });
+                document.querySelectorAll('.check-badge').forEach(b => b.remove());
+
+                const activeImg = this.querySelector('img');
+                activeImg.classList.remove('opacity-50', 'grayscale-[0.3]');
+                activeImg.classList.add('opacity-100', 'ring-2', 'ring-yellow-400');
+                
+                const badgeHTML = `<div class="check-badge absolute top-1 right-1 bg-cyan-400 rounded-full p-0.5 ring-2 ring-white/30"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="text-black"><path d="M20 6 9 17l-5-5"></path></svg></div>`;
+                this.insertAdjacentHTML('beforeend', badgeHTML);
+
+                const charId = this.getAttribute('data-char-id');
+                loadCardImage(charId, false);
+            });
+        });
+
+        // プルダウン変更時のイベント
+        scoreCalcSelect.addEventListener('change', function() {
+            if (currentSelectedCharId) {
+                saveCalcMethod(currentSelectedCharId, this.value);
+                loadCardImage(currentSelectedCharId, false);
+            }
+        });
+
+        // API再取得＋再生成ボタンのイベント
+        regenerateApiBtn.addEventListener('click', function() {
+            if (currentSelectedCharId) {
+                loadCardImage(currentSelectedCharId, true);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+{
+  "name": "ジン",
+  "desc": "正直で真面目な蒲公英騎士。モンド西風騎士団の代理団長。",
+  "weapon": "WEAPON_SWORD_ONE_HAND",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Anemo",
+  "icon": "UI_AvatarIcon_Qin",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 14695,
+  "atk": 239,
+  "def": 769,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_01"
+    },
+    {
+      "icon": "Skill_S_Qin_02"
+    },
+    {
+      "icon": "Skill_E_Qin_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Qin_05"
+    },
+    {
+      "icon": "UI_Talent_S_Qin_06"
+    },
+    {
+      "icon": "UI_Talent_Cook_Heal"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Qin_01"
+    },
+    {
+      "icon": "UI_Talent_S_Qin_02"
+    },
+    {
+      "icon": "UI_Talent_U_Qin_02"
+    },
+    {
+      "icon": "UI_Talent_S_Qin_03"
+    },
+    {
+      "icon": "UI_Talent_U_Qin_01"
+    },
+    {
+      "icon": "UI_Talent_S_Qin_04"
+    }
+  ]
+}

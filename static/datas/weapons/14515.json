@@ -1,0 +1,9 @@
+{
+  "name": "鶴鳴の余韻",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Catalyst_MountainGale",
+  "stats_modifier": {
+    "atk": 740.5801544000001
+  }
+}

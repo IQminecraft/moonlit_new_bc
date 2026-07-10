@@ -1,0 +1,63 @@
+{
+  "name": "カーヴェ",
+  "desc": "スメールの著名建築デザイナー。多くの物事に対し、行き過ぎた思いやりの心を持つ。唯美主義者だが、現実に悩まされている。",
+  "weapon": "WEAPON_CLAYMORE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Dendro",
+  "icon": "UI_AvatarIcon_Kaveh",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 11962,
+  "atk": 234,
+  "def": 751,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_04"
+    },
+    {
+      "icon": "Skill_S_Kaveh_01"
+    },
+    {
+      "icon": "Skill_E_Kaveh_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Kaveh_05"
+    },
+    {
+      "icon": "UI_Talent_S_Kaveh_06"
+    },
+    {
+      "icon": "UI_Talent_S_Yoimiya_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Kaveh_01"
+    },
+    {
+      "icon": "UI_Talent_S_Kaveh_02"
+    },
+    {
+      "icon": "UI_Talent_U_Kaveh_02"
+    },
+    {
+      "icon": "UI_Talent_S_Kaveh_03"
+    },
+    {
+      "icon": "UI_Talent_U_Kaveh_01"
+    },
+    {
+      "icon": "UI_Talent_S_Kaveh_04"
+    }
+  ]
+}

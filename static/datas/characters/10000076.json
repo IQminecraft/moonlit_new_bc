@@ -1,0 +1,63 @@
+{
+  "name": "ファルザン",
+  "desc": "「百年前」から訪れた学者。自ら好んで先輩と名乗り、各種古代文字や古典ギミックに精通している。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Anemo",
+  "icon": "UI_AvatarIcon_Faruzan",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 9570,
+  "atk": 196,
+  "def": 628,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Faruzan_01"
+    },
+    {
+      "icon": "Skill_E_Faruzan_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Faruzan_05"
+    },
+    {
+      "icon": "UI_Talent_S_Faruzan_06"
+    },
+    {
+      "icon": "UI_Talent_S_Cyno_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Faruzan_01"
+    },
+    {
+      "icon": "UI_Talent_S_Faruzan_02"
+    },
+    {
+      "icon": "UI_Talent_U_Faruzan_01"
+    },
+    {
+      "icon": "UI_Talent_S_Faruzan_03"
+    },
+    {
+      "icon": "UI_Talent_U_Faruzan_02"
+    },
+    {
+      "icon": "UI_Talent_S_Faruzan_04"
+    }
+  ]
+}

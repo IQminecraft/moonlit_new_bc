@@ -1,0 +1,63 @@
+{
+  "name": "千織",
+  "desc": "「千織屋」店主。フォンテーヌの有名なファッションデザイナー。",
+  "weapon": "WEAPON_SWORD_ONE_HAND",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Geo",
+  "icon": "UI_AvatarIcon_Chiori",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 11438,
+  "atk": 323,
+  "def": 953,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_01"
+    },
+    {
+      "icon": "Skill_S_Chiori_01"
+    },
+    {
+      "icon": "Skill_E_Chiori_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Chiori_05"
+    },
+    {
+      "icon": "UI_Talent_S_Chiori_06"
+    },
+    {
+      "icon": "UI_Talent_S_Chiori_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Chiori_01"
+    },
+    {
+      "icon": "UI_Talent_S_Chiori_03"
+    },
+    {
+      "icon": "UI_Talent_U_Chiori_01"
+    },
+    {
+      "icon": "UI_Talent_S_Chiori_02"
+    },
+    {
+      "icon": "UI_Talent_U_Chiori_02"
+    },
+    {
+      "icon": "UI_Talent_S_Chiori_04"
+    }
+  ]
+}

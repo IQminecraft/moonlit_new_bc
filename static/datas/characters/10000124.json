@@ -1,0 +1,66 @@
+{
+  "name": "ヤフォダ",
+  "desc": "「秘聞の館」のとても頼れる万能な従業員（自称）。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Anemo",
+  "icon": "UI_AvatarIcon_Jahoda",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 9646,
+  "atk": 223,
+  "def": 580,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Jahoda_01"
+    },
+    {
+      "icon": "Skill_E_Jahoda_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Jahoda_05"
+    },
+    {
+      "icon": "UI_Talent_S_Jahoda_06"
+    },
+    {
+      "icon": "UI_Talent_S_Jahoda_07"
+    },
+    {
+      "icon": "UI_Talent_S_Jahoda_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Jahoda_03"
+    },
+    {
+      "icon": "UI_Talent_S_Jahoda_02"
+    },
+    {
+      "icon": "UI_Talent_U_Jahoda_01"
+    },
+    {
+      "icon": "UI_Talent_S_Jahoda_01"
+    },
+    {
+      "icon": "UI_Talent_U_Jahoda_02"
+    },
+    {
+      "icon": "UI_Talent_S_Jahoda_04"
+    }
+  ]
+}

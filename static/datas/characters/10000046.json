@@ -1,0 +1,63 @@
+{
+  "name": "胡桃",
+  "desc": "「往生堂」七十七代目堂主。若くして璃月の葬儀を仕切り、責任を持ってそれを執り行っている。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Pyro",
+  "icon": "UI_AvatarIcon_Hutao",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 15552,
+  "atk": 106,
+  "def": 876,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0.384
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Hutao_01"
+    },
+    {
+      "icon": "Skill_E_Hutao_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Hutao_05"
+    },
+    {
+      "icon": "UI_Talent_S_Hutao_06"
+    },
+    {
+      "icon": "UI_Talent_Cook_ExtraFailedItem"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Hutao_03"
+    },
+    {
+      "icon": "UI_Talent_S_Hutao_01"
+    },
+    {
+      "icon": "UI_Talent_U_Hutao_01"
+    },
+    {
+      "icon": "UI_Talent_S_Hutao_02"
+    },
+    {
+      "icon": "UI_Talent_U_Hutao_02"
+    },
+    {
+      "icon": "UI_Talent_S_Hutao_04"
+    }
+  ]
+}

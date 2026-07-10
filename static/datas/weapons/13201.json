@@ -1,0 +1,9 @@
+{
+  "name": "鉄尖槍",
+  "weapon_type": "WEAPON_POLE",
+  "rarity": 2,
+  "icon": "UI_EquipIcon_Pole_Rod",
+  "stats_modifier": {
+    "atk": 241.90378
+  }
+}

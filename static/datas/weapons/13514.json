@@ -1,0 +1,9 @@
+{
+  "name": "香りのシンフォニスト",
+  "weapon_type": "WEAPON_POLE",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Pole_Trident",
+  "stats_modifier": {
+    "atk": 608.0745972
+  }
+}

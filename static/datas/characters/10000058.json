@@ -1,0 +1,66 @@
+{
+  "name": "八重神子",
+  "desc": "鳴神大社の宮司様であり、「八重堂」の編集長。華やかな見た目の裏には、思いもよらぬ知性と奸智が隠されている。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Electro",
+  "icon": "UI_AvatarIcon_Yae",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10372,
+  "atk": 340,
+  "def": 569,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Yae_01"
+    },
+    {
+      "icon": "Skill_E_Yae_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Yae_05"
+    },
+    {
+      "icon": "UI_Talent_S_Yae_06"
+    },
+    {
+      "icon": "UI_Talent_S_Yae_07"
+    },
+    {
+      "icon": "UI_Talent_S_Yae_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Yae_01"
+    },
+    {
+      "icon": "UI_Talent_S_Yae_02"
+    },
+    {
+      "icon": "UI_Talent_U_Yae_01"
+    },
+    {
+      "icon": "UI_Talent_S_Yae_03"
+    },
+    {
+      "icon": "UI_Talent_U_Yae_02"
+    },
+    {
+      "icon": "UI_Talent_S_Yae_04"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "name": "ファルカ",
+  "desc": "西風騎士団の大団長——モンドを守る北風騎士。",
+  "weapon": "WEAPON_CLAYMORE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Anemo",
+  "icon": "UI_AvatarIcon_Varka",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12613,
+  "atk": 353,
+  "def": 795,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0.384
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_04"
+    },
+    {
+      "icon": "Skill_S_Varka_01"
+    },
+    {
+      "icon": "Skill_E_Varka_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Varka_06"
+    },
+    {
+      "icon": "UI_Talent_S_Varka_05"
+    },
+    {
+      "icon": "UI_Talent_S_Varka_07"
+    },
+    {
+      "icon": "UI_Talent_S_Varka_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Varka_01"
+    },
+    {
+      "icon": "UI_Talent_S_Varka_02"
+    },
+    {
+      "icon": "UI_Talent_U_Varka_01"
+    },
+    {
+      "icon": "UI_Talent_S_Varka_03"
+    },
+    {
+      "icon": "UI_Talent_U_Varka_02"
+    },
+    {
+      "icon": "UI_Talent_S_Varka_04"
+    }
+  ]
+}

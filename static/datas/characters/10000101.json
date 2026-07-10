@@ -1,0 +1,66 @@
+{
+  "name": "キィニチ",
+  "desc": "ウィッツトランの竜狩り人。代償を量ることに長けている。",
+  "weapon": "WEAPON_CLAYMORE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Dendro",
+  "icon": "UI_AvatarIcon_Kinich",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12858,
+  "atk": 332,
+  "def": 802,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0.384
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_04"
+    },
+    {
+      "icon": "Skill_S_Kinich_01"
+    },
+    {
+      "icon": "Skill_E_Kinich_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Kinich_05"
+    },
+    {
+      "icon": "UI_Talent_S_Kinich_06"
+    },
+    {
+      "icon": "UI_Talent_S_Kinich_08"
+    },
+    {
+      "icon": "UI_Talent_S_Kachina_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Kinich_01"
+    },
+    {
+      "icon": "UI_Talent_S_Kinich_02"
+    },
+    {
+      "icon": "UI_Talent_U_Kinich_01"
+    },
+    {
+      "icon": "UI_Talent_S_Kinich_03"
+    },
+    {
+      "icon": "UI_Talent_U_Kinich_02"
+    },
+    {
+      "icon": "UI_Talent_S_Kinich_04"
+    }
+  ]
+}

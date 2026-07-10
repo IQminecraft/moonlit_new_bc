@@ -1,0 +1,63 @@
+{
+  "name": "ドリー",
+  "desc": "神出鬼没の旅商人。一番好きなものは、キラキラと輝くモラ。",
+  "weapon": "WEAPON_CLAYMORE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Electro",
+  "icon": "UI_AvatarIcon_Dori",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12397,
+  "atk": 223,
+  "def": 723,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_04"
+    },
+    {
+      "icon": "Skill_S_Dori_01"
+    },
+    {
+      "icon": "Skill_E_Dori_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Dori_05"
+    },
+    {
+      "icon": "UI_Talent_S_Dori_06"
+    },
+    {
+      "icon": "UI_Talent_S_Dori_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Dori_01"
+    },
+    {
+      "icon": "UI_Talent_S_Dori_02"
+    },
+    {
+      "icon": "UI_Talent_U_Dori_02"
+    },
+    {
+      "icon": "UI_Talent_S_Dori_03"
+    },
+    {
+      "icon": "UI_Talent_U_Dori_01"
+    },
+    {
+      "icon": "UI_Talent_S_Dori_04"
+    }
+  ]
+}

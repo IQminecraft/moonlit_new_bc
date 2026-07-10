@@ -1,0 +1,63 @@
+{
+  "name": "エスコフィエ",
+  "desc": "フォンテーヌに名を馳せる「元ホテル・ドゥボールのシェフ」。「カーネル・デセール」の肩書きを持つ「科学料理」の先駆者でもある。料理に関する要求が非常に高い。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Cryo",
+  "icon": "UI_AvatarIcon_Escoffier",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 13348,
+  "atk": 347,
+  "def": 732,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Escoffier_01"
+    },
+    {
+      "icon": "Skill_E_Escoffier_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Escoffier_05"
+    },
+    {
+      "icon": "UI_Talent_S_Escoffier_06"
+    },
+    {
+      "icon": "UI_Talent_S_Escoffier_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Escoffier_01"
+    },
+    {
+      "icon": "UI_Talent_S_Escoffier_02"
+    },
+    {
+      "icon": "UI_Talent_U_Escoffier_01"
+    },
+    {
+      "icon": "UI_Talent_S_Escoffier_03"
+    },
+    {
+      "icon": "UI_Talent_U_Escoffier_02"
+    },
+    {
+      "icon": "UI_Talent_S_Escoffier_04"
+    }
+  ]
+}

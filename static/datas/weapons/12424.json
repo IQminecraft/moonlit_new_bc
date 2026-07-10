@@ -1,0 +1,10 @@
+{
+  "name": "話死合い棒",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Claymore_BeastTamer",
+  "stats_modifier": {
+    "atk": 564.7837244,
+    "fight_prop_critical": 0.18376
+  }
+}

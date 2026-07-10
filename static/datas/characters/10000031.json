@@ -1,0 +1,66 @@
+{
+  "name": "フィッシュル",
+  "desc": "自称「断罪の皇女」。オズという漆黒の鴉とともに行動する謎の少女。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Electro",
+  "icon": "UI_AvatarIcon_Fischl",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 9189,
+  "atk": 244,
+  "def": 594,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Fischl_01"
+    },
+    {
+      "icon": "Skill_E_Fischl_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Fischl_05"
+    },
+    {
+      "icon": "UI_Talent_S_Fischl_06"
+    },
+    {
+      "icon": "UI_Talent_Expedition_Mengde"
+    },
+    {
+      "icon": "UI_Talent_S_Fischl_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Fischl_01"
+    },
+    {
+      "icon": "UI_Talent_S_Fischl_02"
+    },
+    {
+      "icon": "UI_Talent_U_Fischl_01"
+    },
+    {
+      "icon": "UI_Talent_S_Fischl_03"
+    },
+    {
+      "icon": "UI_Talent_U_Fischl_02"
+    },
+    {
+      "icon": "UI_Talent_S_Fischl_04"
+    }
+  ]
+}

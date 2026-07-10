@@ -1,0 +1,7 @@
+{
+  "name": "煌烈・真化",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Claymore_MorphGravitas_Great_{0}",
+  "stats_modifier": {}
+}

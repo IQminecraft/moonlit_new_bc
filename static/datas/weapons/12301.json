@@ -1,0 +1,9 @@
+{
+  "name": "鉄影段平",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 3,
+  "icon": "UI_EquipIcon_Claymore_Glaive",
+  "stats_modifier": {
+    "atk": 401.2935898
+  }
+}

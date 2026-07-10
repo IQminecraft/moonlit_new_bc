@@ -1,0 +1,63 @@
+{
+  "name": "タルタリヤ",
+  "desc": "ファトゥス第十一位、「公子」。その戦績や名前は広く知られている。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Hydro",
+  "icon": "UI_AvatarIcon_Tartaglia",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 13103,
+  "atk": 301,
+  "def": 815,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Tartaglia_01"
+    },
+    {
+      "icon": "Skill_E_Tartaglia_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Tartaglia_03"
+    },
+    {
+      "icon": "UI_Talent_S_Tartaglia_06"
+    },
+    {
+      "icon": "UI_Talent_S_Tartaglia_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Tartaglia_01"
+    },
+    {
+      "icon": "UI_Talent_S_Tartaglia_02"
+    },
+    {
+      "icon": "UI_Talent_U_Tartaglia_01"
+    },
+    {
+      "icon": "UI_Talent_S_Tartaglia_05"
+    },
+    {
+      "icon": "UI_Talent_U_Tartaglia_02"
+    },
+    {
+      "icon": "UI_Talent_S_Tartaglia_04"
+    }
+  ]
+}

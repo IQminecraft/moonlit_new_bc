@@ -1,0 +1,9 @@
+{
+  "name": "帳の夜曲",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Catalyst_Brisingamen",
+  "stats_modifier": {
+    "atk": 541.829758
+  }
+}

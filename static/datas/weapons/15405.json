@@ -1,0 +1,9 @@
+{
+  "name": "弓蔵",
+  "weapon_type": "WEAPON_BOW",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Bow_Recluse",
+  "stats_modifier": {
+    "atk": 509.605949
+  }
+}

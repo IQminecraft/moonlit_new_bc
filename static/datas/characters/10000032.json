@@ -1,0 +1,63 @@
+{
+  "name": "ベネット",
+  "desc": "モンドの少年冒険者。その優しさにそぐわない不運の持ち主。",
+  "weapon": "WEAPON_SWORD_ONE_HAND",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Pyro",
+  "icon": "UI_AvatarIcon_Bennett",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 12397,
+  "atk": 191,
+  "def": 771,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_01"
+    },
+    {
+      "icon": "Skill_S_Bennett_01"
+    },
+    {
+      "icon": "Skill_E_Bennett_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Bennett_05"
+    },
+    {
+      "icon": "UI_Talent_S_Bennett_06"
+    },
+    {
+      "icon": "UI_Talent_Expedition_Mengde"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Bennett_01"
+    },
+    {
+      "icon": "UI_Talent_S_Bennett_02"
+    },
+    {
+      "icon": "UI_Talent_U_Bennett_01"
+    },
+    {
+      "icon": "UI_Talent_S_Bennett_03"
+    },
+    {
+      "icon": "UI_Talent_U_Bennett_02"
+    },
+    {
+      "icon": "UI_Talent_S_Bennett_04"
+    }
+  ]
+}

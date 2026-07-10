@@ -1,0 +1,66 @@
+{
+  "name": "リオセスリ",
+  "desc": "メロピデ要塞の公爵。漆黒の海底に潜む領主。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Cryo",
+  "icon": "UI_AvatarIcon_Wriothesley",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 13593,
+  "atk": 311,
+  "def": 763,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0.384
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Wriothesley_01"
+    },
+    {
+      "icon": "Skill_E_Wriothesley_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Wriothesley_05"
+    },
+    {
+      "icon": "UI_Talent_S_Wriothesley_06"
+    },
+    {
+      "icon": "UI_Talent_Combine_Weapon_Double"
+    },
+    {
+      "icon": "UI_Talent_S_Wriothesley_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Wriothesley_01"
+    },
+    {
+      "icon": "UI_Talent_S_Wriothesley_02"
+    },
+    {
+      "icon": "UI_Talent_U_Wriothesley_01"
+    },
+    {
+      "icon": "UI_Talent_S_Wriothesley_03"
+    },
+    {
+      "icon": "UI_Talent_U_Wriothesley_02"
+    },
+    {
+      "icon": "UI_Talent_S_Wriothesley_04"
+    }
+  ]
+}

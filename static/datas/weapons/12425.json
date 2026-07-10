@@ -1,0 +1,9 @@
+{
+  "name": "タイダル·シャドー",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Claymore_Vorpal",
+  "stats_modifier": {
+    "atk": 509.605949
+  }
+}

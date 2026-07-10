@@ -1,0 +1,63 @@
+{
+  "name": "リサ",
+  "desc": "無気力だが博学な図書館司書。スメール教令院「200年に1人」の天才卒業生。",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Electro",
+  "icon": "UI_AvatarIcon_Lisa",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 9570,
+  "atk": 232,
+  "def": 573,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Lisa_01"
+    },
+    {
+      "icon": "Skill_E_Lisa_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Lisa_05"
+    },
+    {
+      "icon": "UI_Talent_S_Lisa_06"
+    },
+    {
+      "icon": "UI_Talent_Combine_Potion"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Lisa_01"
+    },
+    {
+      "icon": "UI_Talent_S_Lisa_02"
+    },
+    {
+      "icon": "UI_Talent_U_Lisa_02"
+    },
+    {
+      "icon": "UI_Talent_S_Lisa_03"
+    },
+    {
+      "icon": "UI_Talent_U_Lisa_01"
+    },
+    {
+      "icon": "UI_Talent_S_Lisa_04"
+    }
+  ]
+}

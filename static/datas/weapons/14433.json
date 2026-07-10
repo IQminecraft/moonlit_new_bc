@@ -1,0 +1,9 @@
+{
+  "name": "烏髄の孤灯",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Catalyst_Ilmarinen",
+  "stats_modifier": {
+    "atk": 454.36315250000007
+  }
+}

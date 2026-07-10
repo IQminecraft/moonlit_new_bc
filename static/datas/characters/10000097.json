@@ -1,0 +1,63 @@
+{
+  "name": "セトス",
+  "desc": "沈黙の殿の継承者。砂漠より訪れ、秘密を背負っている。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Electro",
+  "icon": "UI_AvatarIcon_Sethos",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 9787,
+  "atk": 227,
+  "def": 560,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Sethos_01"
+    },
+    {
+      "icon": "Skill_E_Sethos_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Sethos_05"
+    },
+    {
+      "icon": "UI_Talent_S_Sethos_06"
+    },
+    {
+      "icon": "UI_Talent_S_Tighnari_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Sethos_01"
+    },
+    {
+      "icon": "UI_Talent_S_Sethos_02"
+    },
+    {
+      "icon": "UI_Talent_U_Sethos_01"
+    },
+    {
+      "icon": "UI_Talent_S_Sethos_03"
+    },
+    {
+      "icon": "UI_Talent_U_Sethos_02"
+    },
+    {
+      "icon": "UI_Talent_S_Sethos_04"
+    }
+  ]
+}

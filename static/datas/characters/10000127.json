@@ -1,0 +1,66 @@
+{
+  "name": "イルーガ",
+  "desc": "調査分隊「闇夜の鶯」メンバー。ライトキーパー最年少の分隊長。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Geo",
+  "icon": "UI_AvatarIcon_Illuga",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 11962,
+  "atk": 191,
+  "def": 814,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Illuga_01"
+    },
+    {
+      "icon": "Skill_E_Illuga_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Illuga_05"
+    },
+    {
+      "icon": "UI_Talent_S_Illuga_06"
+    },
+    {
+      "icon": "UI_Talent_S_Illuga_07"
+    },
+    {
+      "icon": "UI_Talent_S_Illuga_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Illuga_01"
+    },
+    {
+      "icon": "UI_Talent_S_Illuga_02"
+    },
+    {
+      "icon": "UI_Talent_U_Illuga_01"
+    },
+    {
+      "icon": "UI_Talent_S_Illuga_03"
+    },
+    {
+      "icon": "UI_Talent_U_Illuga_02"
+    },
+    {
+      "icon": "UI_Talent_S_Illuga_04"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "name": "エミリエ",
+  "desc": "秘密を瓶の中に隠す、フォンテーヌの調香師。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Dendro",
+  "icon": "UI_AvatarIcon_Emilie",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 13568,
+  "atk": 335,
+  "def": 730,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0.384
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Emilie_01"
+    },
+    {
+      "icon": "Skill_E_Emilie_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Emilie_05"
+    },
+    {
+      "icon": "UI_Talent_S_Emilie_06"
+    },
+    {
+      "icon": "UI_Talent_S_Emilie_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Emilie_01"
+    },
+    {
+      "icon": "UI_Talent_S_Emilie_02"
+    },
+    {
+      "icon": "UI_Talent_U_Emilie_01"
+    },
+    {
+      "icon": "UI_Talent_S_Emilie_03"
+    },
+    {
+      "icon": "UI_Talent_U_Emilie_02"
+    },
+    {
+      "icon": "UI_Talent_S_Emilie_04"
+    }
+  ]
+}

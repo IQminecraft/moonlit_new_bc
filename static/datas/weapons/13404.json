@@ -1,0 +1,9 @@
+{
+  "name": "黒岩の突槍",
+  "weapon_type": "WEAPON_POLE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Pole_Blackrock",
+  "stats_modifier": {
+    "atk": 509.605949
+  }
+}

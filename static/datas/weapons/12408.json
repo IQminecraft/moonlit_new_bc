@@ -1,0 +1,9 @@
+{
+  "name": "黒岩の斬刀",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Claymore_Blackrock",
+  "stats_modifier": {
+    "atk": 509.605949
+  }
+}

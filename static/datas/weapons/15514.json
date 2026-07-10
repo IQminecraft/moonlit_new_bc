@@ -1,0 +1,9 @@
+{
+  "name": "星鷲の紅き羽",
+  "weapon_type": "WEAPON_BOW",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Bow_Qoyllorsnova",
+  "stats_modifier": {
+    "atk": 608.0745972
+  }
+}

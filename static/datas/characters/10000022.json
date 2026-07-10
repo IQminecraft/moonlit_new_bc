@@ -1,0 +1,66 @@
+{
+  "name": "ウェンティ",
+  "desc": "モンドの街にいる、数多くの自由な吟遊詩人の一人。",
+  "weapon": "WEAPON_BOW",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Anemo",
+  "icon": "UI_AvatarIcon_Venti",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "hp": 10531,
+  "atk": 263,
+  "def": 669,
+  "stats_modifier": {
+    "ascension": [
+      {
+        "fight_prop_critical_hurt": 0
+      }
+    ]
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_02"
+    },
+    {
+      "icon": "Skill_S_Venti_01"
+    },
+    {
+      "icon": "Skill_E_Venti_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Venti_05"
+    },
+    {
+      "icon": "UI_Talent_S_Venti_06"
+    },
+    {
+      "icon": "UI_Talent_Explosion_Glide"
+    },
+    {
+      "icon": "UI_Talent_S_Venti_07"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Venti_01"
+    },
+    {
+      "icon": "UI_Talent_S_Venti_02"
+    },
+    {
+      "icon": "UI_Talent_U_Venti_02"
+    },
+    {
+      "icon": "UI_Talent_S_Venti_03"
+    },
+    {
+      "icon": "UI_Talent_U_Venti_01"
+    },
+    {
+      "icon": "UI_Talent_S_Venti_04"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "サイフォスの月明かり",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Sword_Pleroma",
+  "stats_modifier": {
+    "atk": 509.605949
+  }
+}
