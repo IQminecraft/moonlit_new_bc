@@ -391,8 +391,7 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False):
 # 3. PIL ビルドカード画像生成エンドポイント
 # --------------------------------------------------------------------
 @app.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")
-async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # 💡 引数をすべて str にしてハイフンと計算方法を受け取る
-    # キャッシュキー用の文字列
+async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None):
     cache_key = f"{uid}_{avatar_id}_{calc_method}"
     print(f"[Cache Miss] 初回生成のため、PILで気合を入れて画像を作ります...: UID:{uid} - CharID:{avatar_id} - Method:{calc_method}")
 
@@ -402,6 +401,7 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
     # ================================================================
 
     # --- 1-1. Showcase JSONの読み込みと対象キャラの特定 ---
+
     target_avatar_info = None
     json_path = os.path.join("static", "datas", "cache", f"showcase_{uid}.json")
 
@@ -445,8 +445,11 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
     # --- 1-2. キャラクター固有JSONの読み込み ---
     print(f"[Debug] 読み込もうとしているファイル名: {avatar_id}.json")
 
-    # 確定した avatar_id を使って、キャラクターJSONを読み込みに行く
-    json_path2 = os.path.join("static", "datas", "characters", f"{avatar_id}.json")
+    if fake_char:
+        json_path2 = os.path.join("static", "datas", "characters", f"{fake_char}.json") #fake_chair
+    else:
+        json_path2 = os.path.join("static", "datas", "characters", f"{avatar_id}.json")
+    
 
     if os.path.exists(json_path2):
         try:
@@ -509,19 +512,27 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
     char_name = chardatas["name"]
 
     # 💡 特定した target_avatar_info からキャラレベルを取得
-    char_level = target_avatar_info.get('propMap', {}).get('4001', {}).get('val', 1)
+    if fake_char:
+        char_level = 90
+    else:
+        char_level = target_avatar_info.get('propMap', {}).get('4001', {}).get('val', 1)
 
     # 💡 好感度レベルを正しく取得
-    friendship_lv = target_avatar_info.get("fetterInfo", {}).get("expLevel", 1)
+    if fake_char:
+        friendship_lv = 10
+    else:
+        friendship_lv = target_avatar_info.get("fetterInfo", {}).get("expLevel", 1)
 
     # --- 1-6. 天賦スキル ---
     skill_map = target_avatar_info.get("skillLevelMap", {})
     skill_values = list(skill_map.values())
-
-    if len(skill_values) >= 3:
-        normal, skill, burst = skill_values[0], skill_values[1], skill_values[2]
+    if fake_char:
+        normal, skill, burst = 9, 9, 9
     else:
-        normal, skill, burst = 1, 1, 1
+        if len(skill_values) >= 3:
+            normal, skill, burst = skill_values[0], skill_values[1], skill_values[2]
+        else:
+            normal, skill, burst = 1, 1, 1
 
     skill_level = [normal, skill, burst]
     skill_icon = [chardatas["skills"][0]["icon"], chardatas["skills"][1]["icon"], chardatas["skills"][2]["icon"]]
@@ -531,7 +542,10 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
     circle_size = 68
 
     # talentIdList の長さから凸数（0〜6）を取得
-    constellation_releas_num = len(target_avatar_info.get("talentIdList", []))
+    if fake_char:
+        constellation_releas_num = 0
+    else:
+        constellation_releas_num = len(target_avatar_info.get("talentIdList", []))
 
     # 先に6箇所分すべての星座アイコンファイル名を取得
     Constellation_icon = []
@@ -543,22 +557,38 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str):  # �
     weapon_data = next((item for item in target_avatar_info.get("equipList", []) if "weapon" in item), None)
 
     # 武器の基本情報を取り出す
-    weapon_id = weapon_data["itemId"]
-    weapon_icon = weapon_data["flat"]["icon"]                # アイコン名 (UI_EquipIcon_...)
-    weapon_level = weapon_data["weapon"]["level"]            # 武器レベル
-
-    # 精錬ランク（凸数）を取得（ない場合は1凸扱い）
-    weapon_affix = list(weapon_data["weapon"].get("affixMap", {}).values())[0] + 1 if weapon_data["weapon"].get("affixMap") else 1
-
-    try:
+    if fake_weapon:
+        weapon_id = fake_weapon
         with open(f"static/datas/weapons/{weapon_id}.json", "r", encoding="utf-8") as f:
             weapon_jsondata = json.load(f)
+        weapon_level = 90
+        weapon_affix = 1
+        weapon_icon = weapon_jsondata["icon"]
+        weapon_name = weapon_jsondata["name"]
+        keys_list = list(weapon_jsondata["stats_modifier"].keys())
+        second_key = keys_list[1]
+        stat_calc = weapon_jsondata["stats_modifier"][second_key]
+        if stat_calc < 1:
+            stat_calc = round(stat_calc*100,1)
+        else:
+            stat_calc = round(stat_calc)
+        print(stat_calc)
+        weapon_stats_list = [
+            {'appendPropId': 'FIGHT_PROP_BASE_ATTACK', 'statValue': round(weapon_jsondata["stats_modifier"]["atk"],1)}, 
+            {'appendPropId': second_key.upper(), 'statValue': stat_calc}
+        ]
+        print()
+    else:
+        weapon_id = weapon_data["itemId"]
+        with open(f"static/datas/weapons/{weapon_id}.json", "r", encoding="utf-8") as f:
+            weapon_jsondata = json.load(f)
+        weapon_icon = weapon_data["flat"]["icon"]
+        weapon_level = weapon_data["weapon"]["level"]
+        weapon_affix = list(weapon_data["weapon"].get("affixMap", {}).values())[0] + 1 if weapon_data["weapon"].get("affixMap") else 1
         weapon_name = weapon_jsondata.get("name", "未知の武器")
-    except Exception:
-        weapon_name = "武器データなし"
+        weapon_stats_list = weapon_data["flat"].get("weaponStats", [])
 
     # 武器のサブステータス（最大2つ）を整形しておく
-    weapon_stats_list = weapon_data["flat"].get("weaponStats", [])
 
     weapon_stat1 = None
     if len(weapon_stats_list) >= 1:
