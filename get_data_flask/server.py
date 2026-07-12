@@ -322,7 +322,7 @@ def nanoka_get_data():
     char_dir = os.path.join("..", "static", "BETA", "characters")
     weapon_dir = os.path.join("..", "static", "BETA", "weapons")
     list_dir = os.path.join("..", "static", "BETA", "lists")
-    
+    """
     # --- 1. 個別キャラクター詳細（_listなしの「characters」を使用） ---
     for char_id in added_character_list:
         url = f"https://static.nanoka.cc/gi/{beta}/ja/character/{char_id}.json"
@@ -338,7 +338,7 @@ def nanoka_get_data():
                 json.dump(converted, f, indent=2, ensure_ascii=False)
         except Exception as e:
             pass
-    """
+    
     # --- 2. 個別武器詳細（_listなしの「weapons」を使用） ---
     for weapon_id in added_weapon_list:
         url = f"https://static.nanoka.cc/gi/{beta}/ja/weapon/{weapon_id}.json"
@@ -354,7 +354,7 @@ def nanoka_get_data():
                 json.dump(converted, f, indent=2, ensure_ascii=False)
         except Exception as e:
             pass
-    
+    """
     # --- 3. 一覧（リスト）データの一括処理 ---
     MODULE_MAP = {
         "characters.json": characters_list,
@@ -363,7 +363,7 @@ def nanoka_get_data():
     }
 
     list_urls = {
-        "characters.json": f"https://static.nanoka.cc/gi/{beta}/chracter.json",
+        "characters.json": f"https://static.nanoka.cc/gi/{beta}/character.json",
         "weapons.json": f"https://static.nanoka.cc/gi/{beta}/weapon.json",
         "artifacts.json": f"https://static.nanoka.cc/gi/{beta}/artifact.json"
     }
@@ -388,7 +388,7 @@ def nanoka_get_data():
         except Exception as e:
             pass
         
-    """
+    
     """
     for charid in added_character_list:
         #アイコン
@@ -423,7 +423,7 @@ def nanoka_get_data():
         with open(img_path2, "wb") as f:
             f.write(r.content) # テキストではなくバイナリを書き込む
         
-
+    
     #聖遺物
     
     for artifactid in added_artifact_list:

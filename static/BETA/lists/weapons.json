@@ -216,14 +216,14 @@
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
   "11435": {
-    "enName": "BP Weapon",
-    "jaName": "BP武器",
+    "enName": "",
+    "jaName": "",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
   "11436": {
-    "enName": "Forgeable Weapon",
-    "jaName": "鍛造武器",
+    "enName": "Emberwell",
+    "jaName": "導炎の源JP0D",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
@@ -330,7 +330,7 @@
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
   "11521": {
-    "enName": "Staredge Saber",
+    "enName": "Exaiphanes Blade",
     "jaName": "星鋒の剣JP0D",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
@@ -528,14 +528,14 @@
     "weaponType": "WEAPON_CLAYMORE"
   },
   "12435": {
-    "enName": "BP Weapon",
-    "jaName": "BP武器",
+    "enName": "",
+    "jaName": "",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CLAYMORE"
   },
   "12436": {
-    "enName": "Forgeable Weapon",
-    "jaName": "鍛造武器",
+    "enName": "Blade of Atonement",
+    "jaName": "救済の剣JP0D",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CLAYMORE"
   },
@@ -774,14 +774,14 @@
     "weaponType": "WEAPON_POLE"
   },
   "13435": {
-    "enName": "BP Weapon",
-    "jaName": "BP武器",
+    "enName": "",
+    "jaName": "",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_POLE"
   },
   "13436": {
-    "enName": "Forgeable Weapon",
-    "jaName": "鍛造武器",
+    "enName": "Song of the Vigil",
+    "jaName": "遠望の歌JP0D",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_POLE"
   },
@@ -1056,14 +1056,14 @@
     "weaponType": "WEAPON_CATALYST"
   },
   "14435": {
-    "enName": "BP Weapon",
-    "jaName": "BP武器",
+    "enName": "",
+    "jaName": "",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CATALYST"
   },
   "14436": {
-    "enName": "Forgeable Weapon",
-    "jaName": "鍛造武器",
+    "enName": "Echoes of the Heart",
+    "jaName": "寸心の余響JP0D",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CATALYST"
   },
@@ -1392,14 +1392,14 @@
     "weaponType": "WEAPON_BOW"
   },
   "15435": {
-    "enName": "BP Weapon",
-    "jaName": "BP武器",
+    "enName": "",
+    "jaName": "",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_BOW"
   },
   "15436": {
-    "enName": "Forgeable Weapon",
-    "jaName": "鍛造武器",
+    "enName": "Covenant of Frost and Snow",
+    "jaName": "霜雪の誓いJP0D",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_BOW"
   },
@@ -1476,49 +1476,49 @@
     "weaponType": "WEAPON_BOW"
   },
   "224001": {
-    "enName": "Shathanaya's Pale Silver",
+    "enName": "Shatanaya's Frostsilver",
     "jaName": "",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224002": {
-    "enName": "Asha's Thousand Lights",
+    "enName": "Ashamez's Thunder",
     "jaName": "",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224003": {
-    "enName": "Sun of Valsag",
+    "enName": "Balsag's Sunwheel",
     "jaName": "",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224004": {
-    "enName": "Pomegranate Crystal Pyro",
+    "enName": "Frag Crystal - Pyro",
     "jaName": "",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224005": {
-    "enName": "Hydro Crystal",
+    "enName": "Frag Crystal - Hydro",
     "jaName": "",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224006": {
-    "enName": "Electro Crystal",
+    "enName": "Frag Crystal - Electro",
     "jaName": "",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224007": {
-    "enName": "Garnet Cryo",
+    "enName": "Frag Crystal - Cryo",
     "jaName": "",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224008": {
-    "enName": "",
+    "enName": "(test) Shadow Realm Grenade",
     "jaName": "",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"

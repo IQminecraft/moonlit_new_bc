@@ -3,22 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Genshin Build Card - Showcase</title>
+    <title>Genshin ビルドカード生成</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        const ver = "{{ ver }}";
+        console.log("現在のデータ:", ver);
+    </script>
     <style>
         body { background-color: #0a0a0c; color: white; font-family: 'Inter', sans-serif; }
         .drag-none { user-drag: none; -webkit-user-drag: none; }
+        .rarity-5 { border-color: #cd8834; }
+        .rarity-4 { border-color: #a256d1; }
+        .rarity-3 { border-color: #5a8dc7; }
+        .rarity-2 { border-color: #4a8a5c; }
+        .picker-grid::-webkit-scrollbar { width: 8px; }
+        .picker-grid::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 8px; }
+        .picker-tile { transition: transform .15s ease, border-color .15s ease; }
+        .picker-tile:hover { transform: translateY(-2px); }
+        .picker-tile.selected { border-color: #22d3ee !important; box-shadow: 0 0 0 2px rgba(34,211,238,0.4); }
+        .combo-tile { transition: transform .15s ease, border-color .15s ease; }
+        .combo-tile:hover { transform: translateY(-2px); }
+        .combo-tile.active { border-color: #22d3ee !important; box-shadow: 0 0 0 2px rgba(34,211,238,0.5); }
+        .combo-remove {
+            position: absolute; top: -6px; right: -6px; width: 18px; height: 18px;
+            background: #ef4444; color: white; border-radius: 9999px; font-size: 12px;
+            line-height: 18px; text-align: center; cursor: pointer; z-index: 10;
+        }
+        .weapon-badge {
+            position: absolute; bottom: -4px; right: -4px; width: 20px; height: 20px;
+            border-radius: 6px; border: 1px solid rgba(255,255,255,0.4); overflow: hidden;
+            background: #18181b;
+        }
     </style>
 </head>
 <body class="p-4 md:p-10">
 
     <div class="max-w-6xl mx-auto">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <h1 class="text-xl font-bold text-yellow-400">UID: <span id="currentUid">{{ uid }}</span> のキャラクター一覧</h1>
+            <div class="flex items-center gap-4">
+                <h1 class="text-xl font-bold text-yellow-400">UID: <span id="currentUid">{{ uid }}</span> のキャラクター一覧</h1>
+                <span class="text-sm text-zinc-400 bg-zinc-800/60 px-3 py-1 rounded-lg border border-zinc-700">{{ ver }}</span>
+            </div>
             <a href="/" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-sm rounded-lg transition-all border border-zinc-700">← 戻る</a>
         </div>
         
-        <div class="grid gap-[5px] grid-cols-4 sm:grid-cols-6 md:grid-cols-12 mb-6 bg-zinc-900/60 p-4 rounded-xl border border-zinc-800">
+        <div id="charThumbRow" class="grid gap-[5px] grid-cols-4 sm:grid-cols-6 md:grid-cols-12 mb-6 bg-zinc-900/60 p-4 rounded-xl border border-zinc-800">
             {% for char in char_list %}
             <div class="relative aspect-square cursor-pointer char-thumb" data-char-id="{{ char.id }}">
                 <img src="{{ char.icon }}" 
@@ -27,18 +56,36 @@
             {% endfor %}
         </div>
 
+        <!-- 差し替え保存枠（実キャラごとに複数のfake_char + fake_weapon組み合わせを保存） -->
+        <div class="mb-6 p-4 bg-zinc-900/60 rounded-xl border border-zinc-800">
+            <div class="text-xs font-semibold text-gray-400 mb-3">差し替え保存枠（デフォルト + 追加キャラ）</div>
+            <div id="comboRow" class="flex flex-wrap gap-3"></div>
+        </div>
+
         <div class="mb-6 p-4 bg-zinc-900/80 rounded-xl border border-zinc-800 flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <label for="scoreCalcSelect" class="text-sm font-semibold text-gray-300">計算方法:</label>
-                <select id="scoreCalcSelect" class="bg-zinc-800 border border-zinc-700 text-white px-3 py-1.5 rounded-lg focus:outline-none focus:border-yellow-400 transition-all text-sm cursor-pointer">
-                    <option value="crit">会心のみ</option>
-                    <option value="atk">攻撃力%</option>
-                    <option value="hp">HP%</option>
-                    <option value="def">防御%</option>
-                    <option value="em">元素熟知</option>
-                    <option value="charge">チャージ効率</option>
-                </select> </div>
-            
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <label for="scoreCalcSelect" class="text-sm font-semibold text-gray-300">計算方法:</label>
+                    <select id="scoreCalcSelect" class="bg-zinc-800 border border-zinc-700 text-white px-3 py-1.5 rounded-lg focus:outline-none focus:border-yellow-400 transition-all text-sm cursor-pointer">
+                        <option value="crit">会心のみ</option>
+                        <option value="atk">攻撃力%</option>
+                        <option value="hp">HP%</option>
+                        <option value="def">防御%</option>
+                        <option value="em">元素熟知</option>
+                        <option value="charge">チャージ効率</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-semibold text-gray-300">武器:</label>
+                    <button id="editWeaponBtn" type="button"
+                        class="flex items-center gap-2 bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-white pl-1.5 pr-3 py-1.5 rounded-lg transition-all text-sm">
+                        <img id="editWeaponIcon" src="" class="w-7 h-7 rounded object-cover hidden">
+                        <span id="editWeaponLabel">なし（実データ）</span>
+                    </button>
+                </div>
+            </div>
+
             <button id="regenerateApiBtn" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-cyan-600/10 transition-all flex items-center gap-1.5">
                 再取得 + 再生成
             </button>
@@ -53,6 +100,32 @@
         </div>
     </div>
 
+    <!-- キャラ追加（差し替えキャラを選んで新しい保存枠を作る）モーダル -->
+    <div id="fakeCharModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 items-center justify-center p-4"
+        onclick="if(event.target===this) closeFakeCharModal()">
+        <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between p-4 border-b border-zinc-800 shrink-0">
+                <h2 class="text-lg font-bold text-cyan-400">追加する差し替えキャラクターを選択</h2>
+                <button onclick="closeFakeCharModal()" class="text-zinc-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div id="fakeCharGridStatus" class="p-4 text-sm text-zinc-400"></div>
+            <div id="fakeCharGrid" class="picker-grid overflow-y-auto p-4 flex flex-wrap gap-2 flex-1 min-h-0"></div>
+        </div>
+    </div>
+
+    <!-- 武器差し替え選択モーダル（現在アクティブな保存枠に適用） -->
+    <div id="fakeWeaponModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 items-center justify-center p-4"
+        onclick="if(event.target===this) closeFakeWeaponModal()">
+        <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-zinc-800 shrink-0">
+                <h2 class="text-lg font-bold text-cyan-400">差し替え武器を選択</h2>
+                <button onclick="closeFakeWeaponModal()" class="text-zinc-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div id="fakeWeaponGridStatus" class="p-4 text-sm text-zinc-400"></div>
+            <div id="fakeWeaponGrid" class="picker-grid overflow-y-auto p-4 flex flex-wrap gap-2"></div>
+        </div>
+    </div>
+
     <script>
         const uid = document.getElementById('currentUid').textContent.trim();
         const scoreCalcSelect = document.getElementById('scoreCalcSelect');
@@ -60,8 +133,490 @@
         const cardImage = document.getElementById('cardImage');
         const placeholderText = document.getElementById('placeholderText');
         const loadingSpinner = document.getElementById('loadingSpinner');
-        
+
+        const comboRow = document.getElementById('comboRow');
+        const editWeaponBtn = document.getElementById('editWeaponBtn');
+        const editWeaponIcon = document.getElementById('editWeaponIcon');
+        const editWeaponLabel = document.getElementById('editWeaponLabel');
+
+        const fakeCharModal = document.getElementById('fakeCharModal');
+        const fakeCharGrid = document.getElementById('fakeCharGrid');
+        const fakeCharGridStatus = document.getElementById('fakeCharGridStatus');
+        const fakeWeaponModal = document.getElementById('fakeWeaponModal');
+        const fakeWeaponGrid = document.getElementById('fakeWeaponGrid');
+        const fakeWeaponGridStatus = document.getElementById('fakeWeaponGridStatus');
+
         let currentSelectedCharId = null;
+
+        // 差し替え保存枠の状態（currentSelectedCharId 単位）
+        let combos = [];              // [{id, fakeChar, fakeWeapon}]
+        let activeComboId = '';       // '' = デフォルト
+        let defaultWeapon = '';       // デフォルト（実キャラ）に対する武器差し替え
+
+        // 🧪 fake_char / fake_weapon 用の静的リスト（id → 情報）＆ アイコンキャッシュ
+        let allCharList = {};
+        let allWeaponList = {};
+        let charIconCache = {};   // id -> icon suffix (例: UI_AvatarIcon_Ayaka)
+        let weaponIconCache = {}; // id -> icon suffix (例: UI_EquipIcon_Sword_Needle)
+        let listsLoaded = false;
+        // 特定id群のアイコンだけを取りにいく方式にするため、
+        // 「全キャラ/全武器を一括で先読み」というフラグは廃止した
+        const pendingIconFetches = new Set(); // 二重フェッチ防止用（例: 'char:10000002'）
+        let allCharIconsPromise = null;       // 全キャラアイコン（追加モーダル用）は一度だけ取得
+
+        // 旅人（主人公）の基礎IDは一覧の一番下にまとめ、グループ内は元素の固定順で並べる
+        const TRAVELER_BASE_IDS = ['10000005', '10000007', '10000117', '10000118'];
+        const ELEMENT_ORDER = ['Anemo', 'Geo', 'Electro', 'Dendro', 'Hydro', 'Pyro', 'Cryo'];
+
+        function baseIdOf(id) {
+            return String(id).split('-')[0];
+        }
+
+        function sortCharIds(ids) {
+            const normal = [];
+            const traveler = [];
+            ids.forEach(id => {
+                if (TRAVELER_BASE_IDS.includes(baseIdOf(id))) {
+                    traveler.push(id);
+                } else {
+                    normal.push(id);
+                }
+            });
+
+            normal.sort((a, b) => Number(baseIdOf(b)) - Number(baseIdOf(a)) || String(b).localeCompare(String(a)));
+
+            traveler.sort((a, b) => {
+                const baseDiff = TRAVELER_BASE_IDS.indexOf(baseIdOf(a)) - TRAVELER_BASE_IDS.indexOf(baseIdOf(b));
+                if (baseDiff !== 0) return baseDiff;
+                const elA = (allCharList[a] || {}).element || '';
+                const elB = (allCharList[b] || {}).element || '';
+                const elDiff = ELEMENT_ORDER.indexOf(elA) - ELEMENT_ORDER.indexOf(elB);
+                if (elDiff !== 0) return elDiff;
+                return String(a).localeCompare(String(b));
+            });
+
+            return [...normal, ...traveler];
+        }
+
+        async function loadFakeLists() {
+            try {
+                const listsBase = ver === 'beta' ? '/static/BETA/lists' : '/static/datas/lists';
+                const [charRes, weaponRes] = await Promise.all([
+                    fetch(`${listsBase}/characters.json`),
+                    fetch(`${listsBase}/weapons.json`)
+                ]);
+                allCharList = charRes.ok ? await charRes.json() : {};
+                allWeaponList = weaponRes.ok ? await weaponRes.json() : {};
+            } catch (e) {
+                console.error('fake_char / fake_weapon 用リストの取得に失敗しました:', e);
+                allCharList = {};
+                allWeaponList = {};
+            }
+            listsLoaded = true;
+
+            if (currentSelectedCharId) {
+                loadComboState(currentSelectedCharId);
+                renderComboRow();
+                updateEditWeaponUI();
+                // 保存済みの差し替え枠に使われているキャラ/武器のアイコンだけを取得する
+                // （全キャラ・全武器を先読みするのではなく必要最低限に絞る）
+                ensureComboIconsLoaded().then(() => renderComboRow());
+                // 一覧取得前に読み込んだ初回画像には差し替えが反映されていないため、
+                // 保存済みのアクティブ枠があれば再読み込みする
+                if (activeComboId || defaultWeapon) {
+                    loadCardImage(currentSelectedCharId, false);
+                }
+            }
+        }
+
+        // 現在の保存枠（デフォルト＋追加枠）で使われているキャラ/武器のアイコンだけを取得する
+        function ensureComboIconsLoaded() {
+            const charIds = combos.map(c => c.fakeChar).filter(Boolean);
+            const weaponIds = combos.map(c => c.fakeWeapon).filter(Boolean);
+            if (defaultWeapon) weaponIds.push(defaultWeapon);
+            return Promise.all([
+                ensureCharIconsLoaded(charIds),
+                ensureWeaponIconsLoaded(weaponIds)
+            ]);
+        }
+
+        // 1キャラ分のアイコンJSONを取得してキャッシュする（未取得・未取得中のみ）
+        // live: static/datas/characters/ のみ参照（従来通り）
+        // beta: static/datas/characters/ を先に見て、無ければ static/BETA/characters/ も探す
+        async function fetchCharIcon(id) {
+            const key = `char:${id}`;
+            if (charIconCache[id] !== undefined || pendingIconFetches.has(key)) return;
+            pendingIconFetches.add(key);
+            try {
+                let base = 'datas';
+                let res = await fetch(`/static/datas/characters/${id}.json`);
+                if (!res.ok && ver === 'beta') {
+                    base = 'BETA';
+                    res = await fetch(`/static/BETA/characters/${id}.json`);
+                }
+                if (res.ok) {
+                    const data = await res.json();
+                    charIconCache[id] = { icon: data.icon, base };
+                }
+            } catch (e) { /* skip individual failures */ }
+            pendingIconFetches.delete(key);
+        }
+
+        // 1武器分のアイコンJSONを取得してキャッシュする（未取得・未取得中のみ）
+        // live: static/datas/weapons/ のみ参照（従来通り）
+        // beta: static/datas/weapons/ を先に見て、無ければ static/BETA/weapons/ も探す
+        async function fetchWeaponIcon(id) {
+            const key = `weapon:${id}`;
+            if (weaponIconCache[id] !== undefined || pendingIconFetches.has(key)) return;
+            pendingIconFetches.add(key);
+            try {
+                let base = 'datas';
+                let res = await fetch(`/static/datas/weapons/${id}.json`);
+                if (!res.ok && ver === 'beta') {
+                    base = 'BETA';
+                    res = await fetch(`/static/BETA/weapons/${id}.json`);
+                }
+                if (res.ok) {
+                    const data = await res.json();
+                    weaponIconCache[id] = { icon: data.icon, base };
+                }
+            } catch (e) { /* skip individual failures */ }
+            pendingIconFetches.delete(key);
+        }
+
+        // キャラアイコン画像のURLを、実際にJSONが見つかったベース(datas/BETA)に合わせて組み立てる
+        function charAssetUrl(id) {
+            const entry = charIconCache[id];
+            if (!entry || !entry.icon) return '';
+            return `/static/${entry.base}/assets/characters/${entry.icon}.webp`;
+        }
+
+        // 武器アイコン画像のURLを、実際にJSONが見つかったベース(datas/BETA)に合わせて組み立てる
+        function weaponAssetUrl(id) {
+            const entry = weaponIconCache[id];
+            if (!entry || !entry.icon) return '';
+            return `/static/${entry.base}/assets/weapons/${entry.icon}.webp`;
+        }
+
+        // 指定したキャラid群のアイコンだけをまとめて取得する
+        function ensureCharIconsLoaded(ids) {
+            const targets = [...new Set(ids)].filter(id => charIconCache[id] === undefined);
+            return Promise.all(targets.map(fetchCharIcon));
+        }
+
+        // 指定した武器id群のアイコンだけをまとめて取得する
+        function ensureWeaponIconsLoaded(ids) {
+            const targets = [...new Set(ids)].filter(id => weaponIconCache[id] === undefined);
+            return Promise.all(targets.map(fetchWeaponIcon));
+        }
+
+        // キャラ追加モーダルは全キャラから選ぶ性質上、開いた時にだけ全キャラ分を取得する
+        function ensureAllCharIconsLoaded() {
+            if (!allCharIconsPromise) {
+                allCharIconsPromise = ensureCharIconsLoaded(Object.keys(allCharList));
+            }
+            return allCharIconsPromise;
+        }
+
+        function qualityToRarity(q) {
+            if (q === 'QUALITY_ORANGE' || q === 'QUALITY_ORANGE_SP') return 5;
+            if (q === 'QUALITY_PURPLE') return 4;
+            if (q === 'QUALITY_BLUE') return 3;
+            if (q === 'QUALITY_GREEN') return 2;
+            return 1;
+        }
+
+        function realCharIconSrc(charId) {
+            const thumb = document.querySelector(`.char-thumb[data-char-id="${charId}"] img`);
+            return thumb ? thumb.getAttribute('src') : '';
+        }
+
+        // ---------- 差し替え保存枠（コンボ）の状態管理 ----------
+
+        function comboStorageKeys(charId) {
+            return {
+                list: `combo_list_${uid}_${charId}`,
+                active: `combo_active_${uid}_${charId}`,
+                defaultWeapon: `combo_default_weapon_${uid}_${charId}`
+            };
+        }
+
+        function loadComboState(charId) {
+            const keys = comboStorageKeys(charId);
+            try {
+                combos = JSON.parse(localStorage.getItem(keys.list)) || [];
+            } catch (e) {
+                combos = [];
+            }
+            activeComboId = localStorage.getItem(keys.active) || '';
+            defaultWeapon = localStorage.getItem(keys.defaultWeapon) || '';
+
+            // 保存されていたアクティブ枠が既に削除されている場合はデフォルトに戻す
+            if (activeComboId && !combos.find(c => c.id === activeComboId)) {
+                activeComboId = '';
+            }
+        }
+
+        function saveComboState(charId) {
+            const keys = comboStorageKeys(charId);
+            localStorage.setItem(keys.list, JSON.stringify(combos));
+            localStorage.setItem(keys.active, activeComboId);
+            localStorage.setItem(keys.defaultWeapon, defaultWeapon);
+        }
+
+        function getActiveCombo() {
+            if (!activeComboId) return null;
+            return combos.find(c => c.id === activeComboId) || null;
+        }
+
+        // 現在アクティブな枠の選択内容（画像生成用パラメータ）
+        function getActiveSelection() {
+            const combo = getActiveCombo();
+            if (combo) return { fakeChar: combo.fakeChar, fakeWeapon: combo.fakeWeapon };
+            return { fakeChar: '', fakeWeapon: defaultWeapon };
+        }
+
+        // 現在アクティブな枠のキャラ（fake_char優先、無ければ実キャラ）の武器種
+        function getActiveWeaponType(charId) {
+            const combo = getActiveCombo();
+            const targetId = combo ? combo.fakeChar : charId;
+            if (targetId && allCharList[targetId]) {
+                return allCharList[targetId].weaponType;
+            }
+            return '';
+        }
+
+        function renderComboRow() {
+            comboRow.innerHTML = '';
+
+            // デフォルト枠
+            const defaultTile = document.createElement('div');
+            defaultTile.className = `combo-tile relative w-16 h-16 rounded-lg border-2 border-zinc-700 bg-zinc-800 cursor-pointer ${!activeComboId ? 'active' : ''}`;
+            defaultTile.title = 'デフォルト（実データ）';
+            const defaultIconSrc = currentSelectedCharId ? realCharIconSrc(currentSelectedCharId) : '';
+            defaultTile.innerHTML = `
+                <div class="relative w-full h-full rounded-md overflow-hidden">
+                    ${defaultIconSrc ? `<img src="${defaultIconSrc}" class="w-full h-full object-cover drag-none">` : ''}
+                    <div class="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] leading-tight text-center truncate px-0.5">デフォルト</div>
+                </div>
+                ${defaultWeapon && weaponAssetUrl(defaultWeapon) ? `<div class="weapon-badge"><img src="${weaponAssetUrl(defaultWeapon)}" class="w-full h-full object-cover"></div>` : ''}
+            `;
+            defaultTile.onclick = () => activateCombo('');
+            comboRow.appendChild(defaultTile);
+
+            // 追加済みの差し替えキャラ枠
+            combos.forEach(combo => {
+                const data = allCharList[combo.fakeChar];
+                if (!data) return;
+                const iconUrl = charAssetUrl(combo.fakeChar);
+                const rarity = qualityToRarity(data.qualityType);
+
+                const tile = document.createElement('div');
+                tile.className = `combo-tile relative w-16 h-16 rounded-lg border-2 rarity-${rarity} bg-zinc-800 cursor-pointer ${activeComboId === combo.id ? 'active' : ''}`;
+                tile.title = data.jaName;
+                tile.onclick = () => activateCombo(combo.id);
+
+                const weaponIconUrl = combo.fakeWeapon ? weaponAssetUrl(combo.fakeWeapon) : '';
+                tile.innerHTML = `
+                    <div class="relative w-full h-full rounded-md overflow-hidden">
+                        ${iconUrl ? `<img src="${iconUrl}" class="w-full h-full object-cover drag-none">` : `<div class="w-full h-full flex items-center justify-center text-[9px] text-zinc-400 text-center px-1">${data.jaName}</div>`}
+                        <div class="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] leading-tight text-center truncate px-0.5">${data.jaName}</div>
+                    </div>
+                    <div class="combo-remove" onclick="event.stopPropagation(); removeCombo('${combo.id}')">&times;</div>
+                    ${weaponIconUrl ? `<div class="weapon-badge"><img src="${weaponIconUrl}" class="w-full h-full object-cover"></div>` : ''}
+                `;
+                comboRow.appendChild(tile);
+            });
+
+            // 追加ボタン
+            const addTile = document.createElement('div');
+            addTile.className = 'w-16 h-16 rounded-lg border-2 border-dashed border-zinc-600 hover:border-cyan-400 flex items-center justify-center cursor-pointer text-2xl text-zinc-500 hover:text-cyan-400 transition-all';
+            addTile.title = '差し替えキャラを追加';
+            addTile.textContent = '+';
+            addTile.onclick = openFakeCharModal;
+            comboRow.appendChild(addTile);
+        }
+
+        function activateCombo(comboId) {
+            activeComboId = comboId;
+            saveComboState(currentSelectedCharId);
+            renderComboRow();
+            updateEditWeaponUI();
+            loadCardImage(currentSelectedCharId, false);
+        }
+
+        function removeCombo(comboId) {
+            combos = combos.filter(c => c.id !== comboId);
+            if (activeComboId === comboId) {
+                activeComboId = '';
+            }
+            saveComboState(currentSelectedCharId);
+            renderComboRow();
+            updateEditWeaponUI();
+            loadCardImage(currentSelectedCharId, false);
+        }
+
+        // ---------- キャラ追加モーダル ----------
+
+        async function openFakeCharModal() {
+            fakeCharModal.classList.remove('hidden');
+            fakeCharModal.classList.add('flex');
+            renderFakeCharGrid();
+
+            const missingIds = Object.keys(allCharList).filter(id => charIconCache[id] === undefined);
+            if (missingIds.length) {
+                fakeCharGridStatus.textContent = 'アイコンを読み込み中...';
+                await ensureAllCharIconsLoaded();
+                fakeCharGridStatus.textContent = '';
+                renderFakeCharGrid();
+            }
+        }
+
+        function closeFakeCharModal() {
+            fakeCharModal.classList.add('hidden');
+            fakeCharModal.classList.remove('flex');
+        }
+
+        function renderFakeCharGrid() {
+            fakeCharGrid.innerHTML = '';
+
+            const sortedIds = sortCharIds(Object.keys(allCharList));
+            sortedIds.forEach(id => {
+                const data = allCharList[id];
+                const iconUrl = charAssetUrl(id);
+                const rarity = qualityToRarity(data.qualityType);
+                const tile = document.createElement('div');
+                tile.className = `picker-tile relative w-24 h-24 shrink-0 cursor-pointer rounded-lg border-2 rarity-${rarity} bg-zinc-800 overflow-hidden`;
+                tile.title = data.jaName;
+                tile.onclick = () => addComboForChar(id);
+
+                if (iconUrl) {
+                    tile.innerHTML = `
+                        <img src="${iconUrl}" class="w-full h-full object-cover drag-none" loading="lazy">
+                        <div class="absolute bottom-0 inset-x-0 bg-black/70 text-[10px] leading-tight text-center truncate px-0.5 py-0.5">${data.jaName}</div>
+                    `;
+                } else {
+                    tile.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 text-center px-1">${data.jaName}</div>`;
+                }
+                fakeCharGrid.appendChild(tile);
+            });
+        }
+
+        function addComboForChar(fakeCharId) {
+            const combo = {
+                id: `combo_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+                fakeChar: fakeCharId,
+                fakeWeapon: ''
+            };
+            combos.push(combo);
+            activeComboId = combo.id;
+            saveComboState(currentSelectedCharId);
+            renderComboRow();
+            updateEditWeaponUI();
+            closeFakeCharModal();
+            loadCardImage(currentSelectedCharId, false);
+        }
+
+        // ---------- 武器差し替えモーダル（アクティブな保存枠に適用） ----------
+
+        async function openFakeWeaponModal() {
+            fakeWeaponModal.classList.remove('hidden');
+            fakeWeaponModal.classList.add('flex');
+            renderFakeWeaponGrid();
+
+            const weaponType = getActiveWeaponType(currentSelectedCharId);
+            const relevantIds = Object.keys(allWeaponList)
+                .filter(id => !weaponType || allWeaponList[id].weaponType === weaponType);
+            const missingIds = relevantIds.filter(id => weaponIconCache[id] === undefined);
+
+            if (missingIds.length) {
+                fakeWeaponGridStatus.textContent = 'アイコンを読み込み中...';
+                await ensureWeaponIconsLoaded(relevantIds);
+                fakeWeaponGridStatus.textContent = '';
+                renderFakeWeaponGrid();
+            }
+        }
+
+        function closeFakeWeaponModal() {
+            fakeWeaponModal.classList.add('hidden');
+            fakeWeaponModal.classList.remove('flex');
+        }
+
+        function renderFakeWeaponGrid() {
+            fakeWeaponGrid.innerHTML = '';
+            fakeWeaponGridStatus.textContent = '';
+            const weaponType = getActiveWeaponType(currentSelectedCharId);
+            const selection = getActiveSelection();
+
+            const noneTile = document.createElement('div');
+            noneTile.className = `picker-tile relative w-16 h-16 shrink-0 cursor-pointer rounded-lg border-2 border-zinc-700 bg-zinc-800 flex items-center justify-center ${!selection.fakeWeapon ? 'selected' : ''}`;
+            noneTile.title = 'なし（実データ）';
+            noneTile.innerHTML = `<span class="text-2xl text-zinc-500">✕</span>`;
+            noneTile.onclick = () => selectFakeWeapon('');
+            fakeWeaponGrid.appendChild(noneTile);
+
+            const sortedIds = Object.keys(allWeaponList)
+                .filter(id => !weaponType || allWeaponList[id].weaponType === weaponType)
+                .sort((a, b) => Number(a) - Number(b));
+
+            if (weaponType && sortedIds.length === 0) {
+                fakeWeaponGridStatus.textContent = 'この武器種の候補が見つかりませんでした。';
+            }
+
+            sortedIds.forEach(id => {
+                const data = allWeaponList[id];
+                const iconUrl = weaponAssetUrl(id);
+                const rarity = qualityToRarity(data.qualityType);
+                const tile = document.createElement('div');
+                tile.className = `picker-tile relative w-16 h-16 shrink-0 cursor-pointer rounded-lg border-2 rarity-${rarity} bg-zinc-800 overflow-hidden ${selection.fakeWeapon === id ? 'selected' : ''}`;
+                tile.title = data.jaName;
+                tile.onclick = () => selectFakeWeapon(id);
+
+                if (iconUrl) {
+                    tile.innerHTML = `
+                        <img src="${iconUrl}" class="w-full h-full object-cover drag-none" loading="lazy">
+                        <div class="absolute bottom-0 inset-x-0 bg-black/70 text-[10px] leading-tight text-center truncate px-0.5 py-0.5">${data.jaName}</div>
+                    `;
+                } else {
+                    tile.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 text-center px-1">${data.jaName}</div>`;
+                }
+                fakeWeaponGrid.appendChild(tile);
+            });
+        }
+
+        function selectFakeWeapon(weaponId) {
+            const combo = getActiveCombo();
+            if (combo) {
+                combo.fakeWeapon = weaponId;
+            } else {
+                defaultWeapon = weaponId;
+            }
+            saveComboState(currentSelectedCharId);
+            renderComboRow();
+            updateEditWeaponUI();
+            closeFakeWeaponModal();
+            loadCardImage(currentSelectedCharId, false);
+        }
+
+        function updateEditWeaponUI() {
+            const selection = getActiveSelection();
+            if (selection.fakeWeapon && allWeaponList[selection.fakeWeapon]) {
+                const data = allWeaponList[selection.fakeWeapon];
+                const iconUrl = weaponAssetUrl(selection.fakeWeapon);
+                editWeaponLabel.textContent = data.jaName;
+                if (iconUrl) {
+                    editWeaponIcon.src = iconUrl;
+                    editWeaponIcon.classList.remove('hidden');
+                } else {
+                    editWeaponIcon.classList.add('hidden');
+                }
+            } else {
+                editWeaponLabel.textContent = 'なし（実データ）';
+                editWeaponIcon.classList.add('hidden');
+            }
+        }
+
+        editWeaponBtn.addEventListener('click', openFakeWeaponModal);
 
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -70,12 +625,17 @@
                 window.history.replaceState({ path: newUrl }, '', newUrl);
             }
 
-            // 初期選択キャラの設定
-            const defaultActive = document.querySelector('.char-thumb img.ring-2');
-            if(!defaultActive) {
-                const firstThumb = document.querySelector('.char-thumb');
-                if(firstThumb) firstThumb.click();
+            loadFakeLists();
+
+            // 初期選択キャラの設定（前回選択していたキャラがあればそれを復元、無ければ先頭キャラ）
+            const savedCharId = localStorage.getItem(`selected_char_${uid}`);
+            let targetThumb = savedCharId
+                ? document.querySelector(`.char-thumb[data-char-id="${savedCharId}"]`)
+                : null;
+            if (!targetThumb) {
+                targetThumb = document.querySelector('.char-thumb');
             }
+            if (targetThumb) targetThumb.click();
         });
 
         function getSavedCalcMethod(charId) {
@@ -85,22 +645,68 @@
             localStorage.setItem(`calc_method_${uid}_${charId}`, method);
         }
 
+        // 直リンク・使い回し防止用: 表示中の blob URL を保持しておき、差し替え時に解放する
+        let currentImageObjectUrl = null;
+        // 途中でキャラや条件が切り替わった場合に、古いリクエストの結果を無視するためのトークン
+        let latestImageRequestToken = 0;
+
         // 💡 3. カード画像の読み込み処理（サーバーのURL形式に完全一致させました）
-        function loadCardImage(charId, forceFetch = false) {
+        async function loadCardImage(charId, forceFetch = false) {
             if(!charId) return;
+            const charChanged = currentSelectedCharId !== charId;
             currentSelectedCharId = charId;
 
             const currentMethod = getSavedCalcMethod(charId);
             scoreCalcSelect.value = currentMethod;
+
+            if (listsLoaded && charChanged) {
+                loadComboState(charId);
+                renderComboRow();
+                updateEditWeaponUI();
+                ensureComboIconsLoaded().then(() => renderComboRow());
+            }
 
             // 生成中の演出（スピナー表示・画像を一時的に隠す）
             loadingSpinner.classList.remove('hidden');
             placeholderText.classList.add('hidden');
             cardImage.classList.add('hidden');
 
-            const timestamp = new Date().getTime();
-            // 💡 Python側の `@app.get("/generate_card_image/{uid}/{avatar_id}")` に形を合わせました
-            cardImage.src = `/generate_card_image/${uid}/${charId}/${currentMethod}`;
+            // 💡 Python側の `@app.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")` に形を合わせました
+            const selection = getActiveSelection();
+            const params = new URLSearchParams();
+            if (selection.fakeChar) params.set('fake_char', selection.fakeChar);
+            if (selection.fakeWeapon) params.set('fake_weapon', selection.fakeWeapon);
+            if (ver === 'beta') params.set('beta', 'true');
+            if (forceFetch) params.set('_', new Date().getTime());
+            const query = params.toString() ? `?${params.toString()}` : '';
+            const url = `/generate_card_image/${uid}/${charId}/${currentMethod}${query}`;
+
+            const requestToken = ++latestImageRequestToken;
+
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`画像の取得に失敗しました (status: ${res.status})`);
+                const blob = await res.blob();
+
+                // 待っている間に別のキャラ/条件に切り替わっていたら、古い結果は破棄する
+                if (requestToken !== latestImageRequestToken) return;
+
+                // img.src に直接エンドポイントURLを渡すと「画像アドレスをコピー」や
+                // 「新しいタブで開く」で実際のURLが露出してしまうため、
+                // 一度 blob として取得してから blob: URL に差し替えて表示する
+                if (currentImageObjectUrl) {
+                    URL.revokeObjectURL(currentImageObjectUrl);
+                }
+                currentImageObjectUrl = URL.createObjectURL(blob);
+                cardImage.src = currentImageObjectUrl;
+            } catch (e) {
+                if (requestToken !== latestImageRequestToken) return;
+                console.error('カード画像の読み込みに失敗しました:', e);
+                loadingSpinner.classList.add('hidden');
+                cardImage.classList.add('hidden');
+                placeholderText.textContent = '画像の読み込みに失敗しました。もう一度お試しください。';
+                placeholderText.classList.remove('hidden');
+            }
         }
 
         // 画像の読み込みが完了したらスピナーを消して表示
@@ -126,6 +732,7 @@
                 this.insertAdjacentHTML('beforeend', badgeHTML);
 
                 const charId = this.getAttribute('data-char-id');
+                localStorage.setItem(`selected_char_${uid}`, charId);
                 loadCardImage(charId, false);
             });
         });
@@ -139,10 +746,32 @@
         });
 
         // API再取得＋再生成ボタンのイベント
-        regenerateApiBtn.addEventListener('click', function() {
-            if (currentSelectedCharId) {
-                loadCardImage(currentSelectedCharId, true);
+        regenerateApiBtn.addEventListener('click', async function() {
+            if (!currentSelectedCharId) return;
+
+            const originalLabel = regenerateApiBtn.innerHTML;
+            regenerateApiBtn.disabled = true;
+            regenerateApiBtn.classList.add('opacity-60', 'cursor-not-allowed');
+            regenerateApiBtn.textContent = '取得中...';
+
+            try {
+                // 💡 まずEnka API側からショーケースデータを取り直してキャッシュを更新する
+                const res = await fetch(`/refresh_uid/${uid}`, { method: 'POST' });
+                if (!res.ok) {
+                    const errBody = await res.json().catch(() => ({}));
+                    throw new Error(errBody.detail || `再取得に失敗しました (status: ${res.status})`);
+                }
+            } catch (e) {
+                console.error('Enka APIの再取得に失敗しました:', e);
+                alert(`データの再取得に失敗しました。\n${e.message}\n（キャッシュ済みのデータで再生成します）`);
+            } finally {
+                regenerateApiBtn.disabled = false;
+                regenerateApiBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                regenerateApiBtn.innerHTML = originalLabel;
             }
+
+            // 再取得の成否に関わらず、画像はキャッシュバスター付きで再生成する
+            loadCardImage(currentSelectedCharId, true);
         });
     </script>
 </body>
