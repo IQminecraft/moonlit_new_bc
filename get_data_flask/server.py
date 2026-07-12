@@ -28,7 +28,7 @@ def get_livedata():
     live_artifact_r = requests.get(f"https://static.nanoka.cc/gi/{live}/artifact.json")
     live_artifact_r= live_artifact_r.json()
     live_artifact = list(live_artifact_r.keys())
-    """
+    
     for m in live_character:
         url = f"https://static.nanoka.cc/gi/{live}/ja/character/{m}.json"
         r = requests.get(url)
@@ -48,7 +48,7 @@ def get_livedata():
         with open(weapon_path, "w", encoding="utf-8") as f:
             json.dump(converted, f, indent=2, ensure_ascii=False)
 # --- 3. 一覧（リスト）データの処理 ---
-    """
+    
     char_list_url = f"https://static.nanoka.cc/gi/{live}/character.json"
     weapon_list_url = f"https://static.nanoka.cc/gi/{live}/weapon.json"
     artifact_list_url = f"https://static.nanoka.cc/gi/{live}/artifact.json"
@@ -322,7 +322,7 @@ def nanoka_get_data():
     char_dir = os.path.join("..", "static", "BETA", "characters")
     weapon_dir = os.path.join("..", "static", "BETA", "weapons")
     list_dir = os.path.join("..", "static", "BETA", "lists")
-    """
+    
     # --- 1. 個別キャラクター詳細（_listなしの「characters」を使用） ---
     for char_id in added_character_list:
         url = f"https://static.nanoka.cc/gi/{beta}/ja/character/{char_id}.json"
@@ -354,7 +354,7 @@ def nanoka_get_data():
                 json.dump(converted, f, indent=2, ensure_ascii=False)
         except Exception as e:
             pass
-    """
+    
     # --- 3. 一覧（リスト）データの一括処理 ---
     MODULE_MAP = {
         "characters.json": characters_list,

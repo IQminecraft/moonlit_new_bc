@@ -11,35 +11,46 @@ def transform_character(data: dict) -> dict:
 
     # ---------- stats_modifier から必要データを取得 ----------
     stats = data.get("stats_modifier", {})
+    
+    # 既存の基本ステータス
     base_hp = data.get("base_hp", 0)
     base_atk = data.get("base_atk", 0)
     base_def = data.get("base_def", 0)
 
+    # 90レベル時の乗算倍率
     hp_mult = stats.get("hp", {}).get("90", 1.0)
     atk_mult = stats.get("atk", {}).get("90", 1.0)
     def_mult = stats.get("def", {}).get("90", 1.0)
 
+    # 突破ステータスの抽出 (最大突破値を使用)
     asc_list = stats.get("ascension", [])
+    
+    # 計算式に基づいたステータス算出
+    final_hp = (hp_mult * base_hp)
+    final_atk = (atk_mult * base_atk)
+    final_def = (def_mult * base_def)
+    
+    extra_stats = {}
+
     if asc_list:
         last_asc = asc_list[-1]
-        add_hp = last_asc.get("fight_prop_base_hp", 0)
-        add_atk = last_asc.get("fight_prop_base_attack", 0)
-        add_def = last_asc.get("fight_prop_base_defense", 0)
-        crit_hurt = last_asc.get("fight_prop_critical_hurt", 0)
-    else:
-        add_hp = add_atk = add_def = crit_hurt = 0
-
-    raw_hp = base_hp * hp_mult + add_hp
-    raw_atk = base_atk * atk_mult + add_atk
-    raw_def = base_def * def_mult + add_def
-
-    new_data["hp"] = round(raw_hp)
-    new_data["atk"] = round(raw_atk)
-    new_data["def"] = round(raw_def)
-
+        
+        # 突破固定値の加算
+        final_hp += last_asc.get("fight_prop_base_hp", 0)
+        final_atk += last_asc.get("fight_prop_base_attack", 0)
+        final_def += last_asc.get("fight_prop_base_defense", 0)
+        
+        # HP/ATK/DEF 以外のキーを自動抽出
+        ignored_keys = {"fight_prop_base_hp", "fight_prop_base_attack", "fight_prop_base_defense"}
+        for key, value in last_asc.items():
+            if key not in ignored_keys and value != 0:
+                extra_stats[key] = value
     new_data["stats_modifier"] = {
-        "ascension": [{"fight_prop_critical_hurt": crit_hurt}] if asc_list else []
-    }
+            "hp": final_hp,
+            "atk": final_atk,
+            "def": final_def,
+            "extra": extra_stats  # 突破ステータスの4つ目以降をここに格納
+        }
 
     # ---------- skills（IDを削除してアイコンのみ） ----------
     skills = data.get("skills", [])

@@ -8,15 +8,13 @@
   "crit_rate": 0.05,
   "crit_dmg": 0.5,
   "elemental_mastery": 0,
-  "hp": 12613,
-  "atk": 330,
-  "def": 828,
   "stats_modifier": {
-    "ascension": [
-      {
-        "fight_prop_critical_hurt": 0
-      }
-    ]
+    "hp": 12613.288084400001,
+    "atk": 330.06616240000005,
+    "def": 827.7330564900001,
+    "extra": {
+      "fight_prop_critical": 0.192
+    }
   },
   "skills": [
     {

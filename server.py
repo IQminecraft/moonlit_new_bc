@@ -28,9 +28,12 @@ if not os.path.exists(STATIC_DIR):
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
+"""
+FONT_PATH = os.path.join(BASE_DIR, "font_fixed.ttf")
+FONT_LIGHT_PATH = os.path.join(BASE_DIR, "font-light.ttf")"""
 
 FONT_PATH = os.path.join(BASE_DIR, "font_fixed.ttf")
-FONT_LIGHT_PATH = os.path.join(BASE_DIR, "font-light.ttf")
+FONT_LIGHT_PATH = os.path.join(BASE_DIR, "font_light.ttf")
 
 try:
     with open(".enka_py/assets/text_map.json", "r", encoding="utf-8") as f:
@@ -73,6 +76,81 @@ def get_stat_japanese(append_prop_id: str) -> str:
 
 def formal_round(val):
     return int(val + 0.5) if val >= 0 else int(val - 0.5)
+
+
+# --------------------------------------------------------------------
+# 🧪 fake_char / fake_weapon 用: ステータス再計算ヘルパー
+# --------------------------------------------------------------------
+def new_stat_totals():
+    """キャラ/武器/聖遺物からの補正値を貯めていく集計用の入れ物"""
+    return {
+        "hp_flat": 0.0, "hp_percent": 0.0,
+        "atk_flat": 0.0, "atk_percent": 0.0,
+        "def_flat": 0.0, "def_percent": 0.0,
+        "em": 0.0, "crit_rate": 0.0, "crit_dmg": 0.0,
+        "energy_recharge": 0.0,
+        "dmg_bonus_by_element": {},  # 例: {"Pyro": 0.15, "物理": 0.10}
+    }
+
+
+def to_ratio_if_percent(prop_id, value):
+    """
+    Enkaの「flat(digest)」データ（武器のサブステ・聖遺物のメイン/サブステ）は、
+    %系ステータスが人間向けの百分率でそのまま入っている（例: 46.6 → 46.6%）。
+    一方 fightPropMap やキャラJSONの ascension は比率のまま（例: 0.466）。
+    このヘルパーで %系のキーだけ ÷100 して比率に揃えてから合算できるようにする。
+    """
+    if value is None:
+        return 0.0
+    key_upper = str(prop_id).upper()
+    if "PERCENT" in key_upper or "CRITICAL" in key_upper or "CHARGE" in key_upper or "HURT" in key_upper:
+        return value / 100.0
+    return value
+
+
+def apply_stat_bonus(totals, prop_id, value):
+    """
+    (prop_id, value) 形式のステータス補正を totals に加算する共通ヘルパー。
+    prop_id は Enka形式（大文字, 例: "FIGHT_PROP_CRITICAL_HURT"）でも
+    静的JSON形式（小文字, 例: "fight_prop_critical_hurt"）でもOK。
+    """
+    if not prop_id or value in (None, ""):
+        return
+    key = str(prop_id).upper()
+
+    if key == "FIGHT_PROP_HP":
+        totals["hp_flat"] += value
+    elif key == "FIGHT_PROP_HP_PERCENT":
+        totals["hp_percent"] += value
+    elif key in ("FIGHT_PROP_ATTACK", "FIGHT_PROP_BASE_ATTACK"):
+        totals["atk_flat"] += value
+    elif key == "FIGHT_PROP_ATTACK_PERCENT":
+        totals["atk_percent"] += value
+    elif key == "FIGHT_PROP_DEFENSE":
+        totals["def_flat"] += value
+    elif key == "FIGHT_PROP_DEFENSE_PERCENT":
+        totals["def_percent"] += value
+    elif key == "FIGHT_PROP_ELEMENT_MASTERY":
+        totals["em"] += value
+    elif key == "FIGHT_PROP_CRITICAL":
+        totals["crit_rate"] += value
+    elif key == "FIGHT_PROP_CRITICAL_HURT":
+        totals["crit_dmg"] += value
+    elif key == "FIGHT_PROP_CHARGE_EFFICIENCY":
+        totals["energy_recharge"] += value
+    elif key.endswith("_DMG") or key.endswith("_ADD_HURT") or "DMG_BONUS" in key:
+        # ⚠️ 元素/物理ダメージ%系。実データのキー名が違う場合はここを調整してください
+        elem = None
+        if "PYRO" in key or "FIRE" in key: elem = "Pyro"
+        elif "HYDRO" in key or "WATER" in key: elem = "Hydro"
+        elif "ANEMO" in key or "WIND" in key: elem = "Anemo"
+        elif "ELECTRO" in key or "ELEC" in key: elem = "Electro"
+        elif "DENDRO" in key or "GRASS" in key: elem = "Dendro"
+        elif "CRYO" in key or "ICE" in key: elem = "Cryo"
+        elif "GEO" in key or "ROCK" in key: elem = "Geo"
+        elif "PHYSICAL" in key: elem = "物理"
+        if elem:
+            totals["dmg_bonus_by_element"][elem] = totals["dmg_bonus_by_element"].get(elem, 0.0) + value
 
 
 # --------------------------------------------------------------------
@@ -616,53 +694,160 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
 
         weapon_stat2 = (stat_name2, stat_val2_str)
 
+    # 💡 fakeモードのステータス再計算でも使うため、聖遺物の生データはここで先に抽出しておく
+    raw_artifacts = [item for item in target_avatar_info.get("equipList", []) if "reliquary" in item]
+
     # --- 1-9. ステータス詳細一覧（HP・攻撃力・防御力など） ---
     # 💡 元素名に対応する正確な「fightPropMap」の文字列IDをマッピング
-    # ─── 💡 元素バフ自動検索ロジック ───
-    # EnkaのfightPropMapに存在する、可能性のあるすべてのダメバフIDのリスト
-    # (30:炎, 40:水, 41:風, 42:雷, 43:草, 45:岩, 46:氷, 44:物理)
-    all_buff_ids = ['30', '40', '41', '42', '43', '44', '45', '46']
+    if fake_char or fake_weapon:
+        # ============================================================
+        # 🧪 fakeモード: キャラ/武器/聖遺物の生データから最終ステータスを再計算する
+        #   ・fake_char あり        → キャラJSON(chardatas)自身の基礎値を使用
+        #   ・fake_char なし(武器のみ) → 実キャラのEnka初期ステ(base HP/ATK/DEF)+汎用初期値を使用
+        #   ・武器は weapon_stats_list（実武器 or fake武器、どちらも同じ形式）を使用
+        #   ・聖遺物は raw_artifacts（実データ）を使用
+        # ============================================================
+        if fake_char:
+            # 💡 キャラJSONのスキーマが2種類あるため両対応する
+            #   ・旧形式(ベータ等): hp/atk/def がトップレベル
+            #   ・新形式(製品版)  : hp/atk/def が stats_modifier の中
+            char_stats_mod = chardatas.get("stats_modifier", {}) or {}
+            base_hp = chardatas.get("hp", char_stats_mod.get("hp", 1))
+            base_atk = chardatas.get("atk", char_stats_mod.get("atk", 1))
+            base_def = chardatas.get("def", char_stats_mod.get("def", 1))
+            base_crit_rate = chardatas.get("crit_rate", 0.05)
+            base_crit_dmg = chardatas.get("crit_dmg", 0.5)
+            base_em = chardatas.get("elemental_mastery", 0.0)
+        else:
+            # 実キャラの「初期ステ」＝Enkaのbase系ID（武器・聖遺物補正を含まない値）
+            base_hp = target_avatar_info.get('fightPropMap', {}).get('1', 1)
+            base_atk = target_avatar_info.get('fightPropMap', {}).get('4', 1)
+            base_def = target_avatar_info.get('fightPropMap', {}).get('7', 1)
+            base_crit_rate = 0.05
+            base_crit_dmg = 0.5
+            base_em = 0.0
+        base_er = 1.0  # 元素チャージ効率の基礎値（100%）は全キャラ共通
 
-    # キャラクターのデータ（あなたが元々お使いだった変数名に変えてください。例: target_avatar_info など）
-    prop_map = target_avatar_info.get('fightPropMap', {})
+        stat_totals = new_stat_totals()
 
-    max_dmg_val = 0.0
+        # キャラクター自身の隠しステータス（突破ボーナスなど）を加算
+        # ※ fake_char が無い場合も chardatas は実キャラ自身の静的JSONなので、そのまま使えます
+        # 💡 キャラJSONのスキーマが2種類あるため両対応する
+        #   ・旧形式(ベータ等): stats_modifier.ascension が [{"fight_prop_xxx": val}, ...] のリスト
+        #   ・新形式(製品版)  : stats_modifier.extra が {"fight_prop_xxx": val} の単一辞書
+        char_stats_mod_for_bonus = chardatas.get("stats_modifier", {}) or {}
 
-    # 1つずつ部屋を覗いて、一番大きい数値（バフ）が入っているところを探す
-    for b_id in all_buff_ids:
-        val = prop_map.get(b_id, 0.0)
-        if val > max_dmg_val:
-            max_dmg_val = val
+        extra_bonus = char_stats_mod_for_bonus.get("extra")
+        if isinstance(extra_bonus, dict):
+            for asc_key, asc_val in extra_bonus.items():
+                apply_stat_bonus(stat_totals, asc_key, asc_val)
+        elif isinstance(extra_bonus, list):
+            for asc_entry in extra_bonus:
+                for asc_key, asc_val in asc_entry.items():
+                    apply_stat_bonus(stat_totals, asc_key, asc_val)
 
-    # もし全部0だった場合は、最低限聖遺物の杯などのメインステータスが入る部屋（50〜57）もスキャンする
-    if max_dmg_val == 0.0:
-        relic_buff_ids = ['50', '51', '52', '53', '54', '55', '56', '57']
-        for r_id in relic_buff_ids:
-            val = prop_map.get(r_id, 0.0)
+        for asc_entry in char_stats_mod_for_bonus.get("ascension", []):
+            for asc_key, asc_val in asc_entry.items():
+                apply_stat_bonus(stat_totals, asc_key, asc_val)
+
+        # 武器のステータスを加算（基礎攻撃力だけは特別扱い、サブステはtotalsへ）
+        # ⚠️ weapon_stats_list の%系ステータス（会心率・会心ダメ・チャージ効率など）は
+        #    表示用に「100倍した値」(例: 61.3 → 61.3%)で入っているため、計算に使う前に
+        #    ÷100 して比率(0.613)に戻してから加算する（実武器・fake武器どちらも同じ形式）
+        weapon_base_atk = 0.0
+        for w_entry in weapon_stats_list:
+            w_prop_id = w_entry.get("appendPropId", "")
+            w_val = w_entry.get("statValue", 0.0)
+            if w_prop_id.upper() in ("FIGHT_PROP_BASE_ATTACK", "FIGHT_PROP_ATTACK"):
+                weapon_base_atk = w_val
+            else:
+                apply_stat_bonus(stat_totals, w_prop_id, to_ratio_if_percent(w_prop_id, w_val))
+
+        # 聖遺物（メイン・サブ両方）のステータスを加算
+        # ※ 武器と同様、reliquaryMainstat/reliquarySubstats の%系ステータスも
+        #   百分率のまま入っているため to_ratio_if_percent() で比率に揃える
+        for art_raw in raw_artifacts:
+            art_flat = art_raw.get("flat", {})
+            art_main = art_flat.get("reliquaryMainstat", {})
+            art_main_id = art_main.get("mainPropId", "")
+            apply_stat_bonus(stat_totals, art_main_id, to_ratio_if_percent(art_main_id, art_main.get("statValue", 0.0)))
+            for art_sub in art_flat.get("reliquarySubstats", []):
+                art_sub_id = art_sub.get("appendPropId", "")
+                apply_stat_bonus(stat_totals, art_sub_id, to_ratio_if_percent(art_sub_id, art_sub.get("statValue", 0.0)))
+
+        total_hp = base_hp * (1 + stat_totals["hp_percent"]) + stat_totals["hp_flat"]
+        total_atk = (base_atk + weapon_base_atk) * (1 + stat_totals["atk_percent"]) + stat_totals["atk_flat"]
+        total_def = base_def * (1 + stat_totals["def_percent"]) + stat_totals["def_flat"]
+        total_em = base_em + stat_totals["em"]
+        total_crit_rate = base_crit_rate + stat_totals["crit_rate"]
+        total_crit_dmg = base_crit_dmg + stat_totals["crit_dmg"]
+        total_er = base_er + stat_totals["energy_recharge"]
+
+        # 元素/物理ダメージ%は、見つかった中で一番大きいものを採用（既存の実キャラ表示と同じ考え方）
+        best_dmg_val = 0.0
+        for _elem_key, _val in stat_totals["dmg_bonus_by_element"].items():
+            if _val > best_dmg_val:
+                best_dmg_val = _val
+        dmg_buff_val = str(formal_round(best_dmg_val * 1000) / 10) + "%"
+
+        stats_mock = {
+            "HP": {"val": formal_round(total_hp), "base": formal_round(base_hp), "add": "+" + str(formal_round(total_hp - base_hp)), "icon": "static/datas/assets/prot_icon/hp.png"},
+            "攻撃力": {"val": formal_round(total_atk), "base": formal_round(base_atk + weapon_base_atk), "add": "+" + str(formal_round(total_atk - base_atk + weapon_base_atk)), "icon": "static/datas/assets/prot_icon/atk.png"},
+            "防禦力": {"val": formal_round(total_def), "base": formal_round(base_def), "add": "+" + str(formal_round(total_def - base_def)), "icon": "static/datas/assets/prot_icon/def.png"},
+            "元素熟知": {"val": formal_round(total_em), "icon": "static/datas/assets/prot_icon/EM.png"},
+            "会心率": {"val": str(formal_round(total_crit_rate * 1000) / 10) + "%", "icon": "static/datas/assets/prot_icon/rate.webp"},
+            "会心ダメージ": {"val": str(formal_round(total_crit_dmg * 1000) / 10) + "%", "icon": "static/datas/assets/prot_icon/dmg.webp"},
+            "元素チャージ効率": {"val": str(formal_round(total_er * 1000) / 10) + "%", "icon": "static/datas/assets/prot_icon/ER.png"},
+            f"{element_ja}ダメバフ": {"val": dmg_buff_val, "icon": f"static/datas/assets/prot_icon/{element_type}.png"},
+        }
+    else:
+        # ============================================================
+        # 🎯 通常モード（今まで通り）: EnkaのfightPropMapの最終値をそのまま表示
+        # ============================================================
+        # ─── 💡 元素バフ自動検索ロジック ───
+        # EnkaのfightPropMapに存在する、可能性のあるすべてのダメバフIDのリスト
+        # (30:炎, 40:水, 41:風, 42:雷, 43:草, 45:岩, 46:氷, 44:物理)
+        all_buff_ids = ['30', '40', '41', '42', '43', '44', '45', '46']
+
+        # キャラクターのデータ（あなたが元々お使いだった変数名に変えてください。例: target_avatar_info など）
+        prop_map = target_avatar_info.get('fightPropMap', {})
+
+        max_dmg_val = 0.0
+
+        # 1つずつ部屋を覗いて、一番大きい数値（バフ）が入っているところを探す
+        for b_id in all_buff_ids:
+            val = prop_map.get(b_id, 0.0)
             if val > max_dmg_val:
                 max_dmg_val = val
 
-    # 最終的に見つかった一番高いバフをパーセント表記に変換
-    dmg_buff_val = str(formal_round(max_dmg_val * 1000) / 10) + "%"
+        # もし全部0だった場合は、最低限聖遺物の杯などのメインステータスが入る部屋（50〜57）もスキャンする
+        if max_dmg_val == 0.0:
+            relic_buff_ids = ['50', '51', '52', '53', '54', '55', '56', '57']
+            for r_id in relic_buff_ids:
+                val = prop_map.get(r_id, 0.0)
+                if val > max_dmg_val:
+                    max_dmg_val = val
 
-    # 💡 元の正常に動いていたクォーテーション（'2000' や '1' など）は1ミリも変えずにそのままです！
-    stats_mock = {
-        "HP": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2000', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('1', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2000', 1)) - formal_round(target_avatar_info.get('fightPropMap', {}).get('1', 1))), "icon": "static/datas/assets/prot_icon/hp.png"},
-        "攻撃力": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2001', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('4', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2001', 1)) - formal_round(target_avatar_info.get('fightPropMap', {}).get('4', 1))), "icon": "static/datas/assets/prot_icon/atk.png"},
-        "防禦力": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2002', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('7', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2002', 1)) - formal_round(target_avatar_info.get('fightPropMap', {}).get('7', 1))), "icon": "static/datas/assets/prot_icon/def.png"},
-        "元素熟知": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('28', 1)), "icon": "static/datas/assets/prot_icon/EM.png"},
-        "会心率": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('20', 1) * 1000) / 10) + "%", "icon": "static/datas/assets/prot_icon/rate.webp"},
-        "会心ダメージ": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('22', 1) * 1000) / 10) + "%", "icon": "static/datas/assets/prot_icon/dmg.webp"},
-        "元素チャージ効率": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('23', 1) * 1000) / 10) + "%", "icon": "static/datas/assets/prot_icon/ER.png"},
-        # 💡 固定表記だった部分を、上で正確に取得した文字列「dmg_buff_val」に差し替え
-        f"{element_ja}ダメバフ": {"val": dmg_buff_val, "icon": f"static/datas/assets/prot_icon/{element_type}.png"},
-    }
+        # 最終的に見つかった一番高いバフをパーセント表記に変換
+        dmg_buff_val = str(formal_round(max_dmg_val * 1000) / 10) + "%"
+
+        # 💡 元の正常に動いていたクォーテーション（'2000' や '1' など）は1ミリも変えずにそのままです！
+        stats_mock = {
+            "HP": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2000', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('1', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2000', 1)) - formal_round(target_avatar_info.get('fightPropMap', {}).get('1', 1))), "icon": "static/datas/assets/prot_icon/hp.png"},
+            "攻撃力": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2001', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('4', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2001', 1)) - formal_round(target_avatar_info.get('fightPropMap', {}).get('4', 1))), "icon": "static/datas/assets/prot_icon/atk.png"},
+            "防禦力": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2002', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('7', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2002', 1)) - formal_round(target_avatar_info.get('fightPropMap', {}).get('7', 1))), "icon": "static/datas/assets/prot_icon/def.png"},
+            "元素熟知": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('28', 1)), "icon": "static/datas/assets/prot_icon/EM.png"},
+            "会心率": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('20', 1) * 1000) / 10) + "%", "icon": "static/datas/assets/prot_icon/rate.webp"},
+            "会心ダメージ": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('22', 1) * 1000) / 10) + "%", "icon": "static/datas/assets/prot_icon/dmg.webp"},
+            "元素チャージ効率": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('23', 1) * 1000) / 10) + "%", "icon": "static/datas/assets/prot_icon/ER.png"},
+            # 💡 固定表記だった部分を、上で正確に取得した文字列「dmg_buff_val」に差し替え
+            f"{element_ja}ダメバフ": {"val": dmg_buff_val, "icon": f"static/datas/assets/prot_icon/{element_type}.png"},
+        }
 
     # --- 1-10. 聖遺物データ解析（スコア・ティア計算を含む） ---
     artifact_x_list = [33, 375, 718, 1061, 1404]
 
-    # equipList から聖遺物（"reliquary"キーを持つもの）だけを抽出
-    raw_artifacts = [item for item in target_avatar_info.get("equipList", []) if "reliquary" in item]
+    # raw_artifacts は上（fakeステータス計算より前）で抽出済みのものを再利用する
 
     # _4:花(0), _2:羽(1), _5:時計(2), _1:杯(3), _3:冠(4)
     slot_to_index = {
