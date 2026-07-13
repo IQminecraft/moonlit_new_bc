@@ -322,7 +322,7 @@ def nanoka_get_data():
     char_dir = os.path.join("..", "static", "BETA", "characters")
     weapon_dir = os.path.join("..", "static", "BETA", "weapons")
     list_dir = os.path.join("..", "static", "BETA", "lists")
-    """
+    
     # --- 1. 個別キャラクター詳細（_listなしの「characters」を使用） ---
     for char_id in added_character_list:
         url = f"https://static.nanoka.cc/gi/{beta}/ja/character/{char_id}.json"
@@ -354,7 +354,7 @@ def nanoka_get_data():
                 json.dump(converted, f, indent=2, ensure_ascii=False)
         except Exception as e:
             pass
-    """
+    
     # --- 3. 一覧（リスト）データの一括処理 ---
     MODULE_MAP = {
         "characters.json": characters_list,
