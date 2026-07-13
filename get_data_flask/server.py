@@ -129,19 +129,16 @@ def lunaris_get_data():
     beta = manifest_data["version"]
     print(f"live : {live}, beta : {beta}")
 
-    # weapon
     live_weapon_r, beta_weapon_r = requests.get(f"https://api.lunaris.moe/data/{live}/weaponlist.json"), requests.get(f"https://api.lunaris.moe/data/{beta}/weaponlist.json")
     live_weapon_r, beta_weapon_r = live_weapon_r.json(), beta_weapon_r.json()
     live_weapon, beta_weapon = list(live_weapon_r.keys()), list(beta_weapon_r.keys())
     added_weapon_list = list(set(beta_weapon) - set(live_weapon))
 
-    # character
     live_character_r, beta_character_r = requests.get(f"https://api.lunaris.moe/data/{live}/charlist.json"), requests.get(f"https://api.lunaris.moe/data/{beta}/charlist.json")
     live_character_r, beta_character_r = live_character_r.json(), beta_character_r.json()
     live_character, beta_character = list(live_character_r.keys()), list(beta_character_r.keys())
     added_character_list = list(set(beta_character) - set(live_character))
 
-    # articaft
     live_artifact_r, beta_artifact_r = requests.get(f"https://api.lunaris.moe/data/{live}/artifactlist.json"), requests.get(f"https://api.lunaris.moe/data/{beta}/artifactlist.json")
     live_artifact_r, beta_artifact_r = live_artifact_r.json(), beta_artifact_r.json()
     live_artifact, beta_artifact = list(live_artifact_r.keys()), list(beta_artifact_r.keys())
@@ -151,7 +148,6 @@ def lunaris_get_data():
     weapon_dir = os.path.join("..", "static", "beta", "data", "weapons")
     list_dir = os.path.join("..", "static", "beta", "data", "lists")
 
-    # --- 1. 個別キャラクター詳細の変換（詳細用の characters モジュールを使用） ---
     for char_id in added_character_list:
         url = f"https://api.lunaris.moe/data/{beta}/en/char/{char_id}.json"
         try:
@@ -159,7 +155,6 @@ def lunaris_get_data():
             response.raise_for_status()
             save_path = os.path.join(char_dir, f"{char_id}.json")
             
-            # 【修正】_listなしの「characters」に修正
             converted = characters.from_lunaris(response.json())
             
             with open(save_path, "w", encoding="utf-8") as f:
@@ -167,16 +162,13 @@ def lunaris_get_data():
         except Exception as e:
             pass
 
-    # --- 2. 個別武器詳細の変換（詳細用の weapons モジュールを使用） ---
     for weapon_id in added_weapon_list:
-        # URLの先頭の不要な空白スペースも削っておきました
         url = f"https://api.lunaris.moe/data/{beta}/en/weapon/{weapon_id}.json"
         try:
             response = requests.get(url, timeout=10)
             response.raise_for_status()
             save_path = os.path.join(weapon_dir, f"{weapon_id}.json")
             
-            # 【修正】_listなしの「weapons」に修正
             converted = weapons.from_lunaris(response.json())
             
             with open(save_path, "w", encoding="utf-8") as f:
@@ -184,11 +176,10 @@ def lunaris_get_data():
         except Exception as e:
             pass
 
-    # --- 3. 一覧（リスト）データの一括変換 ---
     MODULE_MAP = {
-        "characters.json": characters_list,  # リスト用
-        "weapons.json": weapons_list,        # リスト用
-        "artifacts.json": artifacts          # 単体用
+        "characters.json": characters_list,
+        "weapons.json": weapons_list,
+        "artifacts.json": artifacts 
     }
 
     list_urls = {
@@ -219,7 +210,6 @@ def lunaris_get_data():
     return str(added_weapon_list)+"\n"+str(added_character_list)+"\n"+str(added_artifact_list)
 
 def download_character_images(char_id, mode: "live" or "beta"):
-    # 1. モードに応じて、読み込むJSONの場所と画像の保存先を切り替える
     if mode == "live":
         json_path = f"../static/data/characters/{char_id}.json"
         img_dir = os.path.join("..", "static", "assets", "skills")
@@ -232,7 +222,6 @@ def download_character_images(char_id, mode: "live" or "beta"):
 
     os.makedirs(img_dir, exist_ok=True)
 
-    # JSONファイルを開いてデータを読み込む
     try:
         with open(json_path, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -243,7 +232,6 @@ def download_character_images(char_id, mode: "live" or "beta"):
         print(f"JSON読み込みエラー: {e}")
         return
 
-    # 2. JSONからすべてのアイコン名（画像名）を抽出
     icon_names = []
 
     if "icon" in data and data["icon"]:
@@ -264,11 +252,9 @@ def download_character_images(char_id, mode: "live" or "beta"):
             if "icon" in constellation and constellation["icon"]:
                 icon_names.append(constellation["icon"])
 
-    # 重複排除
     icon_names = list(set(icon_names))
     print(f"【{mode.upper()} - {data.get('name', char_id)}】から {len(icon_names)} 個のアイコンを検出しました。")
 
-    # 3. 画像のダウンロードと保存
     for icon_name in icon_names:
         url = f"https://static.nanoka.cc/assets/gi/{icon_name}.webp"
         img_path = os.path.join(img_dir, f"{icon_name}.webp")
@@ -294,19 +280,16 @@ def nanoka_get_data():
     live = manifest_data["gi"]["live"]
     beta = manifest_data["gi"]["latest"]
     print(f"live : {live}, beta : {beta}")
-    # weapon
     live_weapon_r, beta_weapon_r = requests.get(f"https://static.nanoka.cc/gi/{live}/weapon.json"), requests.get(f"https://static.nanoka.cc/gi/{beta}/weapon.json")
     live_weapon_r, beta_weapon_r = live_weapon_r.json(), beta_weapon_r.json()
     live_weapon, beta_weapon = list(live_weapon_r.keys()), list(beta_weapon_r.keys())
     added_weapon_list = list(set(beta_weapon) - set(live_weapon))
 
-    # character
     live_character_r, beta_character_r = requests.get(f"https://static.nanoka.cc/gi/{live}/character.json"), requests.get(f"https://static.nanoka.cc/gi/{beta}/character.json")
     live_character_r, beta_character_r = live_character_r.json(), beta_character_r.json()
     live_character, beta_character = list(live_character_r.keys()), list(beta_character_r.keys())
     added_character_list = list(set(beta_character) - set(live_character))
 
-    # artifact
     live_artifact_r, beta_artifact_r = requests.get(f"https://static.nanoka.cc/gi/{live}/artifact.json"), requests.get(f"https://static.nanoka.cc/gi/{beta}/artifact.json")
     live_artifact_r, beta_artifact_r = live_artifact_r.json(), beta_artifact_r.json()
     live_artifact, beta_artifact = list(live_artifact_r.keys()), list(beta_artifact_r.keys())
@@ -316,7 +299,6 @@ def nanoka_get_data():
     weapon_dir = os.path.join("..", "static", "beta", "data", "weapons")
     list_dir = os.path.join("..", "static", "beta", "data", "lists")
     
-    # --- 1. 個別キャラクター詳細（_listなしの「characters」を使用） ---
     for char_id in added_character_list:
         url = f"https://static.nanoka.cc/gi/{beta}/ja/character/{char_id}.json"
         try:
@@ -324,7 +306,6 @@ def nanoka_get_data():
             response.raise_for_status()
             save_path = os.path.join(char_dir, f"{char_id}.json")
             
-            # フォルダ名を「characters」にして、末尾を「.from_nanoka」で呼び出す
             converted = characters.from_nanoka(response.json())
             
             with open(save_path, "w", encoding="utf-8") as f:
@@ -332,7 +313,6 @@ def nanoka_get_data():
         except Exception as e:
             pass
     
-    # --- 2. 個別武器詳細（_listなしの「weapons」を使用） ---
     for weapon_id in added_weapon_list:
         url = f"https://static.nanoka.cc/gi/{beta}/ja/weapon/{weapon_id}.json"
         try:
@@ -340,7 +320,6 @@ def nanoka_get_data():
             response.raise_for_status()
             save_path = os.path.join(weapon_dir, f"{weapon_id}.json")
             
-            # フォルダ名を「weapons」にして、末尾を「.from_nanoka」で呼び出す
             converted = weapons.from_nanoka(response.json())
             
             with open(save_path, "w", encoding="utf-8") as f:
@@ -348,7 +327,6 @@ def nanoka_get_data():
         except Exception as e:
             pass
     
-    # --- 3. 一覧（リスト）データの一括処理 ---
     MODULE_MAP = {
         "characters.json": characters_list,
         "weapons.json": weapons_list,
@@ -369,7 +347,6 @@ def nanoka_get_data():
             
             target_module = MODULE_MAP.get(filename)
             if target_module:
-                # 末尾を「.from_nanoka」で呼び出す
                 converted = target_module.from_nanoka(raw_data)
             else:
                 converted = raw_data
@@ -384,7 +361,6 @@ def nanoka_get_data():
     
     """
     for charid in added_character_list:
-        #アイコン
         with open(f"../static/beta/data/characters/{charid}.json", "r", encoding="utf-8") as f:
             avatar_id = json.load(f)["icon"]
         
@@ -392,20 +368,17 @@ def nanoka_get_data():
         img_dir = os.path.join("..", "static", "beta", "assets", "characters")
         img_path = os.path.join(img_dir, f"{avatar_id}.webp")
         with open(img_path, "wb") as f:
-            f.write(r.content) # テキストではなくバイナリを書き込む
+            f.write(r.content)
         
-        #スプラッシュ
         splashid = avatar_id.replace("AvatarIcon", "Gacha_AvatarImg")
         r1 = requests.get(f"https://static.nanoka.cc/assets/gi/{splashid}.webp")
         img_dir1 = os.path.join("..", "static", "beta", "assets", "splash")
         img_path1 = os.path.join(img_dir1, f"{splashid}.webp")
         with open(img_path1, "wb") as f:
-            f.write(r1.content) # テキストではなくバイナリを書き込む
-        #スキル/天賦/凸 アイコン
+            f.write(r1.content)
         download_character_images(charid, "beta")
         
 
-    #武器アイコン
     for weaponid in added_weapon_list:
         weaponjson = os.path.join("..","static","beta","data","weapons",f"{weaponid}.json")
         with open(weaponjson, "r", encoding="utf-8") as f:
@@ -414,11 +387,9 @@ def nanoka_get_data():
         img_dir2 = os.path.join("..", "static", "beta", "assets", "weapons")
         img_path2 = os.path.join(img_dir2, f"{avatar_id1}.webp")
         with open(img_path2, "wb") as f:
-            f.write(r.content) # テキストではなくバイナリを書き込む
+            f.write(r.content)
         
-    
-    #聖遺物
-    
+        
     for artifactid in added_artifact_list:
         artifactjson = os.path.join("..","static","beta","data","lists","artifacts.json")
         with open(artifactjson, "r", encoding="utf-8") as f:
@@ -429,7 +400,7 @@ def nanoka_get_data():
             img_dir2 = os.path.join("..", "static", "beta", "assets", "artifacts")
             img_path2 = os.path.join(img_dir2, f"{avatar_new}.webp")
             with open(img_path2, "wb") as f:
-                f.write(r.content) # テキストではなくバイナリを書き込む
+                f.write(r.content)
     """
             
 
