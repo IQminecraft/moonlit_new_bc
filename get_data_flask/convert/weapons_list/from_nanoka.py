@@ -1,7 +1,6 @@
 import json
 import sys
 
-# rank → qualityType の変換マッピング
 RANK_TO_QUALITY = {
     1: "QUALITY_GREEN",
     2: "QUALITY_GREEN",
@@ -16,13 +15,11 @@ def simplify_weapon(data: dict) -> dict:
         if not isinstance(value, dict):
             continue
 
-        # 必須フィールドを取得
         en = value.get("en", "")
         ja = value.get("ja", "")
         rank = value.get("rank")
         weapon_type = value.get("type", "")
 
-        # rank を qualityType に変換（未定義の場合は空文字）
         quality = RANK_TO_QUALITY.get(rank, "")
 
         result[key] = {

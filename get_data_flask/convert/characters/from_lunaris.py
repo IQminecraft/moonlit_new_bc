@@ -12,7 +12,6 @@ def convert(data):
     result = {}
     info = data.get("info", {})
 
-    # ---- 基本情報 ----
     result["name"] = data.get("name") or info.get("name")
     result["desc"] = data.get("desc") or info.get("description", "")
     result["weapon"] = data.get("weapon") or info.get("weapon")
@@ -20,17 +19,14 @@ def convert(data):
     result["element"] = data.get("element") or info.get("element")
     result["icon"] = data.get("icon") or data.get("icons", {}).get("forward", "")
 
-    # ---- attributes から Lv1 と Lv90 だけ抽出 ----
     attrs = info.get("attributes", [])
     lv1 = next((a for a in attrs if a.get("level") == 1), None)
     lv90 = next((a for a in attrs if a.get("level") == 90), None)
 
-    # ---- 旧形式からのフォールバック用 ----
     old_base_hp = data.get("base_hp")
     old_base_atk = data.get("base_atk")
     old_base_def = data.get("base_def")
 
-    # ---- hp / atk / def には Lv90 の値を使う ----
     if lv90:
         result["hp"] = lv90.get("hp")
         result["atk"] = lv90.get("atk")
@@ -48,7 +44,6 @@ def convert(data):
     result["crit_dmg"] = data.get("crit_dmg", 0.5)
     result["elemental_mastery"] = data.get("elemental_mastery", 0)
 
-    # ---- stats_modifier（ascension のみ残す） ----
     stats_mod = {}
     old_stats = data.get("stats_modifier", {})
 
@@ -73,7 +68,6 @@ def convert(data):
 
     result["stats_modifier"] = stats_mod
 
-    # ---- skills / passives / constellations（id を除去し、icon のみ出力） ----
     def pick_icons(src):
         out = []
         if isinstance(src, list):

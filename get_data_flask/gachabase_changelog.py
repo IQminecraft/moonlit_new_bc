@@ -4,13 +4,11 @@ import re
 import requests
 
 def fetch_and_parse_json(url):
-    """URLからテキストを取得し、文字化けを防ぐためにUTF-8を明示してデコードする"""
     print(f"🌐 データをダウンロード中: {url}")
     try:
         response = requests.get(url, timeout=15)
         response.raise_for_status()
         
-        # 🌟 ここが重要：文字化けを防ぐためにエンコーディングを明示的に UTF-8 に設定
         response.encoding = 'utf-8'
         content = response.text
     except Exception as e:
@@ -54,7 +52,6 @@ def resolve_item(data_array, item, visited=None):
         return item
 
 def clean_id(raw_id, is_character=False):
-    """【仕様】キャラクターかつ数値idが9文字以上だったら8桁目と9桁目の間にハイフンを入れる"""
     if isinstance(raw_id, dict):
         base_id = raw_id.get("id") or raw_id.get("text")
         suffix = raw_id.get("suffix") or raw_id.get("subId") or raw_id.get("value")
@@ -66,7 +63,6 @@ def clean_id(raw_id, is_character=False):
     
     raw_str = str(raw_id) if raw_id is not None else ""
     
-    # 🌟 キャラクター限定 ＆ 9文字以上の数値ID（例: 100000052 → 10000005-2）
     if is_character and len(raw_str) >= 9 and raw_str.isdigit():
         return f"{raw_str[:8]}-{raw_str[8:]}"
         
@@ -138,7 +134,6 @@ def main():
         print("エラー: リビジョンの展開に失敗しました。")
         return
 
-    # --- 🌟 Version救出ロジック 🌟 ---
     version = "unknown"
     characters_raw = full_rev_obj.get("characters", [])
     weapons_raw = full_rev_obj.get("weapons", [])
@@ -176,7 +171,6 @@ def main():
                 version = val
                 break
 
-    # データの整形
     def normalize_list(items, is_character=False):
         if not isinstance(items, list):
             return []

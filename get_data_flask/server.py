@@ -33,7 +33,7 @@ def get_livedata():
         url = f"https://static.nanoka.cc/gi/{live}/ja/character/{m}.json"
         r = requests.get(url)
         converted = characters.from_nanoka(r.json())
-        char_path = os.path.join("..","static", "datas", "characters", f"{m}.json")
+        char_path = os.path.join("..","static", "data", "characters", f"{m}.json")
         with open(char_path, "w", encoding="utf-8") as f:
             json.dump(converted, f, indent=2, ensure_ascii=False)
     """
@@ -44,18 +44,16 @@ def get_livedata():
         url = f"https://static.nanoka.cc/gi/{live}/ja/weapon/{m}.json"
         r = requests.get(url)
         converted = weapons.from_nanoka(r.json())
-        weapon_path = os.path.join("..","static", "datas", "weapons", f"{m}.json")
+        weapon_path = os.path.join("..","static", "data", "weapons", f"{m}.json")
         with open(weapon_path, "w", encoding="utf-8") as f:
             json.dump(converted, f, indent=2, ensure_ascii=False)
-# --- 3. 一覧（リスト）データの処理 ---
-    
     char_list_url = f"https://static.nanoka.cc/gi/{live}/character.json"
     weapon_list_url = f"https://static.nanoka.cc/gi/{live}/weapon.json"
     artifact_list_url = f"https://static.nanoka.cc/gi/{live}/artifact.json"
 
-    characters_path = os.path.join("..", "static", "datas", "lists", "characters.json")
-    weapons_path = os.path.join("..", "static", "datas", "lists", "weapons.json")
-    artifacts_path = os.path.join("..", "static", "datas", "lists", "artifacts.json")
+    characters_path = os.path.join("..", "static", "data", "lists", "characters.json")
+    weapons_path = os.path.join("..", "static", "data", "lists", "weapons.json")
+    artifacts_path = os.path.join("..", "static", "data", "lists", "artifacts.json")
     
     # ここでインポートしたモジュール名（weapons, artifacts）と被らない別名にする
     chars_data = characters_list.from_nanoka(requests.get(char_list_url).json())
@@ -70,52 +68,47 @@ def get_livedata():
     
     with open(artifacts_path, "w", encoding="utf-8") as f:
         json.dump(artifacts_data, f, indent=2, ensure_ascii=False)
-    #キャラアバﾀー取得
     for charid in live_character:
         
-        with open(f"../static/datas/characters/{charid}.json", "r", encoding="utf-8") as f:
+        with open(f"../static/data/characters/{charid}.json", "r", encoding="utf-8") as f:
             avatar_id = json.load(f)["icon"]
-        #アバター
         
         r = requests.get(f"https://static.nanoka.cc/assets/gi/{avatar_id}.webp")
-        img_dir = os.path.join("..", "static", "datas", "assets", "characters")
+        img_dir = os.path.join("..", "static", "assets", "characters")
         img_path = os.path.join(img_dir, f"{avatar_id}.webp")
         
         with open(img_path, "wb") as f:
-            f.write(r.content) # テキストではなくバイナリを書き込む
-        #スプラッシュ
+            f.write(r.content)
         splashid = avatar_id.replace("AvatarIcon", "Gacha_AvatarImg")
         r1 = requests.get(f"https://static.nanoka.cc/assets/gi/{splashid}.webp")
-        img_dir1 = os.path.join("..", "static", "datas", "assets", "splash")
+        img_dir1 = os.path.join("..", "static", "assets", "splash")
         img_path1 = os.path.join(img_dir1, f"{splashid}.webp")
         with open(img_path1, "wb") as f:
-            f.write(r1.content) # テキストではなくバイナリを書き込む
+            f.write(r1.content)
     
-        #聖遺物
     for artifactid in live_artifact:
-        artifactjson = os.path.join("..","static","datas","lists","artifacts.json")
+        artifactjson = os.path.join("..","static","data","lists","artifacts.json")
         with open(artifactjson, "r", encoding="utf-8") as f:
             avatar_id2 = json.load(f)[artifactid]["icon"]
         for i in range(5):
             avatar_new = avatar_id2.replace("_4",f"_{i+1}")
             r = requests.get(f"https://static.nanoka.cc/assets/gi/{avatar_new}.webp")
-            img_dir2 = os.path.join("..", "static", "datas", "assets", "artifacts")
+            img_dir2 = os.path.join("..", "static", "assets", "artifacts")
             img_path2 = os.path.join(img_dir2, f"{avatar_new}.webp")
             with open(img_path2, "wb") as f:
-                f.write(r.content) # テキストではなくバイナリを書き込む
+                f.write(r.content)
 
     
-        #武器アイコン
     for weaponid in live_weapon:
         try:
-            weaponjson = os.path.join("..","static","datas","weapons",f"{weaponid}.json")
+            weaponjson = os.path.join("..","static","data","weapons",f"{weaponid}.json")
             with open(weaponjson, "r", encoding="utf-8") as f:
                 avatar_id1 = json.load(f)["icon"]
             r = requests.get(f"https://static.nanoka.cc/assets/gi/{avatar_id1}.webp")
-            img_dir2 = os.path.join("..", "static", "datas", "assets", "weapons")
+            img_dir2 = os.path.join("..", "static", "assets", "weapons")
             img_path2 = os.path.join(img_dir2, f"{avatar_id1}.webp")
             with open(img_path2, "wb") as f:
-                f.write(r.content) # テキストではなくバイナリを書き込む
+                f.write(r.content)
         except:
             pass
     """
@@ -154,9 +147,9 @@ def lunaris_get_data():
     live_artifact, beta_artifact = list(live_artifact_r.keys()), list(beta_artifact_r.keys())
     added_artifact_list = list(set(beta_artifact) - set(live_artifact))
 
-    char_dir = os.path.join("..", "static", "BETA", "characters")
-    weapon_dir = os.path.join("..", "static", "BETA", "weapons")
-    list_dir = os.path.join("..", "static", "BETA", "lists")
+    char_dir = os.path.join("..", "static", "beta", "data", "characters")
+    weapon_dir = os.path.join("..", "static", "beta", "data", "weapons")
+    list_dir = os.path.join("..", "static", "beta", "data", "lists")
 
     # --- 1. 個別キャラクター詳細の変換（詳細用の characters モジュールを使用） ---
     for char_id in added_character_list:
@@ -228,11 +221,11 @@ def lunaris_get_data():
 def download_character_images(char_id, mode: "live" or "beta"):
     # 1. モードに応じて、読み込むJSONの場所と画像の保存先を切り替える
     if mode == "live":
-        json_path = f"../static/datas/characters/{char_id}.json"
-        img_dir = os.path.join("..", "static", "datas", "assets", "skill_icon")
+        json_path = f"../static/data/characters/{char_id}.json"
+        img_dir = os.path.join("..", "static", "assets", "skills")
     elif mode == "beta":
-        json_path = f"../static/BETA/characters/{char_id}.json"
-        img_dir = os.path.join("..", "static", "BETA", "assets", "skill_icon") # 必要に応じてパスは調整してください
+        json_path = f"../static/beta/data/characters/{char_id}.json"
+        img_dir = os.path.join("..", "static", "beta", "assets", "skills")
     else:
         print("エラー: mode には 'live' または 'beta' を指定してください。")
         return
@@ -319,9 +312,9 @@ def nanoka_get_data():
     live_artifact, beta_artifact = list(live_artifact_r.keys()), list(beta_artifact_r.keys())
     added_artifact_list = list(set(beta_artifact) - set(live_artifact))
 
-    char_dir = os.path.join("..", "static", "BETA", "characters")
-    weapon_dir = os.path.join("..", "static", "BETA", "weapons")
-    list_dir = os.path.join("..", "static", "BETA", "lists")
+    char_dir = os.path.join("..", "static", "beta", "data", "characters")
+    weapon_dir = os.path.join("..", "static", "beta", "data", "weapons")
+    list_dir = os.path.join("..", "static", "beta", "data", "lists")
     
     # --- 1. 個別キャラクター詳細（_listなしの「characters」を使用） ---
     for char_id in added_character_list:
@@ -392,11 +385,11 @@ def nanoka_get_data():
     """
     for charid in added_character_list:
         #アイコン
-        with open(f"../static/BETA/characters/{charid}.json", "r", encoding="utf-8") as f:
+        with open(f"../static/beta/data/characters/{charid}.json", "r", encoding="utf-8") as f:
             avatar_id = json.load(f)["icon"]
         
         r = requests.get(f"https://static.nanoka.cc/assets/gi/{avatar_id}.webp")
-        img_dir = os.path.join("..", "static", "BETA", "assets", "characters")
+        img_dir = os.path.join("..", "static", "beta", "assets", "characters")
         img_path = os.path.join(img_dir, f"{avatar_id}.webp")
         with open(img_path, "wb") as f:
             f.write(r.content) # テキストではなくバイナリを書き込む
@@ -404,7 +397,7 @@ def nanoka_get_data():
         #スプラッシュ
         splashid = avatar_id.replace("AvatarIcon", "Gacha_AvatarImg")
         r1 = requests.get(f"https://static.nanoka.cc/assets/gi/{splashid}.webp")
-        img_dir1 = os.path.join("..", "static", "BETA", "assets", "splash")
+        img_dir1 = os.path.join("..", "static", "beta", "assets", "splash")
         img_path1 = os.path.join(img_dir1, f"{splashid}.webp")
         with open(img_path1, "wb") as f:
             f.write(r1.content) # テキストではなくバイナリを書き込む
@@ -414,11 +407,11 @@ def nanoka_get_data():
 
     #武器アイコン
     for weaponid in added_weapon_list:
-        weaponjson = os.path.join("..","static","BETA","weapons",f"{weaponid}.json")
+        weaponjson = os.path.join("..","static","beta","data","weapons",f"{weaponid}.json")
         with open(weaponjson, "r", encoding="utf-8") as f:
             avatar_id1 = json.load(f)["icon"]
         r = requests.get(f"https://static.nanoka.cc/assets/gi/{avatar_id1}.webp")
-        img_dir2 = os.path.join("..", "static", "BETA", "assets", "weapons")
+        img_dir2 = os.path.join("..", "static", "beta", "assets", "weapons")
         img_path2 = os.path.join(img_dir2, f"{avatar_id1}.webp")
         with open(img_path2, "wb") as f:
             f.write(r.content) # テキストではなくバイナリを書き込む
@@ -427,13 +420,13 @@ def nanoka_get_data():
     #聖遺物
     
     for artifactid in added_artifact_list:
-        artifactjson = os.path.join("..","static","BETA","lists","artifacts.json")
+        artifactjson = os.path.join("..","static","beta","data","lists","artifacts.json")
         with open(artifactjson, "r", encoding="utf-8") as f:
             avatar_id2 = json.load(f)[artifactid]["icon"]
         for i in range(5):
             avatar_new = avatar_id2.replace("_4",f"_{i+1}")
             r = requests.get(f"https://static.nanoka.cc/assets/gi/{avatar_new}.webp")
-            img_dir2 = os.path.join("..", "static", "BETA", "assets", "artifacts")
+            img_dir2 = os.path.join("..", "static", "beta", "assets", "artifacts")
             img_path2 = os.path.join(img_dir2, f"{avatar_new}.webp")
             with open(img_path2, "wb") as f:
                 f.write(r.content) # テキストではなくバイナリを書き込む

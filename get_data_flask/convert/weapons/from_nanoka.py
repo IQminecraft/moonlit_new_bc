@@ -1,7 +1,6 @@
 import json
 import sys
 
-# 【超重要】内部のプロパティ名、初期値(weapon_prop)、レベル倍率(stats_modifier)の紐付けマップ
 PROP_CONFIG = {
     "FIGHT_PROP_BASE_ATTACK": {
         "out_key": "atk",
@@ -13,11 +12,11 @@ PROP_CONFIG = {
     },
     "FIGHT_PROP_CRITICAL_HURT": {
         "out_key": "fight_prop_critical_hurt",
-        "curve_key": "crit_dmg"  # :bulb: 真言の匣など、json側が crit_dmg になっているケースに対応
+        "curve_key": "crit_dmg"
     },
     "FIGHT_PROP_CHARGE_EFFICIENCY": {
         "out_key": "fight_prop_charge_efficiency",
-        "curve_key": "charge_eff"  # :bulb: チャージ効率のキー揺れ対策
+        "curve_key": "charge_eff"
     },
     "FIGHT_PROP_ELEMENT_MASTERY": {
         "out_key": "fight_prop_element_mastery",
@@ -45,12 +44,10 @@ def transform_weapon(data: dict) -> dict:
         "icon": data.get("icon")
     }
 
-    # 最終突破(段階6)のボーナスデータを取得
     asc_6 = data.get("ascension", {}).get("6", {})
 
     stats_modifier = {}
 
-    # 各プロパティごとに計算
     weapon_props = data.get("weapon_prop", [])
     for prop in weapon_props:
         prop_type = prop.get("prop_type")
@@ -61,21 +58,14 @@ def transform_weapon(data: dict) -> dict:
             out_key = config["out_key"]
             curve_key = config["curve_key"]
 
-            # 1. stats_modifier からレベル90の倍率を取得 (揺れに対応するため複数のキーをチェック)
             stats_data = data.get("stats_modifier", {})
             curve_data = stats_data.get(curve_key, stats_data.get(out_key, {}))
             mult_90 = curve_data.get("levels", {}).get("90", 1.0)
 
-            # 2. ascension から突破ボーナス値を取得 (大文字・小文字両対応)
             add_value = asc_6.get(prop_type, asc_6.get(prop_type.lower(), 0.0))
 
-            # 3. レベル90時点の最終値を計算
-            # 基礎攻撃力以外（会心など）の突破ボーナスは通常0ですが、一応足し算の式にしています
             final_value = init_value * mult_90 + add_value
 
-            # 小数点以下の丸め処理 (会心系はパーセントで見やすくするため、ここでは生の小数点データ)
-            # 例: 0.192 * 1.9845 = 0.381024 -> 38.1% (初期値が19.2%の場合)
-            # ただし真言の匣の初期値 0.192 はLv.1時点で、突破を重ねて最終的に 88.2% (0.882) になります。
             stats_modifier[out_key] = round(final_value, 4)
 
     result["stats_modifier"] = stats_modifier

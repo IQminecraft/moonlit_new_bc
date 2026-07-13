@@ -15,13 +15,11 @@ def quality_to_rarity(q):
 def convert_weapon(data):
     result = {}
 
-    # 基本情報
     result["name"] = data.get("name")
     result["weapon_type"] = data.get("weaponType")
     result["rarity"] = quality_to_rarity(data.get("qualityType"))
     result["icon"] = data.get("weaponIcon")
 
-    # stats_modifier を作成（レベル90の値を使用）
     stats = data.get("stats", {})
     lv90 = stats.get("90", {})
     atk = lv90.get("atk")

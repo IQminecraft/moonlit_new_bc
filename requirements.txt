@@ -1,15 +1,11 @@
-# --- Webサーバー本体 ---
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
 jinja2>=3.1.0
 
-# 💡 Starlette 1.0.0 は Jinja2 TemplateResponse で
-# "TypeError: cannot use 'tuple' as a dict key" が出る既知バグがあるため
-# 1.0.0未満に固定する (https://github.com/pallets/jinja/issues/2180)
+# Starlette 1.0.0 は Jinja2 TemplateResponse で "TypeError: cannot use 'tuple' as a dict key" が出る既知バグがあるため 1.0.0未満に固定する
+# (https://github.com/pallets/jinja/issues/2180)
 starlette<1.0.0
 
-# --- 画像生成 (PIL) ---
 Pillow>=10.0.0
 
-# --- Enka Network API (ショーケースデータ取得) ---
 enka>=2.0.0

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>原神ビルドカード生成サイト</title>
+    <title>原神ビルドカード生成</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -26,7 +26,7 @@
 
     <div class="w-full max-w-md p-8 bg-[#161a2e] rounded-2xl shadow-2xl border border-[#252a42]">
         <h1 class="text-2xl font-bold text-center text-yellow-400 mb-6 flex items-center justify-center gap-2">
-            ビルドカード生成サイト
+            ビルドカード生成
         </h1>
         
         <form id="searchForm" action="/fetch_uid" method="GET" class="space-y-4">
@@ -58,12 +58,10 @@
         const historyList = document.getElementById('historyList');
         const clearHistory = document.getElementById('clearHistory');
 
-        // 履歴をローカルストレージから取得
         function getHistory() {
             return JSON.parse(localStorage.getItem('uid_history') || '[]');
         }
 
-        // 履歴を表示
         function renderHistory() {
             const history = getHistory();
             if (history.length === 0) {
@@ -86,26 +84,23 @@
             });
         }
 
-        // フォーム送信時に履歴に追加
         searchForm.addEventListener('submit', (e) => {
             const uid = uidInput.value.trim();
             if (!uid) return;
             
             let history = getHistory();
-            history = history.filter(item => item !== uid); // 重複を削除
-            history.unshift(uid); // 先頭に追加
-            history = history.slice(0, 6); // 最大6件
+            history = history.filter(item => item !== uid);
+            history.unshift(uid);
+            history = history.slice(0, 6);
             
             localStorage.setItem('uid_history', JSON.stringify(history));
         });
 
-        // 履歴の全削除
         clearHistory.addEventListener('click', () => {
             localStorage.removeItem('uid_history');
             renderHistory();
         });
 
-        // 初期表示
         renderHistory();
     </script>
 </body>

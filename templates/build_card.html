@@ -56,9 +56,8 @@
             {% endfor %}
         </div>
 
-        <!-- 差し替え保存枠（実キャラごとに複数のfake_char + fake_weapon組み合わせを保存） -->
         <div class="mb-6 p-4 bg-zinc-900/60 rounded-xl border border-zinc-800">
-            <div class="text-xs font-semibold text-gray-400 mb-3">差し替え保存枠（デフォルト + 追加キャラ）</div>
+            <div class="text-xs font-semibold text-gray-400 mb-3">キャラ差し替え</div>
             <div id="comboRow" class="flex flex-wrap gap-3"></div>
         </div>
 
@@ -67,7 +66,7 @@
                 <div class="flex items-center gap-2">
                     <label for="scoreCalcSelect" class="text-sm font-semibold text-gray-300">計算方法:</label>
                     <select id="scoreCalcSelect" class="bg-zinc-800 border border-zinc-700 text-white px-3 py-1.5 rounded-lg focus:outline-none focus:border-yellow-400 transition-all text-sm cursor-pointer">
-                        <option value="crit">会心のみ</option>
+                        <option value="crit">会心</option>
                         <option value="atk">攻撃力%</option>
                         <option value="hp">HP%</option>
                         <option value="def">防御%</option>
@@ -100,7 +99,6 @@
         </div>
     </div>
 
-    <!-- キャラ追加（差し替えキャラを選んで新しい保存枠を作る）モーダル -->
     <div id="fakeCharModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 items-center justify-center p-4"
         onclick="if(event.target===this) closeFakeCharModal()">
         <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden">
@@ -148,23 +146,18 @@
 
         let currentSelectedCharId = null;
 
-        // 差し替え保存枠の状態（currentSelectedCharId 単位）
-        let combos = [];              // [{id, fakeChar, fakeWeapon}]
-        let activeComboId = '';       // '' = デフォルト
-        let defaultWeapon = '';       // デフォルト（実キャラ）に対する武器差し替え
+        let combos = [];
+        let activeComboId = '';
+        let defaultWeapon = '';
 
-        // 🧪 fake_char / fake_weapon 用の静的リスト（id → 情報）＆ アイコンキャッシュ
         let allCharList = {};
         let allWeaponList = {};
-        let charIconCache = {};   // id -> icon suffix (例: UI_AvatarIcon_Ayaka)
-        let weaponIconCache = {}; // id -> icon suffix (例: UI_EquipIcon_Sword_Needle)
+        let charIconCache = {};
+        let weaponIconCache = {};
         let listsLoaded = false;
-        // 特定id群のアイコンだけを取りにいく方式にするため、
-        // 「全キャラ/全武器を一括で先読み」というフラグは廃止した
-        const pendingIconFetches = new Set(); // 二重フェッチ防止用（例: 'char:10000002'）
-        let allCharIconsPromise = null;       // 全キャラアイコン（追加モーダル用）は一度だけ取得
+        const pendingIconFetches = new Set();
+        let allCharIconsPromise = null;
 
-        // 旅人（主人公）の基礎IDは一覧の一番下にまとめ、グループ内は元素の固定順で並べる
         const TRAVELER_BASE_IDS = ['10000005', '10000007', '10000117', '10000118'];
         const ELEMENT_ORDER = ['Anemo', 'Geo', 'Electro', 'Dendro', 'Hydro', 'Pyro', 'Cryo'];
 
@@ -200,7 +193,7 @@
 
         async function loadFakeLists() {
             try {
-                const listsBase = ver === 'beta' ? '/static/BETA/lists' : '/static/datas/lists';
+                const listsBase = ver === 'beta' ? '/static/beta/data/lists' : '/static/data/lists';
                 const [charRes, weaponRes] = await Promise.all([
                     fetch(`${listsBase}/characters.json`),
                     fetch(`${listsBase}/weapons.json`)
@@ -218,18 +211,13 @@
                 loadComboState(currentSelectedCharId);
                 renderComboRow();
                 updateEditWeaponUI();
-                // 保存済みの差し替え枠に使われているキャラ/武器のアイコンだけを取得する
-                // （全キャラ・全武器を先読みするのではなく必要最低限に絞る）
                 ensureComboIconsLoaded().then(() => renderComboRow());
-                // 一覧取得前に読み込んだ初回画像には差し替えが反映されていないため、
-                // 保存済みのアクティブ枠があれば再読み込みする
                 if (activeComboId || defaultWeapon) {
                     loadCardImage(currentSelectedCharId, false);
                 }
             }
         }
 
-        // 現在の保存枠（デフォルト＋追加枠）で使われているキャラ/武器のアイコンだけを取得する
         function ensureComboIconsLoaded() {
             const charIds = combos.map(c => c.fakeChar).filter(Boolean);
             const weaponIds = combos.map(c => c.fakeWeapon).filter(Boolean);
@@ -240,77 +228,68 @@
             ]);
         }
 
-        // 1キャラ分のアイコンJSONを取得してキャッシュする（未取得・未取得中のみ）
-        // live: static/datas/characters/ のみ参照（従来通り）
-        // beta: static/datas/characters/ を先に見て、無ければ static/BETA/characters/ も探す
         async function fetchCharIcon(id) {
             const key = `char:${id}`;
             if (charIconCache[id] !== undefined || pendingIconFetches.has(key)) return;
             pendingIconFetches.add(key);
             try {
-                let base = 'datas';
-                let res = await fetch(`/static/datas/characters/${id}.json`);
+                let fromBeta = false;
+                let res = await fetch(`/static/data/characters/${id}.json`);
                 if (!res.ok && ver === 'beta') {
-                    base = 'BETA';
-                    res = await fetch(`/static/BETA/characters/${id}.json`);
+                    fromBeta = true;
+                    res = await fetch(`/static/beta/data/characters/${id}.json`);
                 }
                 if (res.ok) {
                     const data = await res.json();
-                    charIconCache[id] = { icon: data.icon, base };
+                    charIconCache[id] = { icon: data.icon, fromBeta };
                 }
             } catch (e) { /* skip individual failures */ }
             pendingIconFetches.delete(key);
         }
 
-        // 1武器分のアイコンJSONを取得してキャッシュする（未取得・未取得中のみ）
-        // live: static/datas/weapons/ のみ参照（従来通り）
-        // beta: static/datas/weapons/ を先に見て、無ければ static/BETA/weapons/ も探す
         async function fetchWeaponIcon(id) {
             const key = `weapon:${id}`;
             if (weaponIconCache[id] !== undefined || pendingIconFetches.has(key)) return;
             pendingIconFetches.add(key);
             try {
-                let base = 'datas';
-                let res = await fetch(`/static/datas/weapons/${id}.json`);
+                let fromBeta = false;
+                let res = await fetch(`/static/data/weapons/${id}.json`);
                 if (!res.ok && ver === 'beta') {
-                    base = 'BETA';
-                    res = await fetch(`/static/BETA/weapons/${id}.json`);
+                    fromBeta = true;
+                    res = await fetch(`/static/beta/data/weapons/${id}.json`);
                 }
                 if (res.ok) {
                     const data = await res.json();
-                    weaponIconCache[id] = { icon: data.icon, base };
+                    weaponIconCache[id] = { icon: data.icon, fromBeta };
                 }
             } catch (e) { /* skip individual failures */ }
             pendingIconFetches.delete(key);
         }
 
-        // キャラアイコン画像のURLを、実際にJSONが見つかったベース(datas/BETA)に合わせて組み立てる
         function charAssetUrl(id) {
             const entry = charIconCache[id];
             if (!entry || !entry.icon) return '';
-            return `/static/${entry.base}/assets/characters/${entry.icon}.webp`;
+            const root = entry.fromBeta ? '/static/beta/assets' : '/static/assets';
+            return `${root}/characters/${entry.icon}.webp`;
         }
 
-        // 武器アイコン画像のURLを、実際にJSONが見つかったベース(datas/BETA)に合わせて組み立てる
         function weaponAssetUrl(id) {
             const entry = weaponIconCache[id];
             if (!entry || !entry.icon) return '';
-            return `/static/${entry.base}/assets/weapons/${entry.icon}.webp`;
+            const root = entry.fromBeta ? '/static/beta/assets' : '/static/assets';
+            return `${root}/weapons/${entry.icon}.webp`;
         }
 
-        // 指定したキャラid群のアイコンだけをまとめて取得する
         function ensureCharIconsLoaded(ids) {
             const targets = [...new Set(ids)].filter(id => charIconCache[id] === undefined);
             return Promise.all(targets.map(fetchCharIcon));
         }
 
-        // 指定した武器id群のアイコンだけをまとめて取得する
         function ensureWeaponIconsLoaded(ids) {
             const targets = [...new Set(ids)].filter(id => weaponIconCache[id] === undefined);
             return Promise.all(targets.map(fetchWeaponIcon));
         }
 
-        // キャラ追加モーダルは全キャラから選ぶ性質上、開いた時にだけ全キャラ分を取得する
         function ensureAllCharIconsLoaded() {
             if (!allCharIconsPromise) {
                 allCharIconsPromise = ensureCharIconsLoaded(Object.keys(allCharList));
@@ -331,8 +310,6 @@
             return thumb ? thumb.getAttribute('src') : '';
         }
 
-        // ---------- 差し替え保存枠（コンボ）の状態管理 ----------
-
         function comboStorageKeys(charId) {
             return {
                 list: `combo_list_${uid}_${charId}`,
@@ -351,7 +328,6 @@
             activeComboId = localStorage.getItem(keys.active) || '';
             defaultWeapon = localStorage.getItem(keys.defaultWeapon) || '';
 
-            // 保存されていたアクティブ枠が既に削除されている場合はデフォルトに戻す
             if (activeComboId && !combos.find(c => c.id === activeComboId)) {
                 activeComboId = '';
             }
@@ -369,14 +345,12 @@
             return combos.find(c => c.id === activeComboId) || null;
         }
 
-        // 現在アクティブな枠の選択内容（画像生成用パラメータ）
         function getActiveSelection() {
             const combo = getActiveCombo();
             if (combo) return { fakeChar: combo.fakeChar, fakeWeapon: combo.fakeWeapon };
             return { fakeChar: '', fakeWeapon: defaultWeapon };
         }
 
-        // 現在アクティブな枠のキャラ（fake_char優先、無ければ実キャラ）の武器種
         function getActiveWeaponType(charId) {
             const combo = getActiveCombo();
             const targetId = combo ? combo.fakeChar : charId;
@@ -389,7 +363,6 @@
         function renderComboRow() {
             comboRow.innerHTML = '';
 
-            // デフォルト枠
             const defaultTile = document.createElement('div');
             defaultTile.className = `combo-tile relative w-16 h-16 rounded-lg border-2 border-zinc-700 bg-zinc-800 cursor-pointer ${!activeComboId ? 'active' : ''}`;
             defaultTile.title = 'デフォルト（実データ）';
@@ -404,7 +377,6 @@
             defaultTile.onclick = () => activateCombo('');
             comboRow.appendChild(defaultTile);
 
-            // 追加済みの差し替えキャラ枠
             combos.forEach(combo => {
                 const data = allCharList[combo.fakeChar];
                 if (!data) return;
@@ -428,7 +400,6 @@
                 comboRow.appendChild(tile);
             });
 
-            // 追加ボタン
             const addTile = document.createElement('div');
             addTile.className = 'w-16 h-16 rounded-lg border-2 border-dashed border-zinc-600 hover:border-cyan-400 flex items-center justify-center cursor-pointer text-2xl text-zinc-500 hover:text-cyan-400 transition-all';
             addTile.title = '差し替えキャラを追加';
@@ -455,8 +426,6 @@
             updateEditWeaponUI();
             loadCardImage(currentSelectedCharId, false);
         }
-
-        // ---------- キャラ追加モーダル ----------
 
         async function openFakeCharModal() {
             fakeCharModal.classList.remove('hidden');
@@ -516,8 +485,6 @@
             closeFakeCharModal();
             loadCardImage(currentSelectedCharId, false);
         }
-
-        // ---------- 武器差し替えモーダル（アクティブな保存枠に適用） ----------
 
         async function openFakeWeaponModal() {
             fakeWeaponModal.classList.remove('hidden');
@@ -627,7 +594,6 @@
 
             loadFakeLists();
 
-            // 初期選択キャラの設定（前回選択していたキャラがあればそれを復元、無ければ先頭キャラ）
             const savedCharId = localStorage.getItem(`selected_char_${uid}`);
             let targetThumb = savedCharId
                 ? document.querySelector(`.char-thumb[data-char-id="${savedCharId}"]`)
@@ -645,12 +611,9 @@
             localStorage.setItem(`calc_method_${uid}_${charId}`, method);
         }
 
-        // 直リンク・使い回し防止用: 表示中の blob URL を保持しておき、差し替え時に解放する
         let currentImageObjectUrl = null;
-        // 途中でキャラや条件が切り替わった場合に、古いリクエストの結果を無視するためのトークン
         let latestImageRequestToken = 0;
 
-        // 💡 3. カード画像の読み込み処理（サーバーのURL形式に完全一致させました）
         async function loadCardImage(charId, forceFetch = false) {
             if(!charId) return;
             const charChanged = currentSelectedCharId !== charId;
@@ -666,12 +629,10 @@
                 ensureComboIconsLoaded().then(() => renderComboRow());
             }
 
-            // 生成中の演出（スピナー表示・画像を一時的に隠す）
             loadingSpinner.classList.remove('hidden');
             placeholderText.classList.add('hidden');
             cardImage.classList.add('hidden');
 
-            // 💡 Python側の `@app.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")` に形を合わせました
             const selection = getActiveSelection();
             const params = new URLSearchParams();
             if (selection.fakeChar) params.set('fake_char', selection.fakeChar);
@@ -688,12 +649,8 @@
                 if (!res.ok) throw new Error(`画像の取得に失敗しました (status: ${res.status})`);
                 const blob = await res.blob();
 
-                // 待っている間に別のキャラ/条件に切り替わっていたら、古い結果は破棄する
                 if (requestToken !== latestImageRequestToken) return;
 
-                // img.src に直接エンドポイントURLを渡すと「画像アドレスをコピー」や
-                // 「新しいタブで開く」で実際のURLが露出してしまうため、
-                // 一度 blob として取得してから blob: URL に差し替えて表示する
                 if (currentImageObjectUrl) {
                     URL.revokeObjectURL(currentImageObjectUrl);
                 }
@@ -709,13 +666,11 @@
             }
         }
 
-        // 画像の読み込みが完了したらスピナーを消して表示
         cardImage.onload = function() {
             loadingSpinner.classList.add('hidden');
             cardImage.classList.remove('hidden');
         };
 
-        // サムネイルクリックイベント
         document.querySelectorAll('.char-thumb').forEach(thumb => {
             thumb.addEventListener('click', function() {
                 document.querySelectorAll('.char-thumb img').forEach(img => {
@@ -737,7 +692,6 @@
             });
         });
 
-        // プルダウン変更時のイベント
         scoreCalcSelect.addEventListener('change', function() {
             if (currentSelectedCharId) {
                 saveCalcMethod(currentSelectedCharId, this.value);
@@ -745,7 +699,6 @@
             }
         });
 
-        // API再取得＋再生成ボタンのイベント
         regenerateApiBtn.addEventListener('click', async function() {
             if (!currentSelectedCharId) return;
 
@@ -755,7 +708,6 @@
             regenerateApiBtn.textContent = '取得中...';
 
             try {
-                // 💡 まずEnka API側からショーケースデータを取り直してキャッシュを更新する
                 const res = await fetch(`/refresh_uid/${uid}`, { method: 'POST' });
                 if (!res.ok) {
                     const errBody = await res.json().catch(() => ({}));
@@ -770,7 +722,6 @@
                 regenerateApiBtn.innerHTML = originalLabel;
             }
 
-            // 再取得の成否に関わらず、画像はキャッシュバスター付きで再生成する
             loadCardImage(currentSelectedCharId, true);
         });
     </script>
