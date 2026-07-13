@@ -55,10 +55,9 @@ def get_livedata():
     weapons_path = os.path.join("..", "static", "data", "lists", "weapons.json")
     artifacts_path = os.path.join("..", "static", "data", "lists", "artifacts.json")
     
-    # ここでインポートしたモジュール名（weapons, artifacts）と被らない別名にする
     chars_data = characters_list.from_nanoka(requests.get(char_list_url).json())
     weapons_data = weapons_list.from_nanoka(requests.get(weapon_list_url).json())
-    artifacts_data = artifacts.from_nanoka(requests.get(artifact_list_url).json())
+    artifacts_data = artifacts_list.from_nanoka(requests.get(artifact_list_url).json())
     
     with open(characters_path, "w", encoding="utf-8") as f:
         json.dump(chars_data, f, indent=2, ensure_ascii=False)
