@@ -1253,6 +1253,12 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
     img_io.seek(0)
     return StreamingResponse(img_io, media_type="image/png")
 
+@app.get("/serverup", response_class=HTMLResponse)
+@app.post("/serverup", response_class=HTMLResponse)
+@app.head("/serverup", response_class=HTMLResponse)
+async def serverup(request: Request):
+    return HTMLResponse(content="Success to access")
+
 
 if __name__ == "__main__":
     uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
