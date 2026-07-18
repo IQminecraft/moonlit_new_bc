@@ -5,8 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>原神ビルドカード生成</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script>
+        // ライト/ダークのちらつき防止：CSS適用前にテーマ属性をセットしておく
+        (function () {
+            try {
+                var t = localStorage.getItem('genshin_build_card_theme_pref');
+                document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-on-primary: #ffffff;
+        }
+        [data-theme='dark'] {
+            --primary-color: #60a5fa;
+            --primary-hover: #3b82f6;
+            --text-on-primary: #ffffff;
+        }
+
         body {
             background-color: #0c0f1d;
             color: #ffffff;
@@ -19,36 +41,120 @@
         }
         .history-item:hover {
             background-color: #2c3147;
-            color: #f1c40f;
+            color: var(--primary-color);
         }
+
+        /* 旧オレンジ系(yellow-400等)を置き換えるブランドカラー・ヘルパー */
+        .text-primary { color: var(--primary-color); }
+        .focus-ring-primary:focus { border-color: var(--primary-color) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 25%, transparent); }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--text-on-primary);
+            box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--primary-color) 55%, transparent);
+        }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+        .mode-toggle-btn:hover { border-color: var(--primary-color) !important; color: var(--primary-color) !important; }
+        .spinner-primary {
+            border-width: 3px;
+            border-style: solid;
+            border-color: color-mix(in srgb, var(--text-on-primary) 35%, transparent);
+            border-top-color: var(--text-on-primary);
+            border-radius: 9999px;
+        }
+
+        /* ==========================================================
+           ライトモード（html[data-theme="light"]）
+        ========================================================== */
+        html[data-theme="light"] body { background-color: #f4f4f5; color: #18181b; }
+        html[data-theme="light"] .bg-\[\#161a2e\] { background-color: #ffffff; }
+        html[data-theme="light"] .bg-\[\#1f243f\] { background-color: #e4e4e7; }
+        html[data-theme="light"] .border-\[\#252a42\],
+        html[data-theme="light"] .border-\[\#2c3147\] { border-color: #d4d4d8; }
+        html[data-theme="light"] .text-gray-500 { color: #000000; }
+        html[data-theme="light"] .text-gray-400 { color: #000000; }
+        html[data-theme="light"] .text-gray-300 { color: #000000; }
+        html[data-theme="light"] .text-gray-200 { color: #000000; }
+        html[data-theme="light"] .text-white { color: #000000; }
+        html[data-theme="light"] .history-item:hover { background-color: #e4e4e7; }
+        html[data-theme="light"] .placeholder-gray-500::placeholder { color: #a1a1aa; }
     </style>
 </head>
 <body>
 
-    <div class="w-full max-w-md p-8 bg-[#161a2e] rounded-2xl shadow-2xl border border-[#252a42]">
-        <h1 class="text-2xl font-bold text-center text-yellow-400 mb-6 flex items-center justify-center gap-2">
+    <div class="w-full max-w-md p-7 bg-[#161a2e] rounded-2xl shadow-2xl border border-[#252a42]">
+        <h1 class="text-2xl font-bold text-center text-primary mb-5 flex items-center justify-center gap-2">
             ビルドカード生成
         </h1>
         
         <form id="searchForm" action="/fetch_uid" method="GET" class="space-y-4">
             <input type="hidden" name="from_artifacter" value="true">
+            <input type="hidden" id="verInput" name="ver" value="live">
             
             <div class="relative">
                 <input type="text" id="uidInput" name="uid" placeholder="UIDを入力 (9桁)" required maxlength="10" 
-                       class="w-full px-5 py-3.5 bg-[#1f243f] border-2 border-[#2c3147] rounded-xl text-white text-lg text-center font-mono focus:outline-none focus:border-yellow-400 transition-all placeholder-gray-500">
+                       class="w-full px-5 py-3.5 bg-[#1f243f] border-2 border-[#2c3147] rounded-xl text-white text-lg text-center font-mono focus:outline-none focus-ring-primary transition-all placeholder-gray-500">
+            </div>
+
+            <div class="flex items-center justify-center gap-4 flex-wrap">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500">読み込みモード:</span>
+                    <button type="button" id="verModeBtn"
+                        class="mode-toggle-btn text-xs font-mono px-2.5 py-1 rounded-md bg-[#1f243f] border border-[#2c3147] text-gray-200 transition-all"></button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500">表示テーマ:</span>
+                    <button type="button" id="themeModeBtn"
+                        class="mode-toggle-btn text-xs font-mono px-2.5 py-1 rounded-md bg-[#1f243f] border border-[#2c3147] text-gray-200 transition-all"></button>
+                </div>
             </div>
             
-            <button type="submit" class="w-full py-3.5 bg-yellow-400 hover:bg-yellow-500 text-[#12141c] font-bold text-lg rounded-xl shadow-lg shadow-yellow-400/10 active:scale-[0.99] transition-all">
-                データを読み込む
+            <button type="submit" id="submitBtn" class="btn-primary w-full py-3.5 font-bold text-lg rounded-xl active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+                <span id="submitBtnSpinner" class="hidden animate-spin h-5 w-5 spinner-primary"></span>
+                <span id="submitBtnLabel">データを読み込む</span>
             </button>
         </form>
 
-        <div id="historySection" class="mt-6 pt-5 border-t border-[#252a42] hidden">
+        <div id="historySection" class="mt-5 pt-5 border-t border-[#252a42] hidden">
             <h3 class="text-sm font-semibold text-gray-400 mb-3 flex justify-between items-center">
-                <span>🕒 最近の検索履歴</span>
+                <span>最近の検索履歴</span>
                 <button id="clearHistory" class="text-xs text-red-400 hover:underline">すべて削除</button>
             </h3>
             <div id="historyList" class="grid grid-cols-2 gap-2"></div>
+        </div>
+    </div>
+
+    <!-- 未確定データ(BETA)の閲覧同意モーダル -->
+    <div id="betaConsentModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 items-center justify-center p-4"
+        onclick="if(event.target===this) closeBetaConsentModal(false)">
+        <div class="bg-[#161a2e] border border-[#252a42] rounded-2xl w-full max-w-sm p-5">
+            <div class="flex items-center gap-2.5 mb-3">
+                <div class="w-9 h-9 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-400">
+                        <path d="M10.24 3.957l-8.422 14.06A1.989 1.989 0 0 0 3.518 21h16.964a1.989 1.989 0 0 0 1.7-3l-8.423-14a1.989 1.989 0 0 0-3.517 0z"></path>
+                        <path d="M12 9v4"></path>
+                        <path d="M12 17h.01"></path>
+                    </svg>
+                </div>
+                <h2 class="text-base font-bold text-white">未確定データの閲覧同意</h2>
+            </div>
+            <p class="text-xs text-gray-400 leading-relaxed mb-1">
+                これから表示する内容には、ゲーム内で正式配信される前の未確定データが含まれます。今後のアップデートで数値や仕様が変更・削除される可能性があります。
+            </p>
+            <p class="text-xs text-gray-400 leading-relaxed mb-5">
+                内容にご注意のうえ、ご自身の判断でご覧ください。
+            </p>
+            <div class="flex flex-col gap-2">
+                <!-- 上：同意して閲覧する（推奨アクション・塗りつぶし） -->
+                <button id="betaConsentAgreeBtn" type="button" class="w-full py-2.5 bg-zinc-100 border border-zinc-100 rounded-lg text-sm font-bold text-zinc-900 hover:bg-zinc-200 transition-all">
+                    同意して閲覧する
+                </button>
+
+                <!-- 下：戻る（補助アクション・枠線のみ） -->
+                <button id="betaConsentDeclineBtn" type="button" class="w-full py-2.5 bg-transparent border border-zinc-700 rounded-lg text-sm font-bold text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-all">
+                    戻る
+                </button>
+            </div>
         </div>
     </div>
 
@@ -58,6 +164,106 @@
         const historySection = document.getElementById('historySection');
         const historyList = document.getElementById('historyList');
         const clearHistory = document.getElementById('clearHistory');
+        const verInput = document.getElementById('verInput');
+        const verModeBtn = document.getElementById('verModeBtn');
+
+        // ==========================================================
+        //  未確定データ(BETA)閲覧同意モーダル
+        //  Promiseを返し、「同意して閲覧する」でtrue、「戻る」/背景クリックでfalseを解決する
+        // ==========================================================
+        const betaConsentModal = document.getElementById('betaConsentModal');
+        const betaConsentAgreeBtn = document.getElementById('betaConsentAgreeBtn');
+        const betaConsentDeclineBtn = document.getElementById('betaConsentDeclineBtn');
+        let betaConsentResolve = null;
+
+        function openBetaConsentModal() {
+            return new Promise((resolve) => {
+                betaConsentResolve = resolve;
+                betaConsentModal.classList.remove('hidden');
+                betaConsentModal.classList.add('flex');
+            });
+        }
+
+        function closeBetaConsentModal(agreed) {
+            betaConsentModal.classList.add('hidden');
+            betaConsentModal.classList.remove('flex');
+            if (betaConsentResolve) {
+                betaConsentResolve(agreed);
+                betaConsentResolve = null;
+            }
+        }
+
+        if (betaConsentAgreeBtn) betaConsentAgreeBtn.addEventListener('click', () => closeBetaConsentModal(true));
+        if (betaConsentDeclineBtn) betaConsentDeclineBtn.addEventListener('click', () => closeBetaConsentModal(false));
+        const themeModeBtn = document.getElementById('themeModeBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const submitBtnSpinner = document.getElementById('submitBtnSpinner');
+        const submitBtnLabel = document.getElementById('submitBtnLabel');
+
+        function setSubmitLoading() {
+            submitBtn.disabled = true;
+            submitBtnSpinner.classList.remove('hidden');
+            submitBtnLabel.textContent = '読み込み中...';
+        }
+
+        // build_card.html 側の切替ボタンで保存している「最後に見ていたver」を
+        // ここでも読み込んで、検索フォームに自動で引き継ぐ
+        const VER_PREF_KEY = 'genshin_build_card_ver_pref';
+        const THEME_PREF_KEY = 'genshin_build_card_theme_pref';
+
+        function getSavedThemePref() {
+            try {
+                return localStorage.getItem(THEME_PREF_KEY) === 'light' ? 'light' : 'dark';
+            } catch (e) {
+                return 'dark';
+            }
+        }
+
+        function applyThemeModeUI() {
+            const theme = getSavedThemePref();
+            themeModeBtn.textContent = theme === 'light' ? '☀️ ライト' : '🌙 ダーク';
+        }
+
+        applyThemeModeUI();
+
+        themeModeBtn.addEventListener('click', () => {
+            const next = getSavedThemePref() === 'light' ? 'dark' : 'light';
+            try {
+                localStorage.setItem(THEME_PREF_KEY, next);
+            } catch (e) { /* ignore storage errors */ }
+            document.documentElement.setAttribute('data-theme', next);
+            applyThemeModeUI();
+        });
+
+        function getSavedVerPref() {
+            try {
+                const saved = localStorage.getItem(VER_PREF_KEY);
+                return saved === 'beta' ? 'beta' : 'live';
+            } catch (e) {
+                return 'live';
+            }
+        }
+
+        function applyVerModeUI() {
+            verInput.value = verInput.value === 'beta' ? 'beta' : 'live';
+            verModeBtn.textContent = verInput.value === 'beta' ? 'Beta' : 'Live';
+        }
+
+        verInput.value = getSavedVerPref();
+        applyVerModeUI();
+
+        verModeBtn.addEventListener('click', async () => {
+            const next = verInput.value === 'beta' ? 'live' : 'beta';
+            if (next === 'beta') {
+                const agreed = await openBetaConsentModal();
+                if (!agreed) return;
+            }
+            verInput.value = next;
+            try {
+                localStorage.setItem(VER_PREF_KEY, verInput.value);
+            } catch (e) { /* ignore storage errors */ }
+            applyVerModeUI();
+        });
 
         function getHistory() {
             return JSON.parse(localStorage.getItem('uid_history') || '[]');
@@ -79,6 +285,7 @@
                 btn.textContent = uid;
                 btn.addEventListener('click', () => {
                     uidInput.value = uid;
+                    setSubmitLoading();
                     searchForm.submit();
                 });
                 historyList.appendChild(btn);
@@ -95,6 +302,7 @@
             history = history.slice(0, 6);
             
             localStorage.setItem('uid_history', JSON.stringify(history));
+            setSubmitLoading();
         });
 
         clearHistory.addEventListener('click', () => {

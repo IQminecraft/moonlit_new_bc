@@ -5,13 +5,123 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Genshin ビルドカード生成</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script>
+        // ライト/ダークのちらつき防止：CSS適用前にテーマ属性をセットしておく
+        (function () {
+            try {
+                var t = localStorage.getItem('genshin_build_card_theme_pref');
+                document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         const ver = "{{ ver }}";
         console.log("現在のデータ:", ver);
     </script>
     <style>
+        /* ==========================================================
+           カラーパレット（ブランドカラー）
+           :root = ライトモードの既定値 / [data-theme='dark'] = ダークモード上書き
+        ========================================================== */
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-on-primary: #ffffff;
+            --skeleton-base: #e4e4e7;
+            --skeleton-highlight: #f4f4f5;
+        }
+        [data-theme='dark'] {
+            --primary-color: #60a5fa;
+            --primary-hover: #3b82f6;
+            --text-on-primary: #ffffff;
+            --skeleton-base: #27272a;
+            --skeleton-highlight: #3f3f46;
+        }
+
         body { background-color: #0a0a0c; color: white; font-family: 'Inter', sans-serif; }
+
+        /* 旧オレンジ系(yellow-400等)を置き換えるブランドカラー・ヘルパー */
+        .text-primary { color: var(--primary-color); }
+        .border-primary { border-color: var(--primary-color); }
+        .ring-primary { --tw-ring-color: var(--primary-color); }
+        .focus-ring-primary:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 25%, transparent); }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--text-on-primary);
+            box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--primary-color) 55%, transparent);
+        }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .spinner-primary {
+            border-width: 4px;
+            border-style: solid;
+            border-color: color-mix(in srgb, var(--primary-color) 20%, transparent);
+            border-top-color: var(--primary-color);
+            border-radius: 9999px;
+        }
+
+        /* ==========================================================
+           スケルトン・ローディング
+           画像/データ生成の待ち時間中、完成後のレイアウトに近い形の
+           プレースホルダーをシマー(shimmer)アニメーションで表示する
+        ========================================================== */
+        @keyframes skeleton-shimmer {
+            0% { background-position: -400px 0; }
+            100% { background-position: 400px 0; }
+        }
+        .skeleton {
+            background-image: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-highlight) 37%, var(--skeleton-base) 63%);
+            background-size: 800px 100%;
+            animation: skeleton-shimmer 1.4s ease-in-out infinite;
+            border-radius: 6px;
+        }
+        .skeleton-avatar { border-radius: 9999px; }
+
+        /* ==========================================================
+           ライトモード（html[data-theme="light"]）
+           属性セレクタ + クラスで Tailwind ユーティリティより詳細度を上げて上書き
+        ========================================================== */
+        html[data-theme="light"] body { background-color: #f4f4f5; color: #18181b; }
+        html[data-theme="light"] .bg-zinc-950 { background-color: #e4e4e7; }
+        html[data-theme="light"] .bg-zinc-900,
+        html[data-theme="light"] .bg-zinc-900\/40,
+        html[data-theme="light"] .bg-zinc-900\/60,
+        html[data-theme="light"] .bg-zinc-900\/80 { background-color: #ffffff; }
+        html[data-theme="light"] .bg-zinc-800,
+        html[data-theme="light"] .bg-zinc-800\/60 { background-color: #e4e4e7; }
+        html[data-theme="light"] .bg-zinc-700 { background-color: #d4d4d8; }
+        html[data-theme="light"] .hover\:bg-zinc-700:hover { background-color: #d4d4d8 !important; }
+        html[data-theme="light"] .hover\:bg-zinc-800:hover { background-color: #e4e4e7 !important; }
+        html[data-theme="light"] .border-zinc-600,
+        html[data-theme="light"] .border-zinc-700,
+        html[data-theme="light"] .border-zinc-800,
+        html[data-theme="light"] .border-zinc-900 { border-color: #d4d4d8; }
+        html[data-theme="light"] .text-zinc-200 { color: #000000; }
+        html[data-theme="light"] .text-zinc-300,
+        html[data-theme="light"] .text-gray-300 { color: #000000; }
+        html[data-theme="light"] .text-zinc-400,
+        html[data-theme="light"] .text-gray-400 { color: #000000; }
+        html[data-theme="light"] .text-zinc-500 { color: #000000; }
+        html[data-theme="light"] .text-zinc-600 { color: #000000; }
+        html[data-theme="light"] .text-white { color: #000000; }
+        html[data-theme="light"] .hover\:text-white:hover { color: #000000; }
+        html[data-theme="light"] .text-gray-200 { color: #000000; }
+        html[data-theme="light"] #regenerateApiBtn { color: #ffffff; }
+        html[data-theme="light"] .view-mode-btn { color: #000000; }
+        html[data-theme="light"] .picker-grid::-webkit-scrollbar-thumb { background: #a1a1aa; }
+        /* 薄い色のアイコン(w-4 h-4 object-contain)が白モードの明るい背景で
+           見えなくならないよう、後ろに薄い黒の角丸を敷く */
+        .icon-chip { background-color: transparent; }
+        html[data-theme="light"] .icon-chip { background-color: rgba(0, 0, 0, 0.59); }
+        .icon-chip-lg { background-color: transparent; }
+        html[data-theme="light"] .icon-chip-lg { background-color: rgba(0, 0, 0, 0.59); }
+        /* サムネイル下部のキャラ名ラベル(bg-black/70の上の文字)は
+           ライト/ダーク問わず常に白文字のまま(背景が常に暗いため) */
+        .char-name-label { color: #ffffff; }
+        /* セット効果名(text-cyan-300)は白モードだと薄すぎて見づらいので濃い目に */
+        html[data-theme="light"] .text-cyan-300 { color: #0e7490; }
         .drag-none { user-drag: none; -webkit-user-drag: none; }
         .rarity-5 { border-color: #cd8834; }
         .rarity-4 { border-color: #a256d1; }
@@ -35,68 +145,153 @@
             border-radius: 6px; border: 1px solid rgba(255,255,255,0.4); overflow: hidden;
             background: #18181b;
         }
+        .view-mode-btn {
+            color: #9ca3af;
+            background-color: transparent;
+        }
+        .view-mode-btn.active {
+            background-color: var(--primary-color);
+            color: var(--text-on-primary);
+        }
+        .tier-SS { color: #f59e0b; }
+        .tier-S { color: #a855f7; }
+        .tier-A { color: #38bdf8; }
+        .tier-B { color: #9ca3af; }
     </style>
 </head>
-<body class="p-4 md:p-10">
+<body class="p-4 md:p-8">
 
     <div class="max-w-6xl mx-auto">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-4">
             <div class="flex items-center gap-4">
-                <h1 class="text-xl font-bold text-yellow-400">UID: <span id="currentUid">{{ uid }}</span> のキャラクター一覧</h1>
+                <h1 class="text-xl font-bold text-primary">UID: <span id="currentUid">{{ uid }}</span> のキャラクター一覧</h1>
                 <span class="text-sm text-zinc-400 bg-zinc-800/60 px-3 py-1 rounded-lg border border-zinc-700">{{ ver }}</span>
             </div>
-            <a href="/" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-sm rounded-lg transition-all border border-zinc-700">← 戻る</a>
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <button id="settingsBtn" type="button" title="設定"
+                        class="p-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all border border-zinc-700 flex items-center justify-center text-gray-300 hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </button>
+                    <div id="settingsPanel" class="hidden absolute right-0 mt-2 w-56 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-3 z-30">
+                        <div class="text-xs font-semibold text-gray-400 mb-2 px-1">バージョン</div>
+                        <button type="button" id="settingsVerBtn"
+                            class="w-full flex items-center justify-between px-3 py-2 mb-3 rounded-lg text-sm font-mono bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                            <span id="settingsVerLabel">🚀 Live</span>
+                            <span class="text-[10px] text-gray-500">タップで切替</span>
+                        </button>
+
+                        <div class="text-xs font-semibold text-gray-400 mb-2 px-1">表示テーマ</div>
+                        <button type="button" id="settingsThemeBtn"
+                            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                            <span id="settingsThemeLabel">🌙 ダーク</span>
+                            <span class="text-[10px] text-gray-500">タップで切替</span>
+                        </button>
+                    </div>
+                </div>
+                <a href="/" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-sm rounded-lg transition-all border border-zinc-700">← 戻る</a>
+            </div>
         </div>
         
-        <div id="charThumbRow" class="grid gap-[5px] grid-cols-4 sm:grid-cols-6 md:grid-cols-12 mb-6 bg-zinc-900/60 p-4 rounded-xl border border-zinc-800">
-            {% for char in char_list %}
-            <div class="relative aspect-square cursor-pointer char-thumb" data-char-id="{{ char.id }}">
-                <img src="{{ char.icon }}" 
-                     class="w-full h-full bg-gradient-to-tr from-[rgba(49,43,71,0.53)] to-[rgba(102,115,150,0.42)] rounded-lg object-cover opacity-50 grayscale-[0.3] transition-all hover:opacity-100 drag-none">
+        <div class="space-y-4">
+            <div class="flex gap-2 p-1 bg-zinc-900/60 rounded-xl border border-zinc-800" id="viewModeToggle">
+                <button type="button" data-view="html" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all">
+                    📄 ステータス
+                </button>
+                <button type="button" data-view="image" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all">
+                    🖼️ ビルドカード生成
+                </button>
             </div>
-            {% endfor %}
-        </div>
 
-        <div class="mb-6 p-4 bg-zinc-900/60 rounded-xl border border-zinc-800">
-            <div class="text-xs font-semibold text-gray-400 mb-3">キャラ差し替え</div>
-            <div id="comboRow" class="flex flex-wrap gap-3"></div>
-        </div>
+            <div id="charThumbRow" class="grid gap-[5px] grid-cols-4 sm:grid-cols-6 md:grid-cols-12 bg-zinc-900/60 p-3.5 rounded-xl border border-zinc-800">
+                {% for char in char_list %}
+                <div class="relative aspect-square cursor-pointer char-thumb" data-char-id="{{ char.id }}">
+                    <img src="{{ char.icon }}" 
+                         class="w-full h-full bg-gradient-to-tr from-[rgba(49,43,71,0.53)] to-[rgba(102,115,150,0.42)] rounded-lg object-cover opacity-50 grayscale-[0.3] transition-all hover:opacity-100 drag-none">
+                </div>
+                {% endfor %}
+            </div>
 
-        <div class="mb-6 p-4 bg-zinc-900/80 rounded-xl border border-zinc-800 flex flex-wrap items-center justify-between gap-4">
-            <div class="flex flex-wrap items-center gap-3">
-                <div class="flex items-center gap-2">
-                    <label for="scoreCalcSelect" class="text-sm font-semibold text-gray-300">計算方法:</label>
-                    <select id="scoreCalcSelect" class="bg-zinc-800 border border-zinc-700 text-white px-3 py-1.5 rounded-lg focus:outline-none focus:border-yellow-400 transition-all text-sm cursor-pointer">
-                        <option value="crit">会心</option>
-                        <option value="atk">攻撃力%</option>
-                        <option value="hp">HP%</option>
-                        <option value="def">防御%</option>
-                        <option value="em">元素熟知</option>
-                        <option value="charge">チャージ効率</option>
-                    </select>
+            <div class="p-3.5 bg-zinc-900/60 rounded-xl border border-zinc-800">
+                <div class="text-xs font-semibold text-gray-400 mb-2.5">キャラ差し替え</div>
+                <div id="comboRow" class="flex flex-wrap gap-3"></div>
+            </div>
+
+            <div class="p-3.5 bg-zinc-900/80 rounded-xl border border-zinc-800 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <label for="scoreCalcSelect" class="text-sm font-semibold text-gray-300">計算方法:</label>
+                        <select id="scoreCalcSelect" class="bg-zinc-800 border border-zinc-700 text-white px-3 py-1.5 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer">
+                            <option value="crit">会心</option>
+                            <option value="atk">攻撃力%</option>
+                            <option value="hp">HP%</option>
+                            <option value="def">防御%</option>
+                            <option value="em">元素熟知</option>
+                            <option value="charge">チャージ効率</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-semibold text-gray-300">武器:</label>
+                        <button id="editWeaponBtn" type="button"
+                            class="flex items-center gap-2 bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-white pl-1.5 pr-3 py-1.5 rounded-lg transition-all text-sm">
+                            <img id="editWeaponIcon" src="" class="w-7 h-7 rounded object-cover hidden">
+                            <span id="editWeaponLabel">なし（実データ）</span>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <label class="text-sm font-semibold text-gray-300">武器:</label>
-                    <button id="editWeaponBtn" type="button"
-                        class="flex items-center gap-2 bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-white pl-1.5 pr-3 py-1.5 rounded-lg transition-all text-sm">
-                        <img id="editWeaponIcon" src="" class="w-7 h-7 rounded object-cover hidden">
-                        <span id="editWeaponLabel">なし（実データ）</span>
-                    </button>
-                </div>
+                <button id="regenerateApiBtn" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-cyan-600/10 transition-all flex items-center gap-1.5">
+                    再取得 + 再生成
+                </button>
             </div>
 
-            <button id="regenerateApiBtn" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-cyan-600/10 transition-all flex items-center gap-1.5">
-                再取得 + 再生成
-            </button>
+            <div class="flex justify-center bg-zinc-950 p-4 md:p-8 rounded-2xl border border-zinc-900 min-h-[400px] items-center relative">
+                <img id="cardImage" src="" class="max-w-full h-auto rounded-lg shadow-2xl drag-none hidden">
+                <div id="htmlCardContainer" class="hidden w-full"></div>
+                <div id="placeholderText" class="text-zinc-500 text-sm">キャラクターを選択してください</div>
+            </div>
+            <div id="disclaimerFooter" class="hidden text-right text-[10px] text-red-500 px-1">
+                ※ゲーム内データの仕様上、聖遺物のサブオプションは四捨五入された数値で計算されるため、実際のステータスとわずかな差異が生じる場合があります。
+                また、聖遺物の2セット効果はステータスには反映されていません。
+            </div>
         </div>
+    </div>
 
-        <div class="flex justify-center bg-zinc-950 p-4 md:p-8 rounded-2xl border border-zinc-900 min-h-[400px] items-center relative">
-            <div id="loadingSpinner" class="hidden absolute inset-0 bg-black/50 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
-                <div class="animate-spin h-10 w-10 border-4 border-yellow-400 border-t-transparent rounded-full"></div>
+    <!-- 未確定データ(BETA)の閲覧同意モーダル -->
+    <div id="betaConsentModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 items-center justify-center p-4"
+        onclick="if(event.target===this) closeBetaConsentModal(false)">
+        <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-sm p-5">
+            <div class="flex items-center gap-2.5 mb-3">
+                <div class="w-9 h-9 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-400">
+                        <path d="M10.24 3.957l-8.422 14.06A1.989 1.989 0 0 0 3.518 21h16.964a1.989 1.989 0 0 0 1.7-3l-8.423-14a1.989 1.989 0 0 0-3.517 0z"></path>
+                        <path d="M12 9v4"></path>
+                        <path d="M12 17h.01"></path>
+                    </svg>
+                </div>
+                <h2 class="text-base font-bold text-white">未確定データの閲覧同意</h2>
             </div>
-            <img id="cardImage" src="" class="max-w-full h-auto rounded-lg shadow-2xl drag-none hidden">
-            <div id="placeholderText" class="text-zinc-500 text-sm">キャラクターを選択してください</div>
+            <p class="text-xs text-zinc-400 leading-relaxed mb-1">
+                これから表示する内容には、ゲーム内で正式配信される前の未確定データが含まれます。今後のアップデートで数値や仕様が変更・削除される可能性があります。
+            </p>
+            <p class="text-xs text-zinc-400 leading-relaxed mb-5">
+                内容にご注意のうえ、ご自身の判断でご覧ください。
+            </p>
+            <div class="flex flex-col gap-2">
+                <!-- 上：同意して閲覧する（推奨アクション・塗りつぶし） -->
+                <button id="betaConsentAgreeBtn" type="button" class="w-full py-2.5 bg-zinc-100 border border-zinc-100 rounded-lg text-sm font-bold text-zinc-900 hover:bg-zinc-200 transition-all">
+                    同意して閲覧する
+                </button>
+
+                <!-- 下：戻る（補助アクション・枠線のみ） -->
+                <button id="betaConsentDeclineBtn" type="button" class="w-full py-2.5 bg-transparent border border-zinc-700 rounded-lg text-sm font-bold text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-all">
+                    戻る
+                </button>
+            </div>
         </div>
     </div>
 
@@ -127,11 +322,14 @@
 
     <script>
         const uid = document.getElementById('currentUid').textContent.trim();
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
         const scoreCalcSelect = document.getElementById('scoreCalcSelect');
         const regenerateApiBtn = document.getElementById('regenerateApiBtn');
         const cardImage = document.getElementById('cardImage');
         const placeholderText = document.getElementById('placeholderText');
-        const loadingSpinner = document.getElementById('loadingSpinner');
+        const htmlCardContainer = document.getElementById('htmlCardContainer');
+        const disclaimerFooter = document.getElementById('disclaimerFooter');
 
         const comboRow = document.getElementById('comboRow');
         const editWeaponBtn = document.getElementById('editWeaponBtn');
@@ -144,6 +342,132 @@
         const fakeWeaponModal = document.getElementById('fakeWeaponModal');
         const fakeWeaponGrid = document.getElementById('fakeWeaponGrid');
         const fakeWeaponGridStatus = document.getElementById('fakeWeaponGridStatus');
+
+        // ==========================================================
+        //  設定パネル（⚙️ボタン）
+        //  ・データソース：Beta / Live をワンボタンでトグル。
+        //    クエリ ?ver= を書き換えて /fetch_uid に再アクセスする。
+        //    選んだ状態は localStorage に保存し、artifacter.html の検索フォーム
+        //    から来た時に自動で同じ ver が使われるようにする
+        //  ・表示テーマ：ライト / ダークをワンボタンでトグル（localStorage保存）
+        // ==========================================================
+        const VER_PREF_KEY = 'genshin_build_card_ver_pref';
+        const THEME_PREF_KEY = 'genshin_build_card_theme_pref';
+
+        const settingsVerBtn = document.getElementById('settingsVerBtn');
+        const settingsVerLabel = document.getElementById('settingsVerLabel');
+        const settingsThemeBtn = document.getElementById('settingsThemeBtn');
+        const settingsThemeLabel = document.getElementById('settingsThemeLabel');
+
+        // ==========================================================
+        //  未確定データ(BETA)閲覧同意モーダル
+        //  Promiseを返し、「同意して閲覧する」でtrue、「戻る」/背景クリックでfalseを解決する
+        // ==========================================================
+        const betaConsentModal = document.getElementById('betaConsentModal');
+        const betaConsentAgreeBtn = document.getElementById('betaConsentAgreeBtn');
+        const betaConsentDeclineBtn = document.getElementById('betaConsentDeclineBtn');
+        let betaConsentResolve = null;
+
+        function openBetaConsentModal() {
+            return new Promise((resolve) => {
+                betaConsentResolve = resolve;
+                betaConsentModal.classList.remove('hidden');
+                betaConsentModal.classList.add('flex');
+            });
+        }
+
+        function closeBetaConsentModal(agreed) {
+            betaConsentModal.classList.add('hidden');
+            betaConsentModal.classList.remove('flex');
+            if (betaConsentResolve) {
+                betaConsentResolve(agreed);
+                betaConsentResolve = null;
+            }
+        }
+
+        if (betaConsentAgreeBtn) betaConsentAgreeBtn.addEventListener('click', () => closeBetaConsentModal(true));
+        if (betaConsentDeclineBtn) betaConsentDeclineBtn.addEventListener('click', () => closeBetaConsentModal(false));
+
+        try {
+            // このページで今実際に表示している ver を「最後に見ていた ver」として記録
+            localStorage.setItem(VER_PREF_KEY, ver === 'beta' ? 'beta' : 'live');
+        } catch (e) { /* ignore storage errors */ }
+
+        function getSavedThemePref() {
+            try {
+                return localStorage.getItem(THEME_PREF_KEY) === 'light' ? 'light' : 'dark';
+            } catch (e) {
+                return 'dark';
+            }
+        }
+
+        function setThemePref(theme) {
+            const next = theme === 'light' ? 'light' : 'dark';
+            try {
+                localStorage.setItem(THEME_PREF_KEY, next);
+            } catch (e) { /* ignore storage errors */ }
+            document.documentElement.setAttribute('data-theme', next);
+        }
+
+        function closeSettingsPanel() {
+            if (settingsPanel) settingsPanel.classList.add('hidden');
+        }
+
+        function toggleSettingsPanel() {
+            if (settingsPanel) settingsPanel.classList.toggle('hidden');
+        }
+
+        function applySettingsPanelUI() {
+            if (settingsVerLabel) {
+                settingsVerLabel.textContent = (ver === 'beta') ? '🧪 Beta' : '🚀 Live';
+            }
+            if (settingsThemeLabel) {
+                settingsThemeLabel.textContent = (getSavedThemePref() === 'light') ? '☀️ ライト' : '🌙 ダーク';
+            }
+        }
+
+        if (settingsBtn && settingsPanel) {
+            settingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleSettingsPanel();
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!settingsPanel.classList.contains('hidden') &&
+                    !settingsPanel.contains(e.target) &&
+                    e.target !== settingsBtn && !settingsBtn.contains(e.target)) {
+                    closeSettingsPanel();
+                }
+            });
+
+            if (settingsVerBtn) {
+                settingsVerBtn.addEventListener('click', async () => {
+                    const nextVer = (ver === 'beta') ? 'live' : 'beta';
+                    if (nextVer === 'beta') {
+                        const agreed = await openBetaConsentModal();
+                        if (!agreed) return;
+                    }
+                    closeSettingsPanel();
+                    try {
+                        localStorage.setItem(VER_PREF_KEY, nextVer);
+                    } catch (e) { /* ignore storage errors */ }
+                    const params = new URLSearchParams();
+                    params.set('uid', uid);
+                    params.set('ver', nextVer);
+                    window.location.href = `/fetch_uid?${params.toString()}`;
+                });
+            }
+
+            if (settingsThemeBtn) {
+                settingsThemeBtn.addEventListener('click', () => {
+                    const nextTheme = (getSavedThemePref() === 'light') ? 'dark' : 'light';
+                    setThemePref(nextTheme);
+                    applySettingsPanelUI();
+                });
+            }
+
+            applySettingsPanelUI();
+        }
 
         let currentSelectedCharId = null;
 
@@ -212,9 +536,9 @@
                 loadComboState(currentSelectedCharId);
                 renderComboRow();
                 updateEditWeaponUI();
-                ensureComboIconsLoaded().then(() => renderComboRow());
+                ensureComboIconsLoaded().then(() => { renderComboRow(); updateEditWeaponUI(); });
                 if (activeComboId || defaultWeapon) {
-                    loadCardImage(currentSelectedCharId, false);
+                    refreshCurrentCard(currentSelectedCharId, false);
                 }
             }
         }
@@ -371,7 +695,7 @@
             defaultTile.innerHTML = `
                 <div class="relative w-full h-full rounded-md overflow-hidden">
                     ${defaultIconSrc ? `<img src="${defaultIconSrc}" class="w-full h-full object-cover drag-none">` : ''}
-                    <div class="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] leading-tight text-center truncate px-0.5">デフォルト</div>
+                    <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[9px] leading-tight text-center truncate px-0.5">デフォルト</div>
                 </div>
                 ${defaultWeapon && weaponAssetUrl(defaultWeapon) ? `<div class="weapon-badge"><img src="${weaponAssetUrl(defaultWeapon)}" class="w-full h-full object-cover"></div>` : ''}
             `;
@@ -393,7 +717,7 @@
                 tile.innerHTML = `
                     <div class="relative w-full h-full rounded-md overflow-hidden">
                         ${iconUrl ? `<img src="${iconUrl}" class="w-full h-full object-cover drag-none">` : `<div class="w-full h-full flex items-center justify-center text-[9px] text-zinc-400 text-center px-1">${data.jaName}</div>`}
-                        <div class="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] leading-tight text-center truncate px-0.5">${data.jaName}</div>
+                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[9px] leading-tight text-center truncate px-0.5">${data.jaName}</div>
                     </div>
                     <div class="combo-remove" onclick="event.stopPropagation(); removeCombo('${combo.id}')">&times;</div>
                     ${weaponIconUrl ? `<div class="weapon-badge"><img src="${weaponIconUrl}" class="w-full h-full object-cover"></div>` : ''}
@@ -414,7 +738,7 @@
             saveComboState(currentSelectedCharId);
             renderComboRow();
             updateEditWeaponUI();
-            loadCardImage(currentSelectedCharId, false);
+            refreshCurrentCard(currentSelectedCharId, false);
         }
 
         function removeCombo(comboId) {
@@ -425,7 +749,7 @@
             saveComboState(currentSelectedCharId);
             renderComboRow();
             updateEditWeaponUI();
-            loadCardImage(currentSelectedCharId, false);
+            refreshCurrentCard(currentSelectedCharId, false);
         }
 
         async function openFakeCharModal() {
@@ -463,7 +787,7 @@
                 if (iconUrl) {
                     tile.innerHTML = `
                         <img src="${iconUrl}" class="w-full h-full object-cover drag-none" loading="lazy">
-                        <div class="absolute bottom-0 inset-x-0 bg-black/70 text-[10px] leading-tight text-center truncate px-0.5 py-0.5">${data.jaName}</div>
+                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[10px] leading-tight text-center truncate px-0.5 py-0.5">${data.jaName}</div>
                     `;
                 } else {
                     tile.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 text-center px-1">${data.jaName}</div>`;
@@ -484,7 +808,7 @@
             renderComboRow();
             updateEditWeaponUI();
             closeFakeCharModal();
-            loadCardImage(currentSelectedCharId, false);
+            refreshCurrentCard(currentSelectedCharId, false);
         }
 
         async function openFakeWeaponModal() {
@@ -543,7 +867,7 @@
                 if (iconUrl) {
                     tile.innerHTML = `
                         <img src="${iconUrl}" class="w-full h-full object-cover drag-none" loading="lazy">
-                        <div class="absolute bottom-0 inset-x-0 bg-black/70 text-[10px] leading-tight text-center truncate px-0.5 py-0.5">${data.jaName}</div>
+                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[10px] leading-tight text-center truncate px-0.5 py-0.5">${data.jaName}</div>
                     `;
                 } else {
                     tile.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 text-center px-1">${data.jaName}</div>`;
@@ -563,7 +887,7 @@
             renderComboRow();
             updateEditWeaponUI();
             closeFakeWeaponModal();
-            loadCardImage(currentSelectedCharId, false);
+            refreshCurrentCard(currentSelectedCharId, false);
         }
 
         function updateEditWeaponUI() {
@@ -586,11 +910,20 @@
 
         editWeaponBtn.addEventListener('click', openFakeWeaponModal);
 
-        window.addEventListener('DOMContentLoaded', () => {
+        // artifacter.html の検索フォームから来た直後の初回表示だけ、
+        // 画像生成を必ず forceFetch(=キャッシュ無視で再生成) させるためのフラグ
+        let pendingForceFetchFromArtifacter = false;
+
+        window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('from_artifacter')) {
                 const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?uid=${uid}`;
                 window.history.replaceState({ path: newUrl }, '', newUrl);
+
+                // artifacter.html から来た場合は、古いビルドカード画像キャッシュを破棄し、
+                // 次に画像を表示する際は必ず作り直した画像が使われるようにする
+                pendingForceFetchFromArtifacter = true;
+                await clearCardImageCache();
             }
 
             loadFakeLists();
@@ -615,40 +948,143 @@
         let currentImageObjectUrl = null;
         let latestImageRequestToken = 0;
 
+        // ==========================================================
+        //  ビルドカード画像のクライアント側キャッシュ（Cache Storage API）
+        //  サーバー側には保存しない。「再取得 + 再生成」で Enka API に
+        //  リクエストが飛んだタイミングで全クリアする。
+        // ==========================================================
+        const IMAGE_CACHE_NAME = 'genshin-build-card-image-cache-v1';
+        const cacheStorageSupported = (typeof caches !== 'undefined');
+
+        async function getCachedCardImage(url) {
+            if (!cacheStorageSupported) return null;
+            try {
+                const cache = await caches.open(IMAGE_CACHE_NAME);
+                const cachedRes = await cache.match(url);
+                return cachedRes ? await cachedRes.blob() : null;
+            } catch (e) {
+                console.warn('画像キャッシュの参照に失敗しました:', e);
+                return null;
+            }
+        }
+
+        async function putCachedCardImage(url, response) {
+            if (!cacheStorageSupported) return;
+            try {
+                const cache = await caches.open(IMAGE_CACHE_NAME);
+                await cache.put(url, response);
+            } catch (e) {
+                console.warn('画像キャッシュの保存に失敗しました:', e);
+            }
+        }
+
+        async function clearCardImageCache() {
+            if (!cacheStorageSupported) return;
+            try {
+                await caches.delete(IMAGE_CACHE_NAME);
+            } catch (e) {
+                console.warn('画像キャッシュのクリアに失敗しました:', e);
+            }
+        }
+
+        // ==========================================================
+        //  スケルトン・カード
+        //  「ビルドカード(HTML)」「画像生成」どちらの読み込み中も、
+        //  完成後のレイアウトに近い形のプレースホルダーを表示することで
+        //  生成待ちのUXを改善する
+        // ==========================================================
+        function skeletonBlock(extraClass = '') {
+            return `<div class="skeleton ${extraClass}"></div>`;
+        }
+
+        function skeletonArtifactTile() {
+            return `
+                <div class="bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
+                    <div class="flex items-center gap-2 mb-2">
+                        ${skeletonBlock('skeleton-avatar w-10 h-10 shrink-0')}
+                        <div class="flex-1 min-w-0 space-y-1.5">
+                            ${skeletonBlock('h-3 w-2/3')}
+                            ${skeletonBlock('h-3 w-1/2')}
+                        </div>
+                        ${skeletonBlock('h-6 w-8 shrink-0')}
+                    </div>
+                    <div class="space-y-1.5 pt-1.5 border-t border-zinc-800">
+                        ${skeletonBlock('h-3 w-full')}
+                        ${skeletonBlock('h-3 w-full')}
+                        ${skeletonBlock('h-3 w-4/5')}
+                        ${skeletonBlock('h-3 w-4/5')}
+                    </div>
+                </div>`;
+        }
+
+        function renderCardSkeletonHtml() {
+            const mainStatsSkeleton = Array.from({ length: 4 })
+                .map(() => `
+                    <div class="flex items-center gap-2 bg-zinc-900/60 rounded-lg px-3 py-2 border border-zinc-800">
+                        ${skeletonBlock('w-6 h-6 shrink-0')}
+                        ${skeletonBlock('h-3 flex-1')}
+                    </div>`)
+                .join('');
+
+            const artifactsSkeleton = Array.from({ length: 5 }).map(skeletonArtifactTile).join('');
+
+            return `
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="md:col-span-1 space-y-3">
+                        <div class="flex items-center gap-3 bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
+                            <div class="flex-1 space-y-2">
+                                ${skeletonBlock('h-4 w-2/3')}
+                                ${skeletonBlock('h-3 w-1/2')}
+                            </div>
+                            ${skeletonBlock('skeleton-avatar w-12 h-12 shrink-0')}
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5">${mainStatsSkeleton}</div>
+                        <div class="bg-zinc-900/60 rounded-lg p-3 border border-zinc-800 space-y-2">
+                            ${skeletonBlock('h-3 w-1/3')}
+                            ${skeletonBlock('h-3 w-2/3')}
+                        </div>
+                        <div class="flex items-center justify-between bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
+                            ${skeletonBlock('h-3 w-1/3')}
+                            ${skeletonBlock('h-6 w-16')}
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        ${artifactsSkeleton}
+                    </div>
+                </div>`;
+        }
+
         async function loadCardImage(charId, forceFetch = false) {
             if(!charId) return;
-            const charChanged = currentSelectedCharId !== charId;
-            currentSelectedCharId = charId;
 
             const currentMethod = getSavedCalcMethod(charId);
             scoreCalcSelect.value = currentMethod;
 
-            if (listsLoaded && charChanged) {
-                loadComboState(charId);
-                renderComboRow();
-                updateEditWeaponUI();
-                ensureComboIconsLoaded().then(() => renderComboRow());
-            }
-
-            loadingSpinner.classList.remove('hidden');
             placeholderText.classList.add('hidden');
             cardImage.classList.add('hidden');
+            htmlCardContainer.classList.remove('hidden');
+            htmlCardContainer.innerHTML = renderCardSkeletonHtml();
 
             const selection = getActiveSelection();
+            updateDisclaimerFooter(selection);
             const params = new URLSearchParams();
             if (selection.fakeChar) params.set('fake_char', selection.fakeChar);
             if (selection.fakeWeapon) params.set('fake_weapon', selection.fakeWeapon);
             if (ver === 'beta') params.set('beta', 'true');
-            if (forceFetch) params.set('_', new Date().getTime());
             const query = params.toString() ? `?${params.toString()}` : '';
             const url = `/generate_card_image/${uid}/${charId}/${currentMethod}${query}`;
 
             const requestToken = ++latestImageRequestToken;
 
             try {
-                const res = await fetch(url);
-                if (!res.ok) throw new Error(`画像の取得に失敗しました (status: ${res.status})`);
-                const blob = await res.blob();
+                let blob = forceFetch ? null : await getCachedCardImage(url);
+
+                if (!blob) {
+                    const res = await fetch(url, { cache: forceFetch ? 'reload' : 'default' });
+                    if (!res.ok) throw new Error(`画像の取得に失敗しました (status: ${res.status})`);
+                    putCachedCardImage(url, res.clone());
+                    blob = await res.blob();
+                }
 
                 if (requestToken !== latestImageRequestToken) return;
 
@@ -660,43 +1096,207 @@
             } catch (e) {
                 if (requestToken !== latestImageRequestToken) return;
                 console.error('カード画像の読み込みに失敗しました:', e);
-                loadingSpinner.classList.add('hidden');
+                htmlCardContainer.classList.add('hidden');
                 cardImage.classList.add('hidden');
                 placeholderText.textContent = '画像の読み込みに失敗しました。もう一度お試しください。';
                 placeholderText.classList.remove('hidden');
+                disclaimerFooter.classList.add('hidden');
             }
         }
 
         cardImage.onload = function() {
-            loadingSpinner.classList.add('hidden');
+            htmlCardContainer.classList.add('hidden');
             cardImage.classList.remove('hidden');
         };
+
+        // ==========================================================
+        //  表示モード切替（ビルドカード[HTML] / 画像生成）
+        //  ページを開いた時は常に「html」をデフォルトにする
+        //  （以前に画像生成モードを選んでいても、次にページを開いた時は
+        //    html から始まるようにし、localStorage には保存しない）
+        // ==========================================================
+        let viewMode = 'html';
+        const viewModeButtons = document.querySelectorAll('.view-mode-btn');
+
+        function applyViewModeUI() {
+            viewModeButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === viewMode);
+            });
+        }
+
+        function refreshCurrentCard(charId, forceFetch = false) {
+            if (!charId) return;
+
+            const charChanged = currentSelectedCharId !== charId;
+            currentSelectedCharId = charId;
+
+            if (listsLoaded && charChanged) {
+                loadComboState(charId);
+                renderComboRow();
+                updateEditWeaponUI();
+                ensureComboIconsLoaded().then(() => { renderComboRow(); updateEditWeaponUI(); });
+            }
+
+            if (viewMode === 'image') {
+                loadCardImage(charId, forceFetch);
+            } else {
+                cardImage.classList.add('hidden');
+                placeholderText.classList.add('hidden');
+                loadHtmlCard(charId);
+            }
+        }
+
+        viewModeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.dataset.view === viewMode) return;
+                viewMode = btn.dataset.view;
+                applyViewModeUI();
+                refreshCurrentCard(currentSelectedCharId, false);
+            });
+        });
+
+        applyViewModeUI();
+
+        // ==========================================================
+        //  ビルドカード（HTML表示モード）
+        // ==========================================================
+        let latestHtmlRequestToken = 0;
+
+        function updateDisclaimerFooter(selection) {
+            const show = !!(selection && (selection.fakeChar || selection.fakeWeapon));
+            disclaimerFooter.classList.toggle('hidden', !show);
+        }
+
+        async function loadHtmlCard(charId) {
+            if (!charId) return;
+            htmlCardContainer.classList.remove('hidden');
+            htmlCardContainer.innerHTML = renderCardSkeletonHtml();
+
+            const currentMethod = getSavedCalcMethod(charId);
+            scoreCalcSelect.value = currentMethod;
+
+            const selection = getActiveSelection();
+            updateDisclaimerFooter(selection);
+            const params = new URLSearchParams();
+            params.set('calc_method', currentMethod);
+            if (selection.fakeChar) params.set('fake_char', selection.fakeChar);
+            if (selection.fakeWeapon) params.set('fake_weapon', selection.fakeWeapon);
+            if (ver === 'beta') params.set('beta', 'true');
+
+            const requestToken = ++latestHtmlRequestToken;
+            try {
+                const res = await fetch(`/api/card_data/${uid}/${charId}?${params.toString()}`);
+                if (!res.ok) {
+                    const errBody = await res.json().catch(() => ({}));
+                    throw new Error(errBody.detail || `データの取得に失敗しました (status: ${res.status})`);
+                }
+                const data = await res.json();
+                if (requestToken !== latestHtmlRequestToken) return;
+                renderHtmlCard(data);
+            } catch (e) {
+                if (requestToken !== latestHtmlRequestToken) return;
+                console.error('ビルドカード(HTML)の読み込みに失敗しました:', e);
+                htmlCardContainer.innerHTML = `<div class="text-red-400 text-sm py-16 text-center">読み込みに失敗しました: ${e.message}</div>`;
+                disclaimerFooter.classList.add('hidden');
+            }
+        }
+
+        function tierClass(tier) {
+            return `tier-${tier || 'B'}`;
+        }
+
+        function renderHtmlCard(data) {
+            const mainStatsHtml = data.mainStats.map(s => `
+                <div class="flex items-center gap-2 bg-zinc-900/60 rounded-lg px-3 py-2 border border-zinc-800">
+                    <span class="icon-chip-lg inline-flex items-center justify-center w-7 h-7 rounded-md shrink-0"><img src="/${s.icon}" class="w-6 h-6 object-contain"></span>
+                    <span class="text-xs text-zinc-400 flex-1">${s.label}</span>
+                    <span class="text-sm font-bold text-white">${s.val}</span>
+                </div>
+            `).join('');
+
+            const artifactsHtml = data.artifacts.map(a => {
+                if (!a) return `<div class="bg-zinc-900/40 rounded-lg p-3 border border-zinc-800 text-xs text-zinc-600 flex items-center justify-center">未装備</div>`;
+                const subsHtml = a.substats.map(s => `
+                    <div class="flex items-center gap-1.5 text-xs text-zinc-400">
+                        <span class="icon-chip inline-flex items-center justify-center w-5 h-5 rounded-md shrink-0"><img src="/${s.icon}" class="w-4 h-4 object-contain"></span>
+                        <span>${s.name}</span>
+                        <span class="ml-auto text-zinc-200">${s.value}</span>
+                    </div>
+                `).join('');
+                return `
+                <div class="bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <img src="/${a.icon}" class="w-10 h-10 rounded object-cover border border-zinc-700">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs text-zinc-500">${a.slot} +${a.upgrade}</div>
+                            <div class="text-xs text-zinc-300 truncate">${a.main.name} ${a.main.value}</div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-lg font-bold ${tierClass(a.tier)}">${a.tier}</div>
+                            <div class="text-[10px] text-zinc-500">${a.score}</div>
+                        </div>
+                    </div>
+                    <div class="space-y-1 pt-1.5 border-t border-zinc-800">${subsHtml}</div>
+                </div>`;
+            }).join('');
+
+            const setBonusHtml = data.setBonuses.length
+                ? data.setBonuses.map(s => `<div class="text-xs text-cyan-300">${s.name} ×${s.count}</div>`).join('')
+                : `<div class="text-xs text-zinc-600">セット効果なし</div>`;
+
+            htmlCardContainer.innerHTML = `
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="md:col-span-1 space-y-3">
+                        <div class="flex items-center gap-3 bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
+                            <div class="flex-1">
+                                <div class="text-lg font-bold text-primary">${data.displayName} ${Number.isFinite(data.constellation) ? data.constellation : 0}凸</div>
+                                <div class="text-xs text-zinc-400">${data.weaponName}${data.weaponLevel ? ` Lv.${data.weaponLevel}` : ''}${data.weaponAffix ? ` (精錬${data.weaponAffix})` : ''}</div>
+                            </div>
+                            ${data.weaponIcon ? `<img src="/${data.weaponIcon}" class="w-12 h-12 rounded object-cover border border-zinc-700">` : ''}
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5">${mainStatsHtml}</div>
+                        <div class="bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
+                            <div class="text-xs text-zinc-500 mb-1">セット効果</div>
+                            ${setBonusHtml}
+                        </div>
+                        <div class="flex items-center justify-between bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
+                            <span class="text-xs text-zinc-400">総合スコア</span>
+                            <span class="text-2xl font-bold ${tierClass(data.tierSum)}">${data.scoreSum} <span class="text-sm">${data.tierSum}</span></span>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        ${artifactsHtml}
+                    </div>
+                </div>
+            `;
+        }
 
         document.querySelectorAll('.char-thumb').forEach(thumb => {
             thumb.addEventListener('click', function() {
                 document.querySelectorAll('.char-thumb img').forEach(img => {
-                    img.classList.remove('opacity-100', 'ring-2', 'ring-yellow-400');
+                    img.classList.remove('opacity-100', 'ring-2', 'ring-primary');
                     img.classList.add('opacity-50', 'grayscale-[0.3]');
                 });
                 document.querySelectorAll('.check-badge').forEach(b => b.remove());
 
                 const activeImg = this.querySelector('img');
                 activeImg.classList.remove('opacity-50', 'grayscale-[0.3]');
-                activeImg.classList.add('opacity-100', 'ring-2', 'ring-yellow-400');
+                activeImg.classList.add('opacity-100', 'ring-2', 'ring-primary');
                 
                 const badgeHTML = `<div class="check-badge absolute top-1 right-1 bg-cyan-400 rounded-full p-0.5 ring-2 ring-white/30"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="text-black"><path d="M20 6 9 17l-5-5"></path></svg></div>`;
                 this.insertAdjacentHTML('beforeend', badgeHTML);
 
                 const charId = this.getAttribute('data-char-id');
                 localStorage.setItem(`selected_char_${uid}`, charId);
-                loadCardImage(charId, false);
+                refreshCurrentCard(charId, pendingForceFetchFromArtifacter);
+                pendingForceFetchFromArtifacter = false;
             });
         });
 
         scoreCalcSelect.addEventListener('change', function() {
             if (currentSelectedCharId) {
                 saveCalcMethod(currentSelectedCharId, this.value);
-                loadCardImage(currentSelectedCharId, false);
+                refreshCurrentCard(currentSelectedCharId, false);
             }
         });
 
@@ -723,7 +1323,10 @@
                 regenerateApiBtn.innerHTML = originalLabel;
             }
 
-            loadCardImage(currentSelectedCharId, true);
+            // Enka API へのリクエストが発生したタイミングでキャッシュ済み画像を破棄し、
+            // 必ず作り直した画像が表示されるようにする
+            await clearCardImageCache();
+            refreshCurrentCard(currentSelectedCharId, true);
         });
     </script>
 </body>
