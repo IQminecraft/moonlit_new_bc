@@ -473,7 +473,6 @@
 
         let combos = [];
         let activeComboId = '';
-        let defaultWeapon = '';
 
         let allCharList = {};
         let allWeaponList = {};
@@ -537,7 +536,7 @@
                 renderComboRow();
                 updateEditWeaponUI();
                 ensureComboIconsLoaded().then(() => { renderComboRow(); updateEditWeaponUI(); });
-                if (activeComboId || defaultWeapon) {
+                if (activeComboId) {
                     refreshCurrentCard(currentSelectedCharId, false);
                 }
             }
@@ -546,7 +545,6 @@
         function ensureComboIconsLoaded() {
             const charIds = combos.map(c => c.fakeChar).filter(Boolean);
             const weaponIds = combos.map(c => c.fakeWeapon).filter(Boolean);
-            if (defaultWeapon) weaponIds.push(defaultWeapon);
             return Promise.all([
                 ensureCharIconsLoaded(charIds),
                 ensureWeaponIconsLoaded(weaponIds)
@@ -638,8 +636,7 @@
         function comboStorageKeys(charId) {
             return {
                 list: `combo_list_${uid}_${charId}`,
-                active: `combo_active_${uid}_${charId}`,
-                defaultWeapon: `combo_default_weapon_${uid}_${charId}`
+                active: `combo_active_${uid}_${charId}`
             };
         }
 
@@ -651,7 +648,6 @@
                 combos = [];
             }
             activeComboId = localStorage.getItem(keys.active) || '';
-            defaultWeapon = localStorage.getItem(keys.defaultWeapon) || '';
 
             if (activeComboId && !combos.find(c => c.id === activeComboId)) {
                 activeComboId = '';
@@ -662,7 +658,6 @@
             const keys = comboStorageKeys(charId);
             localStorage.setItem(keys.list, JSON.stringify(combos));
             localStorage.setItem(keys.active, activeComboId);
-            localStorage.setItem(keys.defaultWeapon, defaultWeapon);
         }
 
         function getActiveCombo() {
@@ -673,7 +668,7 @@
         function getActiveSelection() {
             const combo = getActiveCombo();
             if (combo) return { fakeChar: combo.fakeChar, fakeWeapon: combo.fakeWeapon };
-            return { fakeChar: '', fakeWeapon: defaultWeapon };
+            return { fakeChar: '', fakeWeapon: '' };
         }
 
         function getActiveWeaponType(charId) {
@@ -697,7 +692,6 @@
                     ${defaultIconSrc ? `<img src="${defaultIconSrc}" class="w-full h-full object-cover drag-none">` : ''}
                     <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[9px] leading-tight text-center truncate px-0.5">デフォルト</div>
                 </div>
-                ${defaultWeapon && weaponAssetUrl(defaultWeapon) ? `<div class="weapon-badge"><img src="${weaponAssetUrl(defaultWeapon)}" class="w-full h-full object-cover"></div>` : ''}
             `;
             defaultTile.onclick = () => activateCombo('');
             comboRow.appendChild(defaultTile);
@@ -812,6 +806,7 @@
         }
 
         async function openFakeWeaponModal() {
+            if (!activeComboId) return;
             fakeWeaponModal.classList.remove('hidden');
             fakeWeaponModal.classList.add('flex');
             renderFakeWeaponGrid();
@@ -878,11 +873,8 @@
 
         function selectFakeWeapon(weaponId) {
             const combo = getActiveCombo();
-            if (combo) {
-                combo.fakeWeapon = weaponId;
-            } else {
-                defaultWeapon = weaponId;
-            }
+            if (!combo) return;
+            combo.fakeWeapon = weaponId;
             saveComboState(currentSelectedCharId);
             renderComboRow();
             updateEditWeaponUI();
@@ -891,6 +883,18 @@
         }
 
         function updateEditWeaponUI() {
+            const isDefault = !activeComboId;
+            editWeaponBtn.disabled = isDefault;
+            editWeaponBtn.classList.toggle('opacity-50', isDefault);
+            editWeaponBtn.classList.toggle('cursor-not-allowed', isDefault);
+            editWeaponBtn.classList.toggle('hover:border-cyan-400', !isDefault);
+
+            if (isDefault) {
+                editWeaponLabel.textContent = '実データ';
+                editWeaponIcon.classList.add('hidden');
+                return;
+            }
+
             const selection = getActiveSelection();
             if (selection.fakeWeapon && allWeaponList[selection.fakeWeapon]) {
                 const data = allWeaponList[selection.fakeWeapon];
