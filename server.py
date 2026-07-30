@@ -71,6 +71,133 @@ def formal_round(val):
     return int(val + 0.5) if val >= 0 else int(val - 0.5)
 
 
+def get_char_level(avatar_info):
+    """
+    キャラレベルを取得する（90キャップなし）。
+    propMap の 4001 (val / ival) を優先し、無ければ avatar 直下の level を使う。
+    """
+    if not avatar_info:
+        return 1
+    prop_map = avatar_info.get("propMap") or {}
+    level_entry = prop_map.get("4001") or prop_map.get(4001)
+    if isinstance(level_entry, dict):
+        raw = level_entry.get("val")
+        if raw is None:
+            raw = level_entry.get("ival")
+        if raw is not None and str(raw).strip() != "":
+            try:
+                return int(float(str(raw)))
+            except (TypeError, ValueError):
+                pass
+    top_level = avatar_info.get("level")
+    if top_level is not None and str(top_level).strip() != "":
+        try:
+            return int(float(str(top_level)))
+        except (TypeError, ValueError):
+            pass
+    return 1
+
+
+
+
+def hex_to_rgb(hex_str):
+    """#RRGGBB or RRGGBB -> (r, g, b)"""
+    if not hex_str:
+        return None
+    s = str(hex_str).strip().lstrip("#")
+    if len(s) != 6:
+        return None
+    try:
+        return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
+    except ValueError:
+        return None
+
+
+def _shade_rgb(rgb, factor):
+    """factor < 1 で暗く、> 1 で明るく（0-255 にクランプ）"""
+    return tuple(max(0, min(255, int(c * factor))) for c in rgb)
+
+
+def create_card_background(width, height, base_rgb, splash_path=None):
+    """
+    元素ベース色のグラデーション（左上暗め → 右下明るめ）+ 控えめなパーティクル。
+    splash_path があれば拡大ぼかしを半透明で重ねる。
+    """
+    import random as _random
+
+    # 低解像度で対角グラデを作り、拡大してなめらかにする
+    gw, gh = 96, 64
+    tl = _shade_rgb(base_rgb, 0.48)   # 左上: 暗め
+    br = _shade_rgb(base_rgb, 1.38)   # 右下: 明るめ
+    tr = _shade_rgb(base_rgb, 0.85)
+    bl = _shade_rgb(base_rgb, 0.95)
+
+    small = Image.new("RGB", (gw, gh))
+    px = small.load()
+    for y in range(gh):
+        v = y / max(gh - 1, 1)
+        for x in range(gw):
+            u = x / max(gw - 1, 1)
+            # 双線形: TL--TR / BL--BR
+            r = int((1 - u) * (1 - v) * tl[0] + u * (1 - v) * tr[0] + (1 - u) * v * bl[0] + u * v * br[0])
+            g = int((1 - u) * (1 - v) * tl[1] + u * (1 - v) * tr[1] + (1 - u) * v * bl[1] + u * v * br[1])
+            b = int((1 - u) * (1 - v) * tl[2] + u * (1 - v) * tr[2] + (1 - u) * v * bl[2] + u * v * br[2])
+            px[x, y] = (r, g, b)
+    bg = small.resize((width, height), Image.Resampling.LANCZOS).convert("RGBA")
+
+    # 控えめなパーティクル（明るめの点を薄く散らす）
+    particles = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    pdraw = ImageDraw.Draw(particles)
+    rng = _random.Random(hash(base_rgb) & 0xFFFFFFFF)
+    bright = _shade_rgb(base_rgb, 1.55)
+    for _ in range(140):
+        x = rng.randint(0, width - 1)
+        y = rng.randint(0, height - 1)
+        rad = rng.choice([1, 1, 1, 2, 2, 3])
+        alpha = rng.randint(18, 48)
+        pdraw.ellipse(
+            [x - rad, y - rad, x + rad, y + rad],
+            fill=(bright[0], bright[1], bright[2], alpha),
+        )
+    # ごく薄い大きめの光粒も少し
+    for _ in range(25):
+        x = rng.randint(0, width - 1)
+        y = rng.randint(0, height - 1)
+        rad = rng.randint(4, 10)
+        alpha = rng.randint(8, 20)
+        pdraw.ellipse(
+            [x - rad, y - rad, x + rad, y + rad],
+            fill=(bright[0], bright[1], bright[2], alpha),
+        )
+    bg = Image.alpha_composite(bg, particles)
+
+    # スプラッシュ拡大ぼかし
+    if splash_path and os.path.exists(splash_path):
+        try:
+            splash_img = Image.open(splash_path).convert("RGBA")
+            # 画面を覆う程度に拡大
+            scale = max(width / splash_img.width, height / splash_img.height) * 1.35
+            nw = int(splash_img.width * scale)
+            nh = int(splash_img.height * scale)
+            splash_img = splash_img.resize((nw, nh), Image.Resampling.LANCZOS)
+            # 中央配置
+            layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            ox = (width - nw) // 2
+            oy = (height - nh) // 2
+            layer.paste(splash_img, (ox, oy), splash_img)
+            layer = layer.filter(ImageFilter.GaussianBlur(radius=48))
+            # 暗めに抑えて主張しすぎない
+            r, g, b, a = layer.split()
+            a = a.point(lambda p: int(p * 0.09))
+            layer = Image.merge("RGBA", (r, g, b, a))
+            bg = Image.alpha_composite(bg, layer)
+        except Exception as e:
+            print(f"[Warning] splash blur background failed: {e}")
+
+    return bg.convert("RGB")
+
+
+
 def new_stat_totals():
     """キャラ/武器/聖遺物からの補正値を貯めていく集計用の入れ物"""
     return {
@@ -135,15 +262,34 @@ def draw_figma_text_right(draw, text, x, y, font, font_size=24, fill_color=(255,
     draw.text((x, y), text_str, fill=fill_color, font=font, anchor="ra")
 
 
-def draw_figma_box(img, x, y, width, height, radius=15, fill_color=(60, 64, 72, 180)):
+def draw_figma_box(img, x, y, width, height, radius=15, fill_color=(60, 64, 72, 125), outline_color=(140, 145, 155, 90), outline_width=1, shadow=True, shadow_offset=(6, 6), shadow_blur=8, shadow_alpha=70):
+    """薄い灰色アウトライン + 右下寄りのドロップシャドウ（shadow=False で無効）。"""
     x1, y1 = x, y
     x2, y2 = x + width, y + height
+    base_rgba = img.convert("RGBA")
+
+    if shadow:
+        # 右下寄りにぼかした影
+        shadow_layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+        sdraw = ImageDraw.Draw(shadow_layer)
+        ox, oy = shadow_offset
+        sdraw.rounded_rectangle(
+            [x1 + ox, y1 + oy, x2 + ox, y2 + oy],
+            radius=radius,
+            fill=(0, 0, 0, shadow_alpha),
+        )
+        shadow_layer = shadow_layer.filter(ImageFilter.GaussianBlur(radius=shadow_blur))
+        base_rgba = Image.alpha_composite(base_rgba, shadow_layer)
 
     overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
     draw_overlay = ImageDraw.Draw(overlay)
-    draw_overlay.rounded_rectangle([x1, y1, x2, y2], radius=radius, fill=fill_color)
+    outline_kwargs = {}
+    if outline_color and outline_width > 0:
+        outline_kwargs = {"outline": outline_color, "width": outline_width}
+    draw_overlay.rounded_rectangle([x1, y1, x2, y2], radius=radius, fill=fill_color, **outline_kwargs)
 
-    img.paste(Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB"))
+    base_rgba = Image.alpha_composite(base_rgba, overlay)
+    img.paste(base_rgba.convert("RGB"))
 
 
 def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=(255, 255, 255), align="left", box_width=None):
@@ -269,7 +415,7 @@ def draw_figma_line(img, x1, y1, x2, y2, fill_color=(255, 255, 255, 50), width=1
         img.paste(overlay, (0, 0), overlay)
 
 
-def draw_figma_circle(img, x, y, size, fill_color=(60, 64, 72, 180), outline_color=None, outline_width=0):
+def draw_figma_circle(img, x, y, size, fill_color=(60, 64, 72, 125), outline_color=None, outline_width=0):
     x1, y1 = x, y
     x2, y2 = x + size, y + size
 
@@ -317,6 +463,55 @@ def resolve_list_path(path, beta="false"):
         if os.path.exists(beta_path):
             return beta_path
     return path
+
+
+def resolve_display_skill_levels(avatar_info, fake_char=False):
+    """
+    天賦レベル（通常/スキル/爆発）を返す。
+    命の星座による補正（proudSkillExtraLevelMap / C3→スキル+3, C5→爆発+3）を反映する。
+    Returns: (levels: list[int], boosted: list[bool])  # boosted は水色表示用
+    """
+    if fake_char:
+        return [9, 9, 9], [False, False, False]
+
+    skill_map = (avatar_info or {}).get("skillLevelMap") or {}
+    base_vals = list(skill_map.values())
+    levels = []
+    for i in range(3):
+        try:
+            levels.append(int(base_vals[i]) if i < len(base_vals) else 1)
+        except (TypeError, ValueError):
+            levels.append(1)
+
+    constellation = len((avatar_info or {}).get("talentIdList") or [])
+    extra_map = (avatar_info or {}).get("proudSkillExtraLevelMap") or {}
+    extra_amounts = []
+    for v in extra_map.values():
+        try:
+            iv = int(v)
+            if iv > 0:
+                extra_amounts.append(iv)
+        except (TypeError, ValueError):
+            pass
+
+    # 命座3以上 → スキル(E)、命座5以上 → 爆発(Q)
+    # proudSkillExtraLevelMap の値があればそれを使い、無ければ +3
+    e_boost = 0
+    q_boost = 0
+    if constellation >= 3:
+        e_boost = extra_amounts[0] if len(extra_amounts) >= 1 else 3
+    if constellation >= 5:
+        q_boost = extra_amounts[1] if len(extra_amounts) >= 2 else 3
+
+    boosted = [False, False, False]
+    if e_boost:
+        levels[1] = levels[1] + e_boost
+        boosted[1] = True
+    if q_boost:
+        levels[2] = levels[2] + q_boost
+        boosted[2] = True
+
+    return levels, boosted
 
 
 def paste_figma_image(base_img, img_path, box_x, box_y, box_width, box_height, radius=15, beta="false"):
@@ -575,6 +770,12 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         constellation = 0
     else:
         constellation = len(target_avatar_info.get("talentIdList", []))
+
+    # --- キャラレベル（差し替え時は90固定、オリジナルは実データ・90キャップなし） ---
+    if fake_char:
+        char_level = 90
+    else:
+        char_level = get_char_level(target_avatar_info)
 
     # --- 武器情報（差し替え: fake_weapon） ---
     weapon_data = next((item for item in target_avatar_info.get("equipList", []) if "weapon" in item), None)
@@ -867,24 +1068,103 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
     else:
         tier_sum_score = "SS"
 
+    # --- グラスカード用の追加フィールド ---
+    splash_path = ""
+    try:
+        icon_name = str(chardatas.get("icon", ""))
+        if icon_name:
+            splash_raw = f"static/assets/splash/{icon_name.replace('AvatarIcon', 'Gacha_AvatarImg')}.webp"
+            splash_path = resolve_datas_path(splash_raw, beta)
+    except Exception:
+        splash_path = ""
+
+    if fake_char:
+        friendship_lv = 10
+    else:
+        friendship_lv = target_avatar_info.get("fetterInfo", {}).get("expLevel", 1)
+
+    skill_icons = []
+    skill_levels = []
+    skill_boosted = [False, False, False]
+    try:
+        skills_meta = chardatas.get("skills") or []
+        skill_levels, skill_boosted = resolve_display_skill_levels(target_avatar_info, fake_char=bool(fake_char))
+        for i in range(min(3, len(skills_meta))):
+            icon = skills_meta[i].get("icon", "")
+            skill_icons.append(resolve_datas_path(f"static/assets/skills/{icon}.webp", beta) if icon else "")
+        while len(skill_levels) < 3:
+            skill_levels.append(1)
+            skill_boosted.append(False)
+    except Exception:
+        skill_icons, skill_levels, skill_boosted = [], [1, 1, 1], [False, False, False]
+
+    constellation_icons = []
+    try:
+        consts_meta = chardatas.get("constellations") or []
+        for i in range(min(6, len(consts_meta))):
+            icon = consts_meta[i].get("icon", "")
+            constellation_icons.append(resolve_datas_path(f"static/assets/skills/{icon}.webp", beta) if icon else "")
+    except Exception:
+        constellation_icons = []
+
+    weapon_stats_out = []
+    for w_entry in weapon_stats_list:
+        w_prop = w_entry.get("appendPropId", "")
+        w_val = w_entry.get("statValue", 0)
+        w_name = get_stat_japanese(w_prop)
+        if "PERCENT" in str(w_prop).upper() or "CRITICAL" in str(w_prop).upper() or "CHARGE" in str(w_prop).upper() or "HURT" in str(w_prop).upper():
+            # 武器副ステは既にパーセント表記の場合とフラットな場合がある
+            try:
+                fv = float(w_val)
+                w_val_str = f"{fv}%" if fv < 1000 else str(int(fv))
+            except Exception:
+                w_val_str = str(w_val)
+        else:
+            try:
+                w_val_str = str(int(float(w_val)))
+            except Exception:
+                w_val_str = str(w_val)
+        weapon_stats_out.append({"name": w_name, "value": w_val_str})
+
+    display_map = {
+        "crit": "会心のみ",
+        "atk": "攻撃力%",
+        "hp": "HP%",
+        "def": "DEF%",
+        "em": "元素熟知",
+        "charge": "チャージ効率",
+    }
+    display_score_way = display_map.get(calc_method, calc_method)
+
     return {
-        "displayName": chardatas.get("name", avatar_id),
+        "displayName": (chardatas.get("name", avatar_id) + "(swap)") if fake_char else chardatas.get("name", avatar_id),
         "element": element_type,
+        "level": char_level,
+        "friendship": friendship_lv,
         "constellation": constellation,
+        "splash": splash_path,
+        "skills": [{
+            "icon": skill_icons[i] if i < len(skill_icons) else "",
+            "level": skill_levels[i] if i < len(skill_levels) else 1,
+            "boosted": bool(skill_boosted[i]) if i < len(skill_boosted) else False,
+        } for i in range(3)],
+        "constellationIcons": constellation_icons,
         "weaponName": weapon_name,
         "weaponIcon": weapon_icon,
         "weaponLevel": weapon_level,
         "weaponAffix": weapon_affix,
+        "weaponStats": weapon_stats_out,
         "mainStats": main_stats,
         "artifacts": artifacts_out,
         "setBonuses": set_bonuses,
         "scoreSum": round(score_sum, 1),
         "tierSum": tier_sum_score,
         "calcMethod": calc_method,
+        "calcMethodLabel": display_score_way,
     }
 
 
-def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false"):
+def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None):
     if beta != "true":
         beta = "false"
     cache_key = f"{uid}_{avatar_id}_{calc_method}"
@@ -964,15 +1244,16 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     element_type = chardatas.get("element", "None")
 
     # 元素名とカラー（RGBA）のマッピング
+    # 元素ベース色（ユーザー指定）— 背景グラデの基準。アウトライン等にも使用
     element_colors = {
-        "Pyro": (240, 140, 140, 150),      # 🔴 炎
-        "Hydro": (150, 195, 245, 150),     # 🔵 水
-        "Anemo": (150, 230, 205, 150),     # 🟢 風
-        "Electro": (215, 175, 245, 150),    # 🟣 雷
-        "Dendro": (190, 235, 150, 150),     # 🌿 草
-        "Cryo": (195, 235, 245, 150),      # ❄️ 氷
-        "Geo": (240, 215, 150, 150),        # 🟡 岩
-        "None": (255, 255, 255, 255),
+        "Pyro": (0x90, 0x3B, 0x2A),       # 炎 #903b2a
+        "Hydro": (0x34, 0x45, 0x95),      # 水 #344595
+        "Cryo": (0x57, 0x7F, 0xC7),       # 氷 #577fc7
+        "Dendro": (0x46, 0x6B, 0x63),     # 草 #466b63
+        "Geo": (0x6A, 0x67, 0x48),        # 岩 #6a6748
+        "Electro": (0x73, 0x4A, 0x8C),    # 雷 #734a8c
+        "Anemo": (0x12, 0x95, 0x88),      # 風 #129588
+        "None": (0x4A, 0x55, 0x68),
     }
     element_ja_map = {
         "Pyro": "炎元素",
@@ -985,34 +1266,30 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     }
     element_ja = element_ja_map.get(element_type, "なし")
 
-    base_color = element_colors.get(element_type, (121, 169, 239, 255))
+    element_base_rgb = element_colors.get(element_type, (0x4A, 0x55, 0x68))
+    custom_rgb = hex_to_rgb(bg_color) if bg_color else None
+    bg_base_rgb = custom_rgb if custom_rgb else element_base_rgb
+    # 枠線・アウトライン用（カスタム時はカスタム色、それ以外は元素色）
+    base_color = (*bg_base_rgb, 255)
 
     splash = f"static/assets/splash/{chardatas['icon'].replace('AvatarIcon', 'Gacha_AvatarImg')}.webp"
     splash = resolve_datas_path(splash, beta)
 
     char_name = chardatas["name"]
+    if fake_char:
+        char_name = f"{char_name}(swap)"
 
     if fake_char:
         char_level = 90
     else:
-        char_level = target_avatar_info.get('propMap', {}).get('4001', {}).get('val', 1)
+        char_level = get_char_level(target_avatar_info)
 
     if fake_char:
         friendship_lv = 10
     else:
         friendship_lv = target_avatar_info.get("fetterInfo", {}).get("expLevel", 1)
 
-    skill_map = target_avatar_info.get("skillLevelMap", {})
-    skill_values = list(skill_map.values())
-    if fake_char:
-        normal, skill, burst = 9, 9, 9
-    else:
-        if len(skill_values) >= 3:
-            normal, skill, burst = skill_values[0], skill_values[1], skill_values[2]
-        else:
-            normal, skill, burst = 1, 1, 1
-
-    skill_level = [normal, skill, burst]
+    skill_level, skill_boosted = resolve_display_skill_levels(target_avatar_info, fake_char=bool(fake_char))
     skill_icon = [chardatas["skills"][0]["icon"], chardatas["skills"][1]["icon"], chardatas["skills"][2]["icon"]]
 
     y_C_base = 139
@@ -1455,7 +1732,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     }
     display_score_way = display_map[calc_method]
     
-    img = Image.new("RGB", (card_width, card_height), base_color)
+    img = create_card_background(card_width, card_height, bg_base_rgb, splash_path=splash)
     draw = ImageDraw.Draw(img)
 
     if os.path.exists(FONT_PATH):
@@ -1468,13 +1745,18 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         except: font_stats_light = font_stats
     else: font_stats_light = font_stats
 
-    draw_figma_box(img, x=33, y=30, width=694, height=671)
+    draw_figma_box(img, x=33, y=30, width=694, height=671)  # スプラッシュ枠も影あり
     draw_figma_box(img, x=753, y=30, width=549, height=671)
     draw_figma_box(img, x=1332, y=30, width=386, height=164, radius=25)
     draw_figma_box(img, x=1332, y=231, width=386, height=121, radius=25)
     draw_figma_box(img, x=1332, y=389, width=386, height=312, radius=25)
 
     paste_mask_image(img, splash, box_x=33, box_y=30, box_width=694, box_height=671, radius=15, zoom=1.1, beta=beta)
+    # スプラッシュ枠のみ黒アウトライン
+    _splash_outline = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    _od = ImageDraw.Draw(_splash_outline)
+    _od.rounded_rectangle([33, 30, 33 + 694, 30 + 671], radius=15, outline=(0, 0, 0, 220), width=1)
+    img.paste(Image.alpha_composite(img.convert("RGBA"), _splash_outline).convert("RGB"))
 
     draw_figma_text_with_shadow(draw, text=char_name, x=53, y=53, font=font_stats, font_size=50)
     draw_figma_text_with_shadow(draw, text=f"Lv.{char_level}", x=53, y=117, font=font_stats, font_size=30)
@@ -1487,7 +1769,9 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         draw_figma_circle(img, x=49, y=y_skill_base + 79 * i, size=68, fill_color=(0, 0, 0, 150), outline_color=base_color, outline_width=4)
         paste_figma_image(img, f"static/assets/skills/{skill_icon[i]}.webp", box_x=49 + 5, box_y=y_skill_base + 79 * i + 4, box_width=60, box_height=60, radius=15, beta=beta)
 
-        draw_figma_text_with_shadow(draw, text=f"Lv.{skill_level[i]}", x=48, y=y_skill_base + 79 * i + 45, font=font_stats, align="center", font_size=20, box_width=68)
+        # 命座補正ありの天賦レベルは水色で表示
+        lv_color = (125, 210, 255) if (i < len(skill_boosted) and skill_boosted[i]) else (255, 255, 255)
+        draw_figma_text_with_shadow(draw, text=f"Lv.{skill_level[i]}", x=48, y=y_skill_base + 79 * i + 45, font=font_stats, align="center", font_size=20, box_width=68, fill_color=lv_color)
 
     for i in range(6):
         circle_x = 637
@@ -1664,7 +1948,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
 
 @app.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")
-async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false"):
+async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None):
     """
     PILでの画像生成はCPUバウンドかつ完全同期処理（await なし）のため、
     そのまま async def 内に書くとイベントループ自体を占有してしまい、
@@ -1672,9 +1956,11 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
     一切処理されず止まって見える。
     そのため実処理は _generate_card_image_sync に切り出し、
     run_in_threadpool でワーカースレッドに逃がしてイベントループを塞がないようにする。
+
+    bg_color: 任意の背景色 (#RRGGBB または RRGGBB)。未指定時は元素デフォルト。
     """
     png_bytes = await run_in_threadpool(
-        _generate_card_image_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta
+        _generate_card_image_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta, bg_color
     )
     return StreamingResponse(io.BytesIO(png_bytes), media_type="image/png")
 

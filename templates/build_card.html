@@ -157,6 +157,522 @@
         .tier-S { color: #a855f7; }
         .tier-A { color: #38bdf8; }
         .tier-B { color: #9ca3af; }
+    
+        /* ==========================================================
+           グラスモーフィズム・ビルドカード（Bデザイン移植 / パスはA準拠）
+        ========================================================== */
+        .glass-card-root {
+            --gc-bg-dark: #0a0a0c;
+            --gc-glass-border: rgba(255, 255, 255, 0.18);
+            --gc-accent: #69e0ff;
+            --gc-font-main: 'Inter', sans-serif;
+            --gc-font-title: 'Outfit', 'Inter', sans-serif;
+            color: #fff;
+            font-family: var(--gc-font-main);
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0;
+            overflow: hidden;
+        }
+        .glass-card-root .glass-scale-wrap {
+            width: 1200px;
+            transform-origin: top center;
+            /* scale は JS で親幅に合わせて設定 */
+        }
+        .glass-card-root .build-card {
+            position: relative;
+            width: 1200px;
+            height: 800px;
+            flex-shrink: 0;
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            background: rgba(10, 10, 16, 0.25);
+            border: 1px solid var(--gc-glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: 460px 215px;
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            gap: 25px;
+        }
+        /* スプラッシュを拡大してぼかした背景（B準拠） */
+        .glass-card-root .glass-card-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background-size: cover;
+            background-position: center;
+            transform: scale(1.5);
+            filter: blur(80px) brightness(0.45);
+            pointer-events: none;
+        }
+        .glass-card-root .build-card > *:not(.glass-card-bg) {
+            position: relative;
+            z-index: 1;
+        }
+        .glass-card-root .top-section {
+            display: grid;
+            grid-template-columns: 480px 380px 1fr;
+            gap: 15px;
+            height: 100%;
+        }
+        .glass-card-root .splash-container {
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--gc-glass-border);
+            height: 100%;
+        }
+        .glass-card-root .splash-art {
+            position: absolute;
+            height: 120%;
+            width: auto;
+            max-width: none;
+            left: 35%;
+            top: 40%;
+            transform: translate(-50%, -50%);
+            scale: 80%;
+            z-index: 1;
+            pointer-events: none;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.5));
+        }
+        .glass-card-root .char-overlay-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 5;
+        }
+        .glass-card-root .char-name {
+            font-family: var(--gc-font-title);
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1.1;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+        }
+        .glass-card-root .char-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-shadow: 2px 3px 3px rgba(0, 0, 0, 1);
+        }
+        .glass-card-root .friendship-pill {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+        .glass-card-root .talents-stack {
+            position: absolute;
+            left: 15px;
+            bottom: 20px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .glass-card-root .const-stack {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .glass-card-root .talent-bubble,
+        .glass-card-root .const-bubble {
+            width: 44px;
+            height: 44px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 50%;
+            border: 1px solid var(--gc-glass-border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .glass-card-root .talent-bubble img,
+        .glass-card-root .const-bubble img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+        }
+        .glass-card-root .talent-level-badge {
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            color: #fff;
+        }
+        .glass-card-root .talent-level-badge.talent-boosted {
+            color: #7dd3fc;
+            border-color: #7dd3fc;
+        }
+        .glass-card-root .const-bubble.locked {
+            opacity: 0.9;
+            filter: grayscale(1);
+        }
+        .glass-card-root .const-bubble.unlocked {
+            border: 2px solid var(--element-color, rgba(255, 255, 255, 0.3));
+            background: radial-gradient(circle, var(--element-color-dim, rgba(100, 100, 100, 0.3)) 0%, rgba(0, 0, 0, 0.8) 70%);
+            box-shadow: 0 0 12px var(--element-color-dim, rgba(100, 100, 100, 0.2));
+        }
+        .glass-card-root .const-locked-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: grayscale(1) blur(1px);
+            -webkit-backdrop-filter: grayscale(1) blur(1px);
+        }
+        .glass-card-root .const-locked-overlay svg {
+            width: 14px;
+            height: 14px;
+            fill: white;
+        }
+        .glass-card-root .stats-container {
+            background: rgba(10, 10, 15, 0.4);
+            border-radius: 16px;
+            padding: 15px;
+            border: 1px solid var(--gc-glass-border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            height: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .glass-card-root .stat-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            flex: 1 1 0;
+            min-height: 0;
+        }
+        .glass-card-root .stat-icon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .glass-card-root .stat-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .glass-card-root .stat-content { flex: 1; min-width: 0; }
+        .glass-card-root .stat-label-wrap {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+        .glass-card-root .stat-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .glass-card-root .stat-total {
+            font-size: 1.1rem;
+            font-weight: 800;
+            font-family: var(--gc-font-title);
+        }
+        .glass-card-root .stat-breakdown {
+            display: flex;
+            justify-content: flex-end;
+            gap: 5px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .glass-card-root .stat-base { color: rgba(255, 255, 255, 0.5); }
+        .glass-card-root .stat-plus { color: var(--gc-accent); }
+        .glass-card-root .right-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            height: 100%;
+            min-height: 0;
+        }
+        .glass-card-root .weapon-box {
+            background: rgba(10, 10, 15, 0.4);
+            border: 1px solid var(--gc-glass-border);
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            gap: 15px;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .glass-card-root .weapon-img-container {
+            width: 70px;
+            height: 70px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+        .glass-card-root .weapon-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .glass-card-root .weapon-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+        .glass-card-root .weapon-lvl-refine {
+            display: flex;
+            gap: 10px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #fff;
+        }
+        .glass-card-root .weapon-substats {
+            margin-top: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .glass-card-root .set-info-box {
+            background: rgba(10, 10, 15, 0.4);
+            border: 1px solid var(--gc-glass-border);
+            border-radius: 16px;
+            padding: 10px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            justify-content: center;
+            min-height: 48px;
+            flex-shrink: 0;
+        }
+        .glass-card-root .set-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .glass-card-root .set-name { color: #7dffaf; font-weight: 700; }
+        .glass-card-root .set-count { color: rgba(255, 255, 255, 0.7); font-weight: 700; }
+        .glass-card-root .set-none {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        .glass-card-root .score-box {
+            flex: 1 1 auto;
+            background: rgba(10, 10, 15, 0.4);
+            border: 1px solid var(--gc-glass-border);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 12px 12px 52px;
+            min-height: 0;
+        }
+        .glass-card-root .score-label {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 700;
+        }
+        .glass-card-root .score-value {
+            font-size: 3.2rem;
+            font-weight: 800;
+            font-family: var(--gc-font-title);
+            line-height: 1.1;
+        }
+        .glass-card-root .score-method-title {
+            font-size: 0.9rem;
+            color: #fff;
+            font-weight: 500;
+            position: absolute;
+            bottom: 14px;
+            left: 14px;
+        }
+        .glass-card-root .score-method-label {
+            font-size: 0.95rem;
+            color: #fff;
+            font-weight: 700;
+            position: absolute;
+            bottom: 14px;
+            right: 14px;
+        }
+        .glass-card-root .score-box::after {
+            content: "";
+            position: absolute;
+            bottom: 44px;
+            left: 7%;
+            right: 7%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .glass-card-root .rank-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 56px;
+            height: 56px;
+        }
+        .glass-card-root .rank-badge img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .glass-card-root .artifacts-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            height: 100%;
+            min-height: 0;
+        }
+        @media (max-width: 900px) {
+            .glass-card-root .artifacts-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .glass-card-root .art-card {
+            background: rgba(14, 14, 20, 0.4);
+            border: 1px solid var(--gc-glass-border);
+            border-radius: 16px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            height: 130%;
+            min-height: 0;
+            box-sizing: border-box;
+        }
+        .glass-card-root .art-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .glass-card-root .art-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .glass-card-root .art-main-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .glass-card-root .art-main-val {
+            font-weight: 800;
+            font-size: 1.2rem;
+            line-height: 1.1;
+        }
+        .glass-card-root .art-level {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 700;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        .glass-card-root .art-main-label {
+            font-size: 1.1rem;
+            color: #fff;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+        .glass-card-root .art-substats {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 4px;
+            flex: 0 0 auto;
+        }
+        .glass-card-root .substat-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            padding-bottom: 2%;
+        }
+        .glass-card-root .art-footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 5px;
+            border-top: 1px solid rgba(255, 255, 255, 0.22);
+            flex-shrink: 0;
+        }
+        .glass-card-root .art-rank {
+            width: 33px;
+            height: 33px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .glass-card-root .art-rank img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .glass-card-root .art-score {
+            font-weight: 800;
+            font-size: 1.4rem;
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: flex-end;
+            gap: 4px;
+            line-height: 1.1;
+        }
+        .glass-card-root .score-Label {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+            line-height: 1.2;
+            display: flex;
+            align-items: flex-end;
+        }
+
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -201,6 +717,9 @@
                 <button type="button" data-view="html" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all">
                     📄 ステータス
                 </button>
+                <button type="button" data-view="glass" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all">
+                    🎴 ビルドカード
+                </button>
                 <button type="button" data-view="image" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all">
                     🖼️ ビルドカード生成
                 </button>
@@ -242,6 +761,15 @@
                             <span id="editWeaponLabel">なし（実データ）</span>
                         </button>
                     </div>
+
+                    <div class="flex items-center gap-2" id="bgColorControls" title="ビルドカード生成の背景色">
+                        <label class="text-sm font-semibold text-gray-300">背景:</label>
+                        <select id="bgColorModeSelect" class="bg-zinc-800 border border-zinc-700 text-white px-2 py-1.5 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer">
+                            <option value="element">元素デフォルト</option>
+                            <option value="custom">カスタム色</option>
+                        </select>
+                        <input type="color" id="bgColorPicker" value="#4a5568" class="h-8 w-10 cursor-pointer rounded border border-zinc-700 bg-zinc-800 p-0.5 disabled:opacity-40" disabled title="任意の背景色">
+                    </div>
                 </div>
 
                 <button id="regenerateApiBtn" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-cyan-600/10 transition-all flex items-center gap-1.5">
@@ -249,9 +777,10 @@
                 </button>
             </div>
 
-            <div class="flex justify-center bg-zinc-950 p-4 md:p-8 rounded-2xl border border-zinc-900 min-h-[400px] items-center relative">
+            <div class="flex justify-center bg-zinc-950 p-4 md:p-8 rounded-2xl border border-zinc-900 min-h-[400px] items-center relative overflow-hidden">
                 <img id="cardImage" src="" class="max-w-full h-auto rounded-lg shadow-2xl drag-none hidden">
                 <div id="htmlCardContainer" class="hidden w-full"></div>
+                <div id="glassCardContainer" class="hidden w-full"></div>
                 <div id="placeholderText" class="text-zinc-500 text-sm">キャラクターを選択してください</div>
             </div>
             <div id="disclaimerFooter" class="hidden text-right text-[10px] text-red-500 px-1">
@@ -1058,6 +1587,56 @@
                 </div>`;
         }
 
+        // --- 画像生成の背景色（元素デフォルト / カスタム） ---
+        const BG_COLOR_MODE_KEY = 'genshin_build_card_bg_mode';
+        const BG_COLOR_CUSTOM_KEY = 'genshin_build_card_bg_custom';
+        const bgColorModeSelect = document.getElementById('bgColorModeSelect');
+        const bgColorPicker = document.getElementById('bgColorPicker');
+
+        function getBgColorMode() {
+            try {
+                return localStorage.getItem(BG_COLOR_MODE_KEY) === 'custom' ? 'custom' : 'element';
+            } catch (e) { return 'element'; }
+        }
+        function getCustomBgColor() {
+            try {
+                const c = localStorage.getItem(BG_COLOR_CUSTOM_KEY);
+                if (c && /^#[0-9a-fA-F]{6}$/.test(c)) return c;
+            } catch (e) {}
+            return '#4a5568';
+        }
+        function applyBgColorControlsUI() {
+            if (!bgColorModeSelect || !bgColorPicker) return;
+            const mode = getBgColorMode();
+            bgColorModeSelect.value = mode;
+            bgColorPicker.value = getCustomBgColor();
+            bgColorPicker.disabled = mode !== 'custom';
+        }
+        function getBgColorParam() {
+            if (getBgColorMode() !== 'custom') return null;
+            return getCustomBgColor().replace('#', '');
+        }
+        if (bgColorModeSelect) {
+            applyBgColorControlsUI();
+            bgColorModeSelect.addEventListener('change', () => {
+                try { localStorage.setItem(BG_COLOR_MODE_KEY, bgColorModeSelect.value); } catch (e) {}
+                applyBgColorControlsUI();
+                // 背景色は URL クエリに含まれるためキャッシュキーが分かれる。
+                // 別キャラ切替と同じく forceFetch=false（未生成なら取得→キャッシュ、既にあれば再利用）
+                if (viewMode === 'image' && currentSelectedCharId) {
+                    refreshCurrentCard(currentSelectedCharId, false);
+                }
+            });
+        }
+        if (bgColorPicker) {
+            bgColorPicker.addEventListener('change', () => {
+                try { localStorage.setItem(BG_COLOR_CUSTOM_KEY, bgColorPicker.value); } catch (e) {}
+                if (viewMode === 'image' && currentSelectedCharId) {
+                    refreshCurrentCard(currentSelectedCharId, false);
+                }
+            });
+        }
+
         async function loadCardImage(charId, forceFetch = false) {
             if(!charId) return;
 
@@ -1066,6 +1645,8 @@
 
             placeholderText.classList.add('hidden');
             cardImage.classList.add('hidden');
+            const glassElImg = document.getElementById('glassCardContainer');
+            if (glassElImg) glassElImg.classList.add('hidden');
             htmlCardContainer.classList.remove('hidden');
             htmlCardContainer.innerHTML = renderCardSkeletonHtml();
 
@@ -1075,6 +1656,8 @@
             if (selection.fakeChar) params.set('fake_char', selection.fakeChar);
             if (selection.fakeWeapon) params.set('fake_weapon', selection.fakeWeapon);
             if (ver === 'beta') params.set('beta', 'true');
+            const bgParam = getBgColorParam();
+            if (bgParam) params.set('bg_color', bgParam);
             const query = params.toString() ? `?${params.toString()}` : '';
             const url = `/generate_card_image/${uid}/${charId}/${currentMethod}${query}`;
 
@@ -1114,12 +1697,27 @@
         };
 
         // ==========================================================
-        //  表示モード切替（ビルドカード[HTML] / 画像生成）
-        //  ページを開いた時は常に「html」をデフォルトにする
-        //  （以前に画像生成モードを選んでいても、次にページを開いた時は
-        //    html から始まるようにし、localStorage には保存しない）
+        //  表示モード切替（ステータス / ビルドカード / 画像生成）
+        //  選択中タブは localStorage に保存し、リロード後も維持する
         // ==========================================================
-        let viewMode = 'html';
+        const VIEW_MODE_PREF_KEY = 'genshin_build_card_view_mode';
+        const VALID_VIEW_MODES = ['html', 'glass', 'image'];
+
+        function getSavedViewMode() {
+            try {
+                const v = localStorage.getItem(VIEW_MODE_PREF_KEY);
+                if (VALID_VIEW_MODES.includes(v)) return v;
+            } catch (e) { /* ignore */ }
+            return 'html';
+        }
+
+        function saveViewMode(mode) {
+            try {
+                localStorage.setItem(VIEW_MODE_PREF_KEY, mode);
+            } catch (e) { /* ignore */ }
+        }
+
+        let viewMode = getSavedViewMode();
         const viewModeButtons = document.querySelectorAll('.view-mode-btn');
 
         function applyViewModeUI() {
@@ -1143,8 +1741,15 @@
 
             if (viewMode === 'image') {
                 loadCardImage(charId, forceFetch);
+            } else if (viewMode === 'glass') {
+                cardImage.classList.add('hidden');
+                htmlCardContainer.classList.add('hidden');
+                placeholderText.classList.add('hidden');
+                loadGlassCard(charId);
             } else {
                 cardImage.classList.add('hidden');
+                const glassEl = document.getElementById('glassCardContainer');
+                if (glassEl) glassEl.classList.add('hidden');
                 placeholderText.classList.add('hidden');
                 loadHtmlCard(charId);
             }
@@ -1154,12 +1759,230 @@
             btn.addEventListener('click', () => {
                 if (btn.dataset.view === viewMode) return;
                 viewMode = btn.dataset.view;
+                saveViewMode(viewMode);
                 applyViewModeUI();
                 refreshCurrentCard(currentSelectedCharId, false);
             });
         });
 
         applyViewModeUI();
+
+        // ==========================================================
+        //  グラスモーフィズム・ビルドカード（Bデザイン移植）
+        // ==========================================================
+        let latestGlassRequestToken = 0;
+        const ELEMENT_COLORS = {
+            Pyro: '#ff6b4a', Hydro: '#4aa4ff', Anemo: '#74e0c5', Electro: '#c97bff',
+            Dendro: '#a0e05a', Cryo: '#9ad4ff', Geo: '#f0c65a', None: '#aaaaaa'
+        };
+
+        async function loadGlassCard(charId) {
+            if (!charId) return;
+            const glassEl = document.getElementById('glassCardContainer');
+            if (!glassEl) return;
+            glassEl.classList.remove('hidden');
+            htmlCardContainer.classList.add('hidden');
+            cardImage.classList.add('hidden');
+            glassEl.innerHTML = '<div class="text-zinc-500 text-sm py-16 text-center">読み込み中...</div>';
+
+            const currentMethod = getSavedCalcMethod(charId);
+            scoreCalcSelect.value = currentMethod;
+
+            const selection = getActiveSelection();
+            updateDisclaimerFooter(selection);
+            const params = new URLSearchParams();
+            params.set('calc_method', currentMethod);
+            if (selection.fakeChar) params.set('fake_char', selection.fakeChar);
+            if (selection.fakeWeapon) params.set('fake_weapon', selection.fakeWeapon);
+            if (ver === 'beta') params.set('beta', 'true');
+
+            const requestToken = ++latestGlassRequestToken;
+            try {
+                const res = await fetch(`/api/card_data/${uid}/${charId}?${params.toString()}`);
+                if (!res.ok) {
+                    const errBody = await res.json().catch(() => ({}));
+                    throw new Error(errBody.detail || `データの取得に失敗しました (status: ${res.status})`);
+                }
+                const data = await res.json();
+                if (requestToken !== latestGlassRequestToken) return;
+                renderGlassCard(data);
+            } catch (e) {
+                if (requestToken !== latestGlassRequestToken) return;
+                console.error('グラスカードの読み込みに失敗しました:', e);
+                glassEl.innerHTML = `<div class="text-red-400 text-sm py-16 text-center">読み込みに失敗しました: ${e.message}</div>`;
+                disclaimerFooter.classList.add('hidden');
+            }
+        }
+
+        function assetUrl(path) {
+            if (!path) return '';
+            if (path.startsWith('http') || path.startsWith('/')) return path;
+            return '/' + path;
+        }
+
+        function renderGlassCard(data) {
+            const glassEl = document.getElementById('glassCardContainer');
+            if (!glassEl) return;
+
+            const elemColor = ELEMENT_COLORS[data.element] || '#aaaaaa';
+            const elemDim = elemColor + '55';
+            const splash = assetUrl(data.splash);
+            const skills = data.skills || [];
+            const constIcons = data.constellationIcons || [];
+            const unlocked = Number.isFinite(data.constellation) ? data.constellation : 0;
+
+            const talentsHtml = skills.map(s => `
+                <div class="talent-bubble">
+                    ${s.icon ? `<img src="${assetUrl(s.icon)}" alt="">` : ''}
+                    <span class="talent-level-badge${s.boosted ? ' talent-boosted' : ''}">Lv.${s.level ?? 1}</span>
+                </div>
+            `).join('');
+
+            const constsHtml = Array.from({ length: 6 }).map((_, i) => {
+                const icon = constIcons[i] || '';
+                const isUnlocked = i < unlocked;
+                const unlockedCls = isUnlocked ? 'unlocked' : 'locked';
+                const lockMark = isUnlocked ? '' : '<div class="const-locked-overlay"><svg viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V7A5,5 0 0,1 12,2A5,5 0 0,1 17,7V8H18M12,4A3,3 0 0,0 9,7V8H15V7A3,3 0 0,0 12,4Z"/></svg></div>';
+                return `<div class="const-bubble ${unlockedCls}">${icon ? `<img src="${assetUrl(icon)}" alt="">` : ''}${lockMark}</div>`;
+            }).join('');
+
+            const statsHtml = (data.mainStats || []).map(s => {
+                const base = s.base != null ? `<div class="stat-breakdown"><span class="stat-base">${s.base}</span>${s.add ? `<span class="stat-plus">${s.add}</span>` : (s.val != null && s.base != null ? '' : '')}</div>` : '';
+                // base/add may not exist for all; show if available
+                let breakdown = '';
+                if (s.base != null) {
+                    const addVal = (typeof s.val === 'number' && typeof s.base === 'number')
+                        ? (s.val - s.base)
+                        : null;
+                    breakdown = `<div class="stat-breakdown">
+                        <span class="stat-base">${s.base}</span>
+                        ${addVal != null ? `<span class="stat-plus">+${addVal}</span>` : ''}
+                    </div>`;
+                }
+                return `
+                <div class="stat-row">
+                    <div class="stat-icon">${s.icon ? `<img src="${assetUrl(s.icon)}" alt="">` : ''}</div>
+                    <div class="stat-content">
+                        <div class="stat-label-wrap">
+                            <span class="stat-name">${s.label}</span>
+                            <span class="stat-total">${s.val}</span>
+                        </div>
+                        ${breakdown}
+                    </div>
+                </div>`;
+            }).join('');
+
+            const weaponStatsHtml = (data.weaponStats || []).map(w =>
+                `<div class="w-stat"><span>${w.name}</span> <span>${w.value}</span></div>`
+            ).join('');
+
+            const setHtml = (data.setBonuses && data.setBonuses.length)
+                ? data.setBonuses.map(s => `<div class="set-row"><span class="set-name">${s.name}</span><span class="set-count">${s.count}</span></div>`).join('')
+                : `<div class="set-none">セット効果なし</div>`;
+
+            const arts = data.artifacts || [];
+            const artsHtml = arts.map(a => {
+                if (!a) {
+                    return `<div class="art-card"><div style="margin:auto;opacity:0.3">未装備</div></div>`;
+                }
+                const subs = (a.substats || []).map(sub =>
+                    `<div class="substat-item"><span>${sub.name}</span><span>${sub.value}</span></div>`
+                ).join('');
+                return `
+                <div class="art-card">
+                    <div class="art-header">
+                        ${a.icon ? `<img class="art-icon" src="${assetUrl(a.icon)}" alt="">` : '<div class="art-icon"></div>'}
+                        <div class="art-main-info">
+                            <div class="art-main-label">${a.main ? a.main.name : ''}</div>
+                            <div class="art-main-val">${a.main ? a.main.value : ''}</div>
+                        </div>
+                        <div class="art-level">+${a.upgrade ?? 0}</div>
+                    </div>
+                    <div class="art-substats">${subs}</div>
+                    <div class="art-footer">
+                        <div class="art-rank"><img src="/static/assets/tiers/${a.tier || 'B'}.png" alt="${a.tier || 'B'}"></div>
+                        <div class="art-score"><div class="score-Label">score</div>${(Number(a.score) || 0).toFixed(1)}</div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            glassEl.innerHTML = `
+            <div class="glass-card-root" style="--element-color:${elemColor};--element-color-dim:${elemDim}">
+              <div class="glass-scale-wrap" id="glassScaleWrap">
+              <div class="build-card">
+                <div class="glass-card-bg" style="background-image:url('${splash || ''}')"></div>
+                <div class="top-section">
+                  <div class="splash-container">
+                    ${splash ? `<img class="splash-art" src="${splash}" alt="">` : ''}
+                    <div class="char-overlay-info">
+                      <div class="char-name">${data.displayName || ''}</div>
+                      <div class="char-meta">
+                        <span>Lv. ${data.level != null ? data.level : '?'}</span>
+                        <div class="friendship-pill"><span>❤</span><span>${data.friendship != null ? data.friendship : '-'}</span></div>
+                      </div>
+                    </div>
+                    <div class="talents-stack">${talentsHtml}</div>
+                    <div class="const-stack">${constsHtml}</div>
+                  </div>
+                  <div class="stats-container">${statsHtml}</div>
+                  <div class="right-section">
+                    <div class="weapon-box">
+                      <div class="weapon-img-container">
+                        ${data.weaponIcon ? `<img src="${assetUrl(data.weaponIcon)}" alt="">` : ''}
+                      </div>
+                      <div class="weapon-details">
+                        <div class="weapon-title">${data.weaponName || ''}</div>
+                        <div class="weapon-lvl-refine">
+                          <span>Lv.${data.weaponLevel != null ? data.weaponLevel : '?'}</span>
+                          <span>R${data.weaponAffix != null ? data.weaponAffix : 1}</span>
+                        </div>
+                        <div class="weapon-substats">${weaponStatsHtml}</div>
+                      </div>
+                    </div>
+                    <div class="set-info-box">${setHtml}</div>
+                    <div class="score-box">
+                      <div class="rank-badge"><img src="/static/assets/tiers/${data.tierSum || 'B'}.png" alt="${data.tierSum || 'B'}"></div>
+                      <div class="score-label">総合スコア</div>
+                      <div class="score-value">${data.scoreSum != null ? data.scoreSum : 0}</div>
+                      <div class="score-method-title">計算方法</div>
+                      <div class="score-method-label">${data.calcMethodLabel || data.calcMethod || ''}</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="artifacts-grid">${artsHtml}</div>
+              </div>
+              </div>
+            </div>`;
+            requestAnimationFrame(() => scaleGlassCard());
+        }
+
+        function scaleGlassCard() {
+            const wrap = document.getElementById('glassScaleWrap');
+            const glassEl = document.getElementById('glassCardContainer');
+            if (!wrap || !glassEl || glassEl.classList.contains('hidden')) return;
+            const parent = glassEl.parentElement;
+            if (!parent) return;
+            const parentStyle = getComputedStyle(parent);
+            const padX = (parseFloat(parentStyle.paddingLeft) || 0) + (parseFloat(parentStyle.paddingRight) || 0);
+            const available = Math.max(280, parent.clientWidth - padX);
+            const baseW = 1200;
+            const baseH = 800;
+            const scale = Math.min(1, available / baseW);
+            // 左上基準で縮小し、レイアウト上の占有サイズも縮小後に合わせる
+            wrap.style.transformOrigin = 'top left';
+            wrap.style.transform = `scale(${scale})`;
+            wrap.style.width = baseW + 'px';
+            // スケールはレイアウトに影響しないため、余白で見た目の占有領域を調整
+            wrap.style.marginRight = `${-(baseW * (1 - scale))}px`;
+            wrap.style.marginBottom = `${-(baseH * (1 - scale))}px`;
+            glassEl.style.width = '100%';
+            glassEl.style.height = `${baseH * scale}px`;
+            glassEl.style.overflow = 'hidden';
+        }
+
+        window.addEventListener('resize', () => {
+            if (viewMode === 'glass') scaleGlassCard();
+        });
 
         // ==========================================================
         //  ビルドカード（HTML表示モード）
@@ -1173,6 +1996,8 @@
 
         async function loadHtmlCard(charId) {
             if (!charId) return;
+            const glassEl = document.getElementById('glassCardContainer');
+            if (glassEl) glassEl.classList.add('hidden');
             htmlCardContainer.classList.remove('hidden');
             htmlCardContainer.innerHTML = renderCardSkeletonHtml();
 
@@ -1254,7 +2079,7 @@
                         <div class="flex items-center gap-3 bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
                             <div class="flex-1">
                                 <div class="text-lg font-bold text-primary">${data.displayName} ${Number.isFinite(data.constellation) ? data.constellation : 0}凸</div>
-                                <div class="text-xs text-zinc-400">${data.weaponName}${data.weaponLevel ? ` Lv.${data.weaponLevel}` : ''}${data.weaponAffix ? ` (精錬${data.weaponAffix})` : ''}</div>
+                                <div class="text-xs text-zinc-400">${data.level != null ? `Lv.${data.level} · ` : ''}${data.weaponName}${data.weaponLevel ? ` Lv.${data.weaponLevel}` : ''}${data.weaponAffix ? ` (精錬${data.weaponAffix})` : ''}</div>
                             </div>
                             ${data.weaponIcon ? `<img src="/${data.weaponIcon}" class="w-12 h-12 rounded object-cover border border-zinc-700">` : ''}
                         </div>

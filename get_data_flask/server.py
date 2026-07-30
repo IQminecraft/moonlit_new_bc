@@ -377,7 +377,7 @@ def nanoka_get_data():
             f.write(r1.content)
         download_character_images(charid, "beta")
         
-
+    """
     for weaponid in added_weapon_list:
         weaponjson = os.path.join("..","static","beta","data","weapons",f"{weaponid}.json")
         with open(weaponjson, "r", encoding="utf-8") as f:
@@ -388,7 +388,7 @@ def nanoka_get_data():
         with open(img_path2, "wb") as f:
             f.write(r.content)
         
-        
+    """
     for artifactid in added_artifact_list:
         artifactjson = os.path.join("..","static","beta","data","lists","artifacts.json")
         with open(artifactjson, "r", encoding="utf-8") as f:

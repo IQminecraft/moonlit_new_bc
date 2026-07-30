@@ -216,14 +216,14 @@
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
   "11435": {
-    "enName": "",
-    "jaName": "",
+    "enName": "Heretic's Molten Blade",
+    "jaName": "異端を狩る熔刃",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
   "11436": {
     "enName": "Emberwell",
-    "jaName": "導炎の源JP0D",
+    "jaName": "導炎の源",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
@@ -331,7 +331,7 @@
   },
   "11521": {
     "enName": "Exaiphanes Blade",
-    "jaName": "星鋒の剣JP0D",
+    "jaName": "星鋒の剣",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
@@ -528,14 +528,14 @@
     "weaponType": "WEAPON_CLAYMORE"
   },
   "12435": {
-    "enName": "",
-    "jaName": "",
+    "enName": "Forged by the Golden Melody",
+    "jaName": "シンフォニーの鋳影",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CLAYMORE"
   },
   "12436": {
     "enName": "Blade of Atonement",
-    "jaName": "救済の剣JP0D",
+    "jaName": "救済の剣",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CLAYMORE"
   },
@@ -774,14 +774,14 @@
     "weaponType": "WEAPON_POLE"
   },
   "13435": {
-    "enName": "",
-    "jaName": "",
+    "enName": "Frostbreath",
+    "jaName": "氷の吐息",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_POLE"
   },
   "13436": {
     "enName": "Song of the Vigil",
-    "jaName": "遠望の歌JP0D",
+    "jaName": "遠望の歌",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_POLE"
   },
@@ -1056,14 +1056,14 @@
     "weaponType": "WEAPON_CATALYST"
   },
   "14435": {
-    "enName": "",
-    "jaName": "",
+    "enName": "Clash of Kings",
+    "jaName": "諸王の対局",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CATALYST"
   },
   "14436": {
     "enName": "Echoes of the Heart",
-    "jaName": "寸心の余響JP0D",
+    "jaName": "胸中の谺",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CATALYST"
   },
@@ -1392,14 +1392,14 @@
     "weaponType": "WEAPON_BOW"
   },
   "15435": {
-    "enName": "",
-    "jaName": "",
+    "enName": "Jade Vista",
+    "jaName": "懸黎千鈞",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_BOW"
   },
   "15436": {
     "enName": "Covenant of Frost and Snow",
-    "jaName": "霜雪の誓いJP0D",
+    "jaName": "霜雪の契",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_BOW"
   },
@@ -1477,49 +1477,49 @@
   },
   "224001": {
     "enName": "Shatanaya's Frostsilver",
-    "jaName": "",
+    "jaName": "シャタナヤの蒼銀JP0B",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224002": {
     "enName": "Ashamez's Thunder",
-    "jaName": "",
+    "jaName": "アシャメズの千光JP0B",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224003": {
     "enName": "Balsag's Sunwheel",
-    "jaName": "",
+    "jaName": "バルサグの日輪JP0B",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224004": {
     "enName": "Frag Crystal - Pyro",
-    "jaName": "",
+    "jaName": "晶榴弾・炎",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224005": {
     "enName": "Frag Crystal - Hydro",
-    "jaName": "",
+    "jaName": "晶榴弾・水",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224006": {
     "enName": "Frag Crystal - Electro",
-    "jaName": "",
+    "jaName": "晶榴弾・雷",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224007": {
     "enName": "Frag Crystal - Cryo",
-    "jaName": "",
+    "jaName": "晶榴弾・氷",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224008": {
-    "enName": "(test) Shadow Realm Grenade",
-    "jaName": "",
+    "enName": "Specialized Frag Crystals within the Shadow Realm",
+    "jaName": "(test)  闇域グレネードJP0F",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
@@ -1596,8 +1596,8 @@
     "weaponType": "WEAPON_CLAYMORE"
   },
   "380003": {
-    "enName": "",
-    "jaName": "",
+    "enName": "A Touch of Frost in Scorching Summer!",
+    "jaName": "真夏のアイスポップ！",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
