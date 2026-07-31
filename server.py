@@ -99,7 +99,7 @@ def _get_data_manager():
     """Lazy import DataManager from admin_data module."""
     if BASE_DIR not in sys.path:
         sys.path.insert(0, BASE_DIR)
-    from admindata import DataManager
+    from data import DataManager
     return DataManager(BASE_DIR)
 
 @app.get("/admin/__ping")

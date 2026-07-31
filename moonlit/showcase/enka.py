@@ -8,7 +8,7 @@ from enka import GenshinClient
 from moonlit.config import CACHE_DIR
 
 try:
-    import board_generator
+    import board_generator  # type: ignore[import-not-found]
     HAS_BOARD_GENERATOR = True
 except ImportError:
     HAS_BOARD_GENERATOR = False

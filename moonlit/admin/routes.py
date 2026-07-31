@@ -1,6 +1,7 @@
-"""Admin HTTP routes (FastAPI APIRouter)."""
 from __future__ import annotations
 
+import hmac as _hmac
+import os
 import sys
 import traceback
 
@@ -9,16 +10,21 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from starlette.concurrency import run_in_threadpool
 
 from moonlit.admin.auth import admin_token, is_admin
-from moonlit.config import ADMIN_MAX_AGE, BASE_DIR
+from moonlit.config import (
+    ADMIN_COOKIE,
+    ADMIN_MAX_AGE,
+    ADMIN_PASSWORD,
+    ADMIN_USERNAME,
+    BASE_DIR,
+)
 
 router = APIRouter()
 
 
 def _get_data_manager():
-    """Lazy import DataManager from admin_data module."""
     if BASE_DIR not in sys.path:
         sys.path.insert(0, BASE_DIR)
-    from admindata import DataManager
+    from data import DataManager
     return DataManager(BASE_DIR)
 
 
@@ -52,10 +58,9 @@ async def admin_login_submit(request: Request, username: str = Form(...), passwo
             status_code=401,
         )
     resp = RedirectResponse("/admin", status_code=302)
-    import os
     resp.set_cookie(
         ADMIN_COOKIE,
-        token,
+        admin_token(),
         max_age=ADMIN_MAX_AGE,
         httponly=True,
         samesite="lax",
@@ -120,10 +125,8 @@ async def admin_action(request: Request):
             return dm.fetch_live_nanoka_assets()
         if action == "fetch_live_nanoka":
             return dm.fetch_live_nanoka()
-        # Version upgrade = full live re-fetch (NOT copy from beta)
         if action == "version_upgrade_live":
             return dm.version_upgrade_live()
-        # Disabled sources
         if action in ("fetch_beta_lunaris", "fetch_gachabase", "promote"):
             return {"ok": False, "error": "disabled", "disabled": True}
         return {"ok": False, "error": f"unknown action: {action}"}

@@ -4,7 +4,7 @@ from enka import GenshinClient
 import os
 
 try:
-    import board_generator
+    import board_generator  # type: ignore[import-not-found]
     HAS_BOARD_GENERATOR = True
 except ImportError:
     HAS_BOARD_GENERATOR = False
