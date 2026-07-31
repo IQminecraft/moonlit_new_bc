@@ -2078,8 +2078,8 @@
                     <div class="md:col-span-1 space-y-3">
                         <div class="flex items-center gap-3 bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
                             <div class="flex-1">
-                                <div class="text-lg font-bold text-primary">${data.displayName} ${Number.isFinite(data.constellation) ? data.constellation : 0}凸</div>
-                                <div class="text-xs text-zinc-400">${data.level != null ? `Lv.${data.level} · ` : ''}${data.weaponName}${data.weaponLevel ? ` Lv.${data.weaponLevel}` : ''}${data.weaponAffix ? ` (精錬${data.weaponAffix})` : ''}</div>
+                                <div class="text-lg font-bold text-primary">${data.displayName} ${data.level != null ? `Lv.${data.level}` : ''} ${Number.isFinite(data.constellation) ? data.constellation : 0}凸</div>
+                                <div class="text-xs text-zinc-400">${data.weaponName}${data.weaponLevel ? ` Lv.${data.weaponLevel}` : ''}${data.weaponAffix ? ` (精錬${data.weaponAffix})` : ''}</div>
                             </div>
                             ${data.weaponIcon ? `<img src="/${data.weaponIcon}" class="w-12 h-12 rounded object-cover border border-zinc-700">` : ''}
                         </div>

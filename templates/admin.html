@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin · データ管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0a0a0c; color: #e4e4e7; font-family: 'Inter', system-ui, sans-serif; }
+        .card { background: #18181b; border: 1px solid #27272a; border-radius: 12px; }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            padding: 0.55rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600;
+            transition: all .15s;
+        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: #3b82f6; color: #fff; }
+        .btn-primary:hover:not(:disabled) { background: #2563eb; }
+        .btn-amber { background: #d97706; color: #fff; }
+        .btn-amber:hover:not(:disabled) { background: #b45309; }
+        .btn-danger { background: #dc2626; color: #fff; }
+        .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+        .btn-ghost { background: #27272a; color: #e4e4e7; border: 1px solid #3f3f46; }
+        .btn-ghost:hover:not(:disabled) { background: #3f3f46; }
+        .btn-disabled { background: #18181b; color: #52525b; border: 1px solid #27272a; cursor: not-allowed; opacity: 0.7; }
+        .tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; }
+        .tag-ok { background: #14532d; color: #86efac; }
+        .tag-ng { background: #7f1d1d; color: #fca5a5; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+        pre.log {
+            max-height: 280px; overflow: auto; font-size: 0.75rem;
+            background: #09090b; border: 1px solid #27272a; border-radius: 8px;
+            padding: 0.75rem; white-space: pre-wrap; word-break: break-all;
+        }
+        .id-chip {
+            display: inline-block; margin: 2px; padding: 2px 8px;
+            background: #27272a; border-radius: 6px; font-size: 0.7rem; font-family: ui-monospace, monospace;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="max-w-5xl mx-auto px-4 py-8">
+        <header class="flex flex-wrap items-center justify-between gap-3 mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Admin · データ管理</h1>
+                <p class="text-sm text-zinc-500 mt-1">beta 取得 → バージョンアップ時に live へ昇格</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="/" class="btn btn-ghost text-xs">サイトへ</a>
+                <form method="post" action="/admin/logout">
+                    <button type="submit" class="btn btn-ghost text-xs">ログアウト</button>
+                </form>
+            </div>
+        </header>
+
+        <!-- 状態 -->
+        <section class="card p-5 mb-6">
+            <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
+                <h2 class="text-lg font-semibold">バージョン状態</h2>
+                <button type="button" id="refreshBtn" class="btn btn-ghost text-xs">再読み込み</button>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm" id="statusGrid">
+                <div class="bg-zinc-900 rounded-lg p-3 border border-zinc-800">
+                    <div class="text-zinc-500 text-xs mb-1">Live バージョン</div>
+                    <div class="mono text-lg font-bold" id="liveVer">—</div>
+                </div>
+                <div class="bg-zinc-900 rounded-lg p-3 border border-zinc-800">
+                    <div class="text-zinc-500 text-xs mb-1">Beta バージョン</div>
+                    <div class="mono text-lg font-bold text-amber-400" id="betaVer">—</div>
+                </div>
+                <div class="bg-zinc-900 rounded-lg p-3 border border-zinc-800">
+                    <div class="text-zinc-500 text-xs mb-1">データソース</div>
+                    <div class="mono" id="source">—</div>
+                </div>
+                <div class="bg-zinc-900 rounded-lg p-3 border border-zinc-800">
+                    <div class="text-zinc-500 text-xs mb-1">最終 beta 取得</div>
+                    <div class="text-xs" id="lastBeta">—</div>
+                </div>
+            </div>
+            <div class="grid sm:grid-cols-4 gap-3 mt-4 text-sm">
+                <div class="text-zinc-400">Live キャラ JSON: <span id="cLive" class="text-white mono">0</span></div>
+                <div class="text-zinc-400">Live 武器 JSON: <span id="wLive" class="text-white mono">0</span></div>
+                <div class="text-zinc-400">Beta キャラ JSON: <span id="cBeta" class="text-white mono">0</span></div>
+                <div class="text-zinc-400">Beta 武器 JSON: <span id="wBeta" class="text-white mono">0</span></div>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2 text-xs" id="moduleFlags"></div>
+        </section>
+
+        <!-- Pending 差分 -->
+        <section class="card p-5 mb-6">
+            <h2 class="text-lg font-semibold mb-3">昇格待ち (pending)</h2>
+            <p class="text-xs text-zinc-500 mb-3">
+                beta 取得時に「live に無い ID」として記録されます。バージョンアップ時に「beta → live 昇格」で live 領域へコピーされます。
+            </p>
+            <div class="space-y-3 text-sm">
+                <div>
+                    <div class="text-zinc-400 mb-1">Characters <span id="pcCount" class="tag tag-ok">0</span></div>
+                    <div id="pcList" class="min-h-[1.5rem]"></div>
+                </div>
+                <div>
+                    <div class="text-zinc-400 mb-1">Weapons <span id="pwCount" class="tag tag-ok">0</span></div>
+                    <div id="pwList" class="min-h-[1.5rem]"></div>
+                </div>
+                <div>
+                    <div class="text-zinc-400 mb-1">Artifacts <span id="paCount" class="tag tag-ok">0</span></div>
+                    <div id="paList" class="min-h-[1.5rem]"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 操作 -->
+        <section class="card p-5 mb-6">
+            <h2 class="text-lg font-semibold mb-4">操作（Nanoka のみ有効）</h2>
+
+            <div class="mb-6">
+                <h3 class="text-sm font-medium text-zinc-300 mb-2">Beta（差分 → static/beta/）</h3>
+                <div class="grid sm:grid-cols-3 gap-2">
+                    <button type="button" data-action="fetch_beta_nanoka_json" class="btn btn-primary w-full">
+                        Beta JSON のみ
+                    </button>
+                    <button type="button" data-action="fetch_beta_nanoka_assets" class="btn btn-primary w-full">
+                        Beta Asset のみ
+                    </button>
+                    <button type="button" data-action="fetch_beta_nanoka" class="btn btn-primary w-full">
+                        Beta JSON + Asset
+                    </button>
+                </div>
+                <p class="text-xs text-zinc-500 mt-2">live に無い ID だけ beta 領域へ保存します。Asset は pending / beta JSON を参照します。</p>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-sm font-medium text-zinc-300 mb-2">Live（static/data · static/assets）</h3>
+                <div class="grid sm:grid-cols-3 gap-2">
+                    <button type="button" data-action="fetch_live_nanoka_json" class="btn btn-ghost w-full">
+                        Live JSON のみ
+                    </button>
+                    <button type="button" data-action="fetch_live_nanoka_assets" class="btn btn-ghost w-full">
+                        Live Asset のみ
+                    </button>
+                    <button type="button" data-action="fetch_live_nanoka" class="btn btn-ghost w-full">
+                        Live JSON + Asset
+                    </button>
+                </div>
+                <p class="text-xs text-zinc-500 mt-2">nanoka の live 版から全キャラ/武器/リスト・アセットを取得します（重い処理あり）。</p>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-sm font-medium text-zinc-300 mb-2">バージョンアップ</h3>
+                <button type="button" data-action="version_upgrade_live" class="btn btn-amber w-full">
+                    ★ バージョンアップ（Live から JSON + Asset を再取得）
+                </button>
+                <p class="text-xs text-zinc-500 mt-2">
+                    beta からのコピーは行いません。nanoka live を正式ソースとして JSON（リスト含む）とアセットをすべて取り直します。
+                </p>
+            </div>
+
+            <div class="mb-2">
+                <h3 class="text-sm font-medium text-zinc-500 mb-2">その他ソース（未対応）</h3>
+                <div class="grid sm:grid-cols-2 gap-2">
+                    <button type="button" class="btn btn-disabled w-full" disabled title="未対応">
+                        Lunaris（無効）
+                    </button>
+                    <button type="button" class="btn btn-disabled w-full" disabled title="未対応">
+                        Gachabase（無効）
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 結果・ログ -->
+
+        <section class="card p-5 mb-6">
+            <h2 class="text-lg font-semibold mb-3">直近の操作結果</h2>
+            <pre class="log" id="actionResult">（操作するとここに表示されます）</pre>
+        </section>
+
+        <section class="card p-5">
+            <h2 class="text-lg font-semibold mb-3">操作ログ</h2>
+            <div id="logList" class="space-y-2 text-sm"></div>
+        </section>
+    </div>
+
+    <script>
+        const resultEl = document.getElementById('actionResult');
+        const refreshBtn = document.getElementById('refreshBtn');
+
+        function chips(ids) {
+            if (!ids || !ids.length) return '<span class="text-zinc-600 text-xs">なし</span>';
+            return ids.map(id => `<span class="id-chip">${id}</span>`).join('');
+        }
+
+        function renderStatus(data) {
+            const s = data.state || {};
+            const pending = s.pending || {};
+            document.getElementById('liveVer').textContent = s.live_version || '—';
+            document.getElementById('betaVer').textContent = s.beta_version || '—';
+            document.getElementById('source').textContent = s.source || '—';
+            document.getElementById('lastBeta').textContent = s.last_beta_fetch || '—';
+            const c = data.counts || {};
+            document.getElementById('cLive').textContent = c.live_characters ?? 0;
+            document.getElementById('wLive').textContent = c.live_weapons ?? 0;
+            document.getElementById('cBeta').textContent = c.beta_characters ?? 0;
+            document.getElementById('wBeta').textContent = c.beta_weapons ?? 0;
+
+            document.getElementById('pcCount').textContent = (pending.characters || []).length;
+            document.getElementById('pwCount').textContent = (pending.weapons || []).length;
+            document.getElementById('paCount').textContent = (pending.artifacts || []).length;
+            document.getElementById('pcList').innerHTML = chips(pending.characters);
+            document.getElementById('pwList').innerHTML = chips(pending.weapons);
+            document.getElementById('paList').innerHTML = chips(pending.artifacts);
+
+            const flags = [];
+            flags.push(`<span class="tag ${data.convert_available ? 'tag-ok' : 'tag-ng'}">convert ${data.convert_available ? 'OK' : 'NG'}</span>`);
+            flags.push(`<span class="tag ${data.gachabase_available ? 'tag-ok' : 'tag-ng'}">gachabase ${data.gachabase_available ? 'OK' : 'NG'}</span>`);
+            document.getElementById('moduleFlags').innerHTML = flags.join(' ');
+
+            const logs = data.logs || [];
+            document.getElementById('logList').innerHTML = logs.length
+                ? logs.map(l => `
+                    <div class="flex gap-2 items-start border-b border-zinc-800 pb-2">
+                        <span class="tag ${l.ok ? 'tag-ok' : 'tag-ng'}">${l.ok ? 'OK' : 'NG'}</span>
+                        <div class="flex-1 min-w-0">
+                            <div class="mono text-xs text-zinc-400">${l.at || ''}</div>
+                            <div><span class="font-semibold">${l.action}</span> — ${l.message || ''}</div>
+                        </div>
+                    </div>`).join('')
+                : '<div class="text-zinc-600 text-xs">ログなし</div>';
+        }
+
+        async function loadStatus() {
+            const res = await fetch('/admin/api/status');
+            if (res.status === 401) {
+                location.href = '/admin/login';
+                return;
+            }
+            const data = await res.json();
+            renderStatus(data);
+        }
+
+        async function runAction(action) {
+            if (action === 'version_upgrade_live' || action === 'fetch_live_nanoka') {
+                if (!confirm('Live データを nanoka から再取得します。時間がかかることがあります。よろしいですか？')) return;
+            }
+            resultEl.textContent = `実行中: ${action} ...`;
+            document.querySelectorAll('[data-action]').forEach(b => b.disabled = true);
+            try {
+                const res = await fetch('/admin/api/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action }),
+                });
+                const data = await res.json();
+                if (res.status === 401) {
+                    location.href = '/admin/login';
+                    return;
+                }
+                resultEl.textContent = JSON.stringify(data, null, 2);
+                await loadStatus();
+            } catch (e) {
+                resultEl.textContent = String(e);
+            } finally {
+                document.querySelectorAll('[data-action]').forEach(b => b.disabled = false);
+            }
+        }
+
+        document.querySelectorAll('[data-action]').forEach(btn => {
+            btn.addEventListener('click', () => runAction(btn.getAttribute('data-action')));
+        });
+        refreshBtn.addEventListener('click', loadStatus);
+        loadStatus();
+    </script>
+</body>
+</html>

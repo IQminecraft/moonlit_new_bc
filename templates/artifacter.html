@@ -269,6 +269,16 @@
             return JSON.parse(localStorage.getItem('uid_history') || '[]');
         }
 
+        function saveHistory(history) {
+            localStorage.setItem('uid_history', JSON.stringify(history));
+        }
+
+        function removeHistoryUid(uid) {
+            const next = getHistory().filter(item => item !== uid);
+            saveHistory(next);
+            renderHistory();
+        }
+
         function renderHistory() {
             const history = getHistory();
             if (history.length === 0) {
@@ -277,31 +287,50 @@
             }
             historySection.classList.remove('hidden');
             historyList.innerHTML = '';
-            
+
             history.forEach(uid => {
+                const wrap = document.createElement('div');
+                wrap.className = 'history-item flex items-center gap-1 bg-[#1f243f] border border-[#2c3147] rounded-lg overflow-hidden transition-all';
+
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'history-item px-3 py-2 bg-[#1f243f] border border-[#2c3147] rounded-lg text-sm text-gray-300 font-mono transition-all text-center truncate';
+                btn.className = 'flex-1 min-w-0 px-3 py-2 text-sm text-gray-300 font-mono text-center truncate hover:text-primary';
                 btn.textContent = uid;
+                btn.title = uid + ' を読み込む';
                 btn.addEventListener('click', () => {
                     uidInput.value = uid;
                     setSubmitLoading();
                     searchForm.submit();
                 });
-                historyList.appendChild(btn);
+
+                const del = document.createElement('button');
+                del.type = 'button';
+                del.className = 'shrink-0 px-2 py-2 text-xs text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all';
+                del.setAttribute('aria-label', uid + ' を履歴から削除');
+                del.title = 'この UID を履歴から削除';
+                del.innerHTML = '&times;';
+                del.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    removeHistoryUid(uid);
+                });
+
+                wrap.appendChild(btn);
+                wrap.appendChild(del);
+                historyList.appendChild(wrap);
             });
         }
 
         searchForm.addEventListener('submit', (e) => {
             const uid = uidInput.value.trim();
             if (!uid) return;
-            
+
             let history = getHistory();
             history = history.filter(item => item !== uid);
             history.unshift(uid);
             history = history.slice(0, 6);
-            
-            localStorage.setItem('uid_history', JSON.stringify(history));
+
+            saveHistory(history);
             setSubmitLoading();
         });
 

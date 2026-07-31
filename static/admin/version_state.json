@@ -1,0 +1,14 @@
+{
+  "live_version": null,
+  "beta_version": null,
+  "source": null,
+  "pending": {
+    "characters": [],
+    "weapons": [],
+    "artifacts": []
+  },
+  "last_beta_fetch": null,
+  "last_live_fetch": null,
+  "last_promote": null,
+  "history": []
+}
