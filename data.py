@@ -1,15 +1,3 @@
-"""
-ゲームデータ取得・beta→live 昇格を担当するモジュール。
-get_data_server.py のロジックを FastAPI 向けに移植し、
-パスは server.py と同じ BASE_DIR 基準に統一している。
-
-使い方:
-  from admin_data import DataManager
-  dm = DataManager(base_dir)
-  dm.fetch_beta_nanoka()
-  dm.promote_beta_to_live()
-"""
-
 from __future__ import annotations
 
 import json
@@ -21,9 +9,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 
-# convert / gachabase_changelog は server と同じ階層、または get_data_flask 配下を想定
-characters = weapons = characters_list = weapons_list = artifacts_list = None  # type: ignore
-gachabase_changelog = None  # type: ignore
+characters = weapons = characters_list = weapons_list = artifacts_list = ModuleNotFoundError
+gachabase_changelog = None
 
 def _try_import_convert():
     global characters, weapons, characters_list, weapons_list, artifacts_list
@@ -60,7 +47,7 @@ def _try_import_convert():
 def _try_import_gachabase():
     global gachabase_changelog
     try:
-        import gachabase_changelog as _g
+        import gachabase as _g
         gachabase_changelog = _g
     except Exception as e:
         print(f"[admin_data] gachabase_changelog import failed: {e}")
@@ -102,7 +89,6 @@ def _copy_file(src: str, dst: str) -> bool:
 
 
 def _copy_tree_files(src_dir: str, dst_dir: str, names: List[str], ext: str = ".json") -> List[str]:
-    """names に含まれるファイルを src→dst にコピー。成功した id を返す。"""
     done = []
     for name in names:
         src = os.path.join(src_dir, f"{name}{ext}")
@@ -113,8 +99,6 @@ def _copy_tree_files(src_dir: str, dst_dir: str, names: List[str], ext: str = ".
 
 
 class DataManager:
-    """static/data (live) と static/beta/data を管理する。"""
-
     STATE_REL = os.path.join("static", "admin", "version_state.json")
     LOG_REL = os.path.join("static", "admin", "operation_log.json")
 
@@ -125,7 +109,6 @@ class DataManager:
         _ensure_dir(os.path.join(base_dir, "static", "admin"))
         self._ensure_state()
 
-    # ------------------------------------------------------------------ paths
     def live_dir(self, *parts: str) -> str:
         return os.path.join(self.base_dir, "static", "data", *parts)
 
@@ -138,12 +121,11 @@ class DataManager:
     def beta_assets(self, *parts: str) -> str:
         return os.path.join(self.base_dir, "static", "beta", "assets", *parts)
 
-    # ------------------------------------------------------------------ state
     def _default_state(self) -> Dict[str, Any]:
         return {
             "live_version": None,
             "beta_version": None,
-            "source": None,  # "nanoka" | "lunaris" | "gachabase"
+            "source": None,
             "pending": {
                 "characters": [],
                 "weapons": [],
@@ -152,7 +134,7 @@ class DataManager:
             "last_beta_fetch": None,
             "last_live_fetch": None,
             "last_promote": None,
-            "history": [],  # [{at, action, detail}]
+            "history": [],
         }
 
     def _ensure_state(self) -> None:
@@ -161,7 +143,6 @@ class DataManager:
 
     def get_state(self) -> Dict[str, Any]:
         state = _safe_json_load(self.state_path, self._default_state())
-        # 欠損キー補完
         base = self._default_state()
         for k, v in base.items():
             if k not in state:
@@ -178,7 +159,6 @@ class DataManager:
     def _append_history(self, state: Dict[str, Any], action: str, detail: Any) -> None:
         hist = state.setdefault("history", [])
         hist.append({"at": _now_iso(), "action": action, "detail": detail})
-        # 直近 50 件だけ保持
         state["history"] = hist[-50:]
 
     def append_log(self, action: str, ok: bool, message: str, extra: Any = None) -> None:
@@ -205,7 +185,7 @@ class DataManager:
         if characters is None or weapons is None:
             raise RuntimeError(
                 "convert モジュールが見つかりません。"
-                "server.py と同じ階層、または PYTHONPATH に get_data_flask/convert を置いてください。"
+                "server.py と同じ階層、または PYTHONPATH に get_data_flask/convert が必要です。"
             )
 
     def _download_webp(self, icon_name: str, dest_dir: str) -> bool:
@@ -257,7 +237,6 @@ class DataManager:
             if self._download_webp(icon, img_dir):
                 saved += 1
 
-        # キャラアバター / スプラッシュ
         avatar = data.get("icon")
         if avatar:
             self._download_webp(avatar, char_img_dir)
@@ -267,7 +246,6 @@ class DataManager:
         return {"ok": True, "icons": len(icons), "saved": saved, "name": data.get("name", char_id)}
 
 
-    # ------------------------------------------------------------------ nanoka helpers
     def _nanoka_manifest(self):
         manifest = requests.get("https://static.nanoka.cc/manifest.json", timeout=15)
         manifest.raise_for_status()
@@ -275,7 +253,6 @@ class DataManager:
         return data["gi"]["live"], data["gi"]["latest"]
 
     def _nanoka_keys(self, version: str, kind: str) -> List[str]:
-        # kind: character | weapon | artifact
         r = requests.get(f"https://static.nanoka.cc/gi/{version}/{kind}.json", timeout=20)
         r.raise_for_status()
         return list(r.json().keys())
@@ -330,9 +307,7 @@ class DataManager:
             return []
         return sorted(f[:-5] for f in os.listdir(directory) if f.endswith(".json"))
 
-    # ------------------------------------------------------------------ BETA JSON (nanoka 差分)
     def fetch_beta_nanoka_json(self) -> Dict[str, Any]:
-        """beta と live の差分 JSON（キャラ/武器/リスト）のみ static/beta/data に保存。"""
         self._require_convert()
         result: Dict[str, Any] = {"source": "nanoka", "ok": False, "kind": "beta_json"}
         try:
@@ -405,9 +380,7 @@ class DataManager:
             self.append_log("fetch_beta_nanoka_json", False, str(e))
             return result
 
-    # ------------------------------------------------------------------ BETA ASSETS
     def fetch_beta_nanoka_assets(self) -> Dict[str, Any]:
-        """pending（または beta ディレクトリ上の JSON）向けアセットのみ取得。"""
         result: Dict[str, Any] = {"source": "nanoka", "ok": False, "kind": "beta_assets"}
         try:
             state = self.get_state()
@@ -428,7 +401,6 @@ class DataManager:
             weapon_n = self._download_weapon_assets(weapons_ids, "beta")
             art_n = self._download_artifact_assets(arts, "beta") if arts else 0
 
-            # 聖遺物 ID が pending 空でもリストから差分推定はしない（明示 ID 優先）
             result.update({
                 "ok": True,
                 "characters": char_ok,
@@ -466,9 +438,7 @@ class DataManager:
             "beta_version": json_res.get("beta_version"),
         }
 
-    # ------------------------------------------------------------------ LIVE JSON
     def fetch_live_nanoka_json(self) -> Dict[str, Any]:
-        """live バージョンの JSON（全キャラ/全武器/リスト）を static/data に保存。"""
         self._require_convert()
         result: Dict[str, Any] = {"source": "nanoka", "ok": False, "kind": "live_json"}
         try:
@@ -516,7 +486,6 @@ class DataManager:
             state["beta_version"] = beta
             state["source"] = "nanoka"
             state["last_live_fetch"] = _now_iso()
-            # バージョンアップ後は pending をクリア
             state["pending"] = {"characters": [], "weapons": [], "artifacts": []}
             self._append_history(state, "fetch_live_nanoka_json", {
                 "live": live,
@@ -541,9 +510,7 @@ class DataManager:
             self.append_log("fetch_live_nanoka_json", False, str(e))
             return result
 
-    # ------------------------------------------------------------------ LIVE ASSETS
     def fetch_live_nanoka_assets(self) -> Dict[str, Any]:
-        """live 領域の JSON を元に全アセットを取得。"""
         result: Dict[str, Any] = {"source": "nanoka", "ok": False, "kind": "live_assets"}
         try:
             chars = self._list_json_ids(self.live_dir("characters"))
@@ -588,7 +555,6 @@ class DataManager:
             return result
 
     def fetch_live_nanoka(self, characters_only: bool = False) -> Dict[str, Any]:
-        """live JSON + assets 同時（characters_only は互換用・無視してフル）。"""
         json_res = self.fetch_live_nanoka_json()
         if not json_res.get("ok"):
             return json_res
@@ -602,10 +568,6 @@ class DataManager:
         }
 
     def version_upgrade_live(self) -> Dict[str, Any]:
-        """
-        バージョンアップ時: beta コピーではなく nanoka live から
-        JSON（キャラ/武器/リスト）とアセットをすべて再取得する。
-        """
         result = self.fetch_live_nanoka()
         state = self.get_state()
         state["last_promote"] = _now_iso()
@@ -618,7 +580,6 @@ class DataManager:
         self.append_log("version_upgrade_live", bool(result.get("ok")), f"live={result.get('live_version')}", result)
         return {**result, "kind": "version_upgrade_live"}
 
-    # 後方互換（使わないが残す）
     def promote_beta_to_live(self, **kwargs) -> Dict[str, Any]:
         return self.version_upgrade_live()
 
@@ -629,7 +590,6 @@ class DataManager:
         return {"ok": False, "error": "Gachabase is disabled", "disabled": True}
 
 
-    # ------------------------------------------------------------------ status snapshot for UI
     def status_snapshot(self) -> Dict[str, Any]:
         state = self.get_state()
 

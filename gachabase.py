@@ -4,7 +4,7 @@ import re
 import requests
 
 def fetch_and_parse_json(url):
-    print(f"🌐 データをダウンロード中: {url}")
+    print(f"データをダウンロード中: {url}")
     try:
         response = requests.get(url, timeout=15)
         response.raise_for_status()
@@ -12,7 +12,7 @@ def fetch_and_parse_json(url):
         response.encoding = 'utf-8'
         content = response.text
     except Exception as e:
-        print(f"❌ ダウンロードエラー: {e}")
+        print(f"ダウンロードエラー: {e}")
         return None
 
     decoder = json.JSONDecoder()
@@ -94,7 +94,7 @@ def main():
 
     objects = fetch_and_parse_json(target_url)
     if not objects:
-        print("❌ データの取得に失敗したため処理を中断します。")
+        print("データの取得に失敗したため処理を中断します。")
         return
 
     chunks_data = None
@@ -127,7 +127,7 @@ def main():
 
     latest_rev_index = revisions_ref[-1]
     
-    print("データを完全に展開中...")
+    print("データを展開中...")
     full_rev_obj = resolve_item(chunks_data, latest_rev_index)
 
     if not isinstance(full_rev_obj, dict):
@@ -189,16 +189,16 @@ def main():
     }
 
     """try:
-        # 🌟 書き出し時も確実に utf-8 を指定
+        # 書き出し時も確実に utf-8 を指定
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=2, ensure_ascii=False)
-        print(f"\n✅ 文字化け対策版の解析が完了しました！")
+        print(f"\n 文字化け対策版の解析が完了しました！")
         print(f"   - 確定バージョン: {version}")
         print(f"   - キャラクター: {len(result['characters'])} 件")
         print(f"   - 武器: {len(result['weapons'])} 件")
         print(f"   - 聖遺物: {len(result['artifacts'])} 件")
     except Exception as e:
-        print(f"❌ ファイル保存エラー: {e}")"""
+        print(f"ファイル保存エラー: {e}")"""
     
     return result
 

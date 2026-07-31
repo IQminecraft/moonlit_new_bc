@@ -2,7 +2,6 @@ import json
 import sys
 
 def quality_to_rarity(q):
-    """qualityType を rarity 数値に変換"""
     mapping = {
         "QUALITY_PURPLE": 4,
         "QUALITY_ORANGE": 5,

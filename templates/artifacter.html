@@ -6,7 +6,6 @@
     <title>原神ビルドカード生成</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <script>
-        // ライト/ダークのちらつき防止：CSS適用前にテーマ属性をセットしておく
         (function () {
             try {
                 var t = localStorage.getItem('genshin_build_card_theme_pref');
@@ -44,7 +43,6 @@
             color: var(--primary-color);
         }
 
-        /* 旧オレンジ系(yellow-400等)を置き換えるブランドカラー・ヘルパー */
         .text-primary { color: var(--primary-color); }
         .focus-ring-primary:focus { border-color: var(--primary-color) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 25%, transparent); }
         .btn-primary {
@@ -63,9 +61,7 @@
             border-radius: 9999px;
         }
 
-        /* ==========================================================
-           ライトモード（html[data-theme="light"]）
-        ========================================================== */
+
         html[data-theme="light"] body { background-color: #f4f4f5; color: #18181b; }
         html[data-theme="light"] .bg-\[\#161a2e\] { background-color: #ffffff; }
         html[data-theme="light"] .bg-\[\#1f243f\] { background-color: #e4e4e7; }
@@ -124,7 +120,6 @@
         </div>
     </div>
 
-    <!-- 未確定データ(BETA)の閲覧同意モーダル -->
     <div id="betaConsentModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 items-center justify-center p-4"
         onclick="if(event.target===this) closeBetaConsentModal(false)">
         <div class="bg-[#161a2e] border border-[#252a42] rounded-2xl w-full max-w-sm p-5">
@@ -166,11 +161,6 @@
         const clearHistory = document.getElementById('clearHistory');
         const verInput = document.getElementById('verInput');
         const verModeBtn = document.getElementById('verModeBtn');
-
-        // ==========================================================
-        //  未確定データ(BETA)閲覧同意モーダル
-        //  Promiseを返し、「同意して閲覧する」でtrue、「戻る」/背景クリックでfalseを解決する
-        // ==========================================================
         const betaConsentModal = document.getElementById('betaConsentModal');
         const betaConsentAgreeBtn = document.getElementById('betaConsentAgreeBtn');
         const betaConsentDeclineBtn = document.getElementById('betaConsentDeclineBtn');
@@ -206,8 +196,6 @@
             submitBtnLabel.textContent = '読み込み中...';
         }
 
-        // build_card.html 側の切替ボタンで保存している「最後に見ていたver」を
-        // ここでも読み込んで、検索フォームに自動で引き継ぐ
         const VER_PREF_KEY = 'genshin_build_card_ver_pref';
         const THEME_PREF_KEY = 'genshin_build_card_theme_pref';
 

@@ -6,7 +6,6 @@
     <title>Genshin ビルドカード生成</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <script>
-        // ライト/ダークのちらつき防止：CSS適用前にテーマ属性をセットしておく
         (function () {
             try {
                 var t = localStorage.getItem('genshin_build_card_theme_pref');
@@ -22,10 +21,6 @@
         console.log("現在のデータ:", ver);
     </script>
     <style>
-        /* ==========================================================
-           カラーパレット（ブランドカラー）
-           :root = ライトモードの既定値 / [data-theme='dark'] = ダークモード上書き
-        ========================================================== */
         :root {
             --primary-color: #3b82f6;
             --primary-hover: #2563eb;
@@ -43,7 +38,6 @@
 
         body { background-color: #0a0a0c; color: white; font-family: 'Inter', sans-serif; }
 
-        /* 旧オレンジ系(yellow-400等)を置き換えるブランドカラー・ヘルパー */
         .text-primary { color: var(--primary-color); }
         .border-primary { border-color: var(--primary-color); }
         .ring-primary { --tw-ring-color: var(--primary-color); }
@@ -62,11 +56,6 @@
             border-radius: 9999px;
         }
 
-        /* ==========================================================
-           スケルトン・ローディング
-           画像/データ生成の待ち時間中、完成後のレイアウトに近い形の
-           プレースホルダーをシマー(shimmer)アニメーションで表示する
-        ========================================================== */
         @keyframes skeleton-shimmer {
             0% { background-position: -400px 0; }
             100% { background-position: 400px 0; }
@@ -79,10 +68,6 @@
         }
         .skeleton-avatar { border-radius: 9999px; }
 
-        /* ==========================================================
-           ライトモード（html[data-theme="light"]）
-           属性セレクタ + クラスで Tailwind ユーティリティより詳細度を上げて上書き
-        ========================================================== */
         html[data-theme="light"] body { background-color: #f4f4f5; color: #18181b; }
         html[data-theme="light"] .bg-zinc-950 { background-color: #e4e4e7; }
         html[data-theme="light"] .bg-zinc-900,
@@ -111,16 +96,13 @@
         html[data-theme="light"] #regenerateApiBtn { color: #ffffff; }
         html[data-theme="light"] .view-mode-btn { color: #000000; }
         html[data-theme="light"] .picker-grid::-webkit-scrollbar-thumb { background: #a1a1aa; }
-        /* 薄い色のアイコン(w-4 h-4 object-contain)が白モードの明るい背景で
-           見えなくならないよう、後ろに薄い黒の角丸を敷く */
+
         .icon-chip { background-color: transparent; }
         html[data-theme="light"] .icon-chip { background-color: rgba(0, 0, 0, 0.59); }
         .icon-chip-lg { background-color: transparent; }
         html[data-theme="light"] .icon-chip-lg { background-color: rgba(0, 0, 0, 0.59); }
-        /* サムネイル下部のキャラ名ラベル(bg-black/70の上の文字)は
-           ライト/ダーク問わず常に白文字のまま(背景が常に暗いため) */
+
         .char-name-label { color: #ffffff; }
-        /* セット効果名(text-cyan-300)は白モードだと薄すぎて見づらいので濃い目に */
         html[data-theme="light"] .text-cyan-300 { color: #0e7490; }
         .drag-none { user-drag: none; -webkit-user-drag: none; }
         .rarity-5 { border-color: #cd8834; }
@@ -158,9 +140,6 @@
         .tier-A { color: #38bdf8; }
         .tier-B { color: #9ca3af; }
     
-        /* ==========================================================
-           グラスモーフィズム・ビルドカード（Bデザイン移植 / パスはA準拠）
-        ========================================================== */
         .glass-card-root {
             --gc-bg-dark: #0a0a0c;
             --gc-glass-border: rgba(255, 255, 255, 0.18);
@@ -179,7 +158,6 @@
         .glass-card-root .glass-scale-wrap {
             width: 1200px;
             transform-origin: top center;
-            /* scale は JS で親幅に合わせて設定 */
         }
         .glass-card-root .build-card {
             position: relative;
@@ -199,7 +177,6 @@
             padding: 20px;
             gap: 25px;
         }
-        /* スプラッシュを拡大してぼかした背景（B準拠） */
         .glass-card-root .glass-card-bg {
             position: absolute;
             top: 0;
@@ -790,7 +767,6 @@
         </div>
     </div>
 
-    <!-- 未確定データ(BETA)の閲覧同意モーダル -->
     <div id="betaConsentModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 items-center justify-center p-4"
         onclick="if(event.target===this) closeBetaConsentModal(false)">
         <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-sm p-5">
@@ -811,12 +787,10 @@
                 内容にご注意のうえ、ご自身の判断でご覧ください。
             </p>
             <div class="flex flex-col gap-2">
-                <!-- 上：同意して閲覧する（推奨アクション・塗りつぶし） -->
                 <button id="betaConsentAgreeBtn" type="button" class="w-full py-2.5 bg-zinc-100 border border-zinc-100 rounded-lg text-sm font-bold text-zinc-900 hover:bg-zinc-200 transition-all">
                     同意して閲覧する
                 </button>
 
-                <!-- 下：戻る（補助アクション・枠線のみ） -->
                 <button id="betaConsentDeclineBtn" type="button" class="w-full py-2.5 bg-transparent border border-zinc-700 rounded-lg text-sm font-bold text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-all">
                     戻る
                 </button>
@@ -836,7 +810,6 @@
         </div>
     </div>
 
-    <!-- 武器差し替え選択モーダル（現在アクティブな保存枠に適用） -->
     <div id="fakeWeaponModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 items-center justify-center p-4"
         onclick="if(event.target===this) closeFakeWeaponModal()">
         <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col">
@@ -872,14 +845,6 @@
         const fakeWeaponGrid = document.getElementById('fakeWeaponGrid');
         const fakeWeaponGridStatus = document.getElementById('fakeWeaponGridStatus');
 
-        // ==========================================================
-        //  設定パネル（⚙️ボタン）
-        //  ・データソース：Beta / Live をワンボタンでトグル。
-        //    クエリ ?ver= を書き換えて /fetch_uid に再アクセスする。
-        //    選んだ状態は localStorage に保存し、artifacter.html の検索フォーム
-        //    から来た時に自動で同じ ver が使われるようにする
-        //  ・表示テーマ：ライト / ダークをワンボタンでトグル（localStorage保存）
-        // ==========================================================
         const VER_PREF_KEY = 'genshin_build_card_ver_pref';
         const THEME_PREF_KEY = 'genshin_build_card_theme_pref';
 
@@ -888,10 +853,6 @@
         const settingsThemeBtn = document.getElementById('settingsThemeBtn');
         const settingsThemeLabel = document.getElementById('settingsThemeLabel');
 
-        // ==========================================================
-        //  未確定データ(BETA)閲覧同意モーダル
-        //  Promiseを返し、「同意して閲覧する」でtrue、「戻る」/背景クリックでfalseを解決する
-        // ==========================================================
         const betaConsentModal = document.getElementById('betaConsentModal');
         const betaConsentAgreeBtn = document.getElementById('betaConsentAgreeBtn');
         const betaConsentDeclineBtn = document.getElementById('betaConsentDeclineBtn');
@@ -918,7 +879,6 @@
         if (betaConsentDeclineBtn) betaConsentDeclineBtn.addEventListener('click', () => closeBetaConsentModal(false));
 
         try {
-            // このページで今実際に表示している ver を「最後に見ていた ver」として記録
             localStorage.setItem(VER_PREF_KEY, ver === 'beta' ? 'beta' : 'live');
         } catch (e) { /* ignore storage errors */ }
 
@@ -1481,11 +1441,7 @@
         let currentImageObjectUrl = null;
         let latestImageRequestToken = 0;
 
-        // ==========================================================
-        //  ビルドカード画像のクライアント側キャッシュ（Cache Storage API）
-        //  サーバー側には保存しない。「再取得 + 再生成」で Enka API に
-        //  リクエストが飛んだタイミングで全クリアする。
-        // ==========================================================
+
         const IMAGE_CACHE_NAME = 'genshin-build-card-image-cache-v1';
         const cacheStorageSupported = (typeof caches !== 'undefined');
 
@@ -1520,12 +1476,6 @@
             }
         }
 
-        // ==========================================================
-        //  スケルトン・カード
-        //  「ビルドカード(HTML)」「画像生成」どちらの読み込み中も、
-        //  完成後のレイアウトに近い形のプレースホルダーを表示することで
-        //  生成待ちのUXを改善する
-        // ==========================================================
         function skeletonBlock(extraClass = '') {
             return `<div class="skeleton ${extraClass}"></div>`;
         }
@@ -1587,7 +1537,6 @@
                 </div>`;
         }
 
-        // --- 画像生成の背景色（元素デフォルト / カスタム） ---
         const BG_COLOR_MODE_KEY = 'genshin_build_card_bg_mode';
         const BG_COLOR_CUSTOM_KEY = 'genshin_build_card_bg_custom';
         const bgColorModeSelect = document.getElementById('bgColorModeSelect');
@@ -1621,8 +1570,6 @@
             bgColorModeSelect.addEventListener('change', () => {
                 try { localStorage.setItem(BG_COLOR_MODE_KEY, bgColorModeSelect.value); } catch (e) {}
                 applyBgColorControlsUI();
-                // 背景色は URL クエリに含まれるためキャッシュキーが分かれる。
-                // 別キャラ切替と同じく forceFetch=false（未生成なら取得→キャッシュ、既にあれば再利用）
                 if (viewMode === 'image' && currentSelectedCharId) {
                     refreshCurrentCard(currentSelectedCharId, false);
                 }
@@ -1696,10 +1643,6 @@
             cardImage.classList.remove('hidden');
         };
 
-        // ==========================================================
-        //  表示モード切替（ステータス / ビルドカード / 画像生成）
-        //  選択中タブは localStorage に保存し、リロード後も維持する
-        // ==========================================================
         const VIEW_MODE_PREF_KEY = 'genshin_build_card_view_mode';
         const VALID_VIEW_MODES = ['html', 'glass', 'image'];
 
@@ -1767,9 +1710,6 @@
 
         applyViewModeUI();
 
-        // ==========================================================
-        //  グラスモーフィズム・ビルドカード（Bデザイン移植）
-        // ==========================================================
         let latestGlassRequestToken = 0;
         const ELEMENT_COLORS = {
             Pyro: '#ff6b4a', Hydro: '#4aa4ff', Anemo: '#74e0c5', Electro: '#c97bff',
@@ -1848,7 +1788,6 @@
 
             const statsHtml = (data.mainStats || []).map(s => {
                 const base = s.base != null ? `<div class="stat-breakdown"><span class="stat-base">${s.base}</span>${s.add ? `<span class="stat-plus">${s.add}</span>` : (s.val != null && s.base != null ? '' : '')}</div>` : '';
-                // base/add may not exist for all; show if available
                 let breakdown = '';
                 if (s.base != null) {
                     const addVal = (typeof s.val === 'number' && typeof s.base === 'number')
@@ -1968,11 +1907,9 @@
             const baseW = 1200;
             const baseH = 800;
             const scale = Math.min(1, available / baseW);
-            // 左上基準で縮小し、レイアウト上の占有サイズも縮小後に合わせる
             wrap.style.transformOrigin = 'top left';
             wrap.style.transform = `scale(${scale})`;
             wrap.style.width = baseW + 'px';
-            // スケールはレイアウトに影響しないため、余白で見た目の占有領域を調整
             wrap.style.marginRight = `${-(baseW * (1 - scale))}px`;
             wrap.style.marginBottom = `${-(baseH * (1 - scale))}px`;
             glassEl.style.width = '100%';
@@ -1984,9 +1921,6 @@
             if (viewMode === 'glass') scaleGlassCard();
         });
 
-        // ==========================================================
-        //  ビルドカード（HTML表示モード）
-        // ==========================================================
         let latestHtmlRequestToken = 0;
 
         function updateDisclaimerFooter(selection) {
@@ -2152,8 +2086,6 @@
                 regenerateApiBtn.innerHTML = originalLabel;
             }
 
-            // Enka API へのリクエストが発生したタイミングでキャッシュ済み画像を破棄し、
-            // 必ず作り直した画像が表示されるようにする
             await clearCardImageCache();
             refreshCurrentCard(currentSelectedCharId, true);
         });

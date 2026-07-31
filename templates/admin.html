@@ -43,7 +43,8 @@
         <header class="flex flex-wrap items-center justify-between gap-3 mb-8">
             <div>
                 <h1 class="text-2xl font-bold text-white">Admin · データ管理</h1>
-                <p class="text-sm text-zinc-500 mt-1">beta 取得 → バージョンアップ時に live へ昇格</p>
+                <p class="text-sm text-zinc-500 mt-1">beta 取得（差分確認） / バージョンアップは nanoka live の再取得</p>
+
             </div>
             <div class="flex items-center gap-2">
                 <a href="/" class="btn btn-ghost text-xs">サイトへ</a>
@@ -88,10 +89,12 @@
 
         <!-- Pending 差分 -->
         <section class="card p-5 mb-6">
-            <h2 class="text-lg font-semibold mb-3">昇格待ち (pending)</h2>
+            <h2 class="text-lg font-semibold mb-3">差分候補 (pending)</h2>
             <p class="text-xs text-zinc-500 mb-3">
-                beta 取得時に「live に無い ID」として記録されます。バージョンアップ時に「beta → live 昇格」で live 領域へコピーされます。
+                beta 取得時に「live に無い ID」として記録されます。
+                バージョンアップ操作は beta からのコピーではなく、nanoka live の JSON + Asset をすべて再取得します（pending はクリアされます）。
             </p>
+
             <div class="space-y-3 text-sm">
                 <div>
                     <div class="text-zinc-400 mb-1">Characters <span id="pcCount" class="tag tag-ok">0</span></div>
