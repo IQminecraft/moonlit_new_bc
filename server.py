@@ -251,6 +251,7 @@ def _shade_rgb(rgb, factor):
 _IMAGE_CACHE: dict = {}
 _FONT_CACHE: dict = {}
 _SPLASH_BLUR_CACHE: dict = {}
+_RESIZED_CACHE: dict = {}
 
 
 def get_cached_font(path: str, size: int):
@@ -281,6 +282,29 @@ def get_cached_image(path: str):
             return None
     return _IMAGE_CACHE[path].copy()
 
+def get_resized_image(path: str, size: tuple):
+    """
+    指定サイズにリサイズ済みの画像をキャッシュして返す。
+    size は (width, height) のタプル。
+    """
+    if not path:
+        return None
+    key = (path, size)
+    if key not in _RESIZED_CACHE:
+        img = get_cached_image(path)
+        if img is None:
+            if not os.path.exists(path):
+                return None
+            try:
+                img = Image.open(path).convert("RGBA")
+                _IMAGE_CACHE[path] = img  # 元画像も一緒にキャッシュ
+            except Exception as e:
+                print(f"[Warning] Failed to load image {path}: {e}")
+                return None
+        # リサイズしてキャッシュ
+        filt = get_resize_filter(size)
+        _RESIZED_CACHE[key] = img.resize(size, filt)
+    return _RESIZED_CACHE[key].copy()
 
 def get_resize_filter(target_size):
     """
@@ -318,22 +342,38 @@ def create_card_background(width, height, base_rgb, splash_path=None):
 
     bg = small.resize((width, height), Image.Resampling.BICUBIC).convert("RGBA")
 
+# create_card_background 内のパーティクル描画部分を差し替え
+
     particles = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     pdraw = ImageDraw.Draw(particles)
     rng = _random.Random(hash(base_rgb) & 0xFFFFFFFF)
-    bright = _shade_rgb(base_rgb, 1.55)
-    for _ in range(140):
+
+    # 小粒：白っぽい光（元素色のティントを少し入れる）
+    for _ in range(60):
         x = rng.randint(0, width - 1)
         y = rng.randint(0, height - 1)
         rad = rng.choice([1, 1, 1, 2, 2, 3])
-        alpha = rng.randint(18, 48)
-        pdraw.ellipse([x - rad, y - rad, x + rad, y + rad], fill=(bright[0], bright[1], bright[2], alpha))
-    for _ in range(25):
+        alpha = rng.randint(30, 70)  # 少し濃く
+        # 白ベースに元素色をほんのり混ぜる（右下でも見える）
+        tint = _shade_rgb(base_rgb, 1.8)
+        pdraw.ellipse(
+            [x - rad, y - rad, x + rad, y + rad],
+            fill=(min(255, tint[0] + 40), min(255, tint[1] + 40), min(255, tint[2] + 40), alpha),
+        )
+
+    # 大粒：より明るく、やや大きめ
+    for _ in range(20):
         x = rng.randint(0, width - 1)
         y = rng.randint(0, height - 1)
         rad = rng.randint(4, 10)
-        alpha = rng.randint(8, 20)
-        pdraw.ellipse([x - rad, y - rad, x + rad, y + rad], fill=(bright[0], bright[1], bright[2], alpha))
+        alpha = rng.randint(15, 35)
+        # ほぼ白に近い光
+        tint = _shade_rgb(base_rgb, 2.0)
+        pdraw.ellipse(
+            [x - rad, y - rad, x + rad, y + rad],
+            fill=(min(255, tint[0] + 60), min(255, tint[1] + 60), min(255, tint[2] + 60), alpha),
+        )
+
     bg = Image.alpha_composite(bg, particles)
 
     if splash_path and os.path.exists(splash_path):
@@ -626,11 +666,9 @@ def paste_figma_image(base_img, img_path, box_x, box_y, box_width, box_height, r
     if not img_path or not os.path.exists(img_path):
         return
     try:
-        paste_img = get_cached_image(img_path)
+        paste_img = get_resized_image(img_path, (box_width, box_height))
         if paste_img is None:
             return
-        filt = get_resize_filter((box_width, box_height))
-        paste_img = paste_img.resize((box_width, box_height), filt)
 
         if paste_img.mode != "RGBA":
             paste_img = paste_img.convert("RGBA")
@@ -664,8 +702,9 @@ def paste_mask_image(base_img, img_path, box_x, box_y, box_width, box_height, ra
         orig_w, orig_h = paste_img.size
         new_height = int(box_height * zoom)
         new_width = int(orig_w * (new_height / orig_h))
-        filt = get_resize_filter((new_width, new_height))
-        paste_img = paste_img.resize((new_width, new_height), filt)
+        paste_img = get_resized_image(img_path, (new_width, new_height))
+        if paste_img is None:
+            return
 
         if paste_img.mode != "RGBA":
             paste_img = paste_img.convert("RGBA")
@@ -1775,9 +1814,8 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             draw_figma_circle(img, x=circle_x, y=circle_y, size=circle_size, fill_color=(0, 0, 0, 180), outline_color=(80, 85, 95, 255), outline_width=2)
             icon_path = resolve_datas_path(f"static/assets/skills/{icon_name}.webp", beta)
             if os.path.exists(icon_path):
-                icon_img = get_cached_image(icon_path)
+                icon_img = get_resized_image(icon_path, (60, 60))
                 if icon_img is not None:
-                    icon_img = icon_img.resize((60, 60), get_resize_filter((60, 60)))
                     alpha = icon_img.getchannel('A').point(lambda p: int(p * (45 / 255.0)))
                     icon_img.putalpha(alpha)
                     img.paste(icon_img, (circle_x + 5, circle_y + 5), icon_img)
@@ -1825,9 +1863,8 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         icon_x = 840 - 60
         if icon_path and os.path.exists(icon_path):
             try:
-                icon_img = get_cached_image(icon_path)
+                icon_img = get_resized_image(icon_path, (icon_size, icon_size))
                 if icon_img is not None:
-                    icon_img = icon_img.resize((icon_size, icon_size), get_resize_filter((icon_size, icon_size)))
                     img.paste(icon_img, (icon_x, current_y + icon_offset_y), icon_img)
             except Exception as e:
                 print(f"[Error] Failed to paste status icon: {icon_path}. Reason: {e}")
@@ -1891,7 +1928,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         img = img.convert("RGBA")
 
     img_io = io.BytesIO()
-    img.save(img_io, "PNG")
+    img.save(img_io, 'WEBP', quality=95, method=0)
     img_io.seek(0)
     return img_io.getvalue()
 
@@ -1901,7 +1938,7 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
     png_bytes = await run_in_threadpool(
         _generate_card_image_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta, bg_color
     )
-    return StreamingResponse(io.BytesIO(png_bytes), media_type="image/png")
+    return StreamingResponse(io.BytesIO(png_bytes), media_type="image/webp")
 
 
 @app.get("/serverup", response_class=HTMLResponse)
