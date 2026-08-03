@@ -9,6 +9,7 @@ import sys
 import asyncio
 import io
 import json
+import time
 from typing import Dict, Any
 from collections import Counter
 import random as _random
@@ -21,6 +22,10 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops
 import get_info_state
 
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup_event():
+    await run_in_threadpool(_prebuild_backgrounds)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -174,6 +179,13 @@ print("[OK] Admin routes embedded in server.py → /admin/login , /admin/__ping"
 FONT_PATH = os.path.join(BASE_DIR, "fonts", "font_fixed.ttf")
 FONT_LIGHT_PATH = os.path.join(BASE_DIR, "fonts", "font_light.ttf")
 
+# 設計解像度（Figma座標系）と出力解像度。
+# 描画ヘルパーは設計座標で受け取り、内部でキャンバス座標へ拡大する。
+DESIGN_W, DESIGN_H = 1741, 1159
+CARD_W, CARD_H = 2400, 1620
+SX = CARD_W / DESIGN_W
+SY = CARD_H / DESIGN_H
+
 try:
     with open(os.path.join(BASE_DIR, "external", "enka_py", "assets", "text_map.json"), "r", encoding="utf-8") as f:
         text_map_data = json.load(f)
@@ -252,6 +264,7 @@ _IMAGE_CACHE: dict = {}
 _FONT_CACHE: dict = {}
 _SPLASH_BLUR_CACHE: dict = {}
 _RESIZED_CACHE: dict = {}
+_PREBUILT_BGS: dict = {}
 
 
 def get_cached_font(path: str, size: int):
@@ -312,17 +325,15 @@ def get_resize_filter(target_size):
     Pillow-SIMD note: BICUBIC is generally preferred over LANCZOS for better SIMD performance.
     """
     w, h = target_size if isinstance(target_size, (tuple, list)) else (target_size, target_size)
+    """
     if max(w, h) < 100:
         return Image.Resampling.BILINEAR
+    """
     return Image.Resampling.BICUBIC
 
 
-def create_card_background(width, height, base_rgb, splash_path=None):
-    """
-    OPTIMIZED:
-    - Returns RGBA
-    - Splash GaussianBlur(radius=48) is cached
-    """
+def _build_base_background(width, height, base_rgb):
+    """グラデーション + パーティクルのみ。スプラッシュなし。"""
     gw, gh = 96, 64
     tl = _shade_rgb(base_rgb, 0.48)
     br = _shade_rgb(base_rgb, 1.38)
@@ -342,32 +353,26 @@ def create_card_background(width, height, base_rgb, splash_path=None):
 
     bg = small.resize((width, height), Image.Resampling.BICUBIC).convert("RGBA")
 
-# create_card_background 内のパーティクル描画部分を差し替え
-
     particles = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     pdraw = ImageDraw.Draw(particles)
     rng = _random.Random(hash(base_rgb) & 0xFFFFFFFF)
 
-    # 小粒：白っぽい光（元素色のティントを少し入れる）
     for _ in range(60):
         x = rng.randint(0, width - 1)
         y = rng.randint(0, height - 1)
         rad = rng.choice([1, 1, 1, 2, 2, 3])
-        alpha = rng.randint(30, 70)  # 少し濃く
-        # 白ベースに元素色をほんのり混ぜる（右下でも見える）
+        alpha = rng.randint(30, 70)
         tint = _shade_rgb(base_rgb, 1.8)
         pdraw.ellipse(
             [x - rad, y - rad, x + rad, y + rad],
             fill=(min(255, tint[0] + 40), min(255, tint[1] + 40), min(255, tint[2] + 40), alpha),
         )
 
-    # 大粒：より明るく、やや大きめ
     for _ in range(20):
         x = rng.randint(0, width - 1)
         y = rng.randint(0, height - 1)
         rad = rng.randint(4, 10)
         alpha = rng.randint(15, 35)
-        # ほぼ白に近い光
         tint = _shade_rgb(base_rgb, 2.0)
         pdraw.ellipse(
             [x - rad, y - rad, x + rad, y + rad],
@@ -375,7 +380,41 @@ def create_card_background(width, height, base_rgb, splash_path=None):
         )
 
     bg = Image.alpha_composite(bg, particles)
+    return bg
 
+
+def _prebuild_backgrounds(width=CARD_W, height=CARD_H):
+    """サーバー起動時に8元素の背景を事前生成してメモリに保持。"""
+    global _PREBUILT_BGS
+    elements = {
+        "Pyro": (0x90, 0x3B, 0x2A),
+        "Hydro": (0x34, 0x45, 0x95),
+        "Cryo": (0x57, 0x7F, 0xC7),
+        "Dendro": (0x46, 0x6B, 0x63),
+        "Geo": (0x6A, 0x67, 0x48),
+        "Electro": (0x73, 0x4A, 0x8C),
+        "Anemo": (0x12, 0x95, 0x88),
+        "None": (0x4A, 0x55, 0x68),
+    }
+    for elem, rgb in elements.items():
+        _PREBUILT_BGS[elem] = _build_base_background(width, height, rgb)
+    print(f"[Prebuild] {len(_PREBUILT_BGS)} element backgrounds cached in memory")
+
+
+def create_card_background(width, height, base_rgb, splash_path=None, element_type="None", use_prebuilt=True):
+    """
+    OPTIMIZED:
+    - Returns RGBA
+    - Standard element backgrounds are prebuilt and cached
+    - Splash GaussianBlur(radius=48) is cached separately
+    """
+    # 標準元素色の場合、事前生成背景をベースにする
+    if use_prebuilt and element_type in _PREBUILT_BGS:
+        bg = _PREBUILT_BGS[element_type].copy()
+    else:
+        bg = _build_base_background(width, height, base_rgb)
+
+    # スプラッシュ合成（キャッシュあり）
     if splash_path and os.path.exists(splash_path):
         cache_key = (splash_path, width, height)
         if cache_key in _SPLASH_BLUR_CACHE:
@@ -393,7 +432,7 @@ def create_card_background(width, height, base_rgb, splash_path=None):
                 ox = (width - nw) // 2
                 oy = (height - nh) // 2
                 layer.paste(splash_img, (ox, oy), splash_img)
-                layer = layer.filter(ImageFilter.GaussianBlur(radius=48))
+                layer = layer.filter(ImageFilter.GaussianBlur(radius=max(1, round(24 * SY))))
                 r, g, b, a = layer.split()
                 a = a.point(lambda p: int(p * 0.09))
                 layer = Image.merge("RGBA", (r, g, b, a))
@@ -467,27 +506,42 @@ def apply_stat_bonus(totals, prop_id, value):
 
 def draw_figma_text_right(draw, text, x, y, font, font_size=24, fill_color=(255, 255, 255), **kwargs):
     text_str = str(text)
-    draw.text((x, y), text_str, fill=fill_color, font=font, anchor="ra")
+    # 設計座標 → キャンバス座標
+    draw.text((x * SX, y * SY), text_str, fill=fill_color, font=font, anchor="ra")
 
 
 def draw_figma_box(img, x, y, width, height, radius=15, fill_color=(60, 64, 72, 125),
                    outline_color=(140, 145, 155, 90), outline_width=1, shadow=True,
                    shadow_offset=(6, 6), shadow_blur=8, shadow_alpha=70):
     """
-    OPTIMIZED: No GaussianBlur. Uses temporary layer + alpha_composite
-    to preserve proper transparency (prevents black holes).
+    OPTIMIZED: No GaussianBlur. 本体+影を覆う最小範囲の一時レイヤーに
+    描画し、dest 指定で合成する（透明維持 & 全画面アロケーション回避）。
     """
-    x1, y1 = x, y
-    x2, y2 = x + width, y + height
+    # 設計座標 → キャンバス座標
+    x1, y1 = x * SX, y * SY
+    x2, y2 = x1 + width * SX, y1 + height * SY
+    radius = radius * SY
+    ox, oy = (shadow_offset[0] * SX, shadow_offset[1] * SY) if shadow else (0, 0)
+    outline_width = max(1, round(outline_width * SY)) if (outline_color and outline_width > 0) else 0
+
+    # 本体+影を覆う最小領域（キャンバス外はクリップ、float座標でも整数に）
+    canvas_w, canvas_h = img.size
+    margin = max(1, outline_width)
+    layer_x1 = int(max(0, min(x1, x1 + ox) - margin))
+    layer_y1 = int(max(0, min(y1, y1 + oy) - margin))
+    layer_x2 = int(min(canvas_w, max(x2, x2 + ox) + margin + 1))
+    layer_y2 = int(min(canvas_h, max(y2, y2 + oy) + margin + 1))
+    if layer_x2 <= layer_x1 or layer_y2 <= layer_y1:
+        return
 
     # 一時レイヤーに描画してから合成（アルファを壊さない）
-    overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    overlay = Image.new("RGBA", (layer_x2 - layer_x1, layer_y2 - layer_y1), (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
+    dx, dy = -layer_x1, -layer_y1
 
     if shadow:
-        ox, oy = shadow_offset
         draw.rounded_rectangle(
-            [x1 + ox, y1 + oy, x2 + ox, y2 + oy],
+            [x1 + ox + dx, y1 + oy + dy, x2 + ox + dx, y2 + oy + dy],
             radius=radius,
             fill=(0, 0, 0, shadow_alpha),
         )
@@ -495,9 +549,9 @@ def draw_figma_box(img, x, y, width, height, radius=15, fill_color=(60, 64, 72, 
     outline_kwargs = {}
     if outline_color and outline_width > 0:
         outline_kwargs = {"outline": outline_color, "width": outline_width}
-    draw.rounded_rectangle([x1, y1, x2, y2], radius=radius, fill=fill_color, **outline_kwargs)
+    draw.rounded_rectangle([x1 + dx, y1 + dy, x2 + dx, y2 + dy], radius=radius, fill=fill_color, **outline_kwargs)
 
-    img.alpha_composite(overlay)
+    img.alpha_composite(overlay, dest=(layer_x1, layer_y1))
 
 
 def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=(255, 255, 255), align="left", box_width=None):
@@ -505,22 +559,29 @@ def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=(255, 255
     actual_font = font
 
     if font_size is not None:
-        # 元のフォントから path を取り出してサイズ違いを生成
+        # 元のフォントから path を取り出してサイズ違いを生成（キャンバス解像度へ拡大）
+        scaled_size = max(1, round(font_size * SY))
         path = getattr(font, "path", None)
         if path and os.path.exists(path):
-            actual_font = get_cached_font(path, font_size)
+            actual_font = get_cached_font(path, scaled_size)
         elif isinstance(font, str) and os.path.exists(font):
-            actual_font = get_cached_font(font, font_size)
+            actual_font = get_cached_font(font, scaled_size)
 
+    # 設計座標 → キャンバス座標（box_width も設計単位）
+    x_s = x * SX
+    bw_s = box_width * SX if box_width else None
     if align == "left":
-        actual_x = x
-    elif align == "right" and box_width:
+        actual_x = x_s
+    elif align == "right" and bw_s:
         text_width = draw.textlength(text_str, font=actual_font)
-        actual_x = x + box_width - text_width
+        actual_x = x_s + bw_s - text_width
+    elif align == "center" and bw_s:
+        text_width = draw.textlength(text_str, font=actual_font)
+        actual_x = x_s + (bw_s - text_width) / 2
     else:
-        actual_x = x
+        actual_x = x_s
 
-    draw.text((actual_x, y), text_str, font=actual_font, fill=fill_color)
+    draw.text((actual_x, y * SY), text_str, font=actual_font, fill=fill_color)
 
 
 def draw_figma_text_with_shadow(draw, text, x, y, font, font_size=None, fill_color=(255, 255, 255),
@@ -531,58 +592,86 @@ def draw_figma_text_with_shadow(draw, text, x, y, font, font_size=None, fill_col
     actual_font = font
 
     if font_size is not None:
+        scaled_size = max(1, round(font_size * SY))
         path = getattr(font, "path", None)
         if path and os.path.exists(path):
-            actual_font = get_cached_font(path, font_size)
+            actual_font = get_cached_font(path, scaled_size)
         elif isinstance(font, str) and os.path.exists(font):
-            actual_font = get_cached_font(font, font_size)
+            actual_font = get_cached_font(font, scaled_size)
 
+    # 設計座標 → キャンバス座標（box_width も設計単位）
+    x_s = x * SX
+    bw_s = box_width * SX if box_width else None
     if align == "left":
-        target_x = x
-    elif align == "right" and box_width:
+        target_x = x_s
+    elif align == "right" and bw_s:
         text_width = draw.textlength(text_str, font=actual_font)
-        target_x = x + box_width - text_width
-    elif align == "center" and box_width:
+        target_x = x_s + bw_s - text_width
+    elif align == "center" and bw_s:
         text_width = draw.textlength(text_str, font=actual_font)
-        target_x = x + (box_width - text_width) / 2
+        target_x = x_s + (bw_s - text_width) / 2
     else:
-        target_x = x
+        target_x = x_s
 
     # 影（オフセットして半透明黒で描画）
-    sx, sy = shadow_offset
+    sox, soy = shadow_offset[0] * SX, shadow_offset[1] * SY
+    y_s = y * SY
     draw.text(
-        (target_x + sx, y + sy),
+        (target_x + sox, y_s + soy),
         text_str,
         font=actual_font,
         fill=shadow_color,
     )
     # 本文
     draw.text(
-        (target_x, y),
+        (target_x, y_s),
         text_str,
         font=actual_font,
         fill=fill_color,
     )
 
 def draw_figma_line(img, x1, y1, x2, y2, fill_color=(255, 255, 255, 50), width=1):
-    """OPTIMIZED: temporary layer + alpha_composite to preserve transparency."""
-    overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    """OPTIMIZED: 線分を覆う最小レイヤー + alpha_composite(dest) で透明を維持。"""
+    # 設計座標 → キャンバス座標
+    x1, y1, x2, y2 = x1 * SX, y1 * SY, x2 * SX, y2 * SY
+    width = max(1, round(width * SY))
+    canvas_w, canvas_h = img.size
+    margin = max(1, width)
+    layer_x1 = int(max(0, min(x1, x2) - margin))
+    layer_y1 = int(max(0, min(y1, y2) - margin))
+    layer_x2 = int(min(canvas_w, max(x1, x2) + margin + 1))
+    layer_y2 = int(min(canvas_h, max(y1, y2) + margin + 1))
+    if layer_x2 <= layer_x1 or layer_y2 <= layer_y1:
+        return
+    overlay = Image.new("RGBA", (layer_x2 - layer_x1, layer_y2 - layer_y1), (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
-    draw.line([(x1, y1), (x2, y2)], fill=fill_color, width=width)
-    img.alpha_composite(overlay)
+    draw.line([(x1 - layer_x1, y1 - layer_y1), (x2 - layer_x1, y2 - layer_y1)], fill=fill_color, width=width)
+    img.alpha_composite(overlay, dest=(layer_x1, layer_y1))
 
 
 def draw_figma_circle(img, x, y, size, fill_color=(60, 64, 72, 125), outline_color=None, outline_width=0):
-    """OPTIMIZED: temporary layer + alpha_composite to preserve transparency."""
-    overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    """OPTIMIZED: 円を覆う最小レイヤー + alpha_composite(dest) で透明を維持。"""
+    # 設計座標 → キャンバス座標（真円を保つため直径は縦横とも SY 基準）
+    x, y = x * SX, y * SY
+    size = size * SY
+    outline_width = max(1, round(outline_width * SY)) if outline_width else 0
+    canvas_w, canvas_h = img.size
+    margin = max(1, outline_width) + 1
+    layer_x1 = int(max(0, x - margin))
+    layer_y1 = int(max(0, y - margin))
+    layer_x2 = int(min(canvas_w, x + size + margin))
+    layer_y2 = int(min(canvas_h, y + size + margin))
+    if layer_x2 <= layer_x1 or layer_y2 <= layer_y1:
+        return
+    overlay = Image.new("RGBA", (layer_x2 - layer_x1, layer_y2 - layer_y1), (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
     draw.ellipse(
-        [x, y, x + size, y + size],
+        [x - layer_x1, y - layer_y1, x + size - layer_x1, y + size - layer_y1],
         fill=fill_color,
         outline=outline_color,
         width=outline_width,
     )
-    img.alpha_composite(overlay)
+    img.alpha_composite(overlay, dest=(layer_x1, layer_y1))
 
 
 def resolve_datas_path(path, beta="false"):
@@ -666,24 +755,31 @@ def paste_figma_image(base_img, img_path, box_x, box_y, box_width, box_height, r
     if not img_path or not os.path.exists(img_path):
         return
     try:
-        paste_img = get_resized_image(img_path, (box_width, box_height))
+        # 設計座標 → キャンバス座標
+        bx, by = int(round(box_x * SX)), int(round(box_y * SY))
+        bw, bh = max(1, round(box_width * SX)), max(1, round(box_height * SY))
+        paste_img = get_resized_image(img_path, (bw, bh))
         if paste_img is None:
             return
 
         if paste_img.mode != "RGBA":
             paste_img = paste_img.convert("RGBA")
 
-        # 角丸マスク
-        corner_mask = Image.new("L", (box_width, box_height), 0)
-        mask_draw = ImageDraw.Draw(corner_mask)
-        mask_draw.rounded_rectangle([0, 0, box_width, box_height], radius=radius, fill=255)
+        # 小さい画像は角丸マスク省略（見た目の差がほぼない & 大幅高速化）
+        if max(box_width, box_height) < 50:
+            base_img.paste(paste_img, (bx, by), paste_img)
+        else:
+            # 角丸マスク
+            corner_mask = Image.new("L", (bw, bh), 0)
+            mask_draw = ImageDraw.Draw(corner_mask)
+            mask_draw.rounded_rectangle([0, 0, bw, bh], radius=max(1, round(radius * SY)), fill=255)
 
-        # 元画像のアルファ × 角丸マスク（透明ピクセルの RGB=黒がそのまま出ないようにする）
-        r, g, b, a = paste_img.split()
-        combined_alpha = ImageChops.multiply(a, corner_mask)
-        paste_img = Image.merge("RGBA", (r, g, b, combined_alpha))
+            # 元画像のアルファ × 角丸マスク（透明ピクセルの RGB=黒がそのまま出ないようにする）
+            r, g, b, a = paste_img.split()
+            combined_alpha = ImageChops.multiply(a, corner_mask)
+            paste_img = Image.merge("RGBA", (r, g, b, combined_alpha))
 
-        base_img.paste(paste_img, (box_x, box_y), paste_img)
+            base_img.paste(paste_img, (bx, by), paste_img)
     except Exception as e:
         print(f"[Error] Failed to paste image: {img_path}. Reason: {e}")
 
@@ -700,7 +796,9 @@ def paste_mask_image(base_img, img_path, box_x, box_y, box_width, box_height, ra
         if paste_img is None:
             return
         orig_w, orig_h = paste_img.size
-        new_height = int(box_height * zoom)
+        # 設計座標 → キャンバス座標
+        bw, bh = max(1, round(box_width * SX)), max(1, round(box_height * SY))
+        new_height = int(bh * zoom)
         new_width = int(orig_w * (new_height / orig_h))
         paste_img = get_resized_image(img_path, (new_width, new_height))
         if paste_img is None:
@@ -709,22 +807,22 @@ def paste_mask_image(base_img, img_path, box_x, box_y, box_width, box_height, ra
         if paste_img.mode != "RGBA":
             paste_img = paste_img.convert("RGBA")
 
-        canvas = Image.new("RGBA", (box_width, box_height), (0, 0, 0, 0))
-        offset_x = (box_width - new_width) // 2
-        offset_y = (box_height - new_height) // 2
+        canvas = Image.new("RGBA", (bw, bh), (0, 0, 0, 0))
+        offset_x = (bw - new_width) // 2
+        offset_y = (bh - new_height) // 2
         canvas.paste(paste_img, (offset_x, offset_y), paste_img)
 
         # 角丸マスク
-        corner_mask = Image.new("L", (box_width, box_height), 0)
+        corner_mask = Image.new("L", (bw, bh), 0)
         mask_draw = ImageDraw.Draw(corner_mask)
-        mask_draw.rounded_rectangle([0, 0, box_width, box_height], radius=radius, fill=255)
+        mask_draw.rounded_rectangle([0, 0, bw, bh], radius=max(1, round(radius * SY)), fill=255)
 
         # キャンバスのアルファ × 角丸マスク
         r, g, b, a = canvas.split()
         combined_alpha = ImageChops.multiply(a, corner_mask)
         canvas = Image.merge("RGBA", (r, g, b, combined_alpha))
 
-        base_img.paste(canvas, (box_x, box_y), canvas)
+        base_img.paste(canvas, (int(round(box_x * SX)), int(round(box_y * SY))), canvas)
     except Exception as e:
         print(f"[Error] Failed to paste mask image: {img_path}. Reason: {e}")
 
@@ -736,6 +834,72 @@ def score_calc(stat, critrate, critdmg, method):
     else:
         scores += stat
     return scores
+
+
+# =============================================================================
+# 背景画像一覧 API（artifacter のランダム背景用）
+# =============================================================================
+_BG_IMAGE_EXTS = {".webp", ".png", ".jpg", ".jpeg"}
+
+
+def _list_image_urls(rel_dir: str, url_prefix: str, limit: int = 200) -> list:
+    """
+    STATIC_DIR 配下の rel_dir を走査し、画像ファイルの公開URLリストを返す。
+    例: rel_dir="assets/splash" → ["/static/assets/splash/xxx.webp", ...]
+    """
+    abs_dir = os.path.join(STATIC_DIR, rel_dir)
+    if not os.path.isdir(abs_dir):
+        return []
+    urls = []
+    try:
+        for name in sorted(os.listdir(abs_dir)):
+            ext = os.path.splitext(name)[1].lower()
+            if ext not in _BG_IMAGE_EXTS:
+                continue
+            if name.startswith(".") or name.startswith("~"):
+                continue
+            urls.append(f"{url_prefix.rstrip('/')}/{name}")
+            if len(urls) >= limit:
+                break
+    except OSError as e:
+        print(f"[Warning] bg image list failed for {abs_dir}: {e}")
+    return urls
+
+
+@app.get("/api/bg_images")
+async def api_bg_images(beta: str = "false"):
+    """
+    フロントの背景ローテーター用。
+    splash（キャラスプラッシュ）と weapons（武器アイコン）の画像URLを返す。
+    beta=true のときは static/beta 側も追加で探す。
+    """
+    splash = _list_image_urls("assets/splash", "/static/assets/splash")
+    weapons = _list_image_urls("assets/weapons", "/static/assets/weapons")
+
+    if str(beta).lower() in ("1", "true", "yes"):
+        splash_beta = _list_image_urls("beta/assets/splash", "/static/beta/assets/splash")
+        weapons_beta = _list_image_urls("beta/assets/weapons", "/static/beta/assets/weapons")
+        seen_s = set(splash)
+        seen_w = set(weapons)
+        for u in splash_beta:
+            if u not in seen_s:
+                splash.append(u)
+                seen_s.add(u)
+        for u in weapons_beta:
+            if u not in seen_w:
+                weapons.append(u)
+                seen_w.add(u)
+
+    return JSONResponse({
+        "splash": splash,
+        "weapons": weapons,
+        "all": splash + weapons,
+        "count": {
+            "splash": len(splash),
+            "weapons": len(weapons),
+            "all": len(splash) + len(weapons),
+        },
+    })
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -1308,11 +1472,13 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
     }
 
 
-def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None):
+def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "webp"):
+    _total_start = time.perf_counter()
     if beta != "true":
         beta = "false"
     print(f"[Cache Miss] 初回生成のため、PILで気合を入れて画像を作ります...: UID:{uid} - CharID:{avatar_id} - Method:{calc_method}")
 
+    t_start = time.perf_counter()
     target_avatar_info = None
     json_path = os.path.join("static", "cache", f"showcase_{uid}.json")
     json_path = resolve_datas_path(json_path, beta)
@@ -1346,7 +1512,10 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
     if not target_avatar_info:
         raise HTTPException(status_code=404, detail=f"Avatar ID {avatar_id} not found in showcase.")
+    t_end = time.perf_counter()
+    print(f"[Perf] JSON読み込み・パース: {(t_end - t_start)*1000:.1f}ms")
 
+    t_start = time.perf_counter()
     if fake_char:
         json_path2 = os.path.join("static", "data", "characters", f"{fake_char}.json")
         if not os.path.exists(json_path2):
@@ -1376,9 +1545,11 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
                     chardatas = json.load(f)
         else:
             raise HTTPException(status_code=404, detail=f"Character JSON file not found: {json_path2}")
+    t_end = time.perf_counter()
+    print(f"[Perf] キャラJSON読み込み: {(t_end - t_start)*1000:.1f}ms")
 
-    card_width = 1741
-    card_height = 1159
+    card_width = CARD_W
+    card_height = CARD_H
 
     element_type = chardatas.get("element", "None")
     element_colors = {
@@ -1432,6 +1603,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
     Constellation_icon = [chardatas["constellations"][i]["icon"] for i in range(6)]
 
+    t_start = time.perf_counter()
     weapon_data = next((item for item in target_avatar_info.get("equipList", []) if "weapon" in item), None)
 
     if fake_weapon:
@@ -1489,7 +1661,10 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         else:
             stat_val2_str = f"{int(stat_val2)}"
         weapon_stat2 = (stat_name2, stat_val2_str)
+    t_end = time.perf_counter()
+    print(f"[Perf] 武器データ処理: {(t_end - t_start)*1000:.1f}ms")
 
+    t_start = time.perf_counter()
     raw_artifacts = [item for item in target_avatar_info.get("equipList", []) if "reliquary" in item]
 
     if fake_char or fake_weapon:
@@ -1699,7 +1874,10 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             "icon": icon_name
         }
         score_sum += art_score
+    t_end = time.perf_counter()
+    print(f"[Perf] 聖遺物データ処理: {(t_end - t_start)*1000:.1f}ms")
 
+    t_start = time.perf_counter()
     artifact_image_num = [4, 2, 5, 1, 3]
 
     set_ids = [art["set"] for art in artifacts_mock if art["set"] and art["set"] != "0"]
@@ -1758,28 +1936,24 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         "def": "DEF%", "em": "元素熟知", "charge": "チャージ効率"
     }
     display_score_way = display_map[calc_method]
+    t_end = time.perf_counter()
+    print(f"[Perf] セット効果処理: {(t_end - t_start)*1000:.1f}ms")
 
     # ========== DRAWING (OPTIMIZED) ==========
-    img = create_card_background(card_width, card_height, bg_base_rgb, splash_path=splash)
+    t_start = time.perf_counter()
+    img = create_card_background(card_width, card_height, bg_base_rgb, splash_path=splash, element_type=element_type, use_prebuilt=(bg_color is None))
+    t_end = time.perf_counter()
+    print(f"[Perf] 背景生成: {(t_end - t_start)*1000:.1f}ms")
     draw = ImageDraw.Draw(img)
 
-    # フォント読み込み（堅牢版）
-    if os.path.exists(FONT_PATH):
-        try:
-            font_stats = ImageFont.truetype(FONT_PATH, 28)
-        except Exception:
-            font_stats = ImageFont.load_default()
-    else:
-        font_stats = ImageFont.load_default()
+    t_start = time.perf_counter()
+    # フォント読み込み（キャッシュ化: リクエスト間で共有、再読み込みなし。サイズはキャンバス解像度基準）
+    font_stats = get_cached_font(FONT_PATH, max(1, round(28 * SY)))
+    font_stats_light = get_cached_font(FONT_LIGHT_PATH, max(1, round(28 * SY)))
+    t_end = time.perf_counter()
+    print(f"[Perf] フォント読み込み: {(t_end - t_start)*1000:.1f}ms")
 
-    if os.path.exists(FONT_LIGHT_PATH):
-        try:
-            font_stats_light = ImageFont.truetype(FONT_LIGHT_PATH, 28)
-        except Exception:
-            font_stats_light = font_stats
-    else:
-        font_stats_light = font_stats
-
+    t_start = time.perf_counter()
     draw_figma_box(img, x=33, y=30, width=694, height=671)
     draw_figma_box(img, x=753, y=30, width=549, height=671)
     draw_figma_box(img, x=1332, y=30, width=386, height=164, radius=25)
@@ -1788,11 +1962,13 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
     paste_mask_image(img, splash, box_x=33, box_y=30, box_width=694, box_height=671, radius=15, zoom=1.1, beta=beta)
 
-    # スプラッシュ枠アウトライン（一時レイヤーで合成）
-    _outline_layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    # スプラッシュ枠アウトライン（設計座標 → キャンバス、最小レイヤーで合成）
+    _ol_x1, _ol_y1 = int(31 * SX), int(28 * SY)
+    _ol_x2, _ol_y2 = int(729 * SX) + 1, int(703 * SY) + 1
+    _outline_layer = Image.new("RGBA", (_ol_x2 - _ol_x1, _ol_y2 - _ol_y1), (0, 0, 0, 0))
     _od = ImageDraw.Draw(_outline_layer)
-    _od.rounded_rectangle([33, 30, 33 + 694, 30 + 671], radius=15, outline=(0, 0, 0, 220), width=1)
-    img.alpha_composite(_outline_layer)
+    _od.rounded_rectangle([33 * SX - _ol_x1, 30 * SY - _ol_y1, 727 * SX - _ol_x1, 701 * SY - _ol_y1], radius=round(15 * SY), outline=(0, 0, 0, 220), width=max(1, round(1 * SY)))
+    img.alpha_composite(_outline_layer, dest=(_ol_x1, _ol_y1))
 
     draw_figma_text_with_shadow(draw, text=char_name, x=53, y=53, font=font_stats, font_size=50)
     draw_figma_text_with_shadow(draw, text=f"Lv.{char_level}", x=53, y=117, font=font_stats, font_size=30)
@@ -1814,24 +1990,27 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             draw_figma_circle(img, x=circle_x, y=circle_y, size=circle_size, fill_color=(0, 0, 0, 180), outline_color=(80, 85, 95, 255), outline_width=2)
             icon_path = resolve_datas_path(f"static/assets/skills/{icon_name}.webp", beta)
             if os.path.exists(icon_path):
-                icon_img = get_resized_image(icon_path, (60, 60))
+                icon_img = get_resized_image(icon_path, (max(1, round(60 * SX)), max(1, round(60 * SY))))
                 if icon_img is not None:
                     alpha = icon_img.getchannel('A').point(lambda p: int(p * (45 / 255.0)))
                     icon_img.putalpha(alpha)
-                    img.paste(icon_img, (circle_x + 5, circle_y + 5), icon_img)
+                    img.paste(icon_img, (int(round((circle_x + 5) * SX)), int(round((circle_y + 5) * SY))), icon_img)
 
-            lock_w, lock_h = 24, 26
-            lx = circle_x + (circle_size - lock_w) // 2
-            ly = circle_y + (circle_size - lock_h) // 2 + 2
-            # ロックアイコンも一時レイヤーで合成
-            lock_overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
+            # ロックアイコン（設計座標の円中心 → キャンバスへ拡大、最小レイヤーで合成）
+            lock_w, lock_h = 24 * SX, 26 * SY
+            lx = circle_x * SX + (circle_size * SY - lock_w) / 2
+            ly = circle_y * SY + (circle_size * SY - lock_h) / 2 + 2 * SY
+            _lk_x1, _lk_y1 = int(lx) - 3, int(ly) - 3
+            _dx, _dy = -_lk_x1, -_lk_y1
+            lock_overlay = Image.new("RGBA", (int(lock_w) + 7, int(lock_h) + 7), (0, 0, 0, 0))
             draw_lock = ImageDraw.Draw(lock_overlay)
-            draw_lock.arc([lx + 4, ly, lx + lock_w - 4, ly + 16], start=180, end=0, fill=(255, 255, 255, 220), width=3)
-            draw_lock.line([lx + 4, ly + 8, lx + 4, ly + 12], fill=(255, 255, 255, 220), width=3)
-            draw_lock.line([lx + lock_w - 4, ly + 8, lx + lock_w - 4, ly + 12], fill=(255, 255, 255, 220), width=3)
-            draw_lock.rounded_rectangle([lx, ly + 11, lx + lock_w, ly + lock_h], radius=4, fill=(20, 25, 35, 255), outline=(255, 255, 255, 220), width=2)
-            draw_lock.ellipse([lx + 10, ly + 16, lx + 14, ly + 20], fill=(255, 255, 255, 220))
-            img.alpha_composite(lock_overlay)
+            _lw3 = max(1, round(3 * SY))
+            draw_lock.arc([lx + 4 * SX + _dx, ly + _dy, lx + lock_w - 4 * SX + _dx, ly + 16 * SY + _dy], start=180, end=0, fill=(255, 255, 255, 220), width=_lw3)
+            draw_lock.line([lx + 4 * SX + _dx, ly + 8 * SY + _dy, lx + 4 * SX + _dx, ly + 12 * SY + _dy], fill=(255, 255, 255, 220), width=_lw3)
+            draw_lock.line([lx + lock_w - 4 * SX + _dx, ly + 8 * SY + _dy, lx + lock_w - 4 * SX + _dx, ly + 12 * SY + _dy], fill=(255, 255, 255, 220), width=_lw3)
+            draw_lock.rounded_rectangle([lx + _dx, ly + 11 * SY + _dy, lx + lock_w + _dx, ly + lock_h + _dy], radius=max(1, round(4 * SY)), fill=(20, 25, 35, 255), outline=(255, 255, 255, 220), width=max(1, round(2 * SY)))
+            draw_lock.ellipse([lx + 10 * SX + _dx, ly + 16 * SY + _dy, lx + 14 * SX + _dx, ly + 20 * SY + _dy], fill=(255, 255, 255, 220))
+            img.alpha_composite(lock_overlay, dest=(_lk_x1, _lk_y1))
         else:
             draw_figma_circle(img, x=circle_x, y=circle_y, size=circle_size, fill_color=(0, 0, 0, 150), outline_color=base_color, outline_width=4)
             paste_figma_image(img, f"static/assets/skills/{icon_name}.webp", box_x=circle_x + 5, box_y=circle_y + 5, box_width=60, box_height=60, radius=15, beta=beta)
@@ -1850,7 +2029,10 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         stat_name2, stat_val2_str = weapon_stat2
         draw_figma_text(draw, text=stat_name2, x=1462, y=155, font=font_stats_light, align="left", font_size=18)
         draw_figma_text(draw, text=stat_val2_str, x=1635, y=155, font=font_stats_light, align="left", font_size=21)
+    t_end = time.perf_counter()
+    print(f"[Perf] 描画：ボックス・テキスト（上半分）: {(t_end - t_start)*1000:.1f}ms")
 
+    t_start = time.perf_counter()
     base_y = 73
     max_y = 700
     row_gap = (max_y - base_y) // len(stats_mock)
@@ -1863,9 +2045,9 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         icon_x = 840 - 60
         if icon_path and os.path.exists(icon_path):
             try:
-                icon_img = get_resized_image(icon_path, (icon_size, icon_size))
+                icon_img = get_resized_image(icon_path, (max(1, round(icon_size * SX)), max(1, round(icon_size * SY))))
                 if icon_img is not None:
-                    img.paste(icon_img, (icon_x, current_y + icon_offset_y), icon_img)
+                    img.paste(icon_img, (int(round(icon_x * SX)), int(round((current_y + icon_offset_y) * SY))), icon_img)
             except Exception as e:
                 print(f"[Error] Failed to paste status icon: {icon_path}. Reason: {e}")
         draw_figma_text(draw, text=n, x=840, y=current_y, font=font_stats, align="left")
@@ -1875,15 +2057,19 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             sub_y = current_y + 32
             green_text = data["add"]
             gray_text = str(data["base"])
-            calc_font = get_cached_font(FONT_PATH, 20) if os.path.exists(FONT_PATH) else font_stats
-            green_w = draw.textlength(green_text, font=calc_font)
-            gray_w = draw.textlength(gray_text, font=calc_font)
+            calc_font = get_cached_font(FONT_PATH, max(1, round(20 * SY))) if os.path.exists(FONT_PATH) else font_stats
+            # textlength はキャンバスpx → 設計単位(/SX)に変換して座標計算と整合
+            green_w = draw.textlength(green_text, font=calc_font) / SX
+            gray_w = draw.textlength(gray_text, font=calc_font) / SX
             target_right_edge = 1260
             green_x = target_right_edge - green_w
             gray_x = green_x - 8 - gray_w
             draw_figma_text(draw, text=green_text, x=green_x, y=sub_y, font=font_stats, font_size=20, fill_color=(0, 230, 115), align="left")
             draw_figma_text(draw, text=gray_text, x=gray_x, y=sub_y, font=font_stats, font_size=20, fill_color=(160, 165, 175), align="left")
+    t_end = time.perf_counter()
+    print(f"[Perf] 描画：ステータス: {(t_end - t_start)*1000:.1f}ms")
 
+    t_start = time.perf_counter()
     for x in artifact_x_list:
         draw_figma_box(img, x=x, y=738, width=314, height=399, radius=25)
 
@@ -1906,39 +2092,61 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             paste_figma_image(img, artifact_data["stats"][j][0], box_x=box_x + 12, box_y=y_base + 50 * j, box_width=30, box_height=30, radius=5, beta=beta)
 
         draw_figma_line(img, x1=box_x + 27, y1=1065, x2=box_x + 287, y2=1065, fill_color=(255, 255, 255, 50), width=1)
-        draw_figma_text(draw, text="スコア", x=box_x + 142, y=1090, font=font_stats_light, font_size=20, align="left")
-        draw_figma_text(draw, text=artifact_data["score"], x=box_x + 207, y=1070, font=font_stats, font_size=40, align="right")
+        # スコア数字は右端(box_x+287)基準で右揃え、小さい「スコア」ラベルは数字の左側に寄せる
+        _num_font_path = getattr(font_stats, "path", None)
+        _num_font = get_cached_font(_num_font_path, max(1, round(40 * SY))) if _num_font_path and os.path.exists(_num_font_path) else font_stats
+        # textlength はキャンバスpx → 設計単位(/SX)に変換
+        _score_left_x = box_x + 287 - draw.textlength(str(artifact_data["score"]), font=_num_font) / SX
+        draw_figma_text(draw, text="スコア", x=box_x + 27, y=1090, font=font_stats_light, font_size=20, align="right", box_width=(_score_left_x - 6) - (box_x + 27))
+        draw_figma_text(draw, text=artifact_data["score"], x=box_x + 207, y=1070, font=font_stats, font_size=40, align="right", box_width=80)
         paste_figma_image(img, f"static/assets/tiers/{artifact_data['tier']}.png", box_x=box_x + 27, box_y=1070, box_width=60, box_height=60, radius=15, beta=beta)
+    t_end = time.perf_counter()
+    print(f"[Perf] 描画：聖遺物5枠: {(t_end - t_start)*1000:.1f}ms")
 
+    t_start = time.perf_counter()
+    _name_font_path = getattr(font_stats, "path", None)
+    _name_font = get_cached_font(_name_font_path, max(1, round(20 * SY))) if _name_font_path and os.path.exists(_name_font_path) else font_stats
     for s in sets_display:
-        paste_figma_image(img, s["icon"], box_x=1360, box_y=s["img_y"], box_width=60, box_height=60, radius=15, beta=beta)
-        draw_figma_text(draw, text=s["name"], x=1435, y=s["text_y"], font=font_stats, align="left", font_size=20)
-        draw_figma_box(img, x=1610, y=s["box_y"], width=35, height=28, radius=8, fill_color=(255, 255, 255, 40))
-        draw_figma_text(draw, text=s["count"], x=1623, y=s["text_y"], font=font_stats, align="center", font_size=18, box_width=35)
+        # アイコン・名前を左寄りに配置し、個数バッジは名前の直後に付ける（数字はバッジ中央揃え）
+        paste_figma_image(img, s["icon"], box_x=1345, box_y=s["img_y"], box_width=60, box_height=60, radius=15, beta=beta)
+        draw_figma_text(draw, text=s["name"], x=1420, y=s["text_y"], font=font_stats, align="left", font_size=20)
+        _count_box_x = 1420 + draw.textlength(str(s["name"]), font=_name_font) / SX + 10
+        draw_figma_box(img, x=_count_box_x, y=s["box_y"], width=35, height=28, radius=8, fill_color=(255, 255, 255, 40))
+        draw_figma_text(draw, text=s["count"], x=_count_box_x, y=s["text_y"], font=font_stats, align="center", font_size=18, box_width=35)
 
     draw_figma_text(draw, text="総合スコア", x=1443, y=449, font=font_stats, align="left", font_size=30)
-    draw_figma_text(draw, text=round(score_sum, 1), x=1386, y=480, font=font_stats, align="left", font_size=90)
+    draw_figma_text(draw, text=round(score_sum, 1), x=1332, y=480, font=font_stats, align="center", font_size=90, box_width=386)
     draw_figma_line(img, x1=1380, y1=623, x2=1670, y2=623, fill_color=(255, 255, 255, 50), width=1)
     paste_figma_image(img, f"static/assets/tiers/{tier_sum_score}.png", box_x=1620, box_y=400, box_width=80, box_height=80, radius=15, beta=beta)
     draw_figma_text(draw, text="計算方法", x=1350, y=642, font=font_stats, align="left", font_size=30)
     draw_figma_text_right(draw, text=display_score_way, x=1680, y=645, font=font_stats, align="right", font_size=35)
+    t_end = time.perf_counter()
+    print(f"[Perf] 描画：セット効果・総合スコア: {(t_end - t_start)*1000:.1f}ms")
 
-    # 透明を維持するため RGBA のまま PNG 保存（黒背景への合成はしない）
+    # 透明を維持するため RGBA のまま保存（黒背景への合成はしない）。形式は設定で PNG/WEBP 切替
+    t_start = time.perf_counter()
     if img.mode != "RGBA":
         img = img.convert("RGBA")
 
     img_io = io.BytesIO()
-    img.save(img_io, 'WEBP', quality=95, method=0)
+    if img_format == "png":
+        img.save(img_io, 'PNG', compress_level=0)
+    else:
+        img.save(img_io, 'WEBP', quality=95, method=0)
     img_io.seek(0)
+    t_end = time.perf_counter()
+    print(f"[Perf] 画像保存: {(t_end - t_start)*1000:.1f}ms")
+    print(f"[Perf] TOTAL: {(time.perf_counter() - _total_start)*1000:.1f}ms")
     return img_io.getvalue()
 
 
 @app.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")
-async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None):
-    png_bytes = await run_in_threadpool(
-        _generate_card_image_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta, bg_color
+async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "webp"):
+    img_format = "png" if str(img_format).lower() == "png" else "webp"
+    img_bytes = await run_in_threadpool(
+        _generate_card_image_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta, bg_color, img_format
     )
-    return StreamingResponse(io.BytesIO(png_bytes), media_type="image/webp")
+    return StreamingResponse(io.BytesIO(img_bytes), media_type="image/png" if img_format == "png" else "image/webp")
 
 
 @app.get("/serverup", response_class=HTMLResponse)

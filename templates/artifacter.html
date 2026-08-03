@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>原神ビルドカード生成</title>
+    <title>原神ビルドカード</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <script>
-        // ライト/ダークのちらつき防止：CSS適用前にテーマ属性をセットしておく
         (function () {
             try {
                 var t = localStorage.getItem('genshin_build_card_theme_pref');
@@ -16,144 +15,598 @@
             }
         })();
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
-            --primary-color: #3b82f6;
-            --primary-hover: #2563eb;
-            --text-on-primary: #ffffff;
+            --bg: #070b14;
+            --surface: rgba(15, 22, 36, 0.72);
+            --surface-solid: #121a28;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.14);
+            --text: #eef2f8;
+            --text-secondary: #9aa8bc;
+            --text-muted: #6b7a90;
+            --accent: #5eead4;
+            --accent-dim: rgba(94, 234, 212, 0.14);
+            --accent-hover: #2dd4bf;
+            --danger: #f87171;
+            --radius: 12px;
+            --radius-sm: 8px;
         }
-        [data-theme='dark'] {
-            --primary-color: #60a5fa;
-            --primary-hover: #3b82f6;
-            --text-on-primary: #ffffff;
+
+        [data-theme='light'] {
+            --bg: #eef1f6;
+            --surface: rgba(255, 255, 255, 0.78);
+            --surface-solid: #ffffff;
+            --border: rgba(15, 23, 42, 0.08);
+            --border-strong: rgba(15, 23, 42, 0.13);
+            --text: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent: #0d9488;
+            --accent-dim: rgba(13, 148, 136, 0.12);
+            --accent-hover: #0f766e;
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            height: 100%;
         }
 
         body {
-            background-color: #0c0f1d;
-            color: #ffffff;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* 背景：画面全体 */
+        .page-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .page-bg-layer {
+            position: absolute;
+            inset: -12%;
+            background-size: cover;
+            background-position: center 30%;
+            background-repeat: no-repeat;
+            filter: blur(42px) brightness(0.42) saturate(1.2);
+            transform: scale(1.18);
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+        .page-bg-layer.active { opacity: 1; }
+        .page-bg-overlay {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 90% 70% at 50% 40%, rgba(7, 11, 20, 0.25) 0%, transparent 60%),
+                linear-gradient(180deg, rgba(7, 11, 20, 0.45) 0%, rgba(7, 11, 20, 0.88) 100%);
+        }
+        [data-theme='light'] .page-bg-layer {
+            filter: blur(52px) brightness(0.78) saturate(0.9);
+        }
+        [data-theme='light'] .page-bg-overlay {
+            background:
+                radial-gradient(ellipse 90% 70% at 50% 40%, rgba(255,255,255,0.3) 0%, transparent 60%),
+                linear-gradient(180deg, rgba(238,241,246,0.55) 0%, rgba(226,232,240,0.9) 100%);
+        }
+
+        /* 画面全体を使うレイアウト */
+        .page {
+            position: relative;
+            z-index: 1;
+            min-height: 100%;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+        }
+
+        /* ヘッダー：フル幅 */
+        .top-bar {
             display: flex;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            justify-content: space-between;
+            padding: 16px 28px;
+            border-bottom: 1px solid var(--border);
+            background: color-mix(in srgb, var(--bg) 55%, transparent);
+            backdrop-filter: blur(18px);
+        }
+        .top-left, .top-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+        }
+        .top-left { color: var(--text-muted); }
+        .top-right {
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.02em;
+        }
+        .top-link {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: color 0.15s;
+        }
+        .top-link:hover { color: var(--accent); }
+        .top-sep { opacity: 0.35; }
+
+        /* メイン：画面の残り全体を使う */
+        .main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 32px 56px;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .content {
+            width: 100%;
+            max-width: 520px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        /* ヒーロー */
+        .hero {
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.035em;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+        .hero p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.65;
+        }
+
+        /* フォームブロック：画面幅を活かす */
+        .form-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .ver-toggle {
+            display: inline-flex;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 4px;
+            backdrop-filter: blur(12px);
+        }
+        .ver-toggle button {
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 7px 20px;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .ver-toggle button.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+        .ver-toggle button:not(.active):hover {
+            color: var(--text-secondary);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+        .input-row input {
+            flex: 1;
+            min-width: 0;
+            height: 50px;
+            padding: 0 18px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 16px;
+            font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            backdrop-filter: blur(12px);
+        }
+        .input-row input::placeholder {
+            color: var(--text-muted);
+            font-family: inherit;
+            letter-spacing: 0.03em;
+        }
+        .input-row input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        .btn-submit {
+            flex-shrink: 0;
+            height: 50px;
+            padding: 0 24px;
+            border: none;
+            border-radius: var(--radius);
+            background: var(--accent);
+            color: #0a1220;
+            font-size: 14.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.15s, transform 0.1s;
+            white-space: nowrap;
+        }
+        [data-theme='light'] .btn-submit {
+            color: #fff;
+        }
+        .btn-submit:hover:not(:disabled) {
+            background: var(--accent-hover);
+        }
+        .btn-submit:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            width: 15px;
+            height: 15px;
+            border: 2px solid rgba(10, 18, 32, 0.25);
+            border-top-color: #0a1220;
+            border-radius: 50%;
+            animation: spin 0.65s linear infinite;
+        }
+        [data-theme='light'] .spinner {
+            border-color: rgba(255,255,255,0.3);
+            border-top-color: #fff;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 履歴：フル幅寄り */
+        .history {
+            width: 100%;
+            border-top: 1px solid var(--border);
+            padding-top: 24px;
+        }
+        .history-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .history-head span {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.03em;
+        }
+        .history-head button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12.5px;
+            cursor: pointer;
+            padding: 0;
+            transition: color 0.15s;
+        }
+        .history-head button:hover {
+            color: var(--danger);
+        }
+        .history-empty {
+            font-size: 13.5px;
+            color: var(--text-muted);
+            padding: 6px 0;
+        }
+        .history-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .history-item {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            overflow: hidden;
+            transition: border-color 0.15s, background 0.15s;
+            backdrop-filter: blur(10px);
         }
         .history-item:hover {
-            background-color: #2c3147;
-            color: var(--primary-color);
+            border-color: var(--border-strong);
+            background: color-mix(in srgb, var(--surface-solid) 80%, transparent);
+        }
+        .history-item button.load {
+            flex: 1;
+            min-width: 0;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+            font-size: 13.5px;
+            padding: 11px 12px;
+            text-align: center;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: color 0.15s;
+        }
+        .history-item button.load:hover {
+            color: var(--accent);
+        }
+        .history-item button.del {
+            flex-shrink: 0;
+            width: 32px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 10px 0;
+            transition: color 0.15s, background 0.15s;
+        }
+        .history-item button.del:hover {
+            color: var(--danger);
+            background: rgba(248, 113, 113, 0.1);
         }
 
-        /* 旧オレンジ系(yellow-400等)を置き換えるブランドカラー・ヘルパー */
-        .text-primary { color: var(--primary-color); }
-        .focus-ring-primary:focus { border-color: var(--primary-color) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 25%, transparent); }
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: var(--text-on-primary);
-            box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--primary-color) 55%, transparent);
-        }
-        .btn-primary:hover { background-color: var(--primary-hover); }
-        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
-        .mode-toggle-btn:hover { border-color: var(--primary-color) !important; color: var(--primary-color) !important; }
-        .spinner-primary {
-            border-width: 3px;
-            border-style: solid;
-            border-color: color-mix(in srgb, var(--text-on-primary) 35%, transparent);
-            border-top-color: var(--text-on-primary);
-            border-radius: 9999px;
+        /* フッター的な余白 */
+        .footer-space {
+            height: 24px;
         }
 
-        /* ==========================================================
-           ライトモード（html[data-theme="light"]）
-        ========================================================== */
-        html[data-theme="light"] body { background-color: #f4f4f5; color: #18181b; }
-        html[data-theme="light"] .bg-\[\#161a2e\] { background-color: #ffffff; }
-        html[data-theme="light"] .bg-\[\#1f243f\] { background-color: #e4e4e7; }
-        html[data-theme="light"] .border-\[\#252a42\],
-        html[data-theme="light"] .border-\[\#2c3147\] { border-color: #d4d4d8; }
-        html[data-theme="light"] .text-gray-500 { color: #000000; }
-        html[data-theme="light"] .text-gray-400 { color: #000000; }
-        html[data-theme="light"] .text-gray-300 { color: #000000; }
-        html[data-theme="light"] .text-gray-200 { color: #000000; }
-        html[data-theme="light"] .text-white { color: #000000; }
-        html[data-theme="light"] .history-item:hover { background-color: #e4e4e7; }
-        html[data-theme="light"] .placeholder-gray-500::placeholder { color: #a1a1aa; }
+        /* Beta 同意モーダル */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+        }
+        .modal-backdrop.open { display: flex; }
+        .modal {
+            width: 100%;
+            max-width: 360px;
+            background: var(--surface-solid);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.35);
+        }
+        .modal-head {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+        .modal-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(251, 191, 36, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .modal-icon svg {
+            width: 20px;
+            height: 20px;
+            color: #fbbf24;
+        }
+        .modal h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .modal p {
+            font-size: 13.5px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+        .modal p:last-of-type { margin-bottom: 22px; }
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .modal-actions .agree {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: var(--text);
+            color: var(--bg);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .modal-actions .agree:hover { opacity: 0.88; }
+        .modal-actions .decline {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+        .modal-actions .decline:hover {
+            background: color-mix(in srgb, var(--surface-solid) 60%, transparent);
+            color: var(--text);
+        }
+
+        /* レスポンシブ：画面幅に合わせて広がる */
+        @media (min-width: 900px) {
+            .content {
+                max-width: 580px;
+            }
+            .hero h1 {
+                font-size: 28px;
+            }
+            .history-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .top-bar {
+                padding: 14px 18px;
+            }
+            .main {
+                padding: 36px 18px 48px;
+            }
+            .content {
+                gap: 32px;
+            }
+            .hero h1 {
+                font-size: 22px;
+            }
+            .input-row {
+                flex-direction: column;
+            }
+            .btn-submit {
+                width: 100%;
+                height: 48px;
+            }
+            .input-row input {
+                height: 48px;
+            }
+            .history-list {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .history-list {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-
-    <div class="w-full max-w-md p-7 bg-[#161a2e] rounded-2xl shadow-2xl border border-[#252a42]">
-        <h1 class="text-2xl font-bold text-center text-primary mb-5 flex items-center justify-center gap-2">
-            ビルドカード生成
-        </h1>
-        
-        <form id="searchForm" action="/fetch_uid" method="GET" class="space-y-4">
-            <input type="hidden" name="from_artifacter" value="true">
-            <input type="hidden" id="verInput" name="ver" value="live">
-            
-            <div class="relative">
-                <input type="text" id="uidInput" name="uid" placeholder="UIDを入力 (9桁)" required maxlength="10" 
-                       class="w-full px-5 py-3.5 bg-[#1f243f] border-2 border-[#2c3147] rounded-xl text-white text-lg text-center font-mono focus:outline-none focus-ring-primary transition-all placeholder-gray-500">
-            </div>
-
-            <div class="flex items-center justify-center gap-4 flex-wrap">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs text-gray-500">読み込みモード:</span>
-                    <button type="button" id="verModeBtn"
-                        class="mode-toggle-btn text-xs font-mono px-2.5 py-1 rounded-md bg-[#1f243f] border border-[#2c3147] text-gray-200 transition-all"></button>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-xs text-gray-500">表示テーマ:</span>
-                    <button type="button" id="themeModeBtn"
-                        class="mode-toggle-btn text-xs font-mono px-2.5 py-1 rounded-md bg-[#1f243f] border border-[#2c3147] text-gray-200 transition-all"></button>
-                </div>
-            </div>
-            
-            <button type="submit" id="submitBtn" class="btn-primary w-full py-3.5 font-bold text-lg rounded-xl active:scale-[0.99] transition-all flex items-center justify-center gap-2">
-                <span id="submitBtnSpinner" class="hidden animate-spin h-5 w-5 spinner-primary"></span>
-                <span id="submitBtnLabel">データを読み込む</span>
-            </button>
-        </form>
-
-        <div id="historySection" class="mt-5 pt-5 border-t border-[#252a42] hidden">
-            <h3 class="text-sm font-semibold text-gray-400 mb-3 flex justify-between items-center">
-                <span>最近の検索履歴</span>
-                <button id="clearHistory" class="text-xs text-red-400 hover:underline">すべて削除</button>
-            </h3>
-            <div id="historyList" class="grid grid-cols-2 gap-2"></div>
-        </div>
+    <div class="page-bg" aria-hidden="true">
+        <div class="page-bg-layer" id="bgLayerA"></div>
+        <div class="page-bg-layer" id="bgLayerB"></div>
+        <div class="page-bg-overlay"></div>
     </div>
 
-    <!-- 未確定データ(BETA)の閲覧同意モーダル -->
-    <div id="betaConsentModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 items-center justify-center p-4"
-        onclick="if(event.target===this) closeBetaConsentModal(false)">
-        <div class="bg-[#161a2e] border border-[#252a42] rounded-2xl w-full max-w-sm p-5">
-            <div class="flex items-center gap-2.5 mb-3">
-                <div class="w-9 h-9 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-400">
+    <div class="page">
+        <header class="top-bar">
+            <div class="top-left">
+                <span id="verBadge">Live</span>
+                <span class="top-sep">|</span>
+                <button type="button" class="top-link" id="themeModeBtn">ライト / ダーク</button>
+            </div>
+            <div class="top-right">原神ビルドカード</div>
+        </header>
+
+        <main class="main">
+            <div class="content">
+                <div class="hero">
+                    <h1>UIDからビルドを読み込む</h1>
+                    <p>公開プロフィールに登録されたキャラクター情報を取得します</p>
+                </div>
+
+                <form id="searchForm" class="form-block" action="/fetch_uid" method="GET">
+                    <input type="hidden" name="from_artifacter" value="true">
+                    <input type="hidden" id="verInput" name="ver" value="live">
+
+                    <div class="ver-toggle" role="group" aria-label="読み込みモード">
+                        <button type="button" id="verLiveBtn" class="active">Live</button>
+                        <button type="button" id="verBetaBtn">Beta</button>
+                    </div>
+
+                    <div class="input-row">
+                        <input
+                            type="text"
+                            id="uidInput"
+                            name="uid"
+                            placeholder="UID 9桁"
+                            required
+                            maxlength="10"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            aria-label="UID"
+                        >
+                        <button type="submit" id="submitBtn" class="btn-submit">
+                            <span id="submitBtnSpinner" class="spinner" style="display:none"></span>
+                            <span id="submitBtnLabel">データを読み込む</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="history" id="historySection">
+                    <div class="history-head">
+                        <span>最近の検索</span>
+                        <button type="button" id="clearHistory">すべて削除</button>
+                    </div>
+                    <div id="historyEmpty" class="history-empty">検索履歴はありません</div>
+                    <div id="historyList" class="history-list" style="display:none"></div>
+                </div>
+            </div>
+        </main>
+
+        <div class="footer-space"></div>
+    </div>
+
+    <div id="betaConsentModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="betaTitle"
+         onclick="if(event.target===this) closeBetaConsentModal(false)">
+        <div class="modal">
+            <div class="modal-head">
+                <div class="modal-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M10.24 3.957l-8.422 14.06A1.989 1.989 0 0 0 3.518 21h16.964a1.989 1.989 0 0 0 1.7-3l-8.423-14a1.989 1.989 0 0 0-3.517 0z"></path>
                         <path d="M12 9v4"></path>
                         <path d="M12 17h.01"></path>
                     </svg>
                 </div>
-                <h2 class="text-base font-bold text-white">未確定データの閲覧同意</h2>
+                <h2 id="betaTitle">未確定データの閲覧同意</h2>
             </div>
-            <p class="text-xs text-gray-400 leading-relaxed mb-1">
-                これから表示する内容には、ゲーム内で正式配信される前の未確定データが含まれます。今後のアップデートで数値や仕様が変更・削除される可能性があります。
-            </p>
-            <p class="text-xs text-gray-400 leading-relaxed mb-5">
-                内容にご注意のうえ、ご自身の判断でご覧ください。
-            </p>
-            <div class="flex flex-col gap-2">
-                <!-- 上：同意して閲覧する（推奨アクション・塗りつぶし） -->
-                <button id="betaConsentAgreeBtn" type="button" class="w-full py-2.5 bg-zinc-100 border border-zinc-100 rounded-lg text-sm font-bold text-zinc-900 hover:bg-zinc-200 transition-all">
-                    同意して閲覧する
-                </button>
-
-                <!-- 下：戻る（補助アクション・枠線のみ） -->
-                <button id="betaConsentDeclineBtn" type="button" class="w-full py-2.5 bg-transparent border border-zinc-700 rounded-lg text-sm font-bold text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-all">
-                    戻る
-                </button>
+            <p>これから表示する内容には、ゲーム内で正式配信される前の未確定データが含まれます。今後のアップデートで数値や仕様が変更・削除される可能性があります。</p>
+            <p>内容にご注意のうえ、ご自身の判断でご覧ください。</p>
+            <div class="modal-actions">
+                <button type="button" class="agree" id="betaConsentAgreeBtn">同意して閲覧する</button>
+                <button type="button" class="decline" id="betaConsentDeclineBtn">戻る</button>
             </div>
         </div>
     </div>
@@ -163,14 +616,20 @@
         const searchForm = document.getElementById('searchForm');
         const historySection = document.getElementById('historySection');
         const historyList = document.getElementById('historyList');
+        const historyEmpty = document.getElementById('historyEmpty');
         const clearHistory = document.getElementById('clearHistory');
         const verInput = document.getElementById('verInput');
-        const verModeBtn = document.getElementById('verModeBtn');
+        const verLiveBtn = document.getElementById('verLiveBtn');
+        const verBetaBtn = document.getElementById('verBetaBtn');
+        const verBadge = document.getElementById('verBadge');
+        const themeModeBtn = document.getElementById('themeModeBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const submitBtnSpinner = document.getElementById('submitBtnSpinner');
+        const submitBtnLabel = document.getElementById('submitBtnLabel');
 
-        // ==========================================================
-        //  未確定データ(BETA)閲覧同意モーダル
-        //  Promiseを返し、「同意して閲覧する」でtrue、「戻る」/背景クリックでfalseを解決する
-        // ==========================================================
+        const VER_PREF_KEY = 'genshin_build_card_ver_pref';
+        const THEME_PREF_KEY = 'genshin_build_card_theme_pref';
+
         const betaConsentModal = document.getElementById('betaConsentModal');
         const betaConsentAgreeBtn = document.getElementById('betaConsentAgreeBtn');
         const betaConsentDeclineBtn = document.getElementById('betaConsentDeclineBtn');
@@ -179,37 +638,24 @@
         function openBetaConsentModal() {
             return new Promise((resolve) => {
                 betaConsentResolve = resolve;
-                betaConsentModal.classList.remove('hidden');
-                betaConsentModal.classList.add('flex');
+                betaConsentModal.classList.add('open');
             });
         }
-
         function closeBetaConsentModal(agreed) {
-            betaConsentModal.classList.add('hidden');
-            betaConsentModal.classList.remove('flex');
+            betaConsentModal.classList.remove('open');
             if (betaConsentResolve) {
                 betaConsentResolve(agreed);
                 betaConsentResolve = null;
             }
         }
-
-        if (betaConsentAgreeBtn) betaConsentAgreeBtn.addEventListener('click', () => closeBetaConsentModal(true));
-        if (betaConsentDeclineBtn) betaConsentDeclineBtn.addEventListener('click', () => closeBetaConsentModal(false));
-        const themeModeBtn = document.getElementById('themeModeBtn');
-        const submitBtn = document.getElementById('submitBtn');
-        const submitBtnSpinner = document.getElementById('submitBtnSpinner');
-        const submitBtnLabel = document.getElementById('submitBtnLabel');
+        betaConsentAgreeBtn.addEventListener('click', () => closeBetaConsentModal(true));
+        betaConsentDeclineBtn.addEventListener('click', () => closeBetaConsentModal(false));
 
         function setSubmitLoading() {
             submitBtn.disabled = true;
-            submitBtnSpinner.classList.remove('hidden');
+            submitBtnSpinner.style.display = 'inline-block';
             submitBtnLabel.textContent = '読み込み中...';
         }
-
-        // build_card.html 側の切替ボタンで保存している「最後に見ていたver」を
-        // ここでも読み込んで、検索フォームに自動で引き継ぐ
-        const VER_PREF_KEY = 'genshin_build_card_ver_pref';
-        const THEME_PREF_KEY = 'genshin_build_card_theme_pref';
 
         function getSavedThemePref() {
             try {
@@ -218,118 +664,106 @@
                 return 'dark';
             }
         }
-
-        function applyThemeModeUI() {
+        function applyTheme() {
             const theme = getSavedThemePref();
-            themeModeBtn.textContent = theme === 'light' ? '☀️ ライト' : '🌙 ダーク';
+            document.documentElement.setAttribute('data-theme', theme);
         }
-
-        applyThemeModeUI();
-
+        applyTheme();
         themeModeBtn.addEventListener('click', () => {
             const next = getSavedThemePref() === 'light' ? 'dark' : 'light';
-            try {
-                localStorage.setItem(THEME_PREF_KEY, next);
-            } catch (e) { /* ignore storage errors */ }
-            document.documentElement.setAttribute('data-theme', next);
-            applyThemeModeUI();
+            try { localStorage.setItem(THEME_PREF_KEY, next); } catch (e) {}
+            applyTheme();
         });
 
         function getSavedVerPref() {
             try {
-                const saved = localStorage.getItem(VER_PREF_KEY);
-                return saved === 'beta' ? 'beta' : 'live';
+                return localStorage.getItem(VER_PREF_KEY) === 'beta' ? 'beta' : 'live';
             } catch (e) {
                 return 'live';
             }
         }
-
         function applyVerModeUI() {
-            verInput.value = verInput.value === 'beta' ? 'beta' : 'live';
-            verModeBtn.textContent = verInput.value === 'beta' ? 'Beta' : 'Live';
+            const v = verInput.value === 'beta' ? 'beta' : 'live';
+            verInput.value = v;
+            verLiveBtn.classList.toggle('active', v === 'live');
+            verBetaBtn.classList.toggle('active', v === 'beta');
+            verBadge.textContent = v === 'beta' ? 'Beta' : 'Live';
         }
-
         verInput.value = getSavedVerPref();
         applyVerModeUI();
 
-        verModeBtn.addEventListener('click', async () => {
-            const next = verInput.value === 'beta' ? 'live' : 'beta';
+        async function setVer(next) {
             if (next === 'beta') {
                 const agreed = await openBetaConsentModal();
                 if (!agreed) return;
             }
             verInput.value = next;
-            try {
-                localStorage.setItem(VER_PREF_KEY, verInput.value);
-            } catch (e) { /* ignore storage errors */ }
+            try { localStorage.setItem(VER_PREF_KEY, next); } catch (e) {}
             applyVerModeUI();
-        });
+        }
+        verLiveBtn.addEventListener('click', () => setVer('live'));
+        verBetaBtn.addEventListener('click', () => setVer('beta'));
 
         function getHistory() {
             return JSON.parse(localStorage.getItem('uid_history') || '[]');
         }
-
         function saveHistory(history) {
             localStorage.setItem('uid_history', JSON.stringify(history));
         }
-
         function removeHistoryUid(uid) {
-            const next = getHistory().filter(item => item !== uid);
-            saveHistory(next);
+            saveHistory(getHistory().filter(item => item !== uid));
             renderHistory();
         }
-
         function renderHistory() {
             const history = getHistory();
             if (history.length === 0) {
-                historySection.classList.add('hidden');
+                historyEmpty.style.display = 'block';
+                historyList.style.display = 'none';
+                historyList.innerHTML = '';
                 return;
             }
-            historySection.classList.remove('hidden');
+            historyEmpty.style.display = 'none';
+            historyList.style.display = 'grid';
             historyList.innerHTML = '';
 
             history.forEach(uid => {
                 const wrap = document.createElement('div');
-                wrap.className = 'history-item flex items-center gap-1 bg-[#1f243f] border border-[#2c3147] rounded-lg overflow-hidden transition-all';
+                wrap.className = 'history-item';
 
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'flex-1 min-w-0 px-3 py-2 text-sm text-gray-300 font-mono text-center truncate hover:text-primary';
-                btn.textContent = uid;
-                btn.title = uid + ' を読み込む';
-                btn.addEventListener('click', () => {
+                const loadBtn = document.createElement('button');
+                loadBtn.type = 'button';
+                loadBtn.className = 'load';
+                loadBtn.textContent = uid;
+                loadBtn.title = uid + ' を読み込む';
+                loadBtn.addEventListener('click', () => {
                     uidInput.value = uid;
                     setSubmitLoading();
                     searchForm.submit();
                 });
 
-                const del = document.createElement('button');
-                del.type = 'button';
-                del.className = 'shrink-0 px-2 py-2 text-xs text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all';
-                del.setAttribute('aria-label', uid + ' を履歴から削除');
-                del.title = 'この UID を履歴から削除';
-                del.innerHTML = '&times;';
-                del.addEventListener('click', (e) => {
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'del';
+                delBtn.setAttribute('aria-label', uid + ' を履歴から削除');
+                delBtn.innerHTML = '&times;';
+                delBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     removeHistoryUid(uid);
                 });
 
-                wrap.appendChild(btn);
-                wrap.appendChild(del);
+                wrap.appendChild(loadBtn);
+                wrap.appendChild(delBtn);
                 historyList.appendChild(wrap);
             });
         }
 
-        searchForm.addEventListener('submit', (e) => {
+        searchForm.addEventListener('submit', () => {
             const uid = uidInput.value.trim();
             if (!uid) return;
-
-            let history = getHistory();
-            history = history.filter(item => item !== uid);
+            let history = getHistory().filter(item => item !== uid);
             history.unshift(uid);
             history = history.slice(0, 6);
-
             saveHistory(history);
             setSubmitLoading();
         });
@@ -340,6 +774,101 @@
         });
 
         renderHistory();
+
+        (function setupBgRotator() {
+            const layerA = document.getElementById('bgLayerA');
+            const layerB = document.getElementById('bgLayerB');
+            let activeIsA = true;
+            let lastUrl = '';
+            let validUrls = [];
+            let rotateTimer = null;
+
+            function pickRandomUrl() {
+                if (validUrls.length === 0) return null;
+                if (validUrls.length === 1) return validUrls[0];
+                let url;
+                do {
+                    url = validUrls[Math.floor(Math.random() * validUrls.length)];
+                } while (url === lastUrl && validUrls.length > 1);
+                return url;
+            }
+
+            function setLayer(layer, url) {
+                layer.style.backgroundImage = `url('${url}')`;
+            }
+
+            function showNext() {
+                const url = pickRandomUrl();
+                if (!url) return;
+                lastUrl = url;
+
+                const incoming = activeIsA ? layerB : layerA;
+                const outgoing = activeIsA ? layerA : layerB;
+
+                const preload = new Image();
+                preload.onload = () => {
+                    setLayer(incoming, url);
+                    requestAnimationFrame(() => {
+                        incoming.classList.add('active');
+                        outgoing.classList.remove('active');
+                        activeIsA = !activeIsA;
+                    });
+                };
+                preload.onerror = () => {
+                    validUrls = validUrls.filter(u => u !== url);
+                    if (validUrls.length) showNext();
+                };
+                preload.src = url;
+            }
+
+            function startRotation() {
+                if (rotateTimer) clearInterval(rotateTimer);
+                showNext();
+                rotateTimer = setInterval(showNext, 10000);
+            }
+
+            async function loadImageList() {
+                const ver = (document.getElementById('verInput') || {}).value || 'live';
+                const qs = ver === 'beta' ? '?beta=true' : '';
+                try {
+                    const res = await fetch(`/api/bg_images${qs}`);
+                    if (!res.ok) throw new Error(`status ${res.status}`);
+                    const data = await res.json();
+                    validUrls = Array.isArray(data.splash) ? data.splash.slice() : [];
+                    if (validUrls.length > 120) {
+                        for (let i = validUrls.length - 1; i > 0; i--) {
+                            const j = Math.floor(Math.random() * (i + 1));
+                            [validUrls[i], validUrls[j]] = [validUrls[j], validUrls[i]];
+                        }
+                        validUrls = validUrls.slice(0, 120);
+                    }
+                } catch (e) {
+                    console.warn('[bg] /api/bg_images の取得に失敗:', e);
+                    validUrls = [];
+                }
+                return validUrls;
+            }
+
+            loadImageList().then((urls) => {
+                if (!urls.length) {
+                    console.info('[bg] 利用可能な背景画像がありません');
+                    return;
+                }
+                console.info(`[bg] ${urls.length} 枚の背景候補を読み込みました`);
+                startRotation();
+            });
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (rotateTimer) {
+                        clearInterval(rotateTimer);
+                        rotateTimer = null;
+                    }
+                } else if (validUrls.length > 0 && !rotateTimer) {
+                    startRotation();
+                }
+            });
+        })();
     </script>
 </body>
 </html>
