@@ -39,6 +39,7 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 import hashlib as _hashlib
 import hmac as _hmac
+import re as _re
 import secrets as _secrets
 import time as _time
 
@@ -173,6 +174,151 @@ async def admin_action(request: Request):
 
 print("[OK] Admin routes embedded in server.py → /admin/login , /admin/__ping")
 
+# ==========================================================
+#  地域割り当て管理 API（characters.json = {地域名: [キャラ数値ID]}）
+# ==========================================================
+_REGION_KEY_PATTERN = _re.compile(r"^[A-Za-z0-9_-]{1,32}$")
+
+
+def _build_admin_character_catalog():
+    """全キャラをベースID単位に重複排除したカタログを作る（lists の更新を検知して再構築）。"""
+    list_paths = [
+        os.path.join(STATIC_DIR, "data", "lists", "characters.json"),
+        os.path.join(STATIC_DIR, "beta", "data", "lists", "characters.json"),
+    ]
+    cache_key = tuple(
+        (p, os.path.getmtime(p)) if os.path.exists(p) else (p, None)
+        for p in list_paths
+    )
+    cached = _ADMIN_CATALOG_CACHE.get("entry")
+    if cached is not None and _ADMIN_CATALOG_CACHE.get("key") == cache_key:
+        return cached
+
+    merged = {}
+    for list_path in list_paths:
+        if not os.path.exists(list_path):
+            continue
+        try:
+            with open(list_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            continue
+        if not isinstance(data, dict):
+            continue
+        for char_id, entry in data.items():
+            base = str(char_id).split("-")[0]
+            if base in merged:
+                continue
+            merged[base] = {"char_id": str(char_id), "entry": entry or {}}
+
+    catalog = []
+    for base in sorted(merged, key=lambda b: int(b)):
+        info = merged[base]
+        entry = info["entry"]
+        icon = None
+        for char_dir in (
+            os.path.join(STATIC_DIR, "data", "characters"),
+            os.path.join(STATIC_DIR, "beta", "data", "characters"),
+        ):
+            char_json = os.path.join(char_dir, f"{info['char_id']}.json")
+            if not os.path.exists(char_json):
+                continue
+            try:
+                with open(char_json, "r", encoding="utf-8") as f:
+                    icon = json.load(f).get("icon")
+            except Exception:
+                icon = None
+            if icon:
+                break
+        icon_path = None
+        if icon:
+            for assets_dir in (
+                os.path.join(STATIC_DIR, "assets", "characters"),
+                os.path.join(STATIC_DIR, "beta", "assets", "characters"),
+            ):
+                if os.path.exists(os.path.join(assets_dir, f"{icon}.webp")):
+                    prefix = "static/assets" if "beta" not in assets_dir else "static/beta/assets"
+                    icon_path = f"{prefix}/characters/{icon}.webp"
+                    break
+        catalog.append({
+            "id": int(base),
+            "name": entry.get("jaName") or entry.get("enName") or base,
+            "enName": entry.get("enName"),
+            "element": entry.get("element"),
+            "icon": icon_path,
+        })
+
+    _ADMIN_CATALOG_CACHE["key"] = cache_key
+    _ADMIN_CATALOG_CACHE["entry"] = catalog
+    return catalog
+
+
+@app.get("/admin/api/region_map")
+async def admin_region_map_get(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    try:
+        def _run():
+            return {
+                "ok": True,
+                "region_map": _load_region_map(),
+                "catalog": _build_admin_character_catalog(),
+                "region_images": _list_region_image_names(),
+            }
+        return JSONResponse(await run_in_threadpool(_run))
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/admin/api/region_map")
+async def admin_region_map_save(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "invalid JSON"}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"ok": False, "error": "body must be {region: [ids]}"}, status_code=400)
+
+    cleaned = {}
+    for region, ids in body.items():
+        region = str(region).strip()
+        if not _REGION_KEY_PATTERN.match(region):
+            return JSONResponse({"ok": False, "error": f"invalid region key: {region}"}, status_code=400)
+        if not isinstance(ids, list):
+            return JSONResponse({"ok": False, "error": f"invalid ids for {region}"}, status_code=400)
+        cleaned_ids = []
+        skipped_traveler = 0
+        for cid in ids:
+            try:
+                cid_int = int(cid)
+            except (TypeError, ValueError):
+                return JSONResponse({"ok": False, "error": f"invalid char id in {region}: {cid}"}, status_code=400)
+            if cid_int in _TRAVELER_BASE_IDS:
+                # 旅人は元素連動のため編集不可（無視して保存）
+                skipped_traveler += 1
+                continue
+            if cid_int not in cleaned_ids:
+                cleaned_ids.append(cid_int)
+        cleaned[region] = cleaned_ids
+
+    def _run():
+        path = os.path.join(STATIC_DIR, "assets", "characters", "characters.json")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(cleaned, f, indent=2, ensure_ascii=False)
+        clear_region_map_cache()
+        result = {"ok": True, "regions": {k: len(v) for k, v in cleaned.items()}}
+        if skipped_traveler:
+            result["notice"] = f"旅人(10000005/10000007)は元素連動のため{skipped_traveler}件をスキップしました"
+        return result
+
+    try:
+        return JSONResponse(await run_in_threadpool(_run))
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
 FONT_PATH = os.path.join(BASE_DIR, "fonts", "font_fixed.ttf")
 FONT_LIGHT_PATH = os.path.join(BASE_DIR, "fonts", "font_light.ttf")
 
@@ -257,21 +403,11 @@ _FONT_CACHE: dict = {}
 _SPLASH_BLUR_CACHE: dict = {}
 _RESIZED_CACHE: dict = {}
 _PREBUILT_BGS: dict = {}
-_NATION_BGS: dict = {}
-_CHARACTERS_MASTER_CACHE: list | None = None
+_REGION_BGS: dict = {}
+_REGION_MAP_CACHE: dict | None = None
+_ADMIN_CATALOG_CACHE: dict = {}
 
-_NATION_ALIASES = {
-    "mondstadt": "mondstadt",
-    "liyue": "liyue",
-    "inazuma": "inazuma",
-    "sumeru": "sumeru",
-    "fontaine": "fontaine",
-    "natlan": "natlan",
-    "nodkrai": "nodkrai",
-    "nod-krai": "nodkrai",
-    "nod_krai": "nodkrai",
-}
-_NATION_IMAGE_NAMES = {"mondstadt", "liyue", "inazuma", "sumeru", "fontaine", "natlan", "nodkrai"}
+_REGION_STATES_DIR = os.path.join(STATIC_DIR, "assets", "states")
 
 
 def get_cached_font(path: str, size: int):
@@ -388,14 +524,14 @@ def _build_base_background(width, height, base_rgb):
     return bg
 
 
-def _build_nation_background(width, height, nation):
-    if not nation:
+def _build_region_background(width, height, region):
+    if not region:
         return None
-    nation_path = os.path.join(STATIC_DIR, "assets", "states", f"{nation}.png")
-    if not os.path.exists(nation_path):
+    region_path = os.path.join(_REGION_STATES_DIR, f"{region}.png")
+    if not os.path.exists(region_path):
         return None
     try:
-        src = get_cached_image(nation_path)
+        src = get_cached_image(region_path)
         if src is None:
             return None
         scale = max(width / src.width, height / src.height)
@@ -406,18 +542,32 @@ def _build_nation_background(width, height, nation):
         top = max(0, (nh - height) // 2)
         return resized.crop((left, top, left + width, top + height))
     except Exception as e:
-        print(f"[Warning] nation background load failed ({nation_path}): {e}")
+        print(f"[Warning] region background load failed ({region_path}): {e}")
         return None
 
 
-def get_nation_background(width, height, nation):
-    if not nation:
+def get_region_background(width, height, region):
+    if not region:
         return None
-    key = (nation, width, height)
-    if key not in _NATION_BGS:
-        _NATION_BGS[key] = _build_nation_background(width, height, nation)
-    bg = _NATION_BGS[key]
+    key = (region, width, height)
+    if key not in _REGION_BGS:
+        _REGION_BGS[key] = _build_region_background(width, height, region)
+    bg = _REGION_BGS[key]
     return bg.copy() if bg is not None else None
+
+
+def region_image_path(region):
+    """地域背景画像のパスを返す（存在しなければ None）。"""
+    if not region:
+        return None
+    path = os.path.join(_REGION_STATES_DIR, f"{region}.png")
+    return path if os.path.exists(path) else None
+
+
+def _list_region_image_names():
+    if not os.path.isdir(_REGION_STATES_DIR):
+        return []
+    return sorted(fn[:-4] for fn in os.listdir(_REGION_STATES_DIR) if fn.endswith(".png"))
 
 
 def _prebuild_backgrounds(width=CARD_W, height=CARD_H):
@@ -435,77 +585,89 @@ def _prebuild_backgrounds(width=CARD_W, height=CARD_H):
     for elem, rgb in elements.items():
         _PREBUILT_BGS[elem] = _build_base_background(width, height, rgb)
     print(f"[Prebuild] {len(_PREBUILT_BGS)} element backgrounds cached in memory")
-    prebuilt_nations = 0
-    for nation in sorted(_NATION_IMAGE_NAMES):
-        if get_nation_background(width, height, nation) is not None:
-            prebuilt_nations += 1
-    if prebuilt_nations:
-        print(f"[Prebuild] {prebuilt_nations} nation backgrounds cached in memory")
+    prebuilt_regions = 0
+    for region in _list_region_image_names():
+        if get_region_background(width, height, region) is not None:
+            prebuilt_regions += 1
+    if prebuilt_regions:
+        print(f"[Prebuild] {prebuilt_regions} region backgrounds cached in memory")
 
 
-def _load_characters_master():
-    global _CHARACTERS_MASTER_CACHE
-    if _CHARACTERS_MASTER_CACHE is None:
-        _CHARACTERS_MASTER_CACHE = []
+# 旅人（10000005/10000007）は地域マップで管理せず、元素ごとに背景地域を固定する。
+# admin からの割り当ては無効（POST 時にスキップ・ロード時に除去）。
+_TRAVELER_BASE_IDS = (10000005, 10000007)
+_TRAVELER_ELEMENT_REGIONS = {
+    "Anemo": "mondstadt",
+    "Geo": "liyue",
+    "Electro": "inazuma",
+    "Dendro": "sumeru",
+    "Hydro": "fontaine",
+    "Pyro": "natlan",
+    "Cryo": "snezhnaya",
+}
+
+
+def _load_region_map():
+    """static/assets/characters/characters.json を {地域名: [キャラ数値ID]} として読む。"""
+    global _REGION_MAP_CACHE
+    if _REGION_MAP_CACHE is None:
+        region_map = {}
         path = os.path.join(STATIC_DIR, "assets", "characters", "characters.json")
         if os.path.exists(path):
             try:
                 with open(path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                if isinstance(data, list):
-                    _CHARACTERS_MASTER_CACHE = data
+                if isinstance(data, dict):
+                    for region, ids in data.items():
+                        if not isinstance(ids, list):
+                            continue
+                        cleaned = []
+                        for cid in ids:
+                            try:
+                                cleaned.append(int(cid))
+                            except (TypeError, ValueError):
+                                continue
+                        # 旅人は元素連動のためマップに保持しない
+                        region_map[str(region)] = [cid for cid in cleaned if cid not in _TRAVELER_BASE_IDS]
             except Exception as e:
-                print(f"[Warning] characters.json load failed: {e}")
-    return _CHARACTERS_MASTER_CACHE
+                print(f"[Warning] region map load failed: {e}")
+        _REGION_MAP_CACHE = region_map
+    return _REGION_MAP_CACHE
 
 
-def normalize_nation_tag(tag):
-    if not isinstance(tag, str):
-        return None
-    tag = tag.strip()
-    if not tag:
-        return None
-    return _NATION_ALIASES.get(tag.lower())
+def clear_region_map_cache():
+    global _REGION_MAP_CACHE
+    _REGION_MAP_CACHE = None
 
 
-def find_nation_for_character(char_name):
-    if not char_name:
-        return None
-    for obj in _load_characters_master():
-        if not isinstance(obj, dict):
-            continue
-        names = [
-            obj.get("en"),
-            obj.get("ja"),
-            obj.get("zhCN"),
-            obj.get("zhTW"),
-            obj.get("id"),
-        ]
-        if char_name not in [n for n in names if isinstance(n, str)]:
-            continue
-        tags = obj.get("tags")
-        if not isinstance(tags, list) or not tags:
-            return None
-        nation = normalize_nation_tag(tags[0])
-        if nation:
-            return nation
-        for tag in tags[1:]:
-            nation = normalize_nation_tag(tag)
-            if nation:
-                return nation
-        return None
-    return None
+def find_regions_for_character(base_id, element=None):
+    """キャラ（ベース数値ID）が所属する地域リストをJSONのキー順で返す。
+
+    旅人（10000005/10000007）は地域マップを使わず、元素ごとの固定地域を返す（admin編集不可）。
+    """
+    try:
+        base_int = int(str(base_id).split("-")[0])
+    except (TypeError, ValueError):
+        return []
+    if base_int in _TRAVELER_BASE_IDS and element:
+        mapped = _TRAVELER_ELEMENT_REGIONS.get(str(element))
+        return [mapped] if mapped else []
+    return [region for region, ids in _load_region_map().items() if base_int in ids]
 
 
-def create_card_background(width, height, base_rgb, splash_path=None, element_type="None", use_prebuilt=True, nation=None):
-    if nation:
-        bg = get_nation_background(width, height, nation)
-        if bg is not None:
-            pass
-        else:
-            bg = None
-    else:
-        bg = None
+def build_region_info(regions):
+    """フロントエンド向けの地域情報 [{name, image}] を作る。image は背景画像がある時のみ。"""
+    info = []
+    for region in regions:
+        info.append({
+            "name": region,
+            "image": f"static/assets/states/{region}.png" if region_image_path(region) else None,
+        })
+    return info
+
+
+def create_card_background(width, height, base_rgb, splash_path=None, element_type="None", use_prebuilt=True, region=None):
+    bg = get_region_background(width, height, region) if region else None
 
     if bg is None:
         if use_prebuilt and element_type in _PREBUILT_BGS:
@@ -756,6 +918,222 @@ def draw_figma_circle(img, x, y, size, fill_color=(60, 64, 72, 125), outline_col
     img.alpha_composite(overlay, dest=(layer_x1, layer_y1))
 
 
+# ==========================================================
+#  特別枠キャラクター（旅人 / ドール）
+#  これらの avatarId は元素ごとに「id-元素id」のキャラJSONを持つ
+#  （例: 10000005-2.json = 炎）。Enka の showcase データには元素の
+#  フィールドが無いため、skillLevelMap のスキルIDから元素を推定し、
+#  元素→添字の対応は {id}-{n}.json の "element" フィールドを見て決める。
+# ==========================================================
+SPECIAL_ELEMENT_CHARACTERS = {"10000005", "10000007", "10000117", "10000118"}
+
+# スキルID → 元素名。旅人は通常/元素スキル/元素爆発、
+# ドールは元素ごとに異なる元素爆発（11175X）で判別できる。
+_SPECIAL_SKILL_ELEMENT_MAP = {
+    # 旅人 通常攻撃（10054X=男 / 10055X=女）
+    "100540": "Anemo", "100550": "Anemo",  # 元素未変更（風と同じ技セット）
+    "100541": "Pyro",  "100551": "Pyro",
+    "100542": "Hydro", "100552": "Hydro",
+    "100543": "Anemo", "100553": "Anemo",
+    "100545": "Geo",   "100555": "Geo",
+    "100546": "Electro", "100556": "Electro",
+    "100547": "Dendro", "100557": "Dendro",
+    # 旅人 元素スキル / 元素爆発
+    "10067": "Anemo", "10068": "Anemo",
+    "10097": "Pyro",  "10098": "Pyro",
+    "10087": "Hydro", "10088": "Hydro",
+    "10077": "Geo",   "10078": "Geo",
+    "10602": "Electro", "10605": "Electro",
+    "10117": "Dendro", "10118": "Dendro",
+    # ドール 元素爆発（11175X）
+    "111751": "Pyro",   # 元素未変更時もこれを使用
+    "111752": "Hydro",
+    "111753": "Electro",
+    "111754": "Cryo",
+    "111755": "Anemo",
+    "111756": "Geo",
+    "111757": "Dendro",
+}
+
+_SPECIAL_SUFFIX_CACHE = {}
+
+
+def _get_special_element_suffix_map(raw_id, beta="false"):
+    """{id}-{添字}.json の "element" フィールドを読み、{元素名: 添字} マップを作る。
+
+    対応はハードコードせずJSONの中身から決めるため、betaディレクトリに
+    追加された元素（例: 氷の -5）にも自動対応する。同じ添字はlive側の
+    定義を優先し、beta側で上書きしない。
+    """
+    cache_key = (raw_id, beta)
+    cached = _SPECIAL_SUFFIX_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    dirs = [os.path.join("static", "data", "characters")]
+    if beta == "true":
+        dirs.append(os.path.join("static", "beta", "data", "characters"))
+
+    element_to_suffix = {}
+    seen_suffixes = set()
+    prefix = f"{raw_id}-"
+    for char_dir in dirs:
+        if not os.path.isdir(char_dir):
+            continue
+        for fn in os.listdir(char_dir):
+            if not (fn.startswith(prefix) and fn.endswith(".json")):
+                continue
+            suffix = fn[len(prefix):-len(".json")]
+            if suffix in seen_suffixes:
+                continue
+            try:
+                with open(os.path.join(char_dir, fn), "r", encoding="utf-8") as f:
+                    element = json.load(f).get("element")
+            except Exception:
+                element = None
+            if element:
+                seen_suffixes.add(suffix)
+                element_to_suffix[element] = suffix
+
+    _SPECIAL_SUFFIX_CACHE[cache_key] = element_to_suffix
+    return element_to_suffix
+
+
+def build_special_energy_hint_map(showcase_data):
+    """showAvatarInfoList の energyType を {avatarId: energyType} で収集する。
+
+    avatarInfoList 側には energyType が無いため、特別枠キャラの元素を
+    両リストで一致させるためにこのヒントを使う。
+    """
+    player_info = showcase_data.get("playerInfo") or {}
+    show_list = player_info.get("showAvatarInfoList") or player_info.get("show_avatar_info_list") or []
+    hint_map = {}
+    for entry in show_list:
+        raw_id = entry.get("avatarId")
+        energy_type = entry.get("energyType")
+        if raw_id is not None and energy_type is not None:
+            hint_map[str(raw_id)] = energy_type
+    return hint_map
+
+
+# ==========================================================
+#  energyType → JSON添字
+#  旅人(10000005/10000007) と ドール(10000117/10000118) で
+#  JSON の添字体系が異なるため、別マップを使う。
+#
+#  Enka energyType: 1炎 2水 3草 4雷 5氷 7風 8岩
+#
+#  旅人 JSON添字: 2炎 3水 8草 7雷 5氷 4風 6岩
+#  ドール JSON添字: 2炎 3水 8草 4雷 5氷 6風 7岩
+# ==========================================================
+_TRAVELER_CHARS = {"10000005", "10000007"}
+_DOLL_CHARS = {"10000117", "10000118"}
+
+_ENERGY_TYPE_TO_JSON_SUFFIX_TRAVELER = {
+    1: "2",  # Pyro  炎
+    2: "3",  # Hydro 水
+    3: "8",  # Dendro 草
+    4: "7",  # Electro 雷
+    5: "5",  # Cryo  氷
+    7: "4",  # Anemo 風
+    8: "6",  # Geo   岩
+}
+_ENERGY_TYPE_TO_JSON_SUFFIX_DOLL = {
+    1: "2",  # Pyro  炎
+    2: "3",  # Hydro 水
+    3: "8",  # Dendro 草
+    4: "4",  # Electro 雷
+    5: "5",  # Cryo  氷
+    7: "6",  # Anemo 風
+    8: "7",  # Geo   岩
+}
+_ELEMENT_TO_JSON_SUFFIX_TRAVELER = {
+    "Pyro": "2", "Hydro": "3", "Dendro": "8", "Electro": "7",
+    "Cryo": "5", "Anemo": "4", "Geo": "6",
+}
+_ELEMENT_TO_JSON_SUFFIX_DOLL = {
+    "Pyro": "2", "Hydro": "3", "Dendro": "8", "Electro": "4",
+    "Cryo": "5", "Anemo": "6", "Geo": "7",
+}
+
+# 命の星座を表示しない特別枠（ドール）
+_NO_CONSTELLATION_CHARS = {"10000117", "10000118"}
+# 好感度を表示しない特別枠（旅人 / ドール）
+_NO_FRIENDSHIP_CHARS = {"10000005", "10000007", "10000117", "10000118"}
+
+# fightPropMap の元素ダメバフID（enka_py の FightPropType 採番）
+# 30=物理 40=炎 41=雷 42=水 43=草 44=風 45=岩 46=氷
+# （50番台は元素耐性 SUB_HURT のためダメバフとしては参照しない）
+_ELEMENT_DMG_BUFF_ID = {
+    "Pyro": "40", "Electro": "41", "Hydro": "42", "Dendro": "43",
+    "Anemo": "44", "Geo": "45", "Cryo": "46", "None": "30",
+}
+
+
+def _special_raw_id(avatar_id) -> str:
+    return str(avatar_id).split("-")[0]
+
+
+def _energy_suffix_map_for(raw_id: str) -> dict:
+    if raw_id in _DOLL_CHARS:
+        return _ENERGY_TYPE_TO_JSON_SUFFIX_DOLL
+    return _ENERGY_TYPE_TO_JSON_SUFFIX_TRAVELER
+
+
+def _element_suffix_map_for(raw_id: str) -> dict:
+    if raw_id in _DOLL_CHARS:
+        return _ELEMENT_TO_JSON_SUFFIX_DOLL
+    return _ELEMENT_TO_JSON_SUFFIX_TRAVELER
+
+
+def resolve_special_avatar_id(avatar, beta="false", energy_type_hint=None):
+    """特別枠キャラの現在元素を showcase から推定し 'id-添字' を返す。
+
+    energyType は Enka 値なので、キャラ種別ごとの JSON 添字へ変換する。
+    ドール例: energyType=8(岩) → 添字 7 → 10000117-7.json
+    旅人例: energyType=8(岩) → 添字 6 → 10000005-6.json
+    """
+    raw_id = str(avatar.get("avatarId"))
+    if raw_id not in SPECIAL_ELEMENT_CHARACTERS:
+        return raw_id
+
+    energy_type = avatar.get("energyType")
+    if energy_type is None:
+        energy_type = energy_type_hint
+
+    if energy_type is not None:
+        try:
+            et = int(energy_type)
+        except (TypeError, ValueError):
+            et = None
+        suffix_map = _energy_suffix_map_for(raw_id)
+        if et is not None and et in suffix_map:
+            result = f"{raw_id}-{suffix_map[et]}"
+            print(f"[SpecialResolve] {raw_id} energyType={et} → {result}")
+            return result
+
+    elements = [
+        _SPECIAL_SKILL_ELEMENT_MAP[str(skill_id)]
+        for skill_id in (avatar.get("skillLevelMap") or {})
+        if str(skill_id) in _SPECIAL_SKILL_ELEMENT_MAP
+    ]
+    if elements:
+        element = max(set(elements), key=elements.count)
+        # JSON の element フィールドから添字を取る（無ければ固定表）
+        suffix = _get_special_element_suffix_map(raw_id, beta).get(element)
+        if suffix is None:
+            suffix = _element_suffix_map_for(raw_id).get(element)
+        if suffix is not None:
+            result = f"{raw_id}-{suffix}"
+            print(f"[SpecialResolve] {raw_id} skill→{element} → {result}")
+            return result
+
+    # フォールバック: 旅人は風(-4)、ドールも風だが添字が異なる(-6)
+    fallback = "6" if raw_id in _DOLL_CHARS else "4"
+    print(f"[SpecialResolve] {raw_id} fallback → {raw_id}-{fallback}")
+    return f"{raw_id}-{fallback}"
+
+
 def resolve_datas_path(path, beta="false"):
     if beta != "true" or not path or os.path.exists(path):
         return path
@@ -1001,12 +1379,8 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False, v
         if not current_avatar_id:
             continue
 
-        if current_avatar_id in ["10000005", "10000007", "10000117", "10000118"]:
-            energy_type = avatar.get("energyType")
-            if energy_type is not None:
-                current_avatar_id = f"{current_avatar_id}-{energy_type}"
-            else:
-                current_avatar_id = f"{current_avatar_id}-4"
+        if current_avatar_id in SPECIAL_ELEMENT_CHARACTERS:
+            current_avatar_id = resolve_special_avatar_id(avatar, beta)
 
         json_path_char = f"static/data/characters/{current_avatar_id}.json"
         json_path_char = resolve_datas_path(json_path_char, beta)
@@ -1086,14 +1460,14 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         player_info = showcase_data["playerInfo"]
         avatar_list = player_info.get("showAvatarInfoList") or player_info.get("show_avatar_info_list")
     avatar_list = avatar_list or []
+    energy_hint_map = build_special_energy_hint_map(showcase_data)
 
     target_avatar_info = None
     for avatar in avatar_list:
         raw_id = str(avatar.get("avatarId"))
         loop_avatar_id = raw_id
-        if raw_id in ["10000005", "10000007", "10000117", "10000118"]:
-            energy_type = avatar.get("energyType")
-            loop_avatar_id = f"{raw_id}-{energy_type}" if energy_type is not None else f"{raw_id}-4"
+        if raw_id in SPECIAL_ELEMENT_CHARACTERS:
+            loop_avatar_id = resolve_special_avatar_id(avatar, beta, energy_hint_map.get(raw_id))
         if str(loop_avatar_id) == str(avatar_id):
             target_avatar_info = avatar
             break
@@ -1138,7 +1512,8 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
     }
     element_ja = element_ja_map.get(element_type, "無")
 
-    if fake_char:
+    raw_special_id = _special_raw_id(avatar_id)
+    if fake_char or raw_special_id in _NO_CONSTELLATION_CHARS:
         constellation = 0
     else:
         constellation = len(target_avatar_info.get("talentIdList", []))
@@ -1266,7 +1641,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         main_stats = [
             {"label": "HP", "val": formal_round(total_hp), "base": formal_round(base_hp), "icon": "static/assets/props/hp.png"},
             {"label": "攻撃力", "val": formal_round(total_atk), "base": formal_round(base_atk + weapon_base_atk), "icon": "static/assets/props/atk.png"},
-            {"label": "防禦力", "val": formal_round(total_def), "base": formal_round(base_def), "icon": "static/assets/props/def.png"},
+            {"label": "防御力", "val": formal_round(total_def), "base": formal_round(base_def), "icon": "static/assets/props/def.png"},
             {"label": "元素熟知", "val": formal_round(total_em), "icon": "static/assets/props/em.png"},
             {"label": "会心率", "val": str(formal_round(total_crit_rate * 1000) / 10) + "%", "icon": "static/assets/props/rate.webp"},
             {"label": "会心ダメージ", "val": str(formal_round(total_crit_dmg * 1000) / 10) + "%", "icon": "static/assets/props/dmg.webp"},
@@ -1274,28 +1649,21 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
             {"label": f"{element_ja}ダメバフ", "val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
         ]
     else:
-        all_buff_ids = ['30', '40', '41', '42', '43', '44', '45', '46']
         fight_prop = target_avatar_info.get('fightPropMap', {})
 
-        max_dmg_val = 0.0
-        for b_id in all_buff_ids:
-            val = fight_prop.get(b_id, 0.0)
-            if val > max_dmg_val:
-                max_dmg_val = val
-
-        if max_dmg_val == 0.0:
-            relic_buff_ids = ['50', '51', '52', '53', '54', '55', '56', '57']
-            for r_id in relic_buff_ids:
-                val = fight_prop.get(r_id, 0.0)
-                if val > max_dmg_val:
-                    max_dmg_val = val
-
-        dmg_buff_val = str(formal_round(max_dmg_val * 1000) / 10) + "%"
+        # 表示キャラの元素に対応するダメバフだけを参照する。
+        # 全元素で最大値を取ると、装備由来の別元素バフ（例: 岩元素キャラの
+        # 物理/氷バフ）が {element_ja}ダメバフ に混入してしまうため。
+        buff_id = _ELEMENT_DMG_BUFF_ID.get(element_type, "30")
+        max_dmg_val = fight_prop.get(buff_id, 0.0)
+        dmg_buff_val = "0%"
+        if max_dmg_val > 0:
+            dmg_buff_val = str(formal_round(max_dmg_val * 1000) / 10) + "%"
 
         main_stats = [
             {"label": "HP", "val": formal_round(fight_prop.get('2000', 1)), "base": formal_round(fight_prop.get('1', 1)), "icon": "static/assets/props/hp.png"},
             {"label": "攻撃力", "val": formal_round(fight_prop.get('2001', 1)), "base": formal_round(fight_prop.get('4', 1)), "icon": "static/assets/props/atk.png"},
-            {"label": "防禦力", "val": formal_round(fight_prop.get('2002', 1)), "base": formal_round(fight_prop.get('7', 1)), "icon": "static/assets/props/def.png"},
+            {"label": "防御力", "val": formal_round(fight_prop.get('2002', 1)), "base": formal_round(fight_prop.get('7', 1)), "icon": "static/assets/props/def.png"},
             {"label": "元素熟知", "val": formal_round(fight_prop.get('28', 1)), "icon": "static/assets/props/em.png"},
             {"label": "会心率", "val": str(formal_round(fight_prop.get('20', 1) * 1000) / 10) + "%", "icon": "static/assets/props/rate.webp"},
             {"label": "会心ダメージ", "val": str(formal_round(fight_prop.get('22', 1) * 1000) / 10) + "%", "icon": "static/assets/props/dmg.webp"},
@@ -1446,6 +1814,8 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
 
     if fake_char:
         friendship_lv = 10
+    elif raw_special_id in _NO_FRIENDSHIP_CHARS:
+        friendship_lv = None
     else:
         friendship_lv = target_avatar_info.get("fetterInfo", {}).get("expLevel", 1)
 
@@ -1465,13 +1835,15 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         skill_icons, skill_levels, skill_boosted = [], [1, 1, 1], [False, False, False]
 
     constellation_icons = []
-    try:
-        consts_meta = chardatas.get("constellations") or []
-        for i in range(min(6, len(consts_meta))):
-            icon = consts_meta[i].get("icon", "")
-            constellation_icons.append(resolve_datas_path(f"static/assets/skills/{icon}.webp", beta) if icon else "")
-    except Exception:
-        constellation_icons = []
+    # 命の星座は「表示中キャラ」（差し替えがあれば差し替え先）の有無に従う
+    if _special_raw_id(fake_char or avatar_id) not in _NO_CONSTELLATION_CHARS:
+        try:
+            consts_meta = chardatas.get("constellations") or []
+            for i in range(min(6, len(consts_meta))):
+                icon = consts_meta[i].get("icon", "")
+                constellation_icons.append(resolve_datas_path(f"static/assets/skills/{icon}.webp", beta) if icon else "")
+        except Exception:
+            constellation_icons = []
 
     weapon_stats_out = []
     for w_entry in weapon_stats_list:
@@ -1495,7 +1867,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         "crit": "会心のみ",
         "atk": "攻撃力%",
         "hp": "HP%",
-        "def": "DEF%",
+        "def": "防御%",
         "em": "元素熟知",
         "charge": "チャージ効率",
     }
@@ -1526,10 +1898,11 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         "tierSum": tier_sum_score,
         "calcMethod": calc_method,
         "calcMethodLabel": display_score_way,
+        "regions": build_region_info(find_regions_for_character(_special_raw_id(fake_char or avatar_id), element_type)),
     }
 
 
-def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "webp"):
+def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "webp", bg_mode: str = None, bg_region: str = None):
     _total_start = time.perf_counter()
     if beta != "true":
         beta = "false"
@@ -1554,15 +1927,12 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             avatar_list = player_info.get("showAvatarInfoList") or player_info.get("show_avatar_info_list")
 
         if avatar_list:
+            energy_hint_map = build_special_energy_hint_map(showcase_data)
             for avatar in avatar_list:
                 raw_id = str(avatar.get("avatarId"))
                 loop_avatar_id = raw_id
-                if raw_id in ["10000005", "10000007", "10000117", "10000118"]:
-                    energy_type = avatar.get("energyType")
-                    if energy_type is not None:
-                        loop_avatar_id = f"{raw_id}-{energy_type}"
-                    else:
-                        loop_avatar_id = f"{raw_id}-4"
+                if raw_id in SPECIAL_ELEMENT_CHARACTERS:
+                    loop_avatar_id = resolve_special_avatar_id(avatar, beta, energy_hint_map.get(raw_id))
                 if str(loop_avatar_id) == str(avatar_id):
                     target_avatar_info = avatar
                     break
@@ -1630,7 +2000,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     bg_base_rgb = custom_rgb if custom_rgb else element_base_rgb
     base_color = (*bg_base_rgb, 255)
 
-    char_nation = find_nation_for_character(chardatas["name"])
+    char_regions = find_regions_for_character(_special_raw_id(fake_char or avatar_id), element_type)
 
     splash = f"static/assets/splash/{chardatas['icon'].replace('AvatarIcon', 'Gacha_AvatarImg')}.webp"
     splash = resolve_datas_path(splash, beta)
@@ -1644,8 +2014,11 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     else:
         char_level = get_char_level(target_avatar_info)
 
+    raw_special_id = _special_raw_id(avatar_id)
     if fake_char:
         friendship_lv = 10
+    elif raw_special_id in _NO_FRIENDSHIP_CHARS:
+        friendship_lv = None
     else:
         friendship_lv = target_avatar_info.get("fetterInfo", {}).get("expLevel", 1)
 
@@ -1655,12 +2028,19 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     y_C_base = 139
     circle_size = 68
 
-    if fake_char:
+    # 命の星座は「表示中キャラ」（差し替えがあれば差し替え先）の有無に従う。
+    # 表示中キャラを基準にしないと、ドールへ差し替えた旅人が
+    # 存在しない constellations を参照してエラーになる。
+    hide_constellation = _special_raw_id(fake_char or avatar_id) in _NO_CONSTELLATION_CHARS
+    if fake_char or hide_constellation:
         constellation_releas_num = 0
     else:
         constellation_releas_num = len(target_avatar_info.get("talentIdList", []))
 
-    Constellation_icon = [chardatas["constellations"][i]["icon"] for i in range(6)]
+    if hide_constellation:
+        Constellation_icon = []
+    else:
+        Constellation_icon = [chardatas["constellations"][i]["icon"] for i in range(6)]
 
     t_start = time.perf_counter()
     weapon_data = next((item for item in target_avatar_info.get("equipList", []) if "weapon" in item), None)
@@ -1795,7 +2175,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         stats_mock = {
             "HP": {"val": formal_round(total_hp), "base": formal_round(base_hp), "add": "+" + str(formal_round(total_hp - base_hp)), "icon": "static/assets/props/hp.png"},
             "攻撃力": {"val": formal_round(total_atk), "base": formal_round(base_atk + weapon_base_atk), "add": "+" + str(formal_round(total_atk - (base_atk + weapon_base_atk))), "icon": "static/assets/props/atk.png"},
-            "防禦力": {"val": formal_round(total_def), "base": formal_round(base_def), "add": "+" + str(formal_round(total_def - base_def)), "icon": "static/assets/props/def.png"},
+            "防御力": {"val": formal_round(total_def), "base": formal_round(base_def), "add": "+" + str(formal_round(total_def - base_def)), "icon": "static/assets/props/def.png"},
             "元素熟知": {"val": formal_round(total_em), "icon": "static/assets/props/em.png"},
             "会心率": {"val": str(formal_round(total_crit_rate * 1000) / 10) + "%", "icon": "static/assets/props/rate.webp"},
             "会心ダメージ": {"val": str(formal_round(total_crit_dmg * 1000) / 10) + "%", "icon": "static/assets/props/dmg.webp"},
@@ -1803,24 +2183,19 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             f"{element_ja}ダメバフ": {"val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
         }
     else:
-        all_buff_ids = ['30', '40', '41', '42', '43', '44', '45', '46']
         prop_map = target_avatar_info.get('fightPropMap', {})
-        max_dmg_val = 0.0
-        for b_id in all_buff_ids:
-            val = prop_map.get(b_id, 0.0)
-            if val > max_dmg_val:
-                max_dmg_val = val
-        if max_dmg_val == 0.0:
-            for r_id in ['50', '51', '52', '53', '54', '55', '56', '57']:
-                val = prop_map.get(r_id, 0.0)
-                if val > max_dmg_val:
-                    max_dmg_val = val
-        dmg_buff_val = str(formal_round(max_dmg_val * 1000) / 10) + "%"
+
+        # 表示キャラの元素に対応するダメバフだけを参照する（card_data 側と同様）
+        buff_id = _ELEMENT_DMG_BUFF_ID.get(element_type, "30")
+        max_dmg_val = prop_map.get(buff_id, 0.0)
+        dmg_buff_val = "0%"
+        if max_dmg_val > 0:
+            dmg_buff_val = str(formal_round(max_dmg_val * 1000) / 10) + "%"
 
         stats_mock = {
             "HP": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2000', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('1', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2000', 1) - target_avatar_info.get('fightPropMap', {}).get('1', 1))), "icon": "static/assets/props/hp.png"},
             "攻撃力": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2001', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('4', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2001', 1) - target_avatar_info.get('fightPropMap', {}).get('4', 1))), "icon": "static/assets/props/atk.png"},
-            "防禦力": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2002', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('7', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2002', 1) - target_avatar_info.get('fightPropMap', {}).get('7', 1))), "icon": "static/assets/props/def.png"},
+            "防御力": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2002', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('7', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2002', 1) - target_avatar_info.get('fightPropMap', {}).get('7', 1))), "icon": "static/assets/props/def.png"},
             "元素熟知": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('28', 1)), "icon": "static/assets/props/em.png"},
             "会心率": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('20', 1) * 1000) / 10) + "%", "icon": "static/assets/props/rate.webp"},
             "会心ダメージ": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('22', 1) * 1000) / 10) + "%", "icon": "static/assets/props/dmg.webp"},
@@ -1992,20 +2367,30 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
     display_map = {
         "crit": "会心のみ", "atk": "攻撃力%", "hp": "HP%",
-        "def": "DEF%", "em": "元素熟知", "charge": "チャージ効率"
+        "def": "防御%", "em": "元素熟知", "charge": "チャージ効率"
     }
     display_score_way = display_map[calc_method]
     t_end = time.perf_counter()
     print(f"[Perf] セット効果処理: {(t_end - t_start)*1000:.1f}ms")
 
     t_start = time.perf_counter()
-    use_nation_bg = bg_color is None and char_nation is not None
+    # 背景選択: bg_color > bg_mode=element > 地域（bg_region指定 → 所属地域の先頭）> 元素背景
+    selected_region = None
+    if bg_color is None and str(bg_mode or "").lower() != "element":
+        candidates = []
+        if bg_region:
+            candidates.append(str(bg_region))
+        candidates.extend(char_regions)
+        for cand in candidates:
+            if region_image_path(cand):
+                selected_region = cand
+                break
     img = create_card_background(
         card_width, card_height, bg_base_rgb,
         splash_path=splash,
         element_type=element_type,
-        use_prebuilt=(bg_color is None and char_nation is None),
-        nation=(char_nation if use_nation_bg else None),
+        use_prebuilt=(bg_color is None and selected_region is None),
+        region=selected_region,
     )
     t_end = time.perf_counter()
     print(f"[Perf] 背景生成: {(t_end - t_start)*1000:.1f}ms")
@@ -2035,7 +2420,8 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
     draw_figma_text_with_shadow(draw, text=char_name, x=53, y=53, font=font_stats, font_size=50)
     draw_figma_text_with_shadow(draw, text=f"Lv.{char_level}", x=53, y=117, font=font_stats, font_size=30)
-    draw_figma_text_with_shadow(draw, text=f"♥ {friendship_lv}", x=53, y=162, font=font_stats, font_size=30)
+    if friendship_lv is not None:
+        draw_figma_text_with_shadow(draw, text=f"♥ {friendship_lv}", x=53, y=162, font=font_stats, font_size=30)
 
     y_skill_base = 389
     for i in range(3):
@@ -2044,7 +2430,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         lv_color = (125, 210, 255) if (i < len(skill_boosted) and skill_boosted[i]) else (255, 255, 255)
         draw_figma_text_with_shadow(draw, text=f"Lv.{skill_level[i]}", x=48, y=y_skill_base + 79 * i + 45, font=font_stats, align="center", font_size=20, box_width=68, fill_color=lv_color)
 
-    for i in range(6):
+    for i in range(6 if Constellation_icon else 0):
         circle_x = 637
         circle_y = y_C_base + i * 76
         icon_name = Constellation_icon[i]
@@ -2115,7 +2501,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         draw_figma_text(draw, text=n, x=840, y=current_y, font=font_stats, align="left")
         draw_figma_text(draw, text=data["val"], x=870, y=current_y, font=font_stats, align="right", box_width=450 - 60)
 
-        if n in ["HP", "攻撃力", "防禦力"] and data.get("base") and data.get("add"):
+        if n in ["HP", "攻撃力", "防御力"] and data.get("base") and data.get("add"):
             sub_y = current_y + 32
             green_text = data["add"]
             gray_text = str(data["base"])
@@ -2200,10 +2586,10 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
 
 @app.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")
-async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "webp"):
+async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "webp", bg_mode: str = None, bg_region: str = None):
     img_format = "png" if str(img_format).lower() == "png" else "webp"
     img_bytes = await run_in_threadpool(
-        _generate_card_image_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta, bg_color, img_format
+        _generate_card_image_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta, bg_color, img_format, bg_mode, bg_region
     )
     return StreamingResponse(io.BytesIO(img_bytes), media_type="image/png" if img_format == "png" else "image/webp")
 

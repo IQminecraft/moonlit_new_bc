@@ -254,7 +254,17 @@
             padding: 20px;
             gap: 25px;
         }
-        /* スプラッシュを拡大してぼかした背景（B準拠） */
+        /* 下層：選択された背景（元素グラデーション / 地域画像 / カスタム色） */
+        .glass-card-root .glass-card-base-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        /* 上層：スプラッシュを拡大してぼかしたオーバーレイ */
         .glass-card-root .glass-card-bg {
             position: absolute;
             top: 0;
@@ -266,9 +276,10 @@
             background-position: center;
             transform: scale(1.5);
             filter: blur(80px) brightness(0.45);
+            opacity: 0.35;
             pointer-events: none;
         }
-        .glass-card-root .build-card > *:not(.glass-card-bg) {
+        .glass-card-root .build-card > *:not(.glass-card-bg):not(.glass-card-base-bg) {
             position: relative;
             z-index: 1;
         }
@@ -430,7 +441,7 @@
             align-items: center;
             gap: 15px;
             padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
             flex: 1 1 0;
             min-height: 0;
@@ -815,14 +826,20 @@
                         </button>
                     </div>
 
-                    <div id="bgColorControls" title="ビルドカード生成の背景色">
-                        <label class="block text-sm text-zinc-400 mb-1.5">背景色</label>
+                    <div id="bgColorControls" title="ビルドカード生成の背景">
+                        <label class="block text-sm text-zinc-400 mb-1.5">背景</label>
                         <div class="flex items-center gap-2">
                             <select id="bgColorModeSelect" class="flex-1 bg-zinc-800 border border-zinc-700 text-white px-2.5 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer">
-                                <option value="element">元素デフォルト</option>
+                                <option value="element">元素背景</option>
+                                <option value="region">地域背景</option>
                                 <option value="custom">カスタム色</option>
                             </select>
                             <input type="color" id="bgColorPicker" value="#4a5568" class="h-9 w-10 cursor-pointer rounded border border-zinc-700 bg-zinc-800 p-0.5 disabled:opacity-40" disabled title="任意の背景色">
+                        </div>
+                        <div id="bgRegionControls" class="mt-2 hidden">
+                            <select id="bgRegionSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-2.5 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer hidden" title="背景に使う地域"></select>
+                            <div id="bgRegionAutoLabel" class="text-sm text-zinc-300 hidden"></div>
+                            <div id="bgRegionNote" class="text-xs text-zinc-500 mt-1.5 hidden"></div>
                         </div>
                     </div>
 
@@ -1422,7 +1439,30 @@
             saveComboState(currentSelectedCharId);
             renderComboRow();
             updateEditWeaponUI();
-            refreshCurrentCard(currentSelectedCharId, false);
+            // デフォルトに戻したとき、実データ武器キャッシュが空なら軽量取得して左の武器表示を直す
+            if (!comboId && currentSelectedCharId && !lastKnownRealWeapon.name) {
+                ensureRealWeaponKnown(currentSelectedCharId);
+            }
+            refreshCurrentCard(currentSelectedCharId, false, true);
+        }
+
+        /** 差し替え無しの実データ武器を取得して lastKnownRealWeapon を埋める */
+        async function ensureRealWeaponKnown(charId) {
+            if (!charId) return;
+            try {
+                const method = getSavedCalcMethod(charId);
+                const p = new URLSearchParams();
+                p.set('calc_method', method);
+                // fake_char / fake_weapon は付けない＝実データ武器
+                if (ver === 'beta') p.set('beta', 'true');
+                const res = await fetch(`/api/card_data/${uid}/${charId}?${p}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                // 取得中にキャラや差し替えが変わっていたら適用しない
+                if (currentSelectedCharId !== charId) return;
+                if (activeComboId) return; // デフォルト以外に切り替わっていた
+                setLastKnownRealWeapon(data);
+            } catch (e) { /* ignore */ }
         }
 
         function removeCombo(comboId) {
@@ -1433,7 +1473,10 @@
             saveComboState(currentSelectedCharId);
             renderComboRow();
             updateEditWeaponUI();
-            refreshCurrentCard(currentSelectedCharId, false);
+            if (!activeComboId && currentSelectedCharId && !lastKnownRealWeapon.name) {
+                ensureRealWeaponKnown(currentSelectedCharId);
+            }
+            refreshCurrentCard(currentSelectedCharId, false, true);
         }
 
         async function openFakeCharModal() {
@@ -1492,7 +1535,7 @@
             renderComboRow();
             updateEditWeaponUI();
             closeFakeCharModal();
-            refreshCurrentCard(currentSelectedCharId, false);
+            refreshCurrentCard(currentSelectedCharId, false, true);
         }
 
         async function openFakeWeaponModal() {
@@ -1569,7 +1612,7 @@
             renderComboRow();
             updateEditWeaponUI();
             closeFakeWeaponModal();
-            refreshCurrentCard(currentSelectedCharId, false);
+            refreshCurrentCard(currentSelectedCharId, false, true);
         }
 
         function applyRealWeaponToEditUI() {
@@ -1588,6 +1631,10 @@
 
         function setLastKnownRealWeapon(data) {
             if (!data) return;
+            // 差し替え武器使用中は card_data の武器が差し替え先になるため、
+            // 「実データ武器」キャッシュを上書きしない（デフォルトに戻した時にバグる）
+            const selection = getActiveSelection();
+            if (selection.fakeWeapon) return;
             let icon = data.weaponIcon || '';
             if (icon && !icon.startsWith('http') && !icon.startsWith('/')) {
                 icon = '/' + icon;
@@ -1596,11 +1643,7 @@
                 name: data.weaponName || '',
                 icon: icon
             };
-            // 差し替え武器を使っていない表示中なら即反映
-            const selection = getActiveSelection();
-            if (!selection.fakeWeapon) {
-                updateEditWeaponUI();
-            }
+            updateEditWeaponUI();
         }
 
         function updateEditWeaponUI() {
@@ -1766,6 +1809,18 @@
             }
         }
 
+        /** 過去に1枚でも画像を生成・キャッシュしたことがあるか（初回判定用） */
+        async function hasAnyCachedCardImage() {
+            if (!cacheStorageSupported) return false;
+            try {
+                const cache = await caches.open(IMAGE_CACHE_NAME);
+                const keys = await cache.keys();
+                return keys.length > 0;
+            } catch (e) {
+                return false;
+            }
+        }
+
         async function deleteCachedCardImage(url) {
             if (!cacheStorageSupported) return;
             try {
@@ -1843,16 +1898,34 @@
                 </div>`;
         }
 
-        // --- 画像生成の背景色（元素デフォルト / カスタム） ---
+        // --- 画像生成の背景（元素デフォルト / 地域背景 / カスタム色） ---
         const BG_COLOR_MODE_KEY = 'genshin_build_card_bg_mode';
         const BG_COLOR_CUSTOM_KEY = 'genshin_build_card_bg_custom';
+        const BG_REGION_MAP_KEY = 'genshin_build_card_bg_region_map';
         const bgColorModeSelect = document.getElementById('bgColorModeSelect');
         const bgColorPicker = document.getElementById('bgColorPicker');
+        const bgRegionControls = document.getElementById('bgRegionControls');
+        const bgRegionSelect = document.getElementById('bgRegionSelect');
+        const bgRegionAutoLabel = document.getElementById('bgRegionAutoLabel');
+        const bgRegionNote = document.getElementById('bgRegionNote');
+
+        const BG_REGION_LABELS = {
+            mondstadt: 'モンド', liyue: '璃月', inazuma: '稲妻', sumeru: 'スメール',
+            fontaine: 'フォテーヌ', natlan: 'ナタ', nodkrai: 'ノッドクライ',
+            snezhnaya: 'スネージナヤ', dragonspine: 'ドラゴンスパイネ'
+        };
+        function bgRegionLabel(name) { return BG_REGION_LABELS[name] || name; }
+
+        // 現在表示中キャラの所属地域（card_data の regions: [{name, image|null}]）
+        let currentCharRegions = [];
+        let currentRegionsCharKey = null;
 
         function getBgColorMode() {
             try {
-                return localStorage.getItem(BG_COLOR_MODE_KEY) === 'custom' ? 'custom' : 'element';
-            } catch (e) { return 'element'; }
+                const m = localStorage.getItem(BG_COLOR_MODE_KEY);
+                if (m === 'custom' || m === 'region') return m;
+            } catch (e) {}
+            return 'element';
         }
         function getCustomBgColor() {
             try {
@@ -1861,35 +1934,147 @@
             } catch (e) {}
             return '#4a5568';
         }
+        function getBgRegionMap() {
+            try {
+                const raw = localStorage.getItem(BG_REGION_MAP_KEY);
+                const m = raw ? JSON.parse(raw) : {};
+                return (m && typeof m === 'object' && !Array.isArray(m)) ? m : {};
+            } catch (e) { return {}; }
+        }
+        /** 地域選択の保存キー（差し替えキャラ込みでキャラ単位） */
+        function bgRegionStorageKey() {
+            const base = currentSelectedCharId != null ? String(currentSelectedCharId) : '';
+            if (!base) return '';
+            try {
+                const sel = getActiveSelection();
+                return sel.fakeChar ? `${base}:${sel.fakeChar}` : base;
+            } catch (e) { return base; }
+        }
+        function getSavedBgRegion() {
+            const key = bgRegionStorageKey();
+            if (!key) return null;
+            return getBgRegionMap()[key] || null;
+        }
+        function saveBgRegion(region) {
+            const key = bgRegionStorageKey();
+            if (!key) return;
+            const m = getBgRegionMap();
+            m[key] = region;
+            try { localStorage.setItem(BG_REGION_MAP_KEY, JSON.stringify(m)); } catch (e) {}
+        }
+        /** 背景画像が実際に存在する地域のみ */
+        function usableCharRegions(regions) {
+            return (regions || []).filter(r => r && r.name && r.image);
+        }
+        function setCurrentCharRegions(regions) {
+            currentCharRegions = Array.isArray(regions) ? regions : [];
+            currentRegionsCharKey = bgRegionStorageKey();
+            applyBgColorControlsUI();
+        }
+        /** 現在有効な選択地域（保存値が無効なら先頭にフォールバック） */
+        function getSelectedBgRegion() {
+            if (getBgColorMode() !== 'region') return null;
+            const usable = usableCharRegions(currentCharRegions);
+            if (!usable.length) return null;
+            const saved = getSavedBgRegion();
+            return usable.some(r => r.name === saved) ? saved : usable[0].name;
+        }
         function applyBgColorControlsUI() {
             if (!bgColorModeSelect || !bgColorPicker) return;
             const mode = getBgColorMode();
             bgColorModeSelect.value = mode;
             bgColorPicker.value = getCustomBgColor();
             bgColorPicker.disabled = mode !== 'custom';
+            if (!bgRegionControls) return;
+            if (mode !== 'region') {
+                bgRegionControls.classList.add('hidden');
+                return;
+            }
+            bgRegionControls.classList.remove('hidden');
+            const usable = usableCharRegions(currentCharRegions);
+            if (!usable.length) {
+                if (bgRegionSelect) bgRegionSelect.classList.add('hidden');
+                if (bgRegionAutoLabel) bgRegionAutoLabel.classList.add('hidden');
+                if (bgRegionNote) {
+                    bgRegionNote.classList.remove('hidden');
+                    bgRegionNote.textContent = currentCharRegions.length
+                        ? '所属地域に背景画像がありません → 元素背景になります'
+                        : '地域未所属 → 元素背景になります';
+                }
+                return;
+            }
+            if (bgRegionNote) bgRegionNote.classList.add('hidden');
+            const saved = getSavedBgRegion();
+            const current = usable.some(r => r.name === saved) ? saved : usable[0].name;
+            if (usable.length === 1) {
+                // 所属地域が1つのみ → 自動選択（セレクトは出さずラベル表示）
+                if (bgRegionSelect) bgRegionSelect.classList.add('hidden');
+                if (bgRegionAutoLabel) {
+                    bgRegionAutoLabel.classList.remove('hidden');
+                    bgRegionAutoLabel.textContent = `自動選択: ${bgRegionLabel(current)}`;
+                }
+            } else {
+                if (bgRegionAutoLabel) bgRegionAutoLabel.classList.add('hidden');
+                if (bgRegionSelect) {
+                    bgRegionSelect.classList.remove('hidden');
+                    bgRegionSelect.innerHTML = usable.map(r =>
+                        `<option value="${r.name}"${r.name === current ? ' selected' : ''}>${bgRegionLabel(r.name)}</option>`
+                    ).join('');
+                }
+            }
         }
         function getBgColorParam() {
             if (getBgColorMode() !== 'custom') return null;
             return getCustomBgColor().replace('#', '');
         }
+        // 画像表示モードでは card_data を取らないため、地域モード時は個別に取得して所属地域を把握する
+        async function ensureCharRegionsLoaded(charId) {
+            if (!charId || getBgColorMode() !== 'region') return;
+            const key = bgRegionStorageKey();
+            if (!key || currentRegionsCharKey === key) return;
+            try {
+                const sel = getActiveSelection();
+                const p = new URLSearchParams();
+                p.set('calc_method', getSavedCalcMethod(charId));
+                if (sel.fakeChar) p.set('fake_char', sel.fakeChar);
+                if (sel.fakeWeapon) p.set('fake_weapon', sel.fakeWeapon);
+                if (ver === 'beta') p.set('beta', 'true');
+                const res = await fetch(`/api/card_data/${uid}/${charId}?${p}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                // 取得中にキャラや差し替えが変わっていたら適用しない
+                const selNow = getActiveSelection();
+                if (currentSelectedCharId === charId &&
+                    selNow.fakeChar === sel.fakeChar &&
+                    selNow.fakeWeapon === sel.fakeWeapon) {
+                    setCurrentCharRegions(data.regions || []);
+                }
+            } catch (e) { /* ignore */ }
+        }
+        function onBgSettingChanged() {
+            applyBgColorControlsUI();
+            // 背景は URL クエリに含まれるためキャッシュキーが分かれる。
+            // 背景変更時は即時画像生成（キャッシュが無ければその場で生成）
+            if (!currentSelectedCharId) return;
+            refreshCurrentCard(currentSelectedCharId, false, false, true);
+        }
         if (bgColorModeSelect) {
             applyBgColorControlsUI();
             bgColorModeSelect.addEventListener('change', () => {
                 try { localStorage.setItem(BG_COLOR_MODE_KEY, bgColorModeSelect.value); } catch (e) {}
-                applyBgColorControlsUI();
-                // 背景色は URL クエリに含まれるためキャッシュキーが分かれる。
-                // 自動再生成はせず、最新画像がなければ中央の生成ボタンを出す
-                if (viewMode === 'image' && currentSelectedCharId) {
-                    refreshCurrentCard(currentSelectedCharId, false);
-                }
+                onBgSettingChanged();
             });
         }
         if (bgColorPicker) {
             bgColorPicker.addEventListener('change', () => {
                 try { localStorage.setItem(BG_COLOR_CUSTOM_KEY, bgColorPicker.value); } catch (e) {}
-                if (viewMode === 'image' && currentSelectedCharId) {
-                    refreshCurrentCard(currentSelectedCharId, false);
-                }
+                onBgSettingChanged();
+            });
+        }
+        if (bgRegionSelect) {
+            bgRegionSelect.addEventListener('change', () => {
+                saveBgRegion(bgRegionSelect.value);
+                onBgSettingChanged();
             });
         }
 
@@ -1901,13 +2086,22 @@
             if (selection.fakeWeapon) params.set('fake_weapon', selection.fakeWeapon);
             if (ver === 'beta') params.set('beta', 'true');
             const bgParam = getBgColorParam();
-            if (bgParam) params.set('bg_color', bgParam);
+            if (bgParam) {
+                params.set('bg_color', bgParam);
+            } else {
+                const bgMode = getBgColorMode();
+                params.set('bg_mode', bgMode);
+                if (bgMode === 'region') {
+                    const bgRegion = getSelectedBgRegion();
+                    if (bgRegion) params.set('bg_region', bgRegion);
+                }
+            }
             params.set('img_format', getSavedFormatPref());
             const query = params.toString() ? `?${params.toString()}` : '';
             return `/generate_card_image/${uid}/${charId}/${currentMethod}${query}`;
         }
 
-        async function loadCardImage(charId, forceFetch = false, cacheOnly = false) {
+        async function loadCardImage(charId, forceFetch = false, cacheOnly = false, autoGenOnMiss = false) {
             if(!charId) return;
 
             const currentMethod = getSavedCalcMethod(charId);
@@ -1938,12 +2132,14 @@
                 let blob = forceFetch ? null : await getCachedCardImage(url);
 
                 if (!blob && cacheOnly) {
-                    // サーバーでの自動生成はしない：過去のキャッシュが
-                    // なければ中央の生成ボタンを出して待つ
-                    if (requestToken !== latestImageRequestToken) return;
-                    htmlCardContainer.classList.add('hidden');
-                    showImageAwaitState();
-                    return;
+                    // 差し替え切替時は、過去に1枚でも生成実績があれば自動生成する。
+                    // 1枚もキャッシュが無い初回のみ、中央の生成ボタンを出して待つ
+                    if (!(autoGenOnMiss && await hasAnyCachedCardImage())) {
+                        if (requestToken !== latestImageRequestToken) return;
+                        htmlCardContainer.classList.add('hidden');
+                        showImageAwaitState();
+                        return;
+                    }
                 }
 
                 if (!blob) {
@@ -2023,11 +2219,17 @@
             });
         }
 
-        function refreshCurrentCard(charId, forceFetch = false) {
+        async function refreshCurrentCard(charId, forceFetch = false, autoGenOnMiss = false, immediateGen = false) {
             if (!charId) return;
 
             const charChanged = currentSelectedCharId !== charId;
             currentSelectedCharId = charId;
+            if (charChanged) {
+                // キャラ切替時は所属地域を白紙化（次回取得まで注記表示）
+                currentCharRegions = [];
+                currentRegionsCharKey = null;
+                applyBgColorControlsUI();
+            }
 
             if (listsLoaded && charChanged) {
                 loadComboState(charId);
@@ -2038,13 +2240,21 @@
             }
 
             if (viewMode === 'image') {
+                // 地域背景モードでは、URL を組む前に所属地域を確定させる。
+                // 差し替え切替直後は直前キャラ/差し替えの地域が残っており、
+                // 誤った bg_region で画像が生成されるのを防ぐ
+                if (getBgColorMode() === 'region') {
+                    await ensureCharRegionsLoaded(charId);
+                    // 待機中に別キャラへ切り替わっていたら中断
+                    if (currentSelectedCharId !== charId) return;
+                }
                 if (forceFetch) {
                     loadCardImage(charId, true);
                 } else {
-                    // タブ切替やパラメータ変更（キャラ/武器/背景/計算方法）では
-                    // サーバーでの自動生成をしない。最新の画像が表示中ならそのまま、
-                    // 過去に生成したキャッシュがあればそれから復元し、
-                    // どちらもなければ中央の生成ボタンを出す
+                    // タブ切替やパラメータ変更ではサーバーでの自動生成をしない。
+                    // 最新の画像が表示中ならそのまま、過去に生成したキャッシュがあれば
+                    // それから復元し、どちらもなければ中央の生成ボタンを出す
+                    // （計算方法/背景変更は immediateGen で即時生成）
                     const url = buildCardImageUrl(charId);
                     if (currentImageObjectUrl && currentLoadedImageUrl === url) {
                         scoreCalcSelect.value = getSavedCalcMethod(charId);
@@ -2056,8 +2266,13 @@
                         cardImage.classList.remove('hidden');
                         updateDisclaimerFooter(getActiveSelection());
                         updateImageGenButtonLabel(true);
+                    } else if (immediateGen) {
+                        // 計算方法/背景変更時は即時画像生成（キャッシュが無ければその場で生成）
+                        loadCardImage(charId, false, false);
                     } else {
-                        loadCardImage(charId, false, true);
+                        // キャッシュが無ければ「自動生成するか否か」は呼び出し元の判断に委ねる
+                        // （差し替え切替 = 自動生成、キャラ切替 = 生成ボタン待ち）
+                        loadCardImage(charId, false, true, autoGenOnMiss);
                     }
                 }
             } else if (viewMode === 'glass') {
@@ -2101,6 +2316,29 @@
             Pyro: '#ff6b4a', Hydro: '#4aa4ff', Anemo: '#74e0c5', Electro: '#c97bff',
             Dendro: '#a0e05a', Cryo: '#9ad4ff', Geo: '#f0c65a', None: '#aaaaaa'
         };
+        // サーバー側 element_colors（server.py）と同じRGB。生成画像の元素背景と見た目を揃える
+        const ELEMENT_BG_COLORS = {
+            Pyro: '#903b2a', Hydro: '#344595', Cryo: '#577fc7', Dendro: '#466b63',
+            Geo: '#6a6748', Electro: '#734a8c', Anemo: '#129588', None: '#4a5568'
+        };
+
+        // グラスカード下層の背景（element=元素グラデ / region=地域画像 / custom=カスタム色）
+        function glassBaseBgStyle(data) {
+            const mode = getBgColorMode();
+            if (mode === 'custom') {
+                return `background:${getCustomBgColor()};`;
+            }
+            if (mode === 'region') {
+                const usable = usableCharRegions(data.regions);
+                const saved = getSavedBgRegion();
+                const picked = usable.find(r => r.name === saved) || usable[0];
+                if (picked) {
+                    return `background-image:url('${assetUrl(picked.image)}');background-size:cover;background-position:center;`;
+                }
+            }
+            const c = ELEMENT_BG_COLORS[data.element] || ELEMENT_BG_COLORS.None;
+            return `background:linear-gradient(150deg, ${c}40 0%, ${c}14 40%, rgba(12,14,20,0.95) 100%);`;
+        }
 
         async function loadGlassCard(charId) {
             if (!charId) return;
@@ -2151,10 +2389,12 @@
             if (!glassEl) return;
             updateSelectedCharLabel(data);
             setLastKnownRealWeapon(data);
+            setCurrentCharRegions(data.regions || []);
 
             const elemColor = ELEMENT_COLORS[data.element] || '#aaaaaa';
             const elemDim = elemColor + '55';
             const splash = assetUrl(data.splash);
+            const baseBgStyle = glassBaseBgStyle(data);
             const skills = data.skills || [];
             const constIcons = data.constellationIcons || [];
             const unlocked = Number.isFinite(data.constellation) ? data.constellation : 0;
@@ -2238,6 +2478,7 @@
             <div class="glass-card-root" style="--element-color:${elemColor};--element-color-dim:${elemDim}">
               <div class="glass-scale-wrap" id="glassScaleWrap">
               <div class="build-card">
+                <div class="glass-card-base-bg" style="${baseBgStyle}"></div>
                 <div class="glass-card-bg" style="background-image:url('${splash || ''}')"></div>
                 <div class="top-section">
                   <div class="splash-container">
@@ -2246,11 +2487,11 @@
                       <div class="char-name">${data.displayName || ''}</div>
                       <div class="char-meta">
                         <span>Lv. ${data.level != null ? data.level : '?'}</span>
-                        <div class="friendship-pill"><span>❤</span><span>${data.friendship != null ? data.friendship : '-'}</span></div>
+                        ${data.friendship != null ? `<div class="friendship-pill"><span>❤</span><span>${data.friendship}</span></div>` : ''}
                       </div>
                     </div>
                     <div class="talents-stack">${talentsHtml}</div>
-                    <div class="const-stack">${constsHtml}</div>
+                    ${(data.constellationIcons && data.constellationIcons.length) ? `<div class="const-stack">${constsHtml}</div>` : ''}
                   </div>
                   <div class="stats-container">${statsHtml}</div>
                   <div class="right-section">
@@ -2365,6 +2606,7 @@
         function renderHtmlCard(data) {
             updateSelectedCharLabel(data);
             setLastKnownRealWeapon(data);
+            setCurrentCharRegions(data.regions || []);
             const mainStatsHtml = data.mainStats.map(s => `
                 <div class="flex items-center gap-2 bg-zinc-900/60 rounded-lg px-3 py-2 border border-zinc-800">
                     <span class="icon-chip-lg inline-flex items-center justify-center w-7 h-7 rounded-md shrink-0"><img src="/${s.icon}" class="w-6 h-6 object-contain"></span>
@@ -2408,7 +2650,7 @@
                     <div class="md:col-span-1 space-y-3">
                         <div class="flex items-center gap-3 bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
                             <div class="flex-1">
-                                <div class="text-lg font-bold text-primary">${data.displayName} ${data.level != null ? `Lv.${data.level}` : ''} ${Number.isFinite(data.constellation) ? data.constellation : 0}凸</div>
+                                <div class="text-lg font-bold text-primary">${data.displayName} ${data.level != null ? `Lv.${data.level}` : ''}${(data.constellationIcons && data.constellationIcons.length && Number.isFinite(data.constellation)) ? ` ${data.constellation}凸` : ''}</div>
                                 <div class="text-xs text-zinc-400">${data.weaponName}${data.weaponLevel ? ` Lv.${data.weaponLevel}` : ''}${data.weaponAffix ? ` (精錬${data.weaponAffix})` : ''}</div>
                             </div>
                             ${data.weaponIcon ? `<img src="/${data.weaponIcon}" class="w-12 h-12 rounded object-cover border border-zinc-700">` : ''}
@@ -2460,42 +2702,50 @@
 
                 const charId = this.getAttribute('data-char-id');
                 localStorage.setItem(`selected_char_${uid}`, charId);
-                // 画像タブではフルカードデータを取らないため「読み込み中」にしない
-                // 名前だけ軽量に取得してラベル更新する
-                if (selectedCharLabel) {
-                    if (viewMode === 'image') {
-                        // 名前のみバックグラウンド取得（表示は壊さない）
-                        (async () => {
-                            try {
-                                const method = getSavedCalcMethod(charId);
-                                const sel = getActiveSelection();
-                                const p = new URLSearchParams();
-                                p.set('calc_method', method);
-                                if (sel.fakeChar) p.set('fake_char', sel.fakeChar);
-                                if (sel.fakeWeapon) p.set('fake_weapon', sel.fakeWeapon);
-                                if (ver === 'beta') p.set('beta', 'true');
-                                const res = await fetch(`/api/card_data/${uid}/${charId}?${p}`);
-                                if (!res.ok) return;
-                                const data = await res.json();
-                                if (currentSelectedCharId === charId) {
-                                    updateSelectedCharLabel(data);
-                                    setLastKnownRealWeapon(data);
-                                }
-                            } catch (e) { /* ignore */ }
-                        })();
-                    } else {
-                        selectedCharLabel.textContent = '読み込み中...';
-                    }
+                if (selectedCharLabel && viewMode !== 'image') {
+                    selectedCharLabel.textContent = '読み込み中...';
                 }
-                refreshCurrentCard(charId, pendingForceFetchFromArtifacter);
+                // キャラ切替（差し替えではない）では自動生成せず、
+                // キャッシュが無ければ中央の生成ボタンを出す
+                refreshCurrentCard(charId, pendingForceFetchFromArtifacter, false);
                 pendingForceFetchFromArtifacter = false;
+
+                // 画像タブではフルカードデータを取らないため、名前だけ軽量に取得してラベル更新する。
+                // refreshCurrentCard の後（= 新しいキャラの差し替え状態が確定した後）に取得し、
+                // 直前キャラの差し替えキャラ/武器が新しいキャラの武器・地域背景に混入しないようにする
+                if (selectedCharLabel && viewMode === 'image') {
+                    (async () => {
+                        try {
+                            const method = getSavedCalcMethod(charId);
+                            const sel = getActiveSelection();
+                            const p = new URLSearchParams();
+                            p.set('calc_method', method);
+                            if (sel.fakeChar) p.set('fake_char', sel.fakeChar);
+                            if (sel.fakeWeapon) p.set('fake_weapon', sel.fakeWeapon);
+                            if (ver === 'beta') p.set('beta', 'true');
+                            const res = await fetch(`/api/card_data/${uid}/${charId}?${p}`);
+                            if (!res.ok) return;
+                            const data = await res.json();
+                            // 取得中にキャラや差し替えが変わっていたら適用しない
+                            const selNow = getActiveSelection();
+                            if (currentSelectedCharId === charId &&
+                                selNow.fakeChar === sel.fakeChar &&
+                                selNow.fakeWeapon === sel.fakeWeapon) {
+                                updateSelectedCharLabel(data);
+                                setLastKnownRealWeapon(data);
+                                setCurrentCharRegions(data.regions || []);
+                            }
+                        } catch (e) { /* ignore */ }
+                    })();
+                }
             });
         });
 
         scoreCalcSelect.addEventListener('change', function() {
             if (currentSelectedCharId) {
                 saveCalcMethod(currentSelectedCharId, this.value);
-                refreshCurrentCard(currentSelectedCharId, false);
+                // 計算方法変更時は即時画像生成（キャッシュが無ければその場で生成）
+                refreshCurrentCard(currentSelectedCharId, false, false, true);
             }
         });
 

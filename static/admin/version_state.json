@@ -1,14 +1,29 @@
 {
-  "live_version": null,
-  "beta_version": null,
-  "source": null,
+  "live_version": "6.7",
+  "beta_version": "6.7.54",
+  "source": "nanoka",
   "pending": {
     "characters": [],
     "weapons": [],
     "artifacts": []
   },
   "last_beta_fetch": null,
-  "last_live_fetch": null,
+  "last_live_fetch": "2026-08-04T20:18:28+09:00",
   "last_promote": null,
-  "history": []
+  "history": [
+    {
+      "at": "2026-08-04T20:18:28+09:00",
+      "action": "fetch_live_nanoka_json",
+      "detail": {
+        "live": "6.7",
+        "characters": 140,
+        "weapons": 247,
+        "lists": [
+          "characters.json",
+          "weapons.json",
+          "artifacts.json"
+        ]
+      }
+    }
+  ]
 }

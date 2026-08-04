@@ -36,6 +36,29 @@
             display: inline-block; margin: 2px; padding: 2px 8px;
             background: #27272a; border-radius: 6px; font-size: 0.7rem; font-family: ui-monospace, monospace;
         }
+        .region-tab {
+            padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600;
+            background: #27272a; border: 1px solid #3f3f46; color: #d4d4d8; cursor: pointer; transition: all .12s;
+        }
+        .region-tab.active { background: #0e7490; border-color: #22d3ee; color: #fff; }
+        .char-tile {
+            position: relative; border-radius: 10px; border: 1px solid #27272a; background: #0f0f12;
+            padding: 4px; cursor: pointer; transition: all .12s; text-align: center;
+        }
+        .char-tile:hover { border-color: #52525b; }
+        .char-tile img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #18181b; }
+        .char-tile .char-tile-name {
+            font-size: 0.6rem; color: #a1a1aa; margin-top: 3px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .char-tile.assigned { border-color: #22d3ee; box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.4); }
+        .char-tile.disabled { opacity: 0.45; cursor: not-allowed; }
+        .char-tile.disabled:hover { border-color: #27272a; }
+        .char-tile.assigned::after {
+            content: '✓'; position: absolute; top: 8px; right: 8px;
+            background: #22d3ee; color: #000; font-size: 10px; font-weight: 900;
+            border-radius: 9999px; width: 16px; height: 16px; line-height: 16px;
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -167,6 +190,47 @@
             </div>
         </section>
 
+        <!-- キャラ地域割り当て -->
+        <section class="card p-5 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 class="text-lg font-semibold">キャラ地域割り当て</h2>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="regionReloadBtn" class="btn btn-ghost text-xs">再読み込み</button>
+                    <button type="button" id="regionSaveBtn" class="btn btn-primary text-xs">割り当てを保存</button>
+                </div>
+            </div>
+            <p class="text-xs text-zinc-500 mb-3">
+                characters.json を {地域名: [キャラ数値ID]} で管理します。1キャラを複数地域に所属させることができます。
+                保存内容はビルドカード生成の「地域背景」選択に使われます。
+                旅人（10000005/10000007）は元素ごとに背景地域が固定されるため、ここでの割り当てはできません
+                （風→モンド / 岩→璃月 / 雷→稲妻 / 草→スメール / 水→フォンテーヌ / 炎→ナタ / 氷→スネージナヤ）。
+            </p>
+
+            <div id="regionTabs" class="flex flex-wrap gap-1.5 mb-3"></div>
+
+            <div class="flex flex-wrap items-center gap-2 mb-4">
+                <input id="newRegionInput" type="text" placeholder="新しい地域キー (例: snezhnaya)" maxlength="32"
+                    class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm w-56 focus:outline-none">
+                <button type="button" id="addRegionBtn" class="btn btn-ghost text-xs">地域を追加</button>
+                <button type="button" id="renameRegionBtn" class="btn btn-ghost text-xs">選択地域をリネーム</button>
+                <button type="button" id="deleteRegionBtn" class="btn btn-danger text-xs">選択地域を削除</button>
+                <span id="regionImageBadge" class="text-xs text-zinc-500"></span>
+            </div>
+
+            <div id="regionGrid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2"></div>
+            <div id="regionGridStatus" class="text-xs text-zinc-500 mt-2"></div>
+        </section>
+
+        <!-- 未所属キャラの割り当てモーダル -->
+        <div id="assignModal" class="hidden fixed inset-0 bg-black/60 items-center justify-center z-50">
+            <div class="card p-5 w-80 max-w-[90vw]">
+                <div class="text-sm font-semibold mb-1">割り当てる地域を選択</div>
+                <div id="assignModalChar" class="text-xs text-zinc-400 mb-3"></div>
+                <div id="assignModalRegions" class="flex flex-wrap gap-2 mb-3"></div>
+                <button type="button" id="assignModalClose" class="btn btn-ghost text-xs w-full">閉じる</button>
+            </div>
+        </div>
+
         <!-- 結果・ログ -->
 
         <section class="card p-5 mb-6">
@@ -268,6 +332,266 @@
         });
         refreshBtn.addEventListener('click', loadStatus);
         loadStatus();
+
+        // ==========================================================
+        //  キャラ地域割り当て
+        // ==========================================================
+        const REGION_LABELS = {
+            mondstadt: 'モンド', liyue: '璃月', inazuma: '稲妻', sumeru: 'スメール',
+            fontaine: 'フォテーヌ', natlan: 'ナタ', nodkrai: 'ノッドクライ',
+            snezhnaya: 'スネージナヤ', dragonspine: 'ドラゴンスパイネ',
+        };
+        const UNASSIGNED_TAB = '__unassigned__';
+        const REGION_KEY_PATTERN = /^[A-Za-z0-9_-]{1,32}$/;
+        // 旅人は元素ごとに背景地域が固定されるため、ここでの割り当てはできない
+        const TRAVELER_ELEMENT_LINKED = new Set([10000005, 10000007]);
+
+        let regionMap = {};
+        let regionCatalog = [];
+        let regionImages = [];
+        let activeRegionTab = null;
+        let regionDirty = false;
+
+        const regionTabsEl = document.getElementById('regionTabs');
+        const regionGridEl = document.getElementById('regionGrid');
+        const regionGridStatusEl = document.getElementById('regionGridStatus');
+        const regionImageBadgeEl = document.getElementById('regionImageBadge');
+        const assignModal = document.getElementById('assignModal');
+
+        function regionLabel(key) {
+            return REGION_LABELS[key] || key;
+        }
+
+        function charAssignedRegions(charId) {
+            return Object.keys(regionMap).filter(r => (regionMap[r] || []).includes(charId));
+        }
+
+        function markRegionDirty() {
+            regionDirty = true;
+            document.getElementById('regionSaveBtn').textContent = '割り当てを保存 ●';
+        }
+
+        function clearRegionDirty() {
+            regionDirty = false;
+            document.getElementById('regionSaveBtn').textContent = '割り当てを保存';
+        }
+
+        function renderRegionTabs() {
+            const keys = Object.keys(regionMap);
+            const unassignedCount = regionCatalog.filter(c =>
+                !TRAVELER_ELEMENT_LINKED.has(c.id) && charAssignedRegions(c.id).length === 0
+            ).length;
+            let html = keys.map(key => {
+                const active = activeRegionTab === key;
+                return `<button type="button" class="region-tab ${active ? 'active' : ''}" data-region="${key}">
+                    ${regionLabel(key)} <span class="opacity-70">${(regionMap[key] || []).length}</span>
+                </button>`;
+            }).join('');
+            html += `<button type="button" class="region-tab ${activeRegionTab === UNASSIGNED_TAB ? 'active' : ''}" data-region="${UNASSIGNED_TAB}">
+                未所属 <span class="opacity-70">${unassignedCount}</span>
+            </button>`;
+            regionTabsEl.innerHTML = html;
+            regionTabsEl.querySelectorAll('.region-tab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    activeRegionTab = btn.getAttribute('data-region');
+                    renderRegionTabs();
+                    renderRegionGrid();
+                });
+            });
+
+            const isRegion = activeRegionTab && activeRegionTab !== UNASSIGNED_TAB;
+            document.getElementById('renameRegionBtn').disabled = !isRegion;
+            document.getElementById('deleteRegionBtn').disabled = !isRegion;
+            if (isRegion) {
+                regionImageBadgeEl.textContent = regionImages.includes(activeRegionTab)
+                    ? `背景画像あり: states/${activeRegionTab}.png`
+                    : '背景画像なし（元素背景にフォールバック）';
+            } else {
+                regionImageBadgeEl.textContent = '';
+            }
+        }
+
+        function renderRegionGrid() {
+            const isUnassigned = activeRegionTab === UNASSIGNED_TAB;
+            const chars = isUnassigned
+                ? regionCatalog.filter(c => !TRAVELER_ELEMENT_LINKED.has(c.id) && charAssignedRegions(c.id).length === 0)
+                : regionCatalog;
+            const assignedSet = new Set(isUnassigned ? [] : (regionMap[activeRegionTab] || []));
+
+            regionGridEl.innerHTML = chars.length
+                ? chars.map(c => {
+                    const assigned = assignedSet.has(c.id);
+                    const linked = TRAVELER_ELEMENT_LINKED.has(c.id);
+                    const imgHtml = c.icon
+                        ? `<img src="/${c.icon}" loading="lazy" alt="">`
+                        : `<div class="w-full aspect-square rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-600 text-xs">?</div>`;
+                    return `<div class="char-tile ${assigned ? 'assigned' : ''}${linked ? ' disabled' : ''}" data-char-id="${c.id}"
+                        title="${linked ? '旅人は元素で背景地域が決まるため編集できません' : `${c.name} (${c.id})`}">
+                        ${imgHtml}
+                        <div class="char-tile-name">${c.name}${linked ? ' <span class="text-cyan-400">元素連動</span>' : ''}</div>
+                    </div>`;
+                }).join('')
+                : '<div class="col-span-full text-zinc-600 text-xs py-4">該当するキャラがいません</div>';
+
+            regionGridStatusEl.textContent = isUnassigned
+                ? `どこにも属していないキャラ: ${chars.length}件（タップで地域を割り当て。旅人は元素連動のため対象外）`
+                : `全${regionCatalog.length}件中、${regionLabel(activeRegionTab)} に所属: ${assignedSet.size}件（タップで所属を切り替え、複数地域所属可）`;
+
+            regionGridEl.querySelectorAll('.char-tile').forEach(tile => {
+                tile.addEventListener('click', () => {
+                    if (TRAVELER_ELEMENT_LINKED.has(Number(tile.getAttribute('data-char-id')))) return;
+                    const charId = Number(tile.getAttribute('data-char-id'));
+                    if (isUnassigned) {
+                        openAssignModal(charId);
+                    } else {
+                        toggleRegionAssign(activeRegionTab, charId);
+                    }
+                });
+            });
+        }
+
+        function toggleRegionAssign(region, charId) {
+            const ids = regionMap[region] || [];
+            const idx = ids.indexOf(charId);
+            if (idx >= 0) {
+                ids.splice(idx, 1);
+            } else {
+                ids.push(charId);
+            }
+            regionMap[region] = ids;
+            markRegionDirty();
+            renderRegionTabs();
+            renderRegionGrid();
+        }
+
+        function openAssignModal(charId) {
+            const char = regionCatalog.find(c => c.id === charId);
+            if (!char) return;
+            document.getElementById('assignModalChar').textContent = `${char.name} (${char.id})`;
+            const keys = Object.keys(regionMap);
+            document.getElementById('assignModalRegions').innerHTML = keys.length
+                ? keys.map(key => `<button type="button" class="btn btn-ghost text-xs" data-assign-region="${key}">${regionLabel(key)}</button>`).join('')
+                : '<span class="text-xs text-zinc-600">地域がまだありません。先に地域を追加してください。</span>';
+            document.getElementById('assignModalRegions').querySelectorAll('[data-assign-region]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const region = btn.getAttribute('data-assign-region');
+                    if (!(regionMap[region] || []).includes(charId)) {
+                        toggleRegionAssign(region, charId);
+                    }
+                    closeAssignModal();
+                });
+            });
+            assignModal.classList.remove('hidden');
+            assignModal.classList.add('flex');
+        }
+
+        function closeAssignModal() {
+            assignModal.classList.add('hidden');
+            assignModal.classList.remove('flex');
+        }
+
+        document.getElementById('assignModalClose').addEventListener('click', closeAssignModal);
+        assignModal.addEventListener('click', (e) => { if (e.target === assignModal) closeAssignModal(); });
+
+        document.getElementById('addRegionBtn').addEventListener('click', () => {
+            const input = document.getElementById('newRegionInput');
+            const key = (input.value || '').trim();
+            if (!REGION_KEY_PATTERN.test(key)) {
+                alert('地域キーは 英数字・ハイフン・アンダースコア 1〜32文字で入力してください。');
+                return;
+            }
+            if (Object.prototype.hasOwnProperty.call(regionMap, key)) {
+                alert(`地域「${key}」は既に存在します。`);
+                return;
+            }
+            regionMap[key] = [];
+            input.value = '';
+            activeRegionTab = key;
+            markRegionDirty();
+            renderRegionTabs();
+            renderRegionGrid();
+        });
+
+        document.getElementById('renameRegionBtn').addEventListener('click', () => {
+            if (!activeRegionTab || activeRegionTab === UNASSIGNED_TAB) return;
+            const oldKey = activeRegionTab;
+            const newKey = (prompt(`「${oldKey}」の新しいキーを入力してください。`, oldKey) || '').trim();
+            if (!newKey || newKey === oldKey) return;
+            if (!REGION_KEY_PATTERN.test(newKey)) {
+                alert('地域キーは 英数字・ハイフン・アンダースコア 1〜32文字で入力してください。');
+                return;
+            }
+            if (Object.prototype.hasOwnProperty.call(regionMap, newKey)) {
+                alert(`地域「${newKey}」は既に存在します。`);
+                return;
+            }
+            const rebuilt = {};
+            for (const [key, ids] of Object.entries(regionMap)) {
+                rebuilt[key === oldKey ? newKey : key] = ids;
+            }
+            regionMap = rebuilt;
+            activeRegionTab = newKey;
+            markRegionDirty();
+            renderRegionTabs();
+            renderRegionGrid();
+        });
+
+        document.getElementById('deleteRegionBtn').addEventListener('click', () => {
+            if (!activeRegionTab || activeRegionTab === UNASSIGNED_TAB) return;
+            const key = activeRegionTab;
+            if (!confirm(`地域「${key}」を削除します。この地域の割り当ても消えます。よろしいですか？`)) return;
+            delete regionMap[key];
+            activeRegionTab = Object.keys(regionMap)[0] || UNASSIGNED_TAB;
+            markRegionDirty();
+            renderRegionTabs();
+            renderRegionGrid();
+        });
+
+        document.getElementById('regionSaveBtn').addEventListener('click', async () => {
+            resultEl.textContent = '実行中: region_map 保存 ...';
+            try {
+                const res = await fetch('/admin/api/region_map', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(regionMap),
+                });
+                const data = await res.json();
+                if (res.status === 401) {
+                    location.href = '/admin/login';
+                    return;
+                }
+                resultEl.textContent = JSON.stringify(data, null, 2);
+                if (data.ok) clearRegionDirty();
+            } catch (e) {
+                resultEl.textContent = String(e);
+            }
+        });
+
+        document.getElementById('regionReloadBtn').addEventListener('click', () => loadRegionMap());
+
+        async function loadRegionMap() {
+            try {
+                const res = await fetch('/admin/api/region_map');
+                if (res.status === 401) {
+                    location.href = '/admin/login';
+                    return;
+                }
+                const data = await res.json();
+                regionMap = data.region_map || {};
+                regionCatalog = data.catalog || [];
+                regionImages = data.region_images || [];
+                if (!activeRegionTab || !Object.prototype.hasOwnProperty.call(regionMap, activeRegionTab)) {
+                    activeRegionTab = Object.keys(regionMap)[0] || UNASSIGNED_TAB;
+                }
+                clearRegionDirty();
+                renderRegionTabs();
+                renderRegionGrid();
+            } catch (e) {
+                regionGridStatusEl.textContent = `読み込み失敗: ${e}`;
+            }
+        }
+
+        loadRegionMap();
     </script>
 </body>
 </html>

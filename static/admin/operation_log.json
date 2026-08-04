@@ -1,0 +1,23 @@
+[
+  {
+    "at": "2026-08-04T20:18:28+09:00",
+    "action": "fetch_live_nanoka_json",
+    "ok": true,
+    "message": "live=6.7",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "live_json",
+      "live_version": "6.7",
+      "beta_version": "6.7.54",
+      "character_count": 140,
+      "weapon_count": 247,
+      "artifact_list_count": 63,
+      "lists": [
+        "characters.json",
+        "weapons.json",
+        "artifacts.json"
+      ]
+    }
+  }
+]
