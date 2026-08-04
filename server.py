@@ -37,9 +37,6 @@ if not os.path.exists(STATIC_DIR):
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
-# =============================================================================
-# Admin パネル
-# =============================================================================
 import hashlib as _hashlib
 import hmac as _hmac
 import secrets as _secrets
@@ -179,8 +176,6 @@ print("[OK] Admin routes embedded in server.py → /admin/login , /admin/__ping"
 FONT_PATH = os.path.join(BASE_DIR, "fonts", "font_fixed.ttf")
 FONT_LIGHT_PATH = os.path.join(BASE_DIR, "fonts", "font_light.ttf")
 
-# 設計解像度（Figma座標系）と出力解像度。
-# 描画ヘルパーは設計座標で受け取り、内部でキャンバス座標へ拡大する。
 DESIGN_W, DESIGN_H = 1741, 1159
 CARD_W, CARD_H = 2400, 1620
 SX = CARD_W / DESIGN_W
@@ -257,14 +252,26 @@ def _shade_rgb(rgb, factor):
     return tuple(max(0, min(255, int(c * factor))) for c in rgb)
 
 
-# =============================================================================
-# OPTIMIZED: Global caches
-# =============================================================================
 _IMAGE_CACHE: dict = {}
 _FONT_CACHE: dict = {}
 _SPLASH_BLUR_CACHE: dict = {}
 _RESIZED_CACHE: dict = {}
 _PREBUILT_BGS: dict = {}
+_NATION_BGS: dict = {}
+_CHARACTERS_MASTER_CACHE: list | None = None
+
+_NATION_ALIASES = {
+    "mondstadt": "mondstadt",
+    "liyue": "liyue",
+    "inazuma": "inazuma",
+    "sumeru": "sumeru",
+    "fontaine": "fontaine",
+    "natlan": "natlan",
+    "nodkrai": "nodkrai",
+    "nod-krai": "nodkrai",
+    "nod_krai": "nodkrai",
+}
+_NATION_IMAGE_NAMES = {"mondstadt", "liyue", "inazuma", "sumeru", "fontaine", "natlan", "nodkrai"}
 
 
 def get_cached_font(path: str, size: int):
@@ -310,11 +317,10 @@ def get_resized_image(path: str, size: tuple):
                 return None
             try:
                 img = Image.open(path).convert("RGBA")
-                _IMAGE_CACHE[path] = img  # 元画像も一緒にキャッシュ
+                _IMAGE_CACHE[path] = img
             except Exception as e:
                 print(f"[Warning] Failed to load image {path}: {e}")
                 return None
-        # リサイズしてキャッシュ
         filt = get_resize_filter(size)
         _RESIZED_CACHE[key] = img.resize(size, filt)
     return _RESIZED_CACHE[key].copy()
@@ -333,7 +339,6 @@ def get_resize_filter(target_size):
 
 
 def _build_base_background(width, height, base_rgb):
-    """グラデーション + パーティクルのみ。スプラッシュなし。"""
     gw, gh = 96, 64
     tl = _shade_rgb(base_rgb, 0.48)
     br = _shade_rgb(base_rgb, 1.38)
@@ -383,8 +388,39 @@ def _build_base_background(width, height, base_rgb):
     return bg
 
 
+def _build_nation_background(width, height, nation):
+    if not nation:
+        return None
+    nation_path = os.path.join(STATIC_DIR, "assets", "states", f"{nation}.png")
+    if not os.path.exists(nation_path):
+        return None
+    try:
+        src = get_cached_image(nation_path)
+        if src is None:
+            return None
+        scale = max(width / src.width, height / src.height)
+        nw = max(1, int(src.width * scale + 0.5))
+        nh = max(1, int(src.height * scale + 0.5))
+        resized = src.resize((nw, nh), Image.Resampling.BICUBIC)
+        left = max(0, (nw - width) // 2)
+        top = max(0, (nh - height) // 2)
+        return resized.crop((left, top, left + width, top + height))
+    except Exception as e:
+        print(f"[Warning] nation background load failed ({nation_path}): {e}")
+        return None
+
+
+def get_nation_background(width, height, nation):
+    if not nation:
+        return None
+    key = (nation, width, height)
+    if key not in _NATION_BGS:
+        _NATION_BGS[key] = _build_nation_background(width, height, nation)
+    bg = _NATION_BGS[key]
+    return bg.copy() if bg is not None else None
+
+
 def _prebuild_backgrounds(width=CARD_W, height=CARD_H):
-    """サーバー起動時に8元素の背景を事前生成してメモリに保持。"""
     global _PREBUILT_BGS
     elements = {
         "Pyro": (0x90, 0x3B, 0x2A),
@@ -399,22 +435,84 @@ def _prebuild_backgrounds(width=CARD_W, height=CARD_H):
     for elem, rgb in elements.items():
         _PREBUILT_BGS[elem] = _build_base_background(width, height, rgb)
     print(f"[Prebuild] {len(_PREBUILT_BGS)} element backgrounds cached in memory")
+    prebuilt_nations = 0
+    for nation in sorted(_NATION_IMAGE_NAMES):
+        if get_nation_background(width, height, nation) is not None:
+            prebuilt_nations += 1
+    if prebuilt_nations:
+        print(f"[Prebuild] {prebuilt_nations} nation backgrounds cached in memory")
 
 
-def create_card_background(width, height, base_rgb, splash_path=None, element_type="None", use_prebuilt=True):
-    """
-    OPTIMIZED:
-    - Returns RGBA
-    - Standard element backgrounds are prebuilt and cached
-    - Splash GaussianBlur(radius=48) is cached separately
-    """
-    # 標準元素色の場合、事前生成背景をベースにする
-    if use_prebuilt and element_type in _PREBUILT_BGS:
-        bg = _PREBUILT_BGS[element_type].copy()
+def _load_characters_master():
+    global _CHARACTERS_MASTER_CACHE
+    if _CHARACTERS_MASTER_CACHE is None:
+        _CHARACTERS_MASTER_CACHE = []
+        path = os.path.join(STATIC_DIR, "assets", "characters", "characters.json")
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                if isinstance(data, list):
+                    _CHARACTERS_MASTER_CACHE = data
+            except Exception as e:
+                print(f"[Warning] characters.json load failed: {e}")
+    return _CHARACTERS_MASTER_CACHE
+
+
+def normalize_nation_tag(tag):
+    if not isinstance(tag, str):
+        return None
+    tag = tag.strip()
+    if not tag:
+        return None
+    return _NATION_ALIASES.get(tag.lower())
+
+
+def find_nation_for_character(char_name):
+    if not char_name:
+        return None
+    for obj in _load_characters_master():
+        if not isinstance(obj, dict):
+            continue
+        names = [
+            obj.get("en"),
+            obj.get("ja"),
+            obj.get("zhCN"),
+            obj.get("zhTW"),
+            obj.get("id"),
+        ]
+        if char_name not in [n for n in names if isinstance(n, str)]:
+            continue
+        tags = obj.get("tags")
+        if not isinstance(tags, list) or not tags:
+            return None
+        nation = normalize_nation_tag(tags[0])
+        if nation:
+            return nation
+        for tag in tags[1:]:
+            nation = normalize_nation_tag(tag)
+            if nation:
+                return nation
+        return None
+    return None
+
+
+def create_card_background(width, height, base_rgb, splash_path=None, element_type="None", use_prebuilt=True, nation=None):
+    if nation:
+        bg = get_nation_background(width, height, nation)
+        if bg is not None:
+            pass
+        else:
+            bg = None
     else:
-        bg = _build_base_background(width, height, base_rgb)
+        bg = None
 
-    # スプラッシュ合成（キャッシュあり）
+    if bg is None:
+        if use_prebuilt and element_type in _PREBUILT_BGS:
+            bg = _PREBUILT_BGS[element_type].copy()
+        else:
+            bg = _build_base_background(width, height, base_rgb)
+
     if splash_path and os.path.exists(splash_path):
         cache_key = (splash_path, width, height)
         if cache_key in _SPLASH_BLUR_CACHE:
@@ -513,18 +611,12 @@ def draw_figma_text_right(draw, text, x, y, font, font_size=24, fill_color=(255,
 def draw_figma_box(img, x, y, width, height, radius=15, fill_color=(60, 64, 72, 125),
                    outline_color=(140, 145, 155, 90), outline_width=1, shadow=True,
                    shadow_offset=(6, 6), shadow_blur=8, shadow_alpha=70):
-    """
-    OPTIMIZED: No GaussianBlur. 本体+影を覆う最小範囲の一時レイヤーに
-    描画し、dest 指定で合成する（透明維持 & 全画面アロケーション回避）。
-    """
-    # 設計座標 → キャンバス座標
     x1, y1 = x * SX, y * SY
     x2, y2 = x1 + width * SX, y1 + height * SY
     radius = radius * SY
     ox, oy = (shadow_offset[0] * SX, shadow_offset[1] * SY) if shadow else (0, 0)
     outline_width = max(1, round(outline_width * SY)) if (outline_color and outline_width > 0) else 0
 
-    # 本体+影を覆う最小領域（キャンバス外はクリップ、float座標でも整数に）
     canvas_w, canvas_h = img.size
     margin = max(1, outline_width)
     layer_x1 = int(max(0, min(x1, x1 + ox) - margin))
@@ -534,7 +626,6 @@ def draw_figma_box(img, x, y, width, height, radius=15, fill_color=(60, 64, 72, 
     if layer_x2 <= layer_x1 or layer_y2 <= layer_y1:
         return
 
-    # 一時レイヤーに描画してから合成（アルファを壊さない）
     overlay = Image.new("RGBA", (layer_x2 - layer_x1, layer_y2 - layer_y1), (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
     dx, dy = -layer_x1, -layer_y1
@@ -559,7 +650,6 @@ def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=(255, 255
     actual_font = font
 
     if font_size is not None:
-        # 元のフォントから path を取り出してサイズ違いを生成（キャンバス解像度へ拡大）
         scaled_size = max(1, round(font_size * SY))
         path = getattr(font, "path", None)
         if path and os.path.exists(path):
@@ -567,7 +657,6 @@ def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=(255, 255
         elif isinstance(font, str) and os.path.exists(font):
             actual_font = get_cached_font(font, scaled_size)
 
-    # 設計座標 → キャンバス座標（box_width も設計単位）
     x_s = x * SX
     bw_s = box_width * SX if box_width else None
     if align == "left":
@@ -599,7 +688,6 @@ def draw_figma_text_with_shadow(draw, text, x, y, font, font_size=None, fill_col
         elif isinstance(font, str) and os.path.exists(font):
             actual_font = get_cached_font(font, scaled_size)
 
-    # 設計座標 → キャンバス座標（box_width も設計単位）
     x_s = x * SX
     bw_s = box_width * SX if box_width else None
     if align == "left":
@@ -613,7 +701,6 @@ def draw_figma_text_with_shadow(draw, text, x, y, font, font_size=None, fill_col
     else:
         target_x = x_s
 
-    # 影（オフセットして半透明黒で描画）
     sox, soy = shadow_offset[0] * SX, shadow_offset[1] * SY
     y_s = y * SY
     draw.text(
@@ -622,7 +709,6 @@ def draw_figma_text_with_shadow(draw, text, x, y, font, font_size=None, fill_col
         font=actual_font,
         fill=shadow_color,
     )
-    # 本文
     draw.text(
         (target_x, y_s),
         text_str,
@@ -631,8 +717,6 @@ def draw_figma_text_with_shadow(draw, text, x, y, font, font_size=None, fill_col
     )
 
 def draw_figma_line(img, x1, y1, x2, y2, fill_color=(255, 255, 255, 50), width=1):
-    """OPTIMIZED: 線分を覆う最小レイヤー + alpha_composite(dest) で透明を維持。"""
-    # 設計座標 → キャンバス座標
     x1, y1, x2, y2 = x1 * SX, y1 * SY, x2 * SX, y2 * SY
     width = max(1, round(width * SY))
     canvas_w, canvas_h = img.size
@@ -650,8 +734,6 @@ def draw_figma_line(img, x1, y1, x2, y2, fill_color=(255, 255, 255, 50), width=1
 
 
 def draw_figma_circle(img, x, y, size, fill_color=(60, 64, 72, 125), outline_color=None, outline_width=0):
-    """OPTIMIZED: 円を覆う最小レイヤー + alpha_composite(dest) で透明を維持。"""
-    # 設計座標 → キャンバス座標（真円を保つため直径は縦横とも SY 基準）
     x, y = x * SX, y * SY
     size = size * SY
     outline_width = max(1, round(outline_width * SY)) if outline_width else 0
@@ -748,14 +830,10 @@ def resolve_display_skill_levels(avatar_info, fake_char=False):
 
 
 def paste_figma_image(base_img, img_path, box_x, box_y, box_width, box_height, radius=15, beta="false"):
-    """OPTIMIZED: cache + cheap resize + RGBA paste.
-    角丸マスクと元画像のアルファを乗算してから貼る（透明部分が黒くならない）。
-    """
     img_path = resolve_datas_path(img_path, beta)
     if not img_path or not os.path.exists(img_path):
         return
     try:
-        # 設計座標 → キャンバス座標
         bx, by = int(round(box_x * SX)), int(round(box_y * SY))
         bw, bh = max(1, round(box_width * SX)), max(1, round(box_height * SY))
         paste_img = get_resized_image(img_path, (bw, bh))
@@ -765,16 +843,13 @@ def paste_figma_image(base_img, img_path, box_x, box_y, box_width, box_height, r
         if paste_img.mode != "RGBA":
             paste_img = paste_img.convert("RGBA")
 
-        # 小さい画像は角丸マスク省略（見た目の差がほぼない & 大幅高速化）
         if max(box_width, box_height) < 50:
             base_img.paste(paste_img, (bx, by), paste_img)
         else:
-            # 角丸マスク
             corner_mask = Image.new("L", (bw, bh), 0)
             mask_draw = ImageDraw.Draw(corner_mask)
             mask_draw.rounded_rectangle([0, 0, bw, bh], radius=max(1, round(radius * SY)), fill=255)
 
-            # 元画像のアルファ × 角丸マスク（透明ピクセルの RGB=黒がそのまま出ないようにする）
             r, g, b, a = paste_img.split()
             combined_alpha = ImageChops.multiply(a, corner_mask)
             paste_img = Image.merge("RGBA", (r, g, b, combined_alpha))
@@ -785,9 +860,6 @@ def paste_figma_image(base_img, img_path, box_x, box_y, box_width, box_height, r
 
 
 def paste_mask_image(base_img, img_path, box_x, box_y, box_width, box_height, radius=15, zoom=1.0, beta="false"):
-    """OPTIMIZED: cache + cheap resize + RGBA paste.
-    角丸マスクと元画像のアルファを乗算してから貼る（透明部分が黒くならない）。
-    """
     img_path = resolve_datas_path(img_path, beta)
     if not img_path or not os.path.exists(img_path):
         return
@@ -796,7 +868,6 @@ def paste_mask_image(base_img, img_path, box_x, box_y, box_width, box_height, ra
         if paste_img is None:
             return
         orig_w, orig_h = paste_img.size
-        # 設計座標 → キャンバス座標
         bw, bh = max(1, round(box_width * SX)), max(1, round(box_height * SY))
         new_height = int(bh * zoom)
         new_width = int(orig_w * (new_height / orig_h))
@@ -812,12 +883,10 @@ def paste_mask_image(base_img, img_path, box_x, box_y, box_width, box_height, ra
         offset_y = (bh - new_height) // 2
         canvas.paste(paste_img, (offset_x, offset_y), paste_img)
 
-        # 角丸マスク
         corner_mask = Image.new("L", (bw, bh), 0)
         mask_draw = ImageDraw.Draw(corner_mask)
         mask_draw.rounded_rectangle([0, 0, bw, bh], radius=max(1, round(radius * SY)), fill=255)
 
-        # キャンバスのアルファ × 角丸マスク
         r, g, b, a = canvas.split()
         combined_alpha = ImageChops.multiply(a, corner_mask)
         canvas = Image.merge("RGBA", (r, g, b, combined_alpha))
@@ -836,17 +905,10 @@ def score_calc(stat, critrate, critdmg, method):
     return scores
 
 
-# =============================================================================
-# 背景画像一覧 API（artifacter のランダム背景用）
-# =============================================================================
 _BG_IMAGE_EXTS = {".webp", ".png", ".jpg", ".jpeg"}
 
 
 def _list_image_urls(rel_dir: str, url_prefix: str, limit: int = 200) -> list:
-    """
-    STATIC_DIR 配下の rel_dir を走査し、画像ファイルの公開URLリストを返す。
-    例: rel_dir="assets/splash" → ["/static/assets/splash/xxx.webp", ...]
-    """
     abs_dir = os.path.join(STATIC_DIR, rel_dir)
     if not os.path.isdir(abs_dir):
         return []
@@ -868,11 +930,6 @@ def _list_image_urls(rel_dir: str, url_prefix: str, limit: int = 200) -> list:
 
 @app.get("/api/bg_images")
 async def api_bg_images(beta: str = "false"):
-    """
-    フロントの背景ローテーター用。
-    splash（キャラスプラッシュ）と weapons（武器アイコン）の画像URLを返す。
-    beta=true のときは static/beta 側も追加で探す。
-    """
     splash = _list_image_urls("assets/splash", "/static/assets/splash")
     weapons = _list_image_urls("assets/weapons", "/static/assets/weapons")
 
@@ -1573,6 +1630,8 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     bg_base_rgb = custom_rgb if custom_rgb else element_base_rgb
     base_color = (*bg_base_rgb, 255)
 
+    char_nation = find_nation_for_character(chardatas["name"])
+
     splash = f"static/assets/splash/{chardatas['icon'].replace('AvatarIcon', 'Gacha_AvatarImg')}.webp"
     splash = resolve_datas_path(splash, beta)
 
@@ -1939,15 +1998,20 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     t_end = time.perf_counter()
     print(f"[Perf] セット効果処理: {(t_end - t_start)*1000:.1f}ms")
 
-    # ========== DRAWING (OPTIMIZED) ==========
     t_start = time.perf_counter()
-    img = create_card_background(card_width, card_height, bg_base_rgb, splash_path=splash, element_type=element_type, use_prebuilt=(bg_color is None))
+    use_nation_bg = bg_color is None and char_nation is not None
+    img = create_card_background(
+        card_width, card_height, bg_base_rgb,
+        splash_path=splash,
+        element_type=element_type,
+        use_prebuilt=(bg_color is None and char_nation is None),
+        nation=(char_nation if use_nation_bg else None),
+    )
     t_end = time.perf_counter()
     print(f"[Perf] 背景生成: {(t_end - t_start)*1000:.1f}ms")
     draw = ImageDraw.Draw(img)
 
     t_start = time.perf_counter()
-    # フォント読み込み（キャッシュ化: リクエスト間で共有、再読み込みなし。サイズはキャンバス解像度基準）
     font_stats = get_cached_font(FONT_PATH, max(1, round(28 * SY)))
     font_stats_light = get_cached_font(FONT_LIGHT_PATH, max(1, round(28 * SY)))
     t_end = time.perf_counter()
@@ -1962,7 +2026,6 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
     paste_mask_image(img, splash, box_x=33, box_y=30, box_width=694, box_height=671, radius=15, zoom=1.1, beta=beta)
 
-    # スプラッシュ枠アウトライン（設計座標 → キャンバス、最小レイヤーで合成）
     _ol_x1, _ol_y1 = int(31 * SX), int(28 * SY)
     _ol_x2, _ol_y2 = int(729 * SX) + 1, int(703 * SY) + 1
     _outline_layer = Image.new("RGBA", (_ol_x2 - _ol_x1, _ol_y2 - _ol_y1), (0, 0, 0, 0))
@@ -1996,7 +2059,6 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
                     icon_img.putalpha(alpha)
                     img.paste(icon_img, (int(round((circle_x + 5) * SX)), int(round((circle_y + 5) * SY))), icon_img)
 
-            # ロックアイコン（設計座標の円中心 → キャンバスへ拡大、最小レイヤーで合成）
             lock_w, lock_h = 24 * SX, 26 * SY
             lx = circle_x * SX + (circle_size * SY - lock_w) / 2
             ly = circle_y * SY + (circle_size * SY - lock_h) / 2 + 2 * SY
@@ -2058,7 +2120,6 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             green_text = data["add"]
             gray_text = str(data["base"])
             calc_font = get_cached_font(FONT_PATH, max(1, round(20 * SY))) if os.path.exists(FONT_PATH) else font_stats
-            # textlength はキャンバスpx → 設計単位(/SX)に変換して座標計算と整合
             green_w = draw.textlength(green_text, font=calc_font) / SX
             gray_w = draw.textlength(gray_text, font=calc_font) / SX
             target_right_edge = 1260
@@ -2092,10 +2153,8 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             paste_figma_image(img, artifact_data["stats"][j][0], box_x=box_x + 12, box_y=y_base + 50 * j, box_width=30, box_height=30, radius=5, beta=beta)
 
         draw_figma_line(img, x1=box_x + 27, y1=1065, x2=box_x + 287, y2=1065, fill_color=(255, 255, 255, 50), width=1)
-        # スコア数字は右端(box_x+287)基準で右揃え、小さい「スコア」ラベルは数字の左側に寄せる
         _num_font_path = getattr(font_stats, "path", None)
         _num_font = get_cached_font(_num_font_path, max(1, round(40 * SY))) if _num_font_path and os.path.exists(_num_font_path) else font_stats
-        # textlength はキャンバスpx → 設計単位(/SX)に変換
         _score_left_x = box_x + 287 - draw.textlength(str(artifact_data["score"]), font=_num_font) / SX
         draw_figma_text(draw, text="スコア", x=box_x + 27, y=1090, font=font_stats_light, font_size=20, align="right", box_width=(_score_left_x - 6) - (box_x + 27))
         draw_figma_text(draw, text=artifact_data["score"], x=box_x + 207, y=1070, font=font_stats, font_size=40, align="right", box_width=80)
