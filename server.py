@@ -10,7 +10,7 @@ import asyncio
 import io
 import json
 import time
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from collections import Counter
 import random as _random
 
@@ -43,11 +43,41 @@ import re as _re
 import secrets as _secrets
 import time as _time
 
-_ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "aikyu")
-_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "iqmc1104")
-_ADMIN_SECRET = os.environ.get("ADMIN_SECRET") or _secrets.token_hex(32)
+# .env の読み込み（存在しなければ通常の環境変数のみ使用）
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(BASE_DIR, ".env"))
+except ImportError:
+    print("[WARN] python-dotenv が未インストールのため .env は読み込まれません（pip install -r requirements.txt）")
+
 _ADMIN_COOKIE = "admin_session"
 _ADMIN_MAX_AGE = 60 * 60 * 12
+_ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "").strip()
+_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "").strip()
+_ADMIN_SECRET = (os.environ.get("ADMIN_SECRET") or _secrets.token_hex(32)).strip()
+_ADMIN_ALLOWED_IPS = {s.strip() for s in os.environ.get("ADMIN_ALLOWED_IPS", "").split(",") if s.strip()}
+_ADMIN_MAX_LOGIN_FAILS = int(os.environ.get("ADMIN_MAX_LOGIN_FAILS", "5"))
+_ADMIN_LOCK_MINUTES = int(os.environ.get("ADMIN_LOCK_MINUTES", "10"))
+# IP -> {count: 失敗回数, locked_until: ロック解除時刻(epoch秒)}（成功または期限切れで消える）
+_ADMIN_LOGIN_FAILS: Dict[str, Dict[str, Any]] = {}
+
+
+def _validate_admin_config() -> None:
+    """セキュリティ要件を満たさない設定は起動時にエラーで止める（fail closed）。"""
+    problems = []
+    if not _ADMIN_USERNAME:
+        problems.append("ADMIN_USERNAME が未設定です（.env に設定してください）")
+    if len(_ADMIN_PASSWORD) < 12:
+        problems.append("ADMIN_PASSWORD が短すぎます（12文字以上必要）。.env に強力なパスワードを設定してください")
+    if _ADMIN_PASSWORD and _ADMIN_PASSWORD in ("iqmc1104",):
+        problems.append("ADMIN_PASSWORD に既知のデフォルト値が使われています。.env で変更してください")
+    if problems:
+        raise RuntimeError("Admin 設定エラー:\n" + "\n".join(problems))
+    if "ADMIN_SECRET" not in os.environ:
+        print("[WARN] ADMIN_SECRET 未設定のため起動毎にランダム生成します（複数プロセス運用時は .env に固定値を設定してください）")
+
+
+_validate_admin_config()
 
 def _admin_sign(payload: str) -> str:
     sig = _hmac.new(_ADMIN_SECRET.encode(), payload.encode(), _hashlib.sha256).hexdigest()
@@ -78,8 +108,43 @@ def _get_data_manager():
     from admin_data import DataManager
     return DataManager(BASE_DIR)
 
+def _admin_client_ip(request: Request) -> str:
+    """クライアント IP（uvicorn の proxy_headers が信頼プロキシの XFF を解決済み）。"""
+    return request.client.host if request.client else "unknown"
+
+def _admin_login_lock_remaining(ip: str) -> Optional[float]:
+    """ロック中の残り秒数を返す。ロックされていなければ None。"""
+    if len(_ADMIN_LOGIN_FAILS) > 1000:
+        now = _time.time()
+        for key in [k for k, v in _ADMIN_LOGIN_FAILS.items() if v["locked_until"] < now]:
+            _ADMIN_LOGIN_FAILS.pop(key, None)
+    entry = _ADMIN_LOGIN_FAILS.get(ip)
+    if not entry:
+        return None
+    now = _time.time()
+    if entry["locked_until"] > now:
+        return entry["locked_until"] - now
+    if entry["locked_until"] > 0:
+        # ロック期限切れ: 失敗カウントごとリセット
+        _ADMIN_LOGIN_FAILS.pop(ip, None)
+    return None
+
+@app.middleware("http")
+async def _admin_security_middleware(request: Request, call_next):
+    # IP 許可リスト（設定時のみ適用）
+    if request.url.path.startswith("/admin") and _ADMIN_ALLOWED_IPS:
+        if _admin_client_ip(request) not in _ADMIN_ALLOWED_IPS:
+            return JSONResponse({"detail": "Forbidden"}, status_code=403)
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "no-referrer")
+    return response
+
 @app.get("/admin/__ping")
-async def admin_ping():
+async def admin_ping(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
     return {"ok": True, "admin": True}
 
 @app.get("/admin/login", response_class=HTMLResponse)
@@ -90,23 +155,54 @@ async def admin_login_page(request: Request):
 
 @app.post("/admin/login")
 async def admin_login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
+    ip = _admin_client_ip(request)
+    lock_remaining = _admin_login_lock_remaining(ip)
+    if lock_remaining is not None:
+        return templates.TemplateResponse(
+            "admin_login.html",
+            {"request": request, "error": f"試行回数が多すぎます。{int(lock_remaining)}秒後に再度お試しください"},
+            status_code=429,
+        )
+
     ok_user = _hmac.compare_digest(username, _ADMIN_USERNAME)
     ok_pass = _hmac.compare_digest(password, _ADMIN_PASSWORD)
     if not (ok_user and ok_pass):
+        entry = _ADMIN_LOGIN_FAILS.setdefault(ip, {"count": 0.0, "locked_until": 0.0})
+        entry["count"] += 1
+        if entry["count"] >= _ADMIN_MAX_LOGIN_FAILS:
+            entry["locked_until"] = _time.time() + _ADMIN_LOCK_MINUTES * 60
+            entry["count"] = 0.0
+        try:
+            _get_data_manager().append_log(
+                "admin_login_failed", False, f"login failed from {ip} (user={username!r})"
+            )
+        except Exception:
+            pass
         return templates.TemplateResponse(
             "admin_login.html",
             {"request": request, "error": "ユーザー名またはパスワードが違います"},
             status_code=401,
         )
+
+    _ADMIN_LOGIN_FAILS.pop(ip, None)
     resp = RedirectResponse("/admin", status_code=302)
+    secure = os.environ.get("ADMIN_COOKIE_SECURE", "").lower()
+    if secure not in ("0", "false", "no"):
+        # 未指定の場合は HTTPS（またはリバースプロキシの X-Forwarded-Proto）なら Secure を付ける
+        proto = request.headers.get("x-forwarded-proto", "") or request.url.scheme
+        secure = "1" if proto == "https" else ""
     resp.set_cookie(
         _ADMIN_COOKIE,
         _admin_token(),
         max_age=_ADMIN_MAX_AGE,
         httponly=True,
-        samesite="lax",
-        secure=os.environ.get("ADMIN_COOKIE_SECURE", "").lower() in ("1", "true", "yes"),
+        samesite="strict",
+        secure=secure in ("1", "true", "yes"),
     )
+    try:
+        _get_data_manager().append_log("admin_login", True, f"login ok from {ip}")
+    except Exception:
+        pass
     return resp
 
 @app.get("/admin/logout")
@@ -2602,4 +2698,11 @@ async def serverup(request: Request):
 
 
 if __name__ == "__main__":
-    uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(
+        "server:app",
+        host=os.environ.get("HOST", "0.0.0.0"),
+        port=int(os.environ.get("PORT", "8000")),
+        reload=os.environ.get("UVICORN_RELOAD", "1").lower() in ("1", "true", "yes"),
+        proxy_headers=True,
+        forwarded_allow_ips=os.environ.get("UVICORN_FORWARDED_ALLOW_IPS", "127.0.0.1"),
+    )

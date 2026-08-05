@@ -66,7 +66,7 @@
         <header class="flex flex-wrap items-center justify-between gap-3 mb-8">
             <div>
                 <h1 class="text-2xl font-bold text-white">Admin · データ管理</h1>
-                <p class="text-sm text-zinc-500 mt-1">beta 取得 → バージョンアップ時に live へ昇格</p>
+                <p class="text-sm text-zinc-500 mt-1">beta 取得 → バージョンアップ時に live から全件再取得</p>
             </div>
             <div class="flex items-center gap-2">
                 <a href="/" class="btn btn-ghost text-xs">サイトへ</a>
@@ -113,7 +113,7 @@
         <section class="card p-5 mb-6">
             <h2 class="text-lg font-semibold mb-3">昇格待ち (pending)</h2>
             <p class="text-xs text-zinc-500 mb-3">
-                beta 取得時に「live に無い ID」として記録されます。バージョンアップ時に「beta → live 昇格」で live 領域へコピーされます。
+                beta 取得時に「live に無い ID」として記録されます。バージョンアップ（live 再取得）の完了時にクリアされます。
             </p>
             <div class="space-y-3 text-sm">
                 <div>
@@ -170,10 +170,11 @@
             <div class="mb-6">
                 <h3 class="text-sm font-medium text-zinc-300 mb-2">バージョンアップ</h3>
                 <button type="button" data-action="version_upgrade_live" class="btn btn-amber w-full">
-                    ★ バージョンアップ（Live から JSON + Asset を再取得）
+                    ★ バージョンアップ（Live から JSON 全件 + 新規 Asset を取得）
                 </button>
                 <p class="text-xs text-zinc-500 mt-2">
-                    beta からのコピーは行いません。nanoka live を正式ソースとして JSON（リスト含む）とアセットをすべて取り直します。
+                    beta からのコピーは行いません。JSON（リスト含む）は nanoka live から全件取り直し、
+                    アセットは新規追加された ID のみ取得します（既存分は基本的に変更されないため）。
                 </p>
             </div>
 

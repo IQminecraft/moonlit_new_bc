@@ -604,19 +604,70 @@ class DataManager:
     def version_upgrade_live(self) -> Dict[str, Any]:
         """
         バージョンアップ時: beta コピーではなく nanoka live から
-        JSON（キャラ/武器/リスト）とアセットをすべて再取得する。
+        JSON（キャラ/武器/リスト）は全件再取得する。
+        アセットは「新規追加された ID」のみ取得する（既存分は基本的に
+        変更されないため、毎回の再ダウンロードを省く）。
         """
-        result = self.fetch_live_nanoka()
+        # 取得前の既存 ID を控えておき、取得後に新規分を差分判定する
+        old_chars = set(self._list_json_ids(self.live_dir("characters")))
+        old_weapons = set(self._list_json_ids(self.live_dir("weapons")))
+        old_arts = set(_safe_json_load(self.live_dir("lists", "artifacts.json"), {}) or {})
+
+        json_res = self.fetch_live_nanoka_json()
+        assets_res = None
+        new_chars = new_weapons = new_arts = []
+        if json_res.get("ok"):
+            new_chars = sorted(set(self._list_json_ids(self.live_dir("characters"))) - old_chars)
+            new_weapons = sorted(set(self._list_json_ids(self.live_dir("weapons"))) - old_weapons)
+            art_list = _safe_json_load(self.live_dir("lists", "artifacts.json"), {}) or {}
+            new_arts = sorted(set(art_list) - old_arts)
+            assets_res = self._fetch_new_live_assets(new_chars, new_weapons, new_arts)
+
         state = self.get_state()
         state["last_promote"] = _now_iso()
         state["pending"] = {"characters": [], "weapons": [], "artifacts": []}
         self._append_history(state, "version_upgrade_live", {
-            "live_version": result.get("live_version"),
-            "ok": result.get("ok"),
+            "live_version": json_res.get("live_version"),
+            "json_ok": json_res.get("ok"),
+            "assets": assets_res,
         })
         self.save_state(state)
-        self.append_log("version_upgrade_live", bool(result.get("ok")), f"live={result.get('live_version')}", result)
-        return {**result, "kind": "version_upgrade_live"}
+
+        result = {**json_res, "kind": "version_upgrade_live"}
+        if assets_res is not None:
+            result["assets"] = assets_res
+        self.append_log(
+            "version_upgrade_live", bool(json_res.get("ok")),
+            f"live={json_res.get('live_version')} new_chars={len(new_chars)} "
+            f"new_weapons={len(new_weapons)} new_arts={len(new_arts)}",
+            result,
+        )
+        return result
+
+    def _fetch_new_live_assets(
+        self, char_ids: List[str], weapon_ids: List[str], art_ids: List[str]
+    ) -> Dict[str, Any]:
+        """新規追加された ID のみ live アセットを取得する（差分取得用）。"""
+        char_ok = 0
+        for cid in char_ids:
+            try:
+                r = self.download_character_images(cid, "live")
+                if r.get("ok"):
+                    char_ok += 1
+            except Exception as e:
+                print(f"[nanoka live assets diff] char {cid}: {e}")
+        weapon_n = self._download_weapon_assets(weapon_ids, "live")
+        art_n = self._download_artifact_assets(art_ids, "live") if art_ids else 0
+        return {
+            "ok": True,
+            "kind": "live_assets_new",
+            "new_characters": char_ids,
+            "new_weapons": weapon_ids,
+            "new_artifacts": art_ids,
+            "characters": char_ok,
+            "weapons": weapon_n,
+            "artifacts": art_n,
+        }
 
     # 後方互換（使わないが残す）
     def promote_beta_to_live(self, **kwargs) -> Dict[str, Any]:

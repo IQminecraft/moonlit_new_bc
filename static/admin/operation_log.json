@@ -19,5 +19,67 @@
         "artifacts.json"
       ]
     }
+  },
+  {
+    "at": "2026-08-05T14:37:17+09:00",
+    "action": "fetch_beta_nanoka_json",
+    "ok": true,
+    "message": "beta=6.7.54",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "beta_json",
+      "live_version": "6.7",
+      "beta_version": "6.7.54",
+      "added_characters": [
+        "10000005-5",
+        "10000007-5",
+        "10000117-5",
+        "10000118-5",
+        "10000134",
+        "10000135",
+        "10000148",
+        "10000150"
+      ],
+      "added_weapons": [
+        "11435",
+        "11436",
+        "11520",
+        "11521",
+        "12435",
+        "12436",
+        "13435",
+        "13436",
+        "14435",
+        "14436",
+        "15435",
+        "15436",
+        "224001",
+        "224002",
+        "224003",
+        "224004",
+        "224005",
+        "224006",
+        "224007",
+        "224008",
+        "380003"
+      ],
+      "added_artifacts": [
+        "15047",
+        "15048"
+      ],
+      "lists": [
+        "characters.json",
+        "weapons.json",
+        "artifacts.json"
+      ]
+    }
+  },
+  {
+    "at": "2026-08-05T15:40:47+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
   }
 ]
