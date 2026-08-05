@@ -209,6 +209,71 @@
             color: var(--text-secondary);
         }
         .tier-SS { color: #f59e0b; }
+
+        /* server-stats-panel: dark (default) / light */
+        #serverStatsPanel .ssp-card {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(9, 12, 20, 0.88);
+            color: #c4cdd8;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+        #serverStatsPanel .ssp-title {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #6b7a90;
+            margin-bottom: 8px;
+        }
+        #serverStatsPanel .ssp-val {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-weight: 700;
+            color: #eef2f8;
+        }
+        #serverStatsPanel .ssp-muted {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            color: #6b7a90;
+            font-size: 10px;
+        }
+        #serverStatsPanel .ssp-track {
+            height: 6px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+        #serverStatsPanel .ssp-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin-top: 4px;
+            padding-top: 8px;
+        }
+        html[data-theme="light"] #serverStatsPanel .ssp-card {
+            border: 1px solid rgba(15, 23, 42, 0.12);
+            background: rgba(255, 255, 255, 0.92);
+            color: #475569;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+        }
+        html[data-theme="light"] #serverStatsPanel .ssp-title {
+            color: #94a3b8;
+        }
+        html[data-theme="light"] #serverStatsPanel .ssp-val {
+            color: #0f172a;
+        }
+        html[data-theme="light"] #serverStatsPanel .ssp-muted {
+            color: #94a3b8;
+        }
+        html[data-theme="light"] #serverStatsPanel .ssp-track {
+            background: rgba(15, 23, 42, 0.08);
+        }
+        html[data-theme="light"] #serverStatsPanel .ssp-divider {
+            border-top-color: rgba(15, 23, 42, 0.1);
+        }
+
         .tier-S { color: #a855f7; }
         .tier-A { color: #38bdf8; }
         .tier-B { color: #9ca3af; }
@@ -778,9 +843,52 @@
                             <span id="settingsFormatLabel">⚡ WEBP（推奨）</span>
                             <span class="text-[10px] text-gray-500">タップで切替</span>
                         </button>
+
+                        <div class="text-xs font-semibold text-gray-400 mb-2 mt-3 px-1">サーバー負荷表示</div>
+                        <button type="button" id="settingsServerStatsBtn"
+                            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                            <span id="settingsServerStatsLabel">📊 非表示</span>
+                            <span class="text-[10px] text-gray-500">タップで切替</span>
+                        </button>
                     </div>
                 </div>
                 <a href="/" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-sm rounded-lg transition-all border border-zinc-700">← 戻る</a>
+            </div>
+        </div>
+
+        <!-- サーバー CPU / メモリ（右端固定・設定で表示） -->
+        <div id="serverStatsPanel" class="hidden fixed right-3 top-1/2 -translate-y-1/2 z-40 w-[156px] select-none pointer-events-none"
+             aria-live="polite" aria-label="サーバー負荷">
+            <div class="ssp-card">
+                <div class="ssp-title">Server</div>
+                <div class="space-y-2.5">
+                    <div>
+                        <div class="flex justify-between mb-1 gap-2">
+                            <span>使用CPU</span>
+                            <span id="serverStatsCpuVal" class="ssp-val">—</span>
+                        </div>
+                        <div class="ssp-track">
+                            <div id="serverStatsCpuBar" class="h-full rounded-full bg-cyan-400 transition-all duration-500" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1 gap-2">
+                            <span>メモリ</span>
+                            <span id="serverStatsMemVal" class="ssp-val">—</span>
+                        </div>
+                        <div class="ssp-track">
+                            <div id="serverStatsMemBar" class="h-full rounded-full bg-emerald-400 transition-all duration-500" style="width:0%"></div>
+                        </div>
+                        <div id="serverStatsMemDetail" class="ssp-muted mt-1">—</div>
+                    </div>
+                    <div class="ssp-divider">
+                        <div class="flex justify-between gap-2">
+                            <span>プロセス</span>
+                            <span id="serverStatsProcVal" class="ssp-val" style="font-weight:600">—</span>
+                        </div>
+                        <div id="serverStatsCacheVal" class="ssp-muted mt-1 truncate" title="画像キャッシュ数">cache —</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -996,6 +1104,7 @@
         const VER_PREF_KEY = 'genshin_build_card_ver_pref';
         const THEME_PREF_KEY = 'genshin_build_card_theme_pref';
         const FORMAT_PREF_KEY = 'genshin_build_card_img_format_pref';
+        const SERVER_STATS_PREF_KEY = 'genshin_build_card_server_stats_pref';
 
         const settingsVerBtn = document.getElementById('settingsVerBtn');
         const settingsVerLabel = document.getElementById('settingsVerLabel');
@@ -1003,6 +1112,17 @@
         const settingsThemeLabel = document.getElementById('settingsThemeLabel');
         const settingsFormatBtn = document.getElementById('settingsFormatBtn');
         const settingsFormatLabel = document.getElementById('settingsFormatLabel');
+        const settingsServerStatsBtn = document.getElementById('settingsServerStatsBtn');
+        const settingsServerStatsLabel = document.getElementById('settingsServerStatsLabel');
+        const serverStatsPanel = document.getElementById('serverStatsPanel');
+        const serverStatsCpuVal = document.getElementById('serverStatsCpuVal');
+        const serverStatsCpuBar = document.getElementById('serverStatsCpuBar');
+        const serverStatsMemVal = document.getElementById('serverStatsMemVal');
+        const serverStatsMemBar = document.getElementById('serverStatsMemBar');
+        const serverStatsMemDetail = document.getElementById('serverStatsMemDetail');
+        const serverStatsProcVal = document.getElementById('serverStatsProcVal');
+        const serverStatsCacheVal = document.getElementById('serverStatsCacheVal');
+        let serverStatsTimer = null;
 
         // ==========================================================
         //  未確定データ(BETA)閲覧同意モーダル
@@ -1069,6 +1189,107 @@
             } catch (e) { /* ignore storage errors */ }
         }
 
+        function getSavedServerStatsPref() {
+            try {
+                return localStorage.getItem(SERVER_STATS_PREF_KEY) === '1';
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function setServerStatsPref(on) {
+            try {
+                localStorage.setItem(SERVER_STATS_PREF_KEY, on ? '1' : '0');
+            } catch (e) { /* ignore */ }
+        }
+
+        function barColorClass(pct, kind) {
+            if (pct == null || !Number.isFinite(pct)) return kind === 'cpu' ? 'bg-cyan-400' : 'bg-emerald-400';
+            if (pct >= 90) return 'bg-red-400';
+            if (pct >= 70) return 'bg-amber-400';
+            return kind === 'cpu' ? 'bg-cyan-400' : 'bg-emerald-400';
+        }
+
+        function applyServerStatsToUI(data) {
+            if (!data || !data.ok) {
+                if (serverStatsCpuVal) serverStatsCpuVal.textContent = '—';
+                if (serverStatsMemVal) serverStatsMemVal.textContent = '—';
+                if (serverStatsMemDetail) serverStatsMemDetail.textContent = (data && data.error) ? String(data.error) : '取得失敗';
+                return;
+            }
+            const cpu = data.cpu_percent;
+            const mem = data.mem_percent;
+            if (serverStatsCpuVal) {
+                serverStatsCpuVal.textContent = (cpu == null || cpu === undefined) ? 'N/A' : `${cpu}%`;
+                serverStatsCpuVal.title = data.cpu_source
+                    ? `システム全体 / source: ${data.cpu_source} / cores: ${data.cpu_count ?? '?'}`
+                    : 'システム全体';
+            }
+            if (serverStatsCpuBar) {
+                const w = (cpu == null || cpu === undefined) ? 0 : Math.max(0, Math.min(100, Number(cpu)));
+                serverStatsCpuBar.style.width = `${w}%`;
+                serverStatsCpuBar.className = `h-full rounded-full transition-all duration-500 ${barColorClass(cpu, 'cpu')}`;
+            }
+            if (serverStatsMemVal) {
+                serverStatsMemVal.textContent = (mem == null || mem === undefined) ? 'N/A' : `${mem}%`;
+            }
+            if (serverStatsMemBar) {
+                const w = (mem == null || mem === undefined) ? 0 : Math.max(0, Math.min(100, Number(mem)));
+                serverStatsMemBar.style.width = `${w}%`;
+                serverStatsMemBar.className = `h-full rounded-full transition-all duration-500 ${barColorClass(mem, 'mem')}`;
+            }
+            if (serverStatsMemDetail) {
+                if (data.mem_used_mb != null && data.mem_total_mb != null) {
+                    serverStatsMemDetail.textContent = `${data.mem_used_mb} / ${data.mem_total_mb} MB`;
+                } else if (data.errors && data.errors.length) {
+                    serverStatsMemDetail.textContent = data.errors[0];
+                } else {
+                    serverStatsMemDetail.textContent = '—';
+                }
+            }
+            if (serverStatsProcVal) {
+                serverStatsProcVal.textContent = (data.process_mb != null) ? `${data.process_mb} MB` : 'N/A';
+            }
+            if (serverStatsCacheVal && data.cache) {
+                const c = data.cache;
+                serverStatsCacheVal.textContent = `cache i${c.images||0}/r${c.resized||0}/s${c.splash_blur||0}`;
+                serverStatsCacheVal.title = `images=${c.images} resized=${c.resized} splash_blur=${c.splash_blur} fonts=${c.fonts} region_bgs=${c.region_bgs}`;
+            }
+        }
+
+        async function fetchServerStatsOnce() {
+            try {
+                const res = await fetch('/api/server_stats', { cache: 'no-store' });
+                if (!res.ok) return;
+                const data = await res.json();
+                applyServerStatsToUI(data);
+            } catch (e) {
+                /* offline / 一時エラーは無視 */
+            }
+        }
+
+        function startServerStatsPolling() {
+            if (serverStatsTimer) return;
+            fetchServerStatsOnce().then(() => setTimeout(fetchServerStatsOnce, 400));
+            serverStatsTimer = setInterval(fetchServerStatsOnce, 1000);
+        }
+
+        function stopServerStatsPolling() {
+            if (serverStatsTimer) {
+                clearInterval(serverStatsTimer);
+                serverStatsTimer = null;
+            }
+        }
+
+        function applyServerStatsVisibility() {
+            const on = getSavedServerStatsPref();
+            if (serverStatsPanel) {
+                serverStatsPanel.classList.toggle('hidden', !on);
+            }
+            if (on) startServerStatsPolling();
+            else stopServerStatsPolling();
+        }
+
         function closeSettingsPanel() {
             if (settingsPanel) settingsPanel.classList.add('hidden');
         }
@@ -1079,13 +1300,16 @@
 
         function applySettingsPanelUI() {
             if (settingsVerLabel) {
-                settingsVerLabel.textContent = (ver === 'beta') ? '🧪 Beta' : '🚀 Live';
+                settingsVerLabel.textContent = (ver === 'beta') ? 'Beta' : 'Live';
             }
             if (settingsThemeLabel) {
-                settingsThemeLabel.textContent = (getSavedThemePref() === 'light') ? '☀️ ライト' : '🌙 ダーク';
+                settingsThemeLabel.textContent = (getSavedThemePref() === 'light') ? 'ライト' : 'ダーク';
             }
             if (settingsFormatLabel) {
-                settingsFormatLabel.textContent = (getSavedFormatPref() === 'png') ? '📦 PNG（無圧縮）' : '⚡ WEBP（推奨）';
+                settingsFormatLabel.textContent = (getSavedFormatPref() === 'png') ? 'PNG（無圧縮）' : 'WEBP（推奨）';
+            }
+            if (settingsServerStatsLabel) {
+                settingsServerStatsLabel.textContent = getSavedServerStatsPref() ? '表示中' : '非表示';
             }
         }
 
@@ -1142,8 +1366,24 @@
                 });
             }
 
+            if (settingsServerStatsBtn) {
+                settingsServerStatsBtn.addEventListener('click', () => {
+                    const next = !getSavedServerStatsPref();
+                    setServerStatsPref(next);
+                    applySettingsPanelUI();
+                    applyServerStatsVisibility();
+                });
+            }
+
             applySettingsPanelUI();
+            applyServerStatsVisibility();
         }
+
+        document.addEventListener('visibilitychange', () => {
+            if (!getSavedServerStatsPref()) return;
+            if (document.hidden) stopServerStatsPolling();
+            else startServerStatsPolling();
+        });
 
         let currentSelectedCharId = null;
 
