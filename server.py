@@ -12,6 +12,7 @@ import json
 import time
 from typing import Dict, Any, Optional
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 import random as _random
 
 if sys.platform == "win32":
@@ -60,6 +61,122 @@ _ADMIN_MAX_LOGIN_FAILS = int(os.environ.get("ADMIN_MAX_LOGIN_FAILS", "5"))
 _ADMIN_LOCK_MINUTES = int(os.environ.get("ADMIN_LOCK_MINUTES", "10"))
 # IP -> {count: 失敗回数, locked_until: ロック解除時刻(epoch秒)}（成功または期限切れで消える）
 _ADMIN_LOGIN_FAILS: Dict[str, Dict[str, Any]] = {}
+
+# Discord Webhook（エラー通知）.env の DISCORD_WEBHOOK_URL
+# 未設定なら送信しない。リクエストをブロックしないよう別スレッドで POST。
+_DISCORD_WEBHOOK_URL = (os.environ.get("DISCORD_WEBHOOK_URL") or "").strip()
+_DISCORD_WEBHOOK_USERNAME = (os.environ.get("DISCORD_WEBHOOK_USERNAME") or "Artifacter Error").strip()
+_DISCORD_MIN_INTERVAL_SEC = float(os.environ.get("DISCORD_MIN_INTERVAL_SEC", "2"))
+_DISCORD_LAST_SENT = 0.0
+_DISCORD_LOCK = __import__("threading").Lock()
+
+
+def _now_millis() -> int:
+    """System.currentTimeMillis() 相当（UNIX epoch ミリ秒）。"""
+    return int(time.time() * 1000)
+
+
+def _discord_send_sync(payload: dict) -> None:
+    """同期 POST。失敗しても握りつぶす（監視自体で落とさない）。"""
+    if not _DISCORD_WEBHOOK_URL:
+        return
+    global _DISCORD_LAST_SENT
+    try:
+        import urllib.request
+        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        req = urllib.request.Request(
+            _DISCORD_WEBHOOK_URL,
+            data=body,
+            headers={"Content-Type": "application/json", "User-Agent": "ArtifacterServer/1.0"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            resp.read()
+        with _DISCORD_LOCK:
+            _DISCORD_LAST_SENT = time.time()
+    except Exception as e:
+        print(f"[WARN] Discord webhook failed: {e}")
+
+
+def report_error_to_discord(
+    title: str,
+    message: str,
+    *,
+    path: str = "",
+    extra: Optional[Dict[str, Any]] = None,
+    traceback_text: str = "",
+    level: str = "error",
+) -> None:
+    """エラーをコンソールに出し、Discord Webhook へ非同期送信する。
+
+    埋め込みに currentTimeMillis 相当の millis を必ず含める。
+    """
+    millis = _now_millis()
+    ts_iso = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(millis / 1000.0))
+    line = f"[{millis}] {title}: {message}"
+    if path:
+        line += f" path={path}"
+    print(f"[Error] {line}")
+
+    if not _DISCORD_WEBHOOK_URL:
+        return
+
+    # 連打防止（最低間隔）
+    with _DISCORD_LOCK:
+        if time.time() - _DISCORD_LAST_SENT < _DISCORD_MIN_INTERVAL_SEC:
+            # コンソールには出したので Webhook だけスキップ
+            print(f"[Error] Discord rate-limit skip (min interval {_DISCORD_MIN_INTERVAL_SEC}s)")
+            return
+
+    color = 0xE74C3C if level == "error" else 0xF39C12  # red / orange
+    fields = [
+        {"name": "millis", "value": f"`{millis}`", "inline": True},
+        {"name": "time", "value": ts_iso, "inline": True},
+        {"name": "level", "value": level, "inline": True},
+    ]
+    if path:
+        fields.append({"name": "path", "value": f"`{path[:200]}`", "inline": False})
+    if extra:
+        for k, v in list(extra.items())[:8]:
+            fields.append({
+                "name": str(k)[:64],
+                "value": f"`{str(v)[:200]}`",
+                "inline": True,
+            })
+    desc = (message or "")[:1800]
+    if traceback_text:
+        tb = traceback_text.strip()
+        if len(tb) > 1500:
+            tb = "…\n" + tb[-1500:]
+        desc = (desc + "\n```\n" + tb + "\n```")[:3900]
+
+    payload = {
+        "username": _DISCORD_WEBHOOK_USERNAME,
+        "embeds": [{
+            "title": (title or "Error")[:200],
+            "description": desc or "(no message)",
+            "color": color,
+            "fields": fields,
+            "footer": {"text": f"millis={millis}"},
+        }],
+    }
+
+    try:
+        t = __import__("threading").Thread(
+            target=_discord_send_sync,
+            args=(payload,),
+            name="discord-webhook",
+            daemon=True,
+        )
+        t.start()
+    except Exception as e:
+        print(f"[WARN] Discord thread start failed: {e}")
+
+
+if _DISCORD_WEBHOOK_URL:
+    print("[OK] Discord error webhook configured (DISCORD_WEBHOOK_URL)")
+else:
+    print("[WARN] DISCORD_WEBHOOK_URL 未設定のためエラーの Discord 通知は無効です")
 
 
 def _validate_admin_config() -> None:
@@ -135,7 +252,25 @@ async def _admin_security_middleware(request: Request, call_next):
     if request.url.path.startswith("/admin") and _ADMIN_ALLOWED_IPS:
         if _admin_client_ip(request) not in _ADMIN_ALLOWED_IPS:
             return JSONResponse({"detail": "Forbidden"}, status_code=403)
-    response = await call_next(request)
+    try:
+        response = await call_next(request)
+    except HTTPException:
+        raise
+    except Exception as e:
+        # 未処理例外を Discord へ（カード生成など個別で報告済みでも二重になる場合あり → レート制限で抑制）
+        import traceback
+        report_error_to_discord(
+            "unhandled exception",
+            f"{type(e).__name__}: {e}",
+            path=str(request.url.path),
+            extra={
+                "method": request.method,
+                "query": str(request.url.query)[:200] if request.url.query else "",
+            },
+            traceback_text=traceback.format_exc(),
+            level="error",
+        )
+        raise
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "no-referrer")
@@ -504,6 +639,115 @@ _REGION_MAP_CACHE: dict | None = None
 _ADMIN_CATALOG_CACHE: dict = {}
 
 _REGION_STATES_DIR = os.path.join(STATIC_DIR, "assets", "states")
+
+# ==========================================================
+#  カード生成専用スレッドプール（同時実行上限 + 待ち行列）
+#  デフォルトの run_in_threadpool を埋めないため、サイト全体の
+#  フリーズを防ぐ。超過分はキューで順番待ち。
+#
+#  環境変数:
+#    CARD_GEN_MAX_WORKERS  同時生成数 (default: 2)
+#    CARD_GEN_MAX_QUEUE    待ち行列の上限 (default: 20)
+#                          実行中+待ち が workers+queue を超えると 503
+#    CARD_CACHE_TTL_HOURS  画像系キャッシュの寿命時間 (default: 12)
+# ==========================================================
+_CARD_GEN_MAX_WORKERS = max(1, int(os.environ.get("CARD_GEN_MAX_WORKERS", "2")))
+_CARD_GEN_MAX_QUEUE = max(0, int(os.environ.get("CARD_GEN_MAX_QUEUE", "20")))
+_CARD_CACHE_TTL_SEC = max(60, float(os.environ.get("CARD_CACHE_TTL_HOURS", "12")) * 3600.0)
+
+_CARD_GEN_EXECUTOR = ThreadPoolExecutor(
+    max_workers=_CARD_GEN_MAX_WORKERS,
+    thread_name_prefix="card-gen",
+)
+_CARD_GEN_PENDING = 0  # 実行中 + キュー待ちの合計
+_CARD_GEN_RUNNING = 0
+_CARD_GEN_LOCK = __import__("threading").Lock()
+_CARD_CACHE_LAST_RESET = time.time()
+
+
+def _maybe_reset_image_caches(force: bool = False) -> bool:
+    """半日（CARD_CACHE_TTL_HOURS）ごとに動的画像キャッシュを捨ててメモリを解放する。
+    プリビルド背景・フォントは残す（再構築コストが高いため）。
+    """
+    global _CARD_CACHE_LAST_RESET
+    now = time.time()
+    if not force and (now - _CARD_CACHE_LAST_RESET) < _CARD_CACHE_TTL_SEC:
+        return False
+    n_img = len(_IMAGE_CACHE)
+    n_rsz = len(_RESIZED_CACHE)
+    n_blur = len(_SPLASH_BLUR_CACHE)
+    n_reg = len(_REGION_BGS)
+    _IMAGE_CACHE.clear()
+    _RESIZED_CACHE.clear()
+    _SPLASH_BLUR_CACHE.clear()
+    # 地域背景はサイズ固定で少数なので残してもよいが、長時間運用での肥大防止のためクリア
+    _REGION_BGS.clear()
+    _CARD_CACHE_LAST_RESET = now
+    print(
+        f"[Cache] periodic reset: images={n_img} resized={n_rsz} "
+        f"splash_blur={n_blur} region_bgs={n_reg} (ttl={_CARD_CACHE_TTL_SEC / 3600:.1f}h)"
+    )
+    return True
+
+
+def _card_gen_stats() -> Dict[str, Any]:
+    with _CARD_GEN_LOCK:
+        pending = _CARD_GEN_PENDING
+        running = _CARD_GEN_RUNNING
+    return {
+        "max_workers": _CARD_GEN_MAX_WORKERS,
+        "max_queue": _CARD_GEN_MAX_QUEUE,
+        "running": running,
+        "pending": pending,  # running + waiting
+        "waiting": max(0, pending - running),
+        "slots_left": max(0, _CARD_GEN_MAX_WORKERS + _CARD_GEN_MAX_QUEUE - pending),
+        "cache_ttl_hours": round(_CARD_CACHE_TTL_SEC / 3600.0, 2),
+        "cache_last_reset_ago_sec": round(time.time() - _CARD_CACHE_LAST_RESET, 1),
+    }
+
+
+async def _run_in_card_gen_pool(fn, *args):
+    """カード生成を専用プールで実行。満杯なら 503。それ以外は列で待つ。"""
+    global _CARD_GEN_PENDING, _CARD_GEN_RUNNING
+
+    with _CARD_GEN_LOCK:
+        limit = _CARD_GEN_MAX_WORKERS + _CARD_GEN_MAX_QUEUE
+        if _CARD_GEN_PENDING >= limit:
+            print(
+                f"[CardGen] queue full pending={_CARD_GEN_PENDING} "
+                f"limit={limit} → 503"
+            )
+            raise HTTPException(
+                status_code=503,
+                detail="カード生成が混雑しています。しばらくしてから再試行してください。",
+            )
+        _CARD_GEN_PENDING += 1
+        entered = True
+
+    try:
+        def _wrapped():
+            global _CARD_GEN_RUNNING
+            with _CARD_GEN_LOCK:
+                _CARD_GEN_RUNNING += 1
+            try:
+                _maybe_reset_image_caches()
+                return fn(*args)
+            finally:
+                with _CARD_GEN_LOCK:
+                    _CARD_GEN_RUNNING -= 1
+
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(_CARD_GEN_EXECUTOR, _wrapped)
+    finally:
+        if entered:
+            with _CARD_GEN_LOCK:
+                _CARD_GEN_PENDING -= 1
+
+
+print(
+    f"[OK] Card-gen pool: workers={_CARD_GEN_MAX_WORKERS} "
+    f"queue={_CARD_GEN_MAX_QUEUE} cache_ttl={_CARD_CACHE_TTL_SEC / 3600:.1f}h"
+)
 
 
 def get_cached_font(path: str, size: int):
@@ -1692,6 +1936,7 @@ def _server_stats_snapshot() -> Dict[str, Any]:
             "fonts": len(_FONT_CACHE),
             "region_bgs": len(_REGION_BGS),
         },
+        "card_gen": _card_gen_stats(),
         "errors": errors,
         "ts": now,
     }
@@ -2956,10 +3201,65 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
 @app.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")
 async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "webp", bg_mode: str = None, bg_region: str = None):
+    """カード画像生成。専用スレッドプールで同時実行数を制限し、超過分は列待ち。
+    待ち行列が満杯のときは 503 を返す（デフォルトの threadpool は占有しない）。
+    """
     img_format = "png" if str(img_format).lower() == "png" else "webp"
-    img_bytes = await run_in_threadpool(
-        _generate_card_image_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta, bg_color, img_format, bg_mode, bg_region
-    )
+    try:
+        img_bytes = await _run_in_card_gen_pool(
+            _generate_card_image_sync,
+            uid,
+            avatar_id,
+            calc_method,
+            fake_char,
+            fake_weapon,
+            beta,
+            bg_color,
+            img_format,
+            bg_mode,
+            bg_region,
+        )
+    except HTTPException as he:
+        if he.status_code >= 500:
+            report_error_to_discord(
+                "generate_card_image HTTPException",
+                str(he.detail),
+                path=f"/generate_card_image/{uid}/{avatar_id}/{calc_method}",
+                extra={
+                    "uid": uid,
+                    "avatar_id": avatar_id,
+                    "calc_method": calc_method,
+                    "status": he.status_code,
+                    "beta": beta,
+                },
+                level="error",
+            )
+        elif he.status_code == 503:
+            report_error_to_discord(
+                "generate_card_image queue full",
+                str(he.detail),
+                path=f"/generate_card_image/{uid}/{avatar_id}/{calc_method}",
+                extra={"uid": uid, "avatar_id": avatar_id, **_card_gen_stats()},
+                level="warn",
+            )
+        raise
+    except Exception as e:
+        import traceback
+        report_error_to_discord(
+            "generate_card_image failed",
+            f"{type(e).__name__}: {e}",
+            path=f"/generate_card_image/{uid}/{avatar_id}/{calc_method}",
+            extra={
+                "uid": uid,
+                "avatar_id": avatar_id,
+                "calc_method": calc_method,
+                "fake_char": fake_char,
+                "beta": beta,
+            },
+            traceback_text=traceback.format_exc(),
+            level="error",
+        )
+        raise HTTPException(status_code=500, detail=f"カード生成に失敗しました: {e}") from e
     return StreamingResponse(io.BytesIO(img_bytes), media_type="image/png" if img_format == "png" else "image/webp")
 
 
