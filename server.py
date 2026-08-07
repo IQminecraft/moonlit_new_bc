@@ -11,7 +11,7 @@ import io
 import json
 import time
 from typing import Dict, Any, Optional
-from collections import Counter
+from collections import Counter, OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 import random as _random
 
@@ -629,16 +629,29 @@ def _shade_rgb(rgb, factor):
     return tuple(max(0, min(255, int(c * factor))) for c in rgb)
 
 
-_IMAGE_CACHE: dict = {}
+# ==========================================================
+#  画像キャッシュ（無制限 dict だと RSS が単調増加して OOM する）
+#  - 各エントリは RGBA ビットマップ。splash blur 1枚 ≈ 2400*1620*4 ≒ 15MB
+#  - LRU 上限 + TTL 全クリア + バックグラウンド定期掃除
+# ==========================================================
+_IMAGE_CACHE: "OrderedDict" = OrderedDict()
 _FONT_CACHE: dict = {}
-_SPLASH_BLUR_CACHE: dict = {}
-_RESIZED_CACHE: dict = {}
+_SPLASH_BLUR_CACHE: "OrderedDict" = OrderedDict()
+_RESIZED_CACHE: "OrderedDict" = OrderedDict()
 _PREBUILT_BGS: dict = {}
-_REGION_BGS: dict = {}
+_REGION_BGS: "OrderedDict" = OrderedDict()
 _REGION_MAP_CACHE: dict | None = None
 _ADMIN_CATALOG_CACHE: dict = {}
+_CACHE_LOCK = __import__("threading").Lock()
 
 _REGION_STATES_DIR = os.path.join(STATIC_DIR, "assets", "states")
+
+# 件数上限（環境変数で調整可）
+_CACHE_MAX_IMAGES = max(8, int(os.environ.get("CACHE_MAX_IMAGES", "64")))
+_CACHE_MAX_RESIZED = max(16, int(os.environ.get("CACHE_MAX_RESIZED", "96")))
+# splash blur は特に大きいので厳しめ
+_CACHE_MAX_SPLASH_BLUR = max(2, int(os.environ.get("CACHE_MAX_SPLASH_BLUR", "12")))
+_CACHE_MAX_REGION_BGS = max(4, int(os.environ.get("CACHE_MAX_REGION_BGS", "16")))
 
 # ==========================================================
 #  カード生成専用スレッドプール（同時実行上限 + 待ち行列）
@@ -648,14 +661,21 @@ _REGION_STATES_DIR = os.path.join(STATIC_DIR, "assets", "states")
 #  環境変数:
 #    CARD_GEN_MAX_WORKERS  同時生成数 (default: 2)
 #    CARD_GEN_MAX_QUEUE    待ち行列の上限 (default: 20)
-#                          実行中+待ち が workers+queue を超えると 503
-#    CARD_CACHE_TTL_HOURS  画像系キャッシュの寿命時間 (default: 12)
+#    CARD_GEN_TIMEOUT_SEC  1枚のタイムアウト秒 (default: 8)
+#    CARD_CACHE_TTL_HOURS  画像キャッシュ全クリア間隔時間 (default: 1)
+#    CACHE_SWEEP_SEC       バックグラウンド掃除間隔秒 (default: 300)
 # ==========================================================
 _CARD_GEN_MAX_WORKERS = max(1, int(os.environ.get("CARD_GEN_MAX_WORKERS", "2")))
 _CARD_GEN_MAX_QUEUE = max(0, int(os.environ.get("CARD_GEN_MAX_QUEUE", "20")))
-# 1枚の生成がこの秒数を超えたら 504（ハングしたワーカーは占有し続けるので再起動推奨）
 _CARD_GEN_TIMEOUT_SEC = max(1.0, float(os.environ.get("CARD_GEN_TIMEOUT_SEC", "8")))
-_CARD_CACHE_TTL_SEC = max(60, float(os.environ.get("CARD_CACHE_TTL_HOURS", "12")) * 3600.0)
+# 画像メモリキャッシュの寿命（秒）。CARD_CACHE_TTL_SEC 優先、なければ HOURS。
+# デフォルト 5 分。Blob/オブジェクトストレージとは無関係（プロセス内 PIL キャッシュのみ）。
+# デフォルト 300 秒 = 5 分
+_CARD_CACHE_TTL_SEC = float(os.environ.get("CARD_CACHE_TTL_SEC", "300") or 300)
+if "CARD_CACHE_TTL_SEC" not in os.environ and "CARD_CACHE_TTL_HOURS" in os.environ:
+    _CARD_CACHE_TTL_SEC = max(60.0, float(os.environ.get("CARD_CACHE_TTL_HOURS", "1")) * 3600.0)
+# バックグラウンド掃除の間隔（デフォルトも 5 分）
+_CACHE_SWEEP_SEC = max(30.0, float(os.environ.get("CACHE_SWEEP_SEC", "300")))
 
 _CARD_GEN_EXECUTOR = ThreadPoolExecutor(
     max_workers=_CARD_GEN_MAX_WORKERS,
@@ -667,29 +687,89 @@ _CARD_GEN_LOCK = __import__("threading").Lock()
 _CARD_CACHE_LAST_RESET = time.time()
 
 
+def _lru_set(cache: OrderedDict, key, value, max_size: int) -> None:
+    """上限付き LRU 挿入。超過分は最古から捨てる。"""
+    with _CACHE_LOCK:
+        if key in cache:
+            cache.move_to_end(key)
+            cache[key] = value
+        else:
+            cache[key] = value
+            cache.move_to_end(key)
+        while len(cache) > max_size:
+            cache.popitem(last=False)
+
+
+def _lru_get(cache: OrderedDict, key):
+    with _CACHE_LOCK:
+        if key not in cache:
+            return None
+        cache.move_to_end(key)
+        return cache[key]
+
+
 def _maybe_reset_image_caches(force: bool = False) -> bool:
-    """半日（CARD_CACHE_TTL_HOURS）ごとに動的画像キャッシュを捨ててメモリを解放する。
-    プリビルド背景・フォントは残す（再構築コストが高いため）。
+    """TTL ごとに動的画像キャッシュを捨ててメモリを解放する。
+    プリビルド背景・フォントは残す。
     """
     global _CARD_CACHE_LAST_RESET
     now = time.time()
     if not force and (now - _CARD_CACHE_LAST_RESET) < _CARD_CACHE_TTL_SEC:
         return False
-    n_img = len(_IMAGE_CACHE)
-    n_rsz = len(_RESIZED_CACHE)
-    n_blur = len(_SPLASH_BLUR_CACHE)
-    n_reg = len(_REGION_BGS)
-    _IMAGE_CACHE.clear()
-    _RESIZED_CACHE.clear()
-    _SPLASH_BLUR_CACHE.clear()
-    # 地域背景はサイズ固定で少数なので残してもよいが、長時間運用での肥大防止のためクリア
-    _REGION_BGS.clear()
+    with _CACHE_LOCK:
+        n_img = len(_IMAGE_CACHE)
+        n_rsz = len(_RESIZED_CACHE)
+        n_blur = len(_SPLASH_BLUR_CACHE)
+        n_reg = len(_REGION_BGS)
+        _IMAGE_CACHE.clear()
+        _RESIZED_CACHE.clear()
+        _SPLASH_BLUR_CACHE.clear()
+        _REGION_BGS.clear()
     _CARD_CACHE_LAST_RESET = now
+    try:
+        import gc
+        gc.collect()
+    except Exception:
+        pass
     print(
-        f"[Cache] periodic reset: images={n_img} resized={n_rsz} "
-        f"splash_blur={n_blur} region_bgs={n_reg} (ttl={_CARD_CACHE_TTL_SEC / 3600:.1f}h)"
+        f"[Cache] reset: images={n_img} resized={n_rsz} "
+        f"splash_blur={n_blur} region_bgs={n_reg} "
+        f"(ttl={_CARD_CACHE_TTL_SEC:.0f}s force={force})",
+        flush=True,
     )
     return True
+
+
+def _cache_sweeper_loop() -> None:
+    """リクエストが来なくても定期的に TTL クリアする（長時間放置での OOM 防止）。"""
+    while True:
+        try:
+            time.sleep(_CACHE_SWEEP_SEC)
+            _maybe_reset_image_caches(force=False)
+        except Exception as e:
+            print(f"[Cache] sweeper error: {e}", flush=True)
+
+
+_CACHE_SWEEPER_STARTED = False
+
+
+def _ensure_cache_sweeper() -> None:
+    global _CACHE_SWEEPER_STARTED
+    if _CACHE_SWEEPER_STARTED:
+        return
+    _CACHE_SWEEPER_STARTED = True
+    __import__("threading").Thread(
+        target=_cache_sweeper_loop, name="cache-sweeper", daemon=True
+    ).start()
+    print(
+        f"[OK] Cache LRU: images<={_CACHE_MAX_IMAGES} resized<={_CACHE_MAX_RESIZED} "
+        f"splash_blur<={_CACHE_MAX_SPLASH_BLUR} region_bgs<={_CACHE_MAX_REGION_BGS} "
+        f"ttl={_CARD_CACHE_TTL_SEC:.0f}s sweep={_CACHE_SWEEP_SEC:.0f}s",
+        flush=True,
+    )
+
+
+_ensure_cache_sweeper()
 
 
 def _card_gen_stats() -> Dict[str, Any]:
@@ -703,7 +783,7 @@ def _card_gen_stats() -> Dict[str, Any]:
         "pending": pending,  # running + waiting
         "waiting": max(0, pending - running),
         "slots_left": max(0, _CARD_GEN_MAX_WORKERS + _CARD_GEN_MAX_QUEUE - pending),
-        "cache_ttl_hours": round(_CARD_CACHE_TTL_SEC / 3600.0, 2),
+        "cache_ttl_sec": round(_CARD_CACHE_TTL_SEC, 1),
         "cache_last_reset_ago_sec": round(time.time() - _CARD_CACHE_LAST_RESET, 1),
     }
 
@@ -780,41 +860,37 @@ def get_cached_font(path: str, size: int):
 
 
 def get_cached_image(path: str):
-    """OPTIMIZED: Cache Image.open().convert('RGBA'). Returns a copy."""
+    """Cache Image.open().convert('RGBA') with LRU. Returns a copy."""
     if not path:
         return None
-    if path not in _IMAGE_CACHE:
-        if not os.path.exists(path):
-            return None
-        try:
-            _IMAGE_CACHE[path] = Image.open(path).convert("RGBA")
-        except Exception as e:
-            print(f"[Warning] Failed to cache image {path}: {e}")
-            return None
-    return _IMAGE_CACHE[path].copy()
+    hit = _lru_get(_IMAGE_CACHE, path)
+    if hit is not None:
+        return hit.copy()
+    if not os.path.exists(path):
+        return None
+    try:
+        img = Image.open(path).convert("RGBA")
+    except Exception as e:
+        print(f"[Warning] Failed to cache image {path}: {e}")
+        return None
+    _lru_set(_IMAGE_CACHE, path, img, _CACHE_MAX_IMAGES)
+    return img.copy()
 
 def get_resized_image(path: str, size: tuple):
-    """
-    指定サイズにリサイズ済みの画像をキャッシュして返す。
-    size は (width, height) のタプル。
-    """
+    """指定サイズにリサイズ済み画像を LRU キャッシュして返す。"""
     if not path:
         return None
     key = (path, size)
-    if key not in _RESIZED_CACHE:
-        img = get_cached_image(path)
-        if img is None:
-            if not os.path.exists(path):
-                return None
-            try:
-                img = Image.open(path).convert("RGBA")
-                _IMAGE_CACHE[path] = img
-            except Exception as e:
-                print(f"[Warning] Failed to load image {path}: {e}")
-                return None
-        filt = get_resize_filter(size)
-        _RESIZED_CACHE[key] = img.resize(size, filt)
-    return _RESIZED_CACHE[key].copy()
+    hit = _lru_get(_RESIZED_CACHE, key)
+    if hit is not None:
+        return hit.copy()
+    img = get_cached_image(path)
+    if img is None:
+        return None
+    filt = get_resize_filter(size)
+    resized = img.resize(size, filt)
+    _lru_set(_RESIZED_CACHE, key, resized, _CACHE_MAX_RESIZED)
+    return resized.copy()
 
 def get_resize_filter(target_size):
     """
@@ -905,10 +981,14 @@ def get_region_background(width, height, region):
     if not region:
         return None
     key = (region, width, height)
-    if key not in _REGION_BGS:
-        _REGION_BGS[key] = _build_region_background(width, height, region)
-    bg = _REGION_BGS[key]
-    return bg.copy() if bg is not None else None
+    hit = _lru_get(_REGION_BGS, key)
+    if hit is not None:
+        return hit.copy()
+    bg = _build_region_background(width, height, region)
+    if bg is not None:
+        _lru_set(_REGION_BGS, key, bg, _CACHE_MAX_REGION_BGS)
+        return bg.copy()
+    return None
 
 
 def region_image_path(region):
@@ -1046,9 +1126,10 @@ def create_card_background(width, height, base_rgb, splash_path=None, element_ty
 
     if splash_path and os.path.exists(splash_path):
         cache_key = (splash_path, width, height)
-        if cache_key in _SPLASH_BLUR_CACHE:
+        layer_hit = _lru_get(_SPLASH_BLUR_CACHE, cache_key)
+        if layer_hit is not None:
             _bglog("splash blur CACHE HIT")
-            layer = _SPLASH_BLUR_CACHE[cache_key].copy()
+            layer = layer_hit.copy()
             _bglog(f"splash blur cache copy done {(time.perf_counter()-t0)*1000:.0f}ms")
         else:
             layer = None
@@ -1078,7 +1159,7 @@ def create_card_background(width, height, base_rgb, splash_path=None, element_ty
                 r, g, b, a = layer.split()
                 a = a.point(lambda p: int(p * 0.09))
                 layer = Image.merge("RGBA", (r, g, b, a))
-                _SPLASH_BLUR_CACHE[cache_key] = layer.copy()
+                _lru_set(_SPLASH_BLUR_CACHE, cache_key, layer.copy(), _CACHE_MAX_SPLASH_BLUR)
                 _bglog(f"splash blur cached {(time.perf_counter()-t0)*1000:.0f}ms")
             except Exception as e:
                 print(f"[Warning] splash blur background failed: {e}", flush=True)
@@ -1979,10 +2060,16 @@ def _server_stats_snapshot() -> Dict[str, Any]:
         "platform": sys.platform,
         "cache": {
             "images": len(_IMAGE_CACHE),
+            "images_max": _CACHE_MAX_IMAGES,
             "resized": len(_RESIZED_CACHE),
+            "resized_max": _CACHE_MAX_RESIZED,
             "splash_blur": len(_SPLASH_BLUR_CACHE),
+            "splash_blur_max": _CACHE_MAX_SPLASH_BLUR,
             "fonts": len(_FONT_CACHE),
             "region_bgs": len(_REGION_BGS),
+            "region_bgs_max": _CACHE_MAX_REGION_BGS,
+            "ttl_sec": round(_CARD_CACHE_TTL_SEC, 1),
+            "last_reset_ago_sec": round(time.time() - _CARD_CACHE_LAST_RESET, 1),
         },
         "card_gen": _card_gen_stats(),
         "errors": errors,
@@ -2199,24 +2286,24 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
             raise HTTPException(status_code=404, detail=f"Weapon JSON file not found: {weapon_json_path}")
         with open(weapon_json_path, "r", encoding="utf-8") as f:
             weapon_jsondata = json.load(f)
-        weapon_level = 90
+        # レアリティ1・2の武器はLv70（3以上はLv90）
+        weapon_level = 70 if int(weapon_jsondata.get("rarity", 3)) in (1, 2) else 90
         weapon_affix = 1
-        weapon_icon = resolve_datas_path(f"static/assets/weapons/{weapon_jsondata['icon']}.webp", beta)
-        weapon_name = weapon_jsondata["name"]
-        keys_list = list(weapon_jsondata["stats_modifier"].keys())
-        try:
-            second_key = keys_list[1]
-        except Exception:
-            second_key = None
-        stat_calc = weapon_jsondata["stats_modifier"][second_key]
-        if stat_calc < 1:
-            stat_calc = round(stat_calc * 100, 1)
-        else:
-            stat_calc = round(stat_calc)
-        weapon_stats_list = [
-            {'appendPropId': 'FIGHT_PROP_BASE_ATTACK', 'statValue': weapon_jsondata["stats_modifier"]["atk"]},
-            {'appendPropId': second_key.upper(), 'statValue': stat_calc}
-        ]
+        weapon_icon = resolve_datas_path(f"static/assets/weapons/{weapon_jsondata.get('icon', '')}.webp", beta)
+        weapon_name = weapon_jsondata.get("name", "未知の武器")
+        # サブオプション（会心率・チャージ効率など）は武器によって存在しないため、
+        # 無い場合はエントリごとパスする（描画側も None でスキップされる）
+        stats_modifier = weapon_jsondata.get("stats_modifier") or {}
+        weapon_stats_list = [{'appendPropId': 'FIGHT_PROP_BASE_ATTACK', 'statValue': stats_modifier.get("atk", 0.0)}]
+        sub_keys = [k for k in stats_modifier.keys() if k != "atk"]
+        if sub_keys:
+            second_key = sub_keys[0]
+            stat_calc = stats_modifier[second_key]
+            if stat_calc < 1:
+                stat_calc = round(stat_calc * 100, 1)
+            else:
+                stat_calc = round(stat_calc)
+            weapon_stats_list.append({'appendPropId': second_key.upper(), 'statValue': stat_calc})
     elif weapon_data:
         weapon_id = weapon_data["itemId"]
         weapon_json_path = resolve_datas_path(f"static/data/weapons/{weapon_id}.json", beta)
@@ -2732,24 +2819,24 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         weapon_json_path = resolve_datas_path(f"static/data/weapons/{weapon_id}.json", beta)
         with open(weapon_json_path, "r", encoding="utf-8") as f:
             weapon_jsondata = json.load(f)
-        weapon_level = 90
+        # レアリティ1・2の武器はLv70（3以上はLv90）
+        weapon_level = 70 if int(weapon_jsondata.get("rarity", 3)) in (1, 2) else 90
         weapon_affix = 1
-        weapon_icon = weapon_jsondata["icon"]
-        weapon_name = weapon_jsondata["name"]
-        keys_list = list(weapon_jsondata["stats_modifier"].keys())
-        try:
-            second_key = keys_list[1]
-        except Exception:
-            second_key = None
-        stat_calc = weapon_jsondata["stats_modifier"][second_key]
-        if stat_calc < 1:
-            stat_calc = round(stat_calc * 100, 1)
-        else:
-            stat_calc = round(stat_calc)
-        weapon_stats_list = [
-            {'appendPropId': 'FIGHT_PROP_BASE_ATTACK', 'statValue': weapon_jsondata["stats_modifier"]["atk"]},
-            {'appendPropId': second_key.upper(), 'statValue': stat_calc}
-        ]
+        weapon_icon = weapon_jsondata.get("icon", "")
+        weapon_name = weapon_jsondata.get("name", "未知の武器")
+        # サブオプション（会心率・チャージ効率など）は武器によって存在しないため、
+        # 無い場合はエントリごとパスする（PIL描画側も None でスキップされる）
+        stats_modifier = weapon_jsondata.get("stats_modifier") or {}
+        weapon_stats_list = [{'appendPropId': 'FIGHT_PROP_BASE_ATTACK', 'statValue': stats_modifier.get("atk", 0.0)}]
+        sub_keys = [k for k in stats_modifier.keys() if k != "atk"]
+        if sub_keys:
+            second_key = sub_keys[0]
+            stat_calc = stats_modifier[second_key]
+            if stat_calc < 1:
+                stat_calc = round(stat_calc * 100, 1)
+            else:
+                stat_calc = round(stat_calc)
+            weapon_stats_list.append({'appendPropId': second_key.upper(), 'statValue': stat_calc})
     elif weapon_data:
         weapon_id = weapon_data["itemId"]
         weapon_json_path = resolve_datas_path(f"static/data/weapons/{weapon_id}.json", beta)
@@ -2769,27 +2856,38 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     else:
         print(f"[Warning] no weapon equipped for avatar (uid showcase) — drawing as 未装備")
 
+    # キー欠落のエントリはパス（描画側も None でスキップされる）
     weapon_stat1 = None
     if len(weapon_stats_list) >= 1:
-        prop_id1 = weapon_stats_list[0]["appendPropId"]
-        stat_name1 = get_stat_japanese(prop_id1)
-        stat_val1 = weapon_stats_list[0]["statValue"]
-        if "PERCENT" in prop_id1 or "CRITICAL" in prop_id1 or "CHARGE" in prop_id1:
-            stat_val1_str = f"{stat_val1}%"
-        else:
-            stat_val1_str = f"{int(stat_val1)}"
-        weapon_stat1 = (stat_name1, stat_val1_str)
+        entry1 = weapon_stats_list[0] or {}
+        prop_id1 = entry1.get("appendPropId", "")
+        if prop_id1:
+            stat_name1 = get_stat_japanese(prop_id1)
+            stat_val1 = entry1.get("statValue", 0.0)
+            try:
+                if "PERCENT" in prop_id1 or "CRITICAL" in prop_id1 or "CHARGE" in prop_id1:
+                    stat_val1_str = f"{stat_val1}%"
+                else:
+                    stat_val1_str = f"{int(stat_val1)}"
+            except Exception:
+                stat_val1_str = str(stat_val1)
+            weapon_stat1 = (stat_name1, stat_val1_str)
 
     weapon_stat2 = None
-    if len(weapon_stats_list) == 2:
-        prop_id2 = weapon_stats_list[1]["appendPropId"]
-        stat_name2 = get_stat_japanese(prop_id2)
-        stat_val2 = weapon_stats_list[1]["statValue"]
-        if "PERCENT" in prop_id2 or "CRITICAL" in prop_id2 or "CHARGE" in prop_id2 or "HURT" in prop_id2:
-            stat_val2_str = f"{stat_val2}%"
-        else:
-            stat_val2_str = f"{int(stat_val2)}"
-        weapon_stat2 = (stat_name2, stat_val2_str)
+    if len(weapon_stats_list) >= 2:
+        entry2 = weapon_stats_list[1] or {}
+        prop_id2 = entry2.get("appendPropId", "")
+        if prop_id2:
+            stat_name2 = get_stat_japanese(prop_id2)
+            stat_val2 = entry2.get("statValue", 0.0)
+            try:
+                if "PERCENT" in prop_id2 or "CRITICAL" in prop_id2 or "CHARGE" in prop_id2 or "HURT" in prop_id2:
+                    stat_val2_str = f"{stat_val2}%"
+                else:
+                    stat_val2_str = f"{int(stat_val2)}"
+            except Exception:
+                stat_val2_str = str(stat_val2)
+            weapon_stat2 = (stat_name2, stat_val2_str)
     t_end = time.perf_counter()
     print(f"[Perf] 武器データ処理: {(t_end - t_start)*1000:.1f}ms", flush=True)
 
