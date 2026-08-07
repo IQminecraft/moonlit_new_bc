@@ -2168,7 +2168,14 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False, v
         ver = "live"
 
     if not uid.isdigit():
-        return HTMLResponse(content="ユーザーUIDが不正です。数字のみ入力してください。", status_code=400)
+        # 取得失敗時はリダイレクトせず、artifacter ページ上にエラーを表示する
+        return templates.TemplateResponse("artifacter.html", {
+            "request": request,
+            "lang": "ja",
+            "error": "UIDは数字のみで入力してください。",
+            "uid": uid,
+            "ver": ver,
+        }, status_code=400)
 
     beta = "true" if ver == "beta" else "false"
     uid_int = int(uid)
@@ -2180,14 +2187,28 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False, v
             print(f"[Warning] API Fetch failed or warning: {message}")
 
     if not os.path.exists(json_path):
-        raise HTTPException(status_code=404, detail=f"UID: {uid} のデータが見つかりませんでした。(APIエラーかつキャッシュなし)")
+        # 取得失敗時はリダイレクトせず、artifacter ページ上にエラーを表示する
+        return templates.TemplateResponse("artifacter.html", {
+            "request": request,
+            "lang": "ja",
+            "error": "指定されたUIDのデータを取得できませんでした。UIDが存在しないか、ゲーム内プロフィールが公開されていない可能性があります。",
+            "uid": uid,
+            "ver": ver,
+        }, status_code=404)
 
     showcase_data = _load_json_auto(json_path)
 
     char_list = _build_char_list_from_showcase(showcase_data, beta)
 
     if not char_list:
-        return HTMLResponse(content=f"UID: {uid} のゲーム内プロフィールで『キャラクター詳細を公開』がオンになっていないか、ショーケースが空です。", status_code=400)
+        # 取得失敗時はリダイレクトせず、artifacter ページ上にエラーを表示する
+        return templates.TemplateResponse("artifacter.html", {
+            "request": request,
+            "lang": "ja",
+            "error": "指定されたUIDのゲーム内プロフィールで『キャラクター詳細を公開』がオンになっていないか、ショーケースが空です。",
+            "uid": uid,
+            "ver": ver,
+        }, status_code=400)
 
     return templates.TemplateResponse("build_card.html", {
         "request": request,

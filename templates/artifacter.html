@@ -29,6 +29,8 @@
             --accent-dim: rgba(94, 234, 212, 0.14);
             --accent-hover: #2dd4bf;
             --danger: #f87171;
+            --danger-bg: rgba(248, 113, 113, 0.1);
+            --danger-border: rgba(248, 113, 113, 0.45);
             --radius: 12px;
             --radius-sm: 8px;
         }
@@ -46,6 +48,8 @@
             --accent-dim: rgba(13, 148, 136, 0.12);
             --accent-hover: #0f766e;
             --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.08);
+            --danger-border: rgba(239, 68, 68, 0.4);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -274,6 +278,37 @@
         .btn-submit:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+        }
+
+        /* 取得失敗メッセージ */
+        .form-error {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 14px 18px;
+            border: 1px solid var(--danger-border);
+            border-radius: var(--radius);
+            background: var(--danger-bg);
+            color: var(--danger);
+            text-align: left;
+            animation: formErrorIn 0.25s ease;
+        }
+        .form-error-title {
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-error-detail {
+            font-size: 13px;
+            opacity: 0.92;
+            line-height: 1.6;
+        }
+        @keyframes formErrorIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: none; }
         }
 
         .spinner {
@@ -547,7 +582,7 @@
                     <p>公開プロフィールに登録されたキャラクター情報を取得します</p>
                 </div>
 
-                <form id="searchForm" class="form-block" action="/fetch_uid" method="GET">
+                <form id="searchForm" class="form-block" action="/fetch_uid" method="GET" data-init-uid="{{ uid }}" data-init-ver="{{ ver }}">
                     <input type="hidden" name="from_artifacter" value="true">
                     <input type="hidden" id="verInput" name="ver" value="live">
 
@@ -573,6 +608,20 @@
                             <span id="submitBtnLabel">データを読み込む</span>
                         </button>
                     </div>
+
+                    {% if error %}
+                    <div class="form-error" role="alert">
+                        <div class="form-error-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                <line x1="12" y1="9" x2="12" y2="13"></line>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            データを取得できませんでした
+                        </div>
+                        <div class="form-error-detail">{{ error }}</div>
+                    </div>
+                    {% endif %}
                 </form>
 
                 <div class="history" id="historySection">
@@ -691,6 +740,15 @@
         }
         verInput.value = getSavedVerPref();
         applyVerModeUI();
+
+        // 取得失敗で再表示された場合: 入力したUIDとモードを復元する
+        const initUid = searchForm.getAttribute('data-init-uid') || '';
+        const initVer = searchForm.getAttribute('data-init-ver') || '';
+        if (initUid) uidInput.value = initUid;
+        if (initVer) {
+            verInput.value = initVer;
+            applyVerModeUI();
+        }
 
         async function setVer(next) {
             if (next === 'beta') {
