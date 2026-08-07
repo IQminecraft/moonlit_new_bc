@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, Response, HTTPException, BackgroundTasks, Form
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse, JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.concurrency import run_in_threadpool
@@ -653,6 +653,8 @@ _REGION_STATES_DIR = os.path.join(STATIC_DIR, "assets", "states")
 # ==========================================================
 _CARD_GEN_MAX_WORKERS = max(1, int(os.environ.get("CARD_GEN_MAX_WORKERS", "2")))
 _CARD_GEN_MAX_QUEUE = max(0, int(os.environ.get("CARD_GEN_MAX_QUEUE", "20")))
+# 1枚の生成がこの秒数を超えたら 504（ハングしたワーカーは占有し続けるので再起動推奨）
+_CARD_GEN_TIMEOUT_SEC = max(1.0, float(os.environ.get("CARD_GEN_TIMEOUT_SEC", "8")))
 _CARD_CACHE_TTL_SEC = max(60, float(os.environ.get("CARD_CACHE_TTL_HOURS", "12")) * 3600.0)
 
 _CARD_GEN_EXECUTOR = ThreadPoolExecutor(
@@ -737,7 +739,19 @@ async def _run_in_card_gen_pool(fn, *args):
                     _CARD_GEN_RUNNING -= 1
 
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(_CARD_GEN_EXECUTOR, _wrapped)
+        fut = loop.run_in_executor(_CARD_GEN_EXECUTOR, _wrapped)
+        try:
+            return await asyncio.wait_for(fut, timeout=_CARD_GEN_TIMEOUT_SEC)
+        except asyncio.TimeoutError:
+            print(
+                f"[CardGen] TIMEOUT after {_CARD_GEN_TIMEOUT_SEC}s "
+                f"(worker may still be stuck — restart if slots stay full)",
+                flush=True,
+            )
+            raise HTTPException(
+                status_code=504,
+                detail=f"カード生成がタイムアウトしました（{_CARD_GEN_TIMEOUT_SEC:.0f}秒）。時間をおいて再試行してください。",
+            )
     finally:
         if entered:
             with _CARD_GEN_LOCK:
@@ -746,7 +760,8 @@ async def _run_in_card_gen_pool(fn, *args):
 
 print(
     f"[OK] Card-gen pool: workers={_CARD_GEN_MAX_WORKERS} "
-    f"queue={_CARD_GEN_MAX_QUEUE} cache_ttl={_CARD_CACHE_TTL_SEC / 3600:.1f}h"
+    f"queue={_CARD_GEN_MAX_QUEUE} timeout={_CARD_GEN_TIMEOUT_SEC:.0f}s "
+    f"cache_ttl={_CARD_CACHE_TTL_SEC / 3600:.1f}h"
 )
 
 
@@ -1007,42 +1022,75 @@ def build_region_info(regions):
 
 
 def create_card_background(width, height, base_rgb, splash_path=None, element_type="None", use_prebuilt=True, region=None):
-    bg = get_region_background(width, height, region) if region else None
+    def _bglog(msg: str) -> None:
+        print(f"[Perf][bg] {msg}", flush=True)
+
+    _bglog(f"start w={width} h={height} element={element_type} region={region!r} use_prebuilt={use_prebuilt} splash={bool(splash_path)}")
+    t0 = time.perf_counter()
+
+    bg = None
+    if region:
+        _bglog(f"region load begin region={region}")
+        bg = get_region_background(width, height, region)
+        _bglog(f"region load done ok={bg is not None} {(time.perf_counter()-t0)*1000:.0f}ms")
 
     if bg is None:
         if use_prebuilt and element_type in _PREBUILT_BGS:
+            _bglog(f"prebuilt copy element={element_type}")
             bg = _PREBUILT_BGS[element_type].copy()
+            _bglog(f"prebuilt copy done {(time.perf_counter()-t0)*1000:.0f}ms")
         else:
+            _bglog("build_base_background begin")
             bg = _build_base_background(width, height, base_rgb)
+            _bglog(f"build_base_background done {(time.perf_counter()-t0)*1000:.0f}ms")
 
     if splash_path and os.path.exists(splash_path):
         cache_key = (splash_path, width, height)
         if cache_key in _SPLASH_BLUR_CACHE:
+            _bglog("splash blur CACHE HIT")
             layer = _SPLASH_BLUR_CACHE[cache_key].copy()
+            _bglog(f"splash blur cache copy done {(time.perf_counter()-t0)*1000:.0f}ms")
         else:
+            layer = None
             try:
+                _bglog(f"splash blur MISS path={splash_path}")
                 splash_img = get_cached_image(splash_path)
                 if splash_img is None:
+                    _bglog("splash Image.open ...")
                     splash_img = Image.open(splash_path).convert("RGBA")
-                scale = max(width / splash_img.width, height / splash_img.height) * 1.35
+                _bglog(f"splash loaded size={splash_img.size}")
+                # 以前 1.35 倍 + 強 blur で固まることがあったため縮小
+                scale = max(width / splash_img.width, height / splash_img.height) * 1.15
                 nw = int(splash_img.width * scale)
                 nh = int(splash_img.height * scale)
+                _bglog(f"splash resize begin -> {nw}x{nh}")
                 splash_img = splash_img.resize((nw, nh), Image.Resampling.BICUBIC)
+                _bglog(f"splash resize done {(time.perf_counter()-t0)*1000:.0f}ms")
                 layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
                 ox = (width - nw) // 2
                 oy = (height - nh) // 2
                 layer.paste(splash_img, (ox, oy), splash_img)
-                layer = layer.filter(ImageFilter.GaussianBlur(radius=max(1, round(24 * SY))))
+                # radius を抑える（旧: 24*SY ≈ 33）。大きい GaussianBlur がハングの主因になりやすい
+                blur_r = max(1, round(12 * SY))
+                _bglog(f"GaussianBlur begin radius={blur_r}")
+                layer = layer.filter(ImageFilter.GaussianBlur(radius=blur_r))
+                _bglog(f"GaussianBlur done {(time.perf_counter()-t0)*1000:.0f}ms")
                 r, g, b, a = layer.split()
                 a = a.point(lambda p: int(p * 0.09))
                 layer = Image.merge("RGBA", (r, g, b, a))
                 _SPLASH_BLUR_CACHE[cache_key] = layer.copy()
+                _bglog(f"splash blur cached {(time.perf_counter()-t0)*1000:.0f}ms")
             except Exception as e:
-                print(f"[Warning] splash blur background failed: {e}")
+                print(f"[Warning] splash blur background failed: {e}", flush=True)
                 layer = None
         if layer is not None:
+            _bglog("alpha_composite splash begin")
             bg = Image.alpha_composite(bg, layer)
+            _bglog(f"alpha_composite splash done {(time.perf_counter()-t0)*1000:.0f}ms")
+    else:
+        _bglog("no splash (missing path or empty)")
 
+    _bglog(f"return total {(time.perf_counter()-t0)*1000:.0f}ms")
     return bg  # RGBA
 
 
@@ -2516,11 +2564,25 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
     }
 
 
-def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "webp", bg_mode: str = None, bg_region: str = None):
+def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None):
     _total_start = time.perf_counter()
+
+    def _plog(msg: str) -> None:
+        """画像生成の区間ログ。バッファで消えないよう必ず flush。"""
+        elapsed = (time.perf_counter() - _total_start) * 1000.0
+        print(f"[Perf] +{elapsed:.0f}ms | {msg}", flush=True)
+
     if beta != "true":
         beta = "false"
-    print(f"[Cache Miss] 初回生成のため、PILで気合を入れて画像を作ります...: UID:{uid} - CharID:{avatar_id} - Method:{calc_method}")
+    _plog(
+        f"START uid={uid} avatar={avatar_id} method={calc_method} "
+        f"format={img_format} beta={beta} fake_char={fake_char} bg_mode={bg_mode} bg_region={bg_region}"
+    )
+    print(
+        f"[Cache Miss] 初回生成のため、PILで気合を入れて画像を作ります...: "
+        f"UID:{uid} - CharID:{avatar_id} - Method:{calc_method}",
+        flush=True,
+    )
 
     t_start = time.perf_counter()
     target_avatar_info = None
@@ -2554,7 +2616,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     if not target_avatar_info:
         raise HTTPException(status_code=404, detail=f"Avatar ID {avatar_id} not found in showcase.")
     t_end = time.perf_counter()
-    print(f"[Perf] JSON読み込み・パース: {(t_end - t_start)*1000:.1f}ms")
+    print(f"[Perf] JSON読み込み・パース: {(t_end - t_start)*1000:.1f}ms", flush=True)
 
     t_start = time.perf_counter()
     if fake_char:
@@ -2587,7 +2649,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         else:
             raise HTTPException(status_code=404, detail=f"Character JSON file not found: {json_path2}")
     t_end = time.perf_counter()
-    print(f"[Perf] キャラJSON読み込み: {(t_end - t_start)*1000:.1f}ms")
+    print(f"[Perf] キャラJSON読み込み: {(t_end - t_start)*1000:.1f}ms", flush=True)
 
     card_width = CARD_W
     card_height = CARD_H
@@ -2658,6 +2720,12 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
     t_start = time.perf_counter()
     weapon_data = next((item for item in target_avatar_info.get("equipList", []) if "weapon" in item), None)
+    # 未装備（ショーケースに武器が無い）でもカード生成を続行する
+    weapon_name = "未装備"
+    weapon_icon = ""
+    weapon_level = 0
+    weapon_affix = 0
+    weapon_stats_list = []
 
     if fake_weapon:
         weapon_id = fake_weapon
@@ -2682,16 +2750,24 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             {'appendPropId': 'FIGHT_PROP_BASE_ATTACK', 'statValue': weapon_jsondata["stats_modifier"]["atk"]},
             {'appendPropId': second_key.upper(), 'statValue': stat_calc}
         ]
-    else:
+    elif weapon_data:
         weapon_id = weapon_data["itemId"]
         weapon_json_path = resolve_datas_path(f"static/data/weapons/{weapon_id}.json", beta)
-        with open(weapon_json_path, "r", encoding="utf-8") as f:
-            weapon_jsondata = json.load(f)
-        weapon_icon = weapon_data["flat"]["icon"]
-        weapon_level = weapon_data["weapon"]["level"]
-        weapon_affix = list(weapon_data["weapon"].get("affixMap", {}).values())[0] + 1 if weapon_data["weapon"].get("affixMap") else 1
-        weapon_name = weapon_jsondata.get("name", "未知の武器")
-        weapon_stats_list = weapon_data["flat"].get("weaponStats", [])
+        weapon_name = "未知の武器"
+        if os.path.exists(weapon_json_path):
+            try:
+                with open(weapon_json_path, "r", encoding="utf-8") as f:
+                    weapon_jsondata = json.load(f)
+                weapon_name = weapon_jsondata.get("name", "未知の武器")
+            except (UnicodeDecodeError, json.JSONDecodeError, OSError):
+                pass
+        weapon_icon = (weapon_data.get("flat") or {}).get("icon") or ""
+        weapon_level = (weapon_data.get("weapon") or {}).get("level") or 1
+        affix_map = (weapon_data.get("weapon") or {}).get("affixMap") or {}
+        weapon_affix = (list(affix_map.values())[0] + 1) if affix_map else 1
+        weapon_stats_list = (weapon_data.get("flat") or {}).get("weaponStats") or []
+    else:
+        print(f"[Warning] no weapon equipped for avatar (uid showcase) — drawing as 未装備")
 
     weapon_stat1 = None
     if len(weapon_stats_list) >= 1:
@@ -2715,7 +2791,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             stat_val2_str = f"{int(stat_val2)}"
         weapon_stat2 = (stat_name2, stat_val2_str)
     t_end = time.perf_counter()
-    print(f"[Perf] 武器データ処理: {(t_end - t_start)*1000:.1f}ms")
+    print(f"[Perf] 武器データ処理: {(t_end - t_start)*1000:.1f}ms", flush=True)
 
     t_start = time.perf_counter()
     raw_artifacts = [item for item in target_avatar_info.get("equipList", []) if "reliquary" in item]
@@ -2923,7 +2999,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         }
         score_sum += art_score
     t_end = time.perf_counter()
-    print(f"[Perf] 聖遺物データ処理: {(t_end - t_start)*1000:.1f}ms")
+    print(f"[Perf] 聖遺物データ処理: {(t_end - t_start)*1000:.1f}ms", flush=True)
 
     t_start = time.perf_counter()
     artifact_image_num = [4, 2, 5, 1, 3]
@@ -2985,10 +3061,11 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     }
     display_score_way = display_map[calc_method]
     t_end = time.perf_counter()
-    print(f"[Perf] セット効果処理: {(t_end - t_start)*1000:.1f}ms")
+    print(f"[Perf] セット効果処理: {(t_end - t_start)*1000:.1f}ms", flush=True)
 
     t_start = time.perf_counter()
     # 背景選択: bg_color > bg_mode=element > 地域（bg_region指定 → 所属地域の先頭）> 元素背景
+    _plog("背景生成: select region begin")
     selected_region = None
     if bg_color is None and str(bg_mode or "").lower() != "element":
         candidates = []
@@ -2999,6 +3076,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             if region_image_path(cand):
                 selected_region = cand
                 break
+    _plog(f"背景生成: selected_region={selected_region!r} splash={splash!r} element={element_type}")
     img = create_card_background(
         card_width, card_height, bg_base_rgb,
         splash_path=splash,
@@ -3007,14 +3085,15 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         region=selected_region,
     )
     t_end = time.perf_counter()
-    print(f"[Perf] 背景生成: {(t_end - t_start)*1000:.1f}ms")
+    print(f"[Perf] 背景生成: {(t_end - t_start)*1000:.1f}ms", flush=True)
+    _plog(f"背景生成: done img.size={getattr(img, 'size', None)}")
     draw = ImageDraw.Draw(img)
 
     t_start = time.perf_counter()
     font_stats = get_cached_font(FONT_PATH, max(1, round(28 * SY)))
     font_stats_light = get_cached_font(FONT_LIGHT_PATH, max(1, round(28 * SY)))
     t_end = time.perf_counter()
-    print(f"[Perf] フォント読み込み: {(t_end - t_start)*1000:.1f}ms")
+    print(f"[Perf] フォント読み込み: {(t_end - t_start)*1000:.1f}ms", flush=True)
 
     t_start = time.perf_counter()
     draw_figma_box(img, x=33, y=30, width=694, height=671)
@@ -3077,11 +3156,18 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             draw_figma_circle(img, x=circle_x, y=circle_y, size=circle_size, fill_color=(0, 0, 0, 150), outline_color=base_color, outline_width=4)
             paste_figma_image(img, f"static/assets/skills/{icon_name}.webp", box_x=circle_x + 5, box_y=circle_y + 5, box_width=60, box_height=60, radius=15, beta=beta)
 
-    paste_figma_image(img, f"static/assets/weapons/{weapon_icon}.webp", box_x=1350, box_y=60, box_width=100, box_height=100, radius=15, beta=beta)
+    if weapon_icon:
+        paste_figma_image(img, f"static/assets/weapons/{weapon_icon}.webp", box_x=1350, box_y=60, box_width=100, box_height=100, radius=15, beta=beta)
     draw_figma_box(img, x=1340, y=47, width=60, height=30, radius=2)
-    draw_figma_text(draw, text=f"R{weapon_affix}", x=1357, y=48, font=font_stats, align="left", font_size=20)
+    if weapon_affix:
+        draw_figma_text(draw, text=f"R{weapon_affix}", x=1357, y=48, font=font_stats, align="left", font_size=20)
+    else:
+        draw_figma_text(draw, text="-", x=1357, y=48, font=font_stats, align="left", font_size=20)
     draw_figma_text(draw, text=weapon_name, x=1462, y=60, font=font_stats, align="left", font_size=23)
-    draw_figma_text(draw, text=f"Lv.{weapon_level}", x=1462, y=90, font=font_stats, align="left", font_size=20)
+    if weapon_level:
+        draw_figma_text(draw, text=f"Lv.{weapon_level}", x=1462, y=90, font=font_stats, align="left", font_size=20)
+    else:
+        draw_figma_text(draw, text="Lv.-", x=1462, y=90, font=font_stats, align="left", font_size=20)
 
     if weapon_stat1:
         stat_name1, stat_val1_str = weapon_stat1
@@ -3092,7 +3178,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         draw_figma_text(draw, text=stat_name2, x=1462, y=155, font=font_stats_light, align="left", font_size=18)
         draw_figma_text(draw, text=stat_val2_str, x=1635, y=155, font=font_stats_light, align="left", font_size=21)
     t_end = time.perf_counter()
-    print(f"[Perf] 描画：ボックス・テキスト（上半分）: {(t_end - t_start)*1000:.1f}ms")
+    print(f"[Perf] 描画：ボックス・テキスト（上半分）: {(t_end - t_start)*1000:.1f}ms", flush=True)
 
     t_start = time.perf_counter()
     base_y = 73
@@ -3128,7 +3214,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             draw_figma_text(draw, text=green_text, x=green_x, y=sub_y, font=font_stats, font_size=20, fill_color=(0, 230, 115), align="left")
             draw_figma_text(draw, text=gray_text, x=gray_x, y=sub_y, font=font_stats, font_size=20, fill_color=(160, 165, 175), align="left")
     t_end = time.perf_counter()
-    print(f"[Perf] 描画：ステータス: {(t_end - t_start)*1000:.1f}ms")
+    print(f"[Perf] 描画：ステータス: {(t_end - t_start)*1000:.1f}ms", flush=True)
 
     t_start = time.perf_counter()
     for x in artifact_x_list:
@@ -3160,7 +3246,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         draw_figma_text(draw, text=artifact_data["score"], x=box_x + 207, y=1070, font=font_stats, font_size=40, align="right", box_width=80)
         paste_figma_image(img, f"static/assets/tiers/{artifact_data['tier']}.png", box_x=box_x + 27, box_y=1070, box_width=60, box_height=60, radius=15, beta=beta)
     t_end = time.perf_counter()
-    print(f"[Perf] 描画：聖遺物5枠: {(t_end - t_start)*1000:.1f}ms")
+    print(f"[Perf] 描画：聖遺物5枠: {(t_end - t_start)*1000:.1f}ms", flush=True)
 
     t_start = time.perf_counter()
     _name_font_path = getattr(font_stats, "path", None)
@@ -3180,31 +3266,60 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     draw_figma_text(draw, text="計算方法", x=1350, y=642, font=font_stats, align="left", font_size=30)
     draw_figma_text_right(draw, text=display_score_way, x=1680, y=645, font=font_stats, align="right", font_size=35)
     t_end = time.perf_counter()
-    print(f"[Perf] 描画：セット効果・総合スコア: {(t_end - t_start)*1000:.1f}ms")
+    print(f"[Perf] 描画：セット効果・総合スコア: {(t_end - t_start)*1000:.1f}ms", flush=True)
+    _plog(f"描画完了 size={img.size} mode={img.mode}")
 
-    # 透明を維持するため RGBA のまま保存（黒背景への合成はしない）。形式は設定で PNG/WEBP 切替
+    # 透明を維持するため RGBA のまま保存。ハングしやすい区間なので段階ログを細かく出す。
     t_start = time.perf_counter()
+    _plog(f"画像保存: begin format={img_format}")
+
     if img.mode != "RGBA":
+        _plog(f"画像保存: convert {img.mode} -> RGBA ...")
         img = img.convert("RGBA")
+        _plog("画像保存: convert done")
+    else:
+        _plog("画像保存: already RGBA")
+
+    w, h = img.size
+    _plog(f"画像保存: encode start {w}x{h} format={img_format}")
 
     img_io = io.BytesIO()
-    if img_format == "png":
-        img.save(img_io, 'PNG', compress_level=0)
-    else:
-        img.save(img_io, 'WEBP', quality=95, method=0)
+    used_format = img_format
+    try:
+        if img_format == "png":
+            _plog("画像保存: PNG compress_level=1 ...")
+            img.save(img_io, "PNG", compress_level=1)
+        else:
+            # quality=95 は pillow-simd で極端に遅い／固まる事例あり
+            _plog("画像保存: WEBP quality=88 method=0 ...")
+            img.save(img_io, "WEBP", quality=88, method=0)
+        _plog(f"画像保存: encode done bytes={img_io.tell()}")
+    except Exception as enc_err:
+        _plog(f"画像保存: {used_format} failed ({type(enc_err).__name__}: {enc_err}) -> PNG fallback")
+        img_io = io.BytesIO()
+        used_format = "png"
+        img.save(img_io, "PNG", compress_level=1)
+        _plog(f"画像保存: PNG fallback done bytes={img_io.tell()}")
+
+    _plog("画像保存: seek(0) + getvalue ...")
     img_io.seek(0)
+    payload = img_io.getvalue()
     t_end = time.perf_counter()
-    print(f"[Perf] 画像保存: {(t_end - t_start)*1000:.1f}ms")
-    print(f"[Perf] TOTAL: {(time.perf_counter() - _total_start)*1000:.1f}ms")
-    return img_io.getvalue()
+    print(f"[Perf] 画像保存: {(t_end - t_start)*1000:.1f}ms format={used_format} bytes={len(payload)}", flush=True)
+    print(f"[Perf] 合計: {(time.perf_counter() - _total_start)*1000:.1f}ms", flush=True)
+    _plog(f"DONE format={used_format} bytes={len(payload)}")
+    return payload
 
 
 @app.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")
-async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "webp", bg_mode: str = None, bg_region: str = None):
+async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None):
     """カード画像生成。専用スレッドプールで同時実行数を制限し、超過分は列待ち。
     待ち行列が満杯のときは 503 を返す（デフォルトの threadpool は占有しない）。
     """
-    img_format = "png" if str(img_format).lower() == "png" else "webp"
+    img_format = str(img_format or "png").lower()
+    if img_format != "png":
+        # WEBP 廃止: 生成処理にも待ち行列にも入れず、即エラーを返す
+        raise HTTPException(status_code=400, detail="WEBP形式は廃止されました。PNG（img_format=png）のみ利用できます")
     try:
         img_bytes = await _run_in_card_gen_pool(
             _generate_card_image_sync,
@@ -3260,7 +3375,10 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
             level="error",
         )
         raise HTTPException(status_code=500, detail=f"カード生成に失敗しました: {e}") from e
-    return StreamingResponse(io.BytesIO(img_bytes), media_type="image/png" if img_format == "png" else "image/webp")
+    # StreamingResponse(io.BytesIO) はバイナリを改行(0x0A)ごとに分割して
+    # チャンク毎にスレッドプール往復するため、4MB 級の PNG で転送に数秒かかる。
+    # 生成済みの bytes を丸ごと返す Response にすることで Content-Length も付き即完了。
+    return Response(content=img_bytes, media_type="image/png")
 
 
 @app.get("/serverup", response_class=HTMLResponse)

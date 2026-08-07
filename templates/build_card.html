@@ -838,10 +838,10 @@
                         </button>
 
                         <div class="text-xs font-semibold text-gray-400 mb-2 mt-3 px-1">生成画像形式</div>
-                        <button type="button" id="settingsFormatBtn"
-                            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                            <span id="settingsFormatLabel">⚡ WEBP（推奨）</span>
-                            <span class="text-[10px] text-gray-500">タップで切替</span>
+                        <button type="button" id="settingsFormatBtn" disabled
+                            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 text-gray-500 opacity-60 cursor-not-allowed transition-all">
+                            <span id="settingsFormatLabel">PNG（無圧縮）</span>
+                            <span class="text-[10px] text-gray-500">WEBP は廃止</span>
                         </button>
 
                         <div class="text-xs font-semibold text-gray-400 mb-2 mt-3 px-1">サーバー負荷表示</div>
@@ -1175,17 +1175,14 @@
         }
 
         function getSavedFormatPref() {
-            try {
-                return localStorage.getItem(FORMAT_PREF_KEY) === 'png' ? 'png' : 'webp';
-            } catch (e) {
-                return 'webp';
-            }
+            // WEBP 廃止: 保存値に関係なく常に PNG
+            return 'png';
         }
 
         function setFormatPref(fmt) {
-            const next = fmt === 'png' ? 'png' : 'webp';
+            // WEBP 廃止: 常に PNG として保存（切替ボタンは無効化済み）
             try {
-                localStorage.setItem(FORMAT_PREF_KEY, next);
+                localStorage.setItem(FORMAT_PREF_KEY, 'png');
             } catch (e) { /* ignore storage errors */ }
         }
 
@@ -1306,7 +1303,7 @@
                 settingsThemeLabel.textContent = (getSavedThemePref() === 'light') ? 'ライト' : 'ダーク';
             }
             if (settingsFormatLabel) {
-                settingsFormatLabel.textContent = (getSavedFormatPref() === 'png') ? 'PNG（無圧縮）' : 'WEBP（推奨）';
+                settingsFormatLabel.textContent = 'PNG（無圧縮）';
             }
             if (settingsServerStatsLabel) {
                 settingsServerStatsLabel.textContent = getSavedServerStatsPref() ? '表示中' : '非表示';
@@ -1353,18 +1350,7 @@
                 });
             }
 
-            if (settingsFormatBtn) {
-                settingsFormatBtn.addEventListener('click', () => {
-                    const nextFormat = (getSavedFormatPref() === 'png') ? 'webp' : 'png';
-                    setFormatPref(nextFormat);
-                    applySettingsPanelUI();
-                    // 形式は URL クエリに含まれるためキャッシュキーが分かれる。
-                    // 画像表示モードなら表示状態を更新（自動生成はせず、最新画像がなければ中央の生成ボタン）
-                    if (viewMode === 'image' && currentSelectedCharId) {
-                        refreshCurrentCard(currentSelectedCharId, false);
-                    }
-                });
-            }
+            // WEBP 廃止により形式切替ボタンは無効化（disabled）。切替処理は削除。
 
             if (settingsServerStatsBtn) {
                 settingsServerStatsBtn.addEventListener('click', () => {
