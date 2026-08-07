@@ -197,6 +197,34 @@
             border-radius: 5px; border: 1px solid rgba(255,255,255,0.4); overflow: hidden;
             background: #18181b;
         }
+        /* Beta専用（live データに存在しない）キャラ/武器の「New!!」バッジ */
+        .beta-new-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            z-index: 5;
+            color: #f87171;
+            font-size: 9px;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: 0.03em;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85), 0 0 3px rgba(0, 0, 0, 0.7);
+            pointer-events: none;
+            user-select: none;
+        }
+        /* 右上に削除ボタン/選択チェックがあるタイル用（左上配置） */
+        .beta-new-badge.tl {
+            left: 2px;
+            right: auto;
+        }
+        /* 武器用: 標準より少し大きめ */
+        .beta-new-badge.md {
+            font-size: 11px;
+        }
+        /* キャラ用: 標準よりかなり大きめ */
+        .beta-new-badge.lg {
+            font-size: 14px;
+        }
         .view-mode-btn {
             color: #9ca3af;
             background-color: transparent;
@@ -1385,6 +1413,9 @@
         let listsLoaded = false;
         const pendingIconFetches = new Set();
         let allCharIconsPromise = null;
+        // Beta専用（live リストに存在しない）判定用。取得失敗時は null のまま → New!! を出さない（誤表示防止）
+        let liveCharIds = null;
+        let liveWeaponIds = null;
 
         const TRAVELER_BASE_IDS = ['10000005', '10000007', '10000117', '10000118'];
         const ELEMENT_ORDER = ['Anemo', 'Geo', 'Electro', 'Dendro', 'Hydro', 'Pyro', 'Cryo'];
@@ -1435,9 +1466,27 @@
             }
             listsLoaded = true;
 
+            // New!! バッジ判定用に live リストも取得する（beta モードのみ。失敗時は New!! を出さない）
+            if (ver === 'beta') {
+                try {
+                    const [liveCharRes, liveWeaponRes] = await Promise.all([
+                        fetch('/static/data/lists/characters.json'),
+                        fetch('/static/data/lists/weapons.json')
+                    ]);
+                    if (liveCharRes.ok) liveCharIds = new Set(Object.keys(await liveCharRes.json()));
+                    if (liveWeaponRes.ok) liveWeaponIds = new Set(Object.keys(await liveWeaponRes.json()));
+                } catch (e) {
+                    console.warn('New!! 判定用の live リスト取得に失敗しました:', e);
+                }
+            }
+            // サーバー描画済みのキャラサムネイル行にも New!! を反映する
+            applyBetaNewBadgesToCharThumbs();
+
             if (currentSelectedCharId) {
                 loadComboState(currentSelectedCharId);
-                if (sanitizeCombosForVer()) saveComboState(currentSelectedCharId);
+                const c1 = sanitizeCombosForVer();
+                const c2 = sanitizeHiddenCombos();
+                if (c1 || c2) saveComboState(currentSelectedCharId);
                 renderComboRow();
                 updateEditWeaponUI();
                 ensureComboIconsLoaded().then(() => { renderComboRow(); updateEditWeaponUI(); });
@@ -1454,6 +1503,59 @@
                 ensureCharIconsLoaded(charIds),
                 ensureWeaponIconsLoaded(weaponIds)
             ]);
+        }
+
+        // Beta専用（live データに存在しない）キャラ/武器の判定。
+        // live リスト取得失敗時は null のまま → false を返し New!! を出さない。
+        function isBetaOnlyChar(id) {
+            if (ver !== 'beta' || !liveCharIds) return false;
+            return !liveCharIds.has(String(id));
+        }
+        function isBetaOnlyWeapon(id) {
+            if (ver !== 'beta' || !liveWeaponIds) return false;
+            return !liveWeaponIds.has(String(id));
+        }
+        // positionClass: '' = 右上（既定）, 'tl' = 左上（×ボタン等と重ならないようにする場合）
+        function betaNewBadgeHTML(positionClass) {
+            return `<div class="beta-new-badge ${positionClass || ''}">New!!</div>`;
+        }
+        // ページ初期表示のサムネイル行（サーバー描画分）に New!! を付ける
+        function applyBetaNewBadgesToCharThumbs() {
+            if (ver !== 'beta' || !liveCharIds) return;
+            document.querySelectorAll('#charThumbRow .char-thumb').forEach(thumb => {
+                if (thumb.querySelector('.beta-new-badge')) return;
+                if (isBetaOnlyChar(thumb.getAttribute('data-char-id'))) {
+                    thumb.insertAdjacentHTML('beforeend', betaNewBadgeHTML('tl lg'));
+                }
+            });
+        }
+
+        // 差し替え機能で非表示にする対象（キャラ: 134/135 系統、武器: 数値IDが3始まり）
+        const HIDDEN_SWAP_CHAR_BASE_IDS = new Set(['10000134', '10000135']);
+        function isSwapHiddenChar(id) {
+            return HIDDEN_SWAP_CHAR_BASE_IDS.has(baseIdOf(id));
+        }
+        function isSwapHiddenWeapon(id) {
+            return String(id).startsWith('3');
+        }
+        // 非表示対象を参照しているコンボを除去する（アクティブ中ならデフォルトに戻す）
+        function sanitizeHiddenCombos() {
+            let changed = false;
+            const valid = [];
+            for (const c of combos) {
+                if (c.fakeChar && isSwapHiddenChar(c.fakeChar)) {
+                    if (activeComboId === c.id) activeComboId = '';
+                    changed = true;
+                    continue;
+                }
+                if (c.fakeWeapon && isSwapHiddenWeapon(c.fakeWeapon)) {
+                    c.fakeWeapon = '';
+                    changed = true;
+                }
+                valid.push(c);
+            }
+            combos = valid;
+            return changed;
         }
 
         async function fetchCharIcon(id) {
@@ -1632,6 +1734,7 @@
             combos.forEach(combo => {
                 const data = allCharList[combo.fakeChar];
                 if (!data) return;
+                if (isSwapHiddenChar(combo.fakeChar)) return;
                 const iconUrl = charAssetUrl(combo.fakeChar);
                 const rarity = qualityToRarity(data.qualityType);
 
@@ -1640,7 +1743,7 @@
                 tile.title = data.jaName;
                 tile.onclick = () => activateCombo(combo.id);
 
-                const weaponIconUrl = combo.fakeWeapon ? weaponAssetUrl(combo.fakeWeapon) : '';
+                const weaponIconUrl = (combo.fakeWeapon && !isSwapHiddenWeapon(combo.fakeWeapon)) ? weaponAssetUrl(combo.fakeWeapon) : '';
                 tile.innerHTML = `
                     <div class="relative w-full h-full rounded-md overflow-hidden">
                         ${iconUrl ? `<img src="${iconUrl}" class="w-full h-full object-cover drag-none">` : `<div class="w-full h-full flex items-center justify-center text-[9px] text-zinc-400 text-center px-0.5">${data.jaName}</div>`}
@@ -1649,6 +1752,9 @@
                     <div class="combo-remove" onclick="event.stopPropagation(); removeCombo('${combo.id}')">&times;</div>
                     ${weaponIconUrl ? `<div class="weapon-badge"><img src="${weaponIconUrl}" class="w-full h-full object-cover"></div>` : ''}
                 `;
+                if (isBetaOnlyChar(combo.fakeChar)) {
+                    tile.insertAdjacentHTML('beforeend', betaNewBadgeHTML('tl lg'));
+                }
                 comboRow.appendChild(tile);
             });
 
@@ -1727,7 +1833,7 @@
         function renderFakeCharGrid() {
             fakeCharGrid.innerHTML = '';
 
-            const sortedIds = sortCharIds(Object.keys(allCharList));
+            const sortedIds = sortCharIds(Object.keys(allCharList)).filter(id => !isSwapHiddenChar(id));
             sortedIds.forEach(id => {
                 const data = allCharList[id];
                 const iconUrl = charAssetUrl(id);
@@ -1744,6 +1850,9 @@
                     `;
                 } else {
                     tile.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 text-center px-1">${data.jaName}</div>`;
+                }
+                if (isBetaOnlyChar(id)) {
+                    tile.insertAdjacentHTML('beforeend', betaNewBadgeHTML('lg'));
                 }
                 fakeCharGrid.appendChild(tile);
             });
@@ -1803,6 +1912,7 @@
 
             const sortedIds = Object.keys(allWeaponList)
                 .filter(id => !weaponType || allWeaponList[id].weaponType === weaponType)
+                .filter(id => !isSwapHiddenWeapon(id))
                 .sort((a, b) => Number(a) - Number(b));
 
             if (weaponType && sortedIds.length === 0) {
@@ -1825,6 +1935,9 @@
                     `;
                 } else {
                     tile.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 text-center px-1">${data.jaName}</div>`;
+                }
+                if (isBetaOnlyWeapon(id)) {
+                    tile.insertAdjacentHTML('beforeend', betaNewBadgeHTML('md'));
                 }
                 fakeWeaponGrid.appendChild(tile);
             });
@@ -2492,7 +2605,9 @@
 
             if (listsLoaded && charChanged) {
                 loadComboState(charId);
-                if (sanitizeCombosForVer()) saveComboState(charId);
+                const c1 = sanitizeCombosForVer();
+                const c2 = sanitizeHiddenCombos();
+                if (c1 || c2) saveComboState(charId);
                 renderComboRow();
                 updateEditWeaponUI();
                 ensureComboIconsLoaded().then(() => { renderComboRow(); updateEditWeaponUI(); });
@@ -3026,6 +3141,9 @@
                 img.src = ch.icon;
                 img.className = 'w-full h-full bg-gradient-to-tr from-[rgba(49,43,71,0.53)] to-[rgba(102,115,150,0.42)] rounded-lg object-cover opacity-50 grayscale-[0.3] transition-all hover:opacity-100 drag-none';
                 div.appendChild(img);
+                if (isBetaOnlyChar(ch.id)) {
+                    div.insertAdjacentHTML('beforeend', betaNewBadgeHTML('tl lg'));
+                }
                 bindCharThumbClick(div);
                 row.appendChild(div);
             }
