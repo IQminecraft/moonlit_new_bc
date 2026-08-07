@@ -11,7 +11,8 @@ import io
 import json
 import time
 from typing import Dict, Any, Optional
-from collections import Counter, OrderedDict
+from collections import Counter, OrderedDict, deque
+from urllib.parse import urlencode, quote
 from concurrent.futures import ThreadPoolExecutor
 import random as _random
 
@@ -685,6 +686,75 @@ _CARD_GEN_PENDING = 0  # 実行中 + キュー待ちの合計
 _CARD_GEN_RUNNING = 0
 _CARD_GEN_LOCK = __import__("threading").Lock()
 _CARD_CACHE_LAST_RESET = time.time()
+
+# ==========================================================
+#  カード画像URL署名（エンドポイント秘匿化 / DDoS 対策）
+#  /generate_card_image を直接叩かれても、HMAC署名が無い・
+#  期限切れ・パラメータ不一致のリクエストは生成前に安価に拒否。
+#  クライアントは /api/card_sign で署名付きURLを取得する
+#  （署名取得エンドポイントはIP単位でレート制限）。
+#
+#  環境変数:
+#    CARD_URL_SECRET              署名用シークレット（未設定 = 署名無効）
+#    CARD_SIGN_VALIDITY_HOURS     署名の有効時間 (default: 12)
+#    CARD_SIGN_RATE_LIMIT_PER_MIN 署名取得のIP毎レート上限 (default: 60, 0=無効)
+#    CARD_GEN_RATE_LIMIT_PER_MIN  画像生成のIP毎レート上限 (default: 0=無効)
+# ==========================================================
+_CARD_URL_SECRET = (os.environ.get("CARD_URL_SECRET") or "").strip()
+_CARD_SIGN_VALIDITY_SEC = max(60, float(os.environ.get("CARD_SIGN_VALIDITY_HOURS", "12")) * 3600.0)
+_CARD_SIGN_MAX_AGE_SEC = 12 * 3600.0  # 発行済み署名の受付上限（12h を超える exp は拒否）
+_CARD_SIGN_RATE_LIMIT_PER_MIN = max(0, int(os.environ.get("CARD_SIGN_RATE_LIMIT_PER_MIN", "60")))
+_CARD_GEN_RATE_LIMIT_PER_MIN = max(0, int(os.environ.get("CARD_GEN_RATE_LIMIT_PER_MIN", "0")))
+_CARD_SIGN_PARAM_ORDER = ["uid", "avatar_id", "calc_method", "fake_char", "fake_weapon", "beta", "bg_color", "img_format", "bg_mode", "bg_region"]
+_rate_buckets = {}  # key -> deque(monotonic秒) スライディングウィンドウ
+
+
+def _rate_limited(key: str, limit_per_min: int) -> bool:
+    """IP毎レート制限。超過していれば True（イベントループ単一スレッドで完結）。"""
+    if limit_per_min <= 0:
+        return False
+    now = time.monotonic()
+    dq = _rate_buckets.setdefault(key, deque())
+    while dq and now - dq[0] > 60.0:
+        dq.popleft()
+    if len(dq) >= limit_per_min:
+        return True
+    dq.append(now)
+    if len(_rate_buckets) > 10000:
+        for k in [k for k, v in _rate_buckets.items() if not v]:
+            _rate_buckets.pop(k, None)
+    return False
+
+
+def _client_ip(request: Request) -> str:
+    """uvicorn proxy_headers=True 時、信頼プロキシ（forwarded_allow_ips）経由なら
+    client.host は実クライアントIP。Cloudflare直結の場合はCFエッジIPになる。"""
+    return request.client.host if request and request.client else "unknown"
+
+
+def _card_sign_canonical(params: Dict[str, Any]) -> str:
+    """署名対象の正規化文字列。パラメータ順を固定して欠落は空文字扱い。"""
+    return "|".join(str(params.get(k) or "") for k in _CARD_SIGN_PARAM_ORDER)
+
+
+def _card_signature(exp: int, params: Dict[str, Any]) -> str:
+    msg = f"{_card_sign_canonical(params)}|{exp}"
+    return _hmac.new(_CARD_URL_SECRET.encode(), msg.encode(), _hashlib.sha256).hexdigest()
+
+
+def _verify_card_sign(card_exp, card_sig, params: Dict[str, Any]) -> bool:
+    """署名検証。不正・期限切れ・パラメータ不一致は False（生成前に安価に拒否）。"""
+    if not _CARD_URL_SECRET or not card_exp or not card_sig:
+        return False
+    try:
+        exp = int(card_exp)
+    except (TypeError, ValueError):
+        return False
+    now = time.time()
+    if exp < now or exp > now + _CARD_SIGN_MAX_AGE_SEC:
+        return False
+    expected = _card_signature(exp, params)
+    return _hmac.compare_digest(expected, str(card_sig).lower())
 
 
 def _lru_set(cache: OrderedDict, key, value, max_size: int) -> None:
@@ -2112,47 +2182,9 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False, v
     if not os.path.exists(json_path):
         raise HTTPException(status_code=404, detail=f"UID: {uid} のデータが見つかりませんでした。(APIエラーかつキャッシュなし)")
 
-    try:
-        with open(json_path, 'r', encoding='utf-8') as f:
-            showcase_data = json.load(f)
-    except (UnicodeDecodeError, json.JSONDecodeError):
-        with open(json_path, 'r', encoding='cp932') as f:
-            showcase_data = json.load(f)
+    showcase_data = _load_json_auto(json_path)
 
-    player_info = showcase_data.get("playerInfo", {})
-    show_avatar_list = player_info.get("showAvatarInfoList", [])
-
-    char_list = []
-    for index, avatar in enumerate(show_avatar_list):
-        current_avatar_id = str(avatar.get("avatarId"))
-        if not current_avatar_id:
-            continue
-
-        if current_avatar_id in SPECIAL_ELEMENT_CHARACTERS:
-            current_avatar_id = resolve_special_avatar_id(avatar, beta)
-
-        json_path_char = f"static/data/characters/{current_avatar_id}.json"
-        json_path_char = resolve_datas_path(json_path_char, beta)
-
-        if os.path.exists(json_path_char):
-            try:
-                with open(json_path_char, "r", encoding="utf-8") as f:
-                    jsondata = json.load(f)
-            except (UnicodeDecodeError, json.JSONDecodeError):
-                with open(json_path_char, "r", encoding="cp932") as f:
-                    jsondata = json.load(f)
-
-            icon_suffix = str(jsondata["icon"])
-            icon_path = resolve_datas_path(f"static/assets/characters/{icon_suffix}.webp", beta)
-            char_entry = {
-                "id": current_avatar_id,
-                "icon": icon_path,
-                "active": (index == 0)
-            }
-            char_list.append(char_entry)
-        else:
-            print(f"[Warning] キャラクターJSONが見つからないためスキップ: {json_path_char}")
-            continue
+    char_list = _build_char_list_from_showcase(showcase_data, beta)
 
     if not char_list:
         return HTMLResponse(content=f"UID: {uid} のゲーム内プロフィールで『キャラクター詳細を公開』がオンになっていないか、ショーケースが空です。", status_code=400)
@@ -2166,19 +2198,87 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False, v
 
 
 @app.post("/refresh_uid/{uid}")
-async def refresh_uid(uid: str):
+async def refresh_uid(uid: str, ver: str = "live"):
     if not uid.isdigit():
         raise HTTPException(status_code=400, detail="UIDが不正です。数字のみ入力してください。")
+    if ver != "beta":
+        ver = "live"
+    beta = "true" if ver == "beta" else "false"
 
     uid_int = int(uid)
-    print(f"[Info] Refreshing showcase data via Enka API for UID: {uid}")
+    print(f"[Info] Refreshing showcase data via Enka API for UID: {uid} ({ver})")
     success, message = await get_info_state.update_uid_data(uid_int)
 
     if not success:
         print(f"[Warning] Refresh failed: {message}")
         raise HTTPException(status_code=502, detail=f"Enka APIの取得に失敗しました: {message}")
 
-    return {"success": True, "message": message}
+    # 再取得後のキャラ一覧を返す（クライアント側でサムネイル行を同期するため）
+    char_list = []
+    json_path = os.path.join("static", "cache", f"showcase_{uid}.json")
+    if os.path.exists(json_path):
+        try:
+            char_list = _build_char_list_from_showcase(_load_json_auto(json_path), beta)
+        except Exception as e:
+            print(f"[Warning] 再取得後のキャラ一覧構築に失敗: {e}")
+            char_list = []
+
+    return {"success": True, "message": message, "char_list": char_list}
+
+
+@app.get("/api/char_list/{uid}")
+async def get_char_list(uid: str, beta: str = "false"):
+    """現在キャッシュされているショーケースのキャラ一覧を返す（再取得後のUI同期用）。"""
+    if beta != "true":
+        beta = "false"
+    json_path = os.path.join("static", "cache", f"showcase_{uid}.json")
+    if not os.path.exists(json_path):
+        raise HTTPException(status_code=404, detail=f"UID: {uid} のキャッシュデータが見つかりませんでした。")
+    showcase_data = _load_json_auto(json_path)
+    return {"uid": uid, "char_list": _build_char_list_from_showcase(showcase_data, beta)}
+
+
+def _load_json_auto(path: str) -> dict:
+    """UTF-8 → cp932 の順で JSON を読み込む（キャッシュ読み込みの共通処理）。"""
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        with open(path, 'r', encoding='cp932') as f:
+            return json.load(f)
+
+
+def _build_char_list_from_showcase(showcase_data: dict, beta: str) -> list:
+    """showcase JSON からサムネイル用キャラ一覧を構築する（fetch_uid / refresh_uid / char_list API 共通）。"""
+    player_info = showcase_data.get("playerInfo", {})
+    show_avatar_list = player_info.get("showAvatarInfoList", [])
+
+    char_list = []
+    for index, avatar in enumerate(show_avatar_list):
+        current_avatar_id = str(avatar.get("avatarId"))
+        if not current_avatar_id:
+            continue
+
+        if current_avatar_id in SPECIAL_ELEMENT_CHARACTERS:
+            current_avatar_id = resolve_special_avatar_id(avatar, beta)
+
+        json_path_char = resolve_datas_path(f"static/data/characters/{current_avatar_id}.json", beta)
+
+        if os.path.exists(json_path_char):
+            jsondata = _load_json_auto(json_path_char)
+            icon_suffix = str(jsondata["icon"])
+            icon_path = resolve_datas_path(f"static/assets/characters/{icon_suffix}.webp", beta)
+            char_entry = {
+                "id": current_avatar_id,
+                "icon": icon_path,
+                "active": (index == 0)
+            }
+            char_list.append(char_entry)
+        else:
+            print(f"[Warning] キャラクターJSONが見つからないためスキップ: {json_path_char}")
+            continue
+
+    return char_list
 
 
 @app.get("/api/card_data/{uid}/{avatar_id}")
@@ -3409,15 +3509,72 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     return payload
 
 
+@app.get("/api/card_sign")
+async def card_sign(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, request: Request = None):
+    """署名付きカード画像URLの発行（安価・IP毎レート制限付き）。
+    このエンドポイントは画像生成も外部通信もしないため、
+    ここへの集中攻撃はレート制限で吸収する。
+    """
+    img_format = str(img_format or "png").lower()
+    if img_format != "png":
+        # WEBP 廃止: 署名発行もしない
+        raise HTTPException(status_code=400, detail="WEBP形式は廃止されました。PNG（img_format=png）のみ利用できます")
+    if _rate_limited(f"sign:{_client_ip(request)}", _CARD_SIGN_RATE_LIMIT_PER_MIN):
+        raise HTTPException(status_code=429, detail="署名の取得が頻繁すぎます。しばらく待って再試行してください。")
+    params = {
+        "uid": uid,
+        "avatar_id": avatar_id,
+        "calc_method": calc_method,
+        "fake_char": fake_char,
+        "fake_weapon": fake_weapon,
+        "beta": beta,
+        "bg_color": bg_color,
+        "img_format": img_format,
+        "bg_mode": bg_mode,
+        "bg_region": bg_region,
+    }
+    if _CARD_URL_SECRET:
+        exp = int(time.time()) + int(_CARD_SIGN_VALIDITY_SEC)
+        params["card_exp"] = exp
+        params["card_sig"] = _card_signature(exp, params)
+    else:
+        print("[CardSign] CARD_URL_SECRET 未設定のため署名なしURLを発行（本番では設定推奨）", flush=True)
+    query = urlencode({k: str(v) for k, v in params.items() if v is not None and v != ""})
+    return {
+        "url": f"/generate_card_image/{quote(str(uid))}/{quote(str(avatar_id))}/{quote(str(calc_method))}?{query}",
+        "exp": params.get("card_exp", 0),
+    }
+
+
 @app.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")
-async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None):
+async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, card_exp: str = None, card_sig: str = None, request: Request = None):
     """カード画像生成。専用スレッドプールで同時実行数を制限し、超過分は列待ち。
     待ち行列が満杯のときは 503 を返す（デフォルトの threadpool は占有しない）。
+    署名検証（安価）→ IPレート制限 → プール投入の順で、
+    無署名・不正な直接アクセスは生成前に拒否する（DDoS対策）。
     """
     img_format = str(img_format or "png").lower()
     if img_format != "png":
         # WEBP 廃止: 生成処理にも待ち行列にも入れず、即エラーを返す
         raise HTTPException(status_code=400, detail="WEBP形式は廃止されました。PNG（img_format=png）のみ利用できます")
+    if _CARD_URL_SECRET:
+        # 署名検証: 不正・期限切れ・パラメータ不一致は生成前に安価に拒否
+        params = {
+            "uid": uid,
+            "avatar_id": avatar_id,
+            "calc_method": calc_method,
+            "fake_char": fake_char,
+            "fake_weapon": fake_weapon,
+            "beta": beta,
+            "bg_color": bg_color,
+            "img_format": img_format,
+            "bg_mode": bg_mode,
+            "bg_region": bg_region,
+        }
+        if not _verify_card_sign(card_exp, card_sig, params):
+            raise HTTPException(status_code=403, detail="カード画像URLの署名が無効です。ページを再読み込みしてください。")
+    if _rate_limited(f"gen:{_client_ip(request)}", _CARD_GEN_RATE_LIMIT_PER_MIN):
+        raise HTTPException(status_code=429, detail="画像生成のリクエストが頻繁すぎます。しばらく待って再試行してください。")
     try:
         img_bytes = await _run_in_card_gen_pool(
             _generate_card_image_sync,

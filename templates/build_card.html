@@ -2327,6 +2327,30 @@
             return `/generate_card_image/${uid}/${charId}/${currentMethod}${query}`;
         }
 
+        // ==========================================================
+        //  署名付きカード画像URL（エンドポイント秘匿化 / DDoS対策）
+        //  /generate_card_image を直接叩かれてもサーバーがHMAC署名を
+        //  検証するため、先に /api/card_sign で署名付きURLを取得する。
+        //  有効期限内は同じURLを再利用（ブラウザキャッシュのキーと
+        //  表示中URLの比較が壊れないようにする）
+        // ==========================================================
+        const signedCardUrlCache = new Map(); // baseUrl -> {url, exp}
+
+        async function getSignedCardUrl(baseUrl) {
+            const cached = signedCardUrlCache.get(baseUrl);
+            if (cached && cached.exp * 1000 > Date.now() + 60000) return cached.url;
+            const [path, query = ''] = baseUrl.split('?');
+            // /generate_card_image/{uid}/{avatar_id}/{calc_method}（先頭スラッシュを除去）
+            const seg = path.split('/').filter(Boolean);
+            const p = new URLSearchParams({ uid: seg[1], avatar_id: seg[2], calc_method: seg[3] });
+            for (const [k, v] of new URLSearchParams(query)) p.set(k, v);
+            const res = await fetch(`/api/card_sign?${p.toString()}`, { cache: 'no-store' });
+            if (!res.ok) throw new Error(`署名の取得に失敗しました (status: ${res.status})`);
+            const data = await res.json();
+            signedCardUrlCache.set(baseUrl, { url: data.url, exp: data.exp });
+            return data.url;
+        }
+
         async function loadCardImage(charId, forceFetch = false, cacheOnly = false, autoGenOnMiss = false) {
             if(!charId) return;
 
@@ -2346,7 +2370,7 @@
                 </div>`;
 
             updateDisclaimerFooter(getActiveSelection());
-            const url = buildCardImageUrl(charId);
+            const baseUrl = buildCardImageUrl(charId);
 
             const requestToken = ++latestImageRequestToken;
 
@@ -2355,6 +2379,8 @@
             setTopImageButtonsDisabled(true);
 
             try {
+                // DDoS対策: 署名付きURLを取得してから画像を取得する
+                let url = await getSignedCardUrl(baseUrl);
                 let blob = forceFetch ? null : await getCachedCardImage(url);
 
                 if (!blob && cacheOnly) {
@@ -2369,7 +2395,14 @@
                 }
 
                 if (!blob) {
-                    const res = await fetch(url, { cache: forceFetch ? 'reload' : 'default' });
+                    let res = await fetch(url, { cache: forceFetch ? 'reload' : 'default' });
+                    if (res.status === 403) {
+                        // 署名期限切れ・サーバー再起動などで署名が無効化された場合は
+                        // 署名を取り直して1回だけ再試行する
+                        signedCardUrlCache.delete(baseUrl);
+                        url = await getSignedCardUrl(baseUrl);
+                        res = await fetch(url, { cache: forceFetch ? 'reload' : 'default' });
+                    }
                     if (!res.ok) throw new Error(`画像の取得に失敗しました (status: ${res.status})`);
                     putCachedCardImage(url, res.clone());
                     blob = await res.blob();
@@ -2481,8 +2514,14 @@
                     // 最新の画像が表示中ならそのまま、過去に生成したキャッシュがあれば
                     // それから復元し、どちらもなければ中央の生成ボタンを出す
                     // （計算方法/背景変更は immediateGen で即時生成）
-                    const url = buildCardImageUrl(charId);
-                    if (currentImageObjectUrl && currentLoadedImageUrl === url) {
+                    // DDoS対策: 表示中・キャッシュ比較用のURLも署名付きで統一する
+                    let url = null;
+                    try {
+                        url = await getSignedCardUrl(buildCardImageUrl(charId));
+                    } catch (e) {
+                        console.warn('署名付きURLの取得に失敗しました:', e);
+                    }
+                    if (url && currentImageObjectUrl && currentLoadedImageUrl === url) {
                         scoreCalcSelect.value = getSavedCalcMethod(charId);
                         hideImageAwaitState();
                         const glassElImg2 = document.getElementById('glassCardContainer');
@@ -2911,61 +2950,97 @@
             selectedCharLabel.textContent = `${name}${lv}`;
         }
 
-        document.querySelectorAll('.char-thumb').forEach(thumb => {
-            thumb.addEventListener('click', function() {
-                document.querySelectorAll('.char-thumb img').forEach(img => {
-                    img.classList.remove('opacity-100', 'ring-2', 'ring-primary');
-                    img.classList.add('opacity-50', 'grayscale-[0.3]');
-                });
-                document.querySelectorAll('.check-badge').forEach(b => b.remove());
+        function selectCharById(charId, forceFetch) {
+            const thumb = document.querySelector(`.char-thumb[data-char-id="${charId}"]`);
+            if (!thumb) return false;
 
-                const activeImg = this.querySelector('img');
-                activeImg.classList.remove('opacity-50', 'grayscale-[0.3]');
-                activeImg.classList.add('opacity-100', 'ring-2', 'ring-primary');
-
-                const badgeHTML = `<div class="check-badge absolute top-0.5 right-0.5 bg-cyan-400 rounded-full p-0.5 ring-2 ring-white/30"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="text-black"><path d="M20 6 9 17l-5-5"></path></svg></div>`;
-                this.insertAdjacentHTML('beforeend', badgeHTML);
-
-                const charId = this.getAttribute('data-char-id');
-                localStorage.setItem(`selected_char_${uid}`, charId);
-                if (selectedCharLabel && viewMode !== 'image') {
-                    selectedCharLabel.textContent = '読み込み中...';
-                }
-                // キャラ切替（差し替えではない）では自動生成せず、
-                // キャッシュが無ければ中央の生成ボタンを出す
-                refreshCurrentCard(charId, pendingForceFetchFromArtifacter, false);
-                pendingForceFetchFromArtifacter = false;
-
-                // 画像タブではフルカードデータを取らないため、名前だけ軽量に取得してラベル更新する。
-                // refreshCurrentCard の後（= 新しいキャラの差し替え状態が確定した後）に取得し、
-                // 直前キャラの差し替えキャラ/武器が新しいキャラの武器・地域背景に混入しないようにする
-                if (selectedCharLabel && viewMode === 'image') {
-                    (async () => {
-                        try {
-                            const method = getSavedCalcMethod(charId);
-                            const sel = getActiveSelection();
-                            const p = new URLSearchParams();
-                            p.set('calc_method', method);
-                            if (sel.fakeChar) p.set('fake_char', sel.fakeChar);
-                            if (sel.fakeWeapon) p.set('fake_weapon', sel.fakeWeapon);
-                            if (ver === 'beta') p.set('beta', 'true');
-                            const res = await fetch(`/api/card_data/${uid}/${charId}?${p}`);
-                            if (!res.ok) return;
-                            const data = await res.json();
-                            // 取得中にキャラや差し替えが変わっていたら適用しない
-                            const selNow = getActiveSelection();
-                            if (currentSelectedCharId === charId &&
-                                selNow.fakeChar === sel.fakeChar &&
-                                selNow.fakeWeapon === sel.fakeWeapon) {
-                                updateSelectedCharLabel(data);
-                                setLastKnownRealWeapon(data);
-                                setCurrentCharRegions(data.regions || []);
-                            }
-                        } catch (e) { /* ignore */ }
-                    })();
-                }
+            document.querySelectorAll('.char-thumb img').forEach(img => {
+                img.classList.remove('opacity-100', 'ring-2', 'ring-primary');
+                img.classList.add('opacity-50', 'grayscale-[0.3]');
             });
-        });
+            document.querySelectorAll('.check-badge').forEach(b => b.remove());
+
+            const activeImg = thumb.querySelector('img');
+            activeImg.classList.remove('opacity-50', 'grayscale-[0.3]');
+            activeImg.classList.add('opacity-100', 'ring-2', 'ring-primary');
+
+            const badgeHTML = `<div class="check-badge absolute top-0.5 right-0.5 bg-cyan-400 rounded-full p-0.5 ring-2 ring-white/30"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="text-black"><path d="M20 6 9 17l-5-5"></path></svg></div>`;
+            thumb.insertAdjacentHTML('beforeend', badgeHTML);
+
+            localStorage.setItem(`selected_char_${uid}`, charId);
+            if (selectedCharLabel && viewMode !== 'image') {
+                selectedCharLabel.textContent = '読み込み中...';
+            }
+            // キャラ切替（差し替えではない）では自動生成せず、
+            // キャッシュが無ければ中央の生成ボタンを出す
+            refreshCurrentCard(charId, forceFetch, false);
+            pendingForceFetchFromArtifacter = false;
+
+            // 画像タブではフルカードデータを取らないため、名前だけ軽量に取得してラベル更新する。
+            // refreshCurrentCard の後（= 新しいキャラの差し替え状態が確定した後）に取得し、
+            // 直前キャラの差し替えキャラ/武器が新しいキャラの武器・地域背景に混入しないようにする
+            if (selectedCharLabel && viewMode === 'image') {
+                (async () => {
+                    try {
+                        const method = getSavedCalcMethod(charId);
+                        const sel = getActiveSelection();
+                        const p = new URLSearchParams();
+                        p.set('calc_method', method);
+                        if (sel.fakeChar) p.set('fake_char', sel.fakeChar);
+                        if (sel.fakeWeapon) p.set('fake_weapon', sel.fakeWeapon);
+                        if (ver === 'beta') p.set('beta', 'true');
+                        const res = await fetch(`/api/card_data/${uid}/${charId}?${p}`);
+                        if (!res.ok) return;
+                        const data = await res.json();
+                        // 取得中にキャラや差し替えが変わっていたら適用しない
+                        const selNow = getActiveSelection();
+                        if (currentSelectedCharId === charId &&
+                            selNow.fakeChar === sel.fakeChar &&
+                            selNow.fakeWeapon === sel.fakeWeapon) {
+                            updateSelectedCharLabel(data);
+                            setLastKnownRealWeapon(data);
+                            setCurrentCharRegions(data.regions || []);
+                        }
+                    } catch (e) { /* ignore */ }
+                })();
+            }
+            return true;
+        }
+
+        function bindCharThumbClick(thumbEl) {
+            thumbEl.addEventListener('click', function() {
+                selectCharById(this.getAttribute('data-char-id'), pendingForceFetchFromArtifacter);
+            });
+        }
+
+        // 再取得後のキャラ一覧でサムネイル行を作り直す（クリック動作も再バインドする）
+        function renderCharThumbRow(charList) {
+            const row = document.getElementById('charThumbRow');
+            if (!row || !Array.isArray(charList) || charList.length === 0) return false;
+            row.innerHTML = '';
+            for (const ch of charList) {
+                const div = document.createElement('div');
+                div.className = 'relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 cursor-pointer char-thumb';
+                div.setAttribute('data-char-id', String(ch.id));
+                const img = document.createElement('img');
+                img.src = ch.icon;
+                img.className = 'w-full h-full bg-gradient-to-tr from-[rgba(49,43,71,0.53)] to-[rgba(102,115,150,0.42)] rounded-lg object-cover opacity-50 grayscale-[0.3] transition-all hover:opacity-100 drag-none';
+                div.appendChild(img);
+                bindCharThumbClick(div);
+                row.appendChild(div);
+            }
+            return true;
+        }
+
+        // 再取得後の選択解決: 選択中キャラが消えていたら「同じ位置」のキャラを選ぶ
+        function resolveCharAfterRefresh(prevSelectedCharId, prevSelectedIndex, charList) {
+            if (!charList || charList.length === 0) return prevSelectedCharId;
+            if (charList.some(ch => String(ch.id) === String(prevSelectedCharId))) return prevSelectedCharId;
+            const idx = prevSelectedIndex >= 0 ? Math.min(prevSelectedIndex, charList.length - 1) : 0;
+            return String(charList[idx].id);
+        }
+
+        document.querySelectorAll('.char-thumb').forEach(bindCharThumbClick);
 
         scoreCalcSelect.addEventListener('change', function() {
             if (currentSelectedCharId) {
@@ -2982,12 +3057,22 @@
             setTopImageButtonsDisabled(true);
             regenerateApiBtn.textContent = '取得中...';
 
+            // 再取得前の選択位置を記録（選択キャラが消えた場合の「同じ位置」フォールバック用）
+            const prevSelectedCharId = currentSelectedCharId;
+            let prevSelectedIndex = -1;
+            document.querySelectorAll('.char-thumb').forEach((t, i) => {
+                if (t.getAttribute('data-char-id') === prevSelectedCharId) prevSelectedIndex = i;
+            });
+
+            let charList = null;
             try {
-                const res = await fetch(`/refresh_uid/${uid}`, { method: 'POST' });
+                const res = await fetch(`/refresh_uid/${uid}?ver=${ver}`, { method: 'POST' });
                 if (!res.ok) {
                     const errBody = await res.json().catch(() => ({}));
                     throw new Error(errBody.detail || `再取得に失敗しました (status: ${res.status})`);
                 }
+                const data = await res.json();
+                if (data && Array.isArray(data.char_list)) charList = data.char_list;
             } catch (e) {
                 console.error('Enka APIの再取得に失敗しました:', e);
                 alert(`データの再取得に失敗しました。\n${e.message}\n（キャッシュ済みのデータで再生成します）`);
@@ -2999,7 +3084,17 @@
             // Enka API へのリクエストが発生したタイミングでキャッシュ済み画像を破棄し、
             // 必ず作り直した画像が表示されるようにする
             await clearCardImageCache();
-            refreshCurrentCard(currentSelectedCharId, true);
+
+            if (charList && charList.length > 0) {
+                // 再取得でキャラ一覧が変わった場合はサムネイル行を書き換える。
+                // 選択中キャラが消えた場合は「同じ位置」のキャラを選んで表示する
+                renderCharThumbRow(charList);
+                const nextCharId = resolveCharAfterRefresh(prevSelectedCharId, prevSelectedIndex, charList);
+                selectCharById(nextCharId, true);
+            } else {
+                // 一覧が取れなかった場合は従来どおり現選択キャラで再生成する
+                refreshCurrentCard(prevSelectedCharId, true);
+            }
         });
 
         // 再生成：Enka API にはアクセスせず、カード画像だけをサーバーに作り直してもらう。
@@ -3015,7 +3110,7 @@
                 latestHtmlRequestToken++;
             }
             // 既存キャッシュを消してサーバー再生成（「生成」「再生成」共通）
-            await deleteCachedCardImage(buildCardImageUrl(currentSelectedCharId));
+            await deleteCachedCardImage(await getSignedCardUrl(buildCardImageUrl(currentSelectedCharId)));
             loadCardImage(currentSelectedCharId, true);
         });
     </script>
