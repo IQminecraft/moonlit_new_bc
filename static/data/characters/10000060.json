@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Yelan_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 206001,
+      "icon": "UI_AvatarIcon_YelanCostumeSummer",
+      "quality": 4
+    },
+    {
+      "id": 206000,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Yaoyao_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 207701,
+      "icon": "UI_AvatarIcon_YaoyaoCostumeWinter",
+      "quality": 4
+    },
+    {
+      "id": 207700,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

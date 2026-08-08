@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Ningguang_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 202701,
+      "icon": "UI_AvatarIcon_NingguangCostumeFloral",
+      "quality": 4
+    },
+    {
+      "id": 202700,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

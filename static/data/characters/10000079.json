@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Dehya_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 207900,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

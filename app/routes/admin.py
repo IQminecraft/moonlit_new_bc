@@ -232,16 +232,36 @@ async def admin_action(request: Request):
         dm = _get_data_manager()
         if action == "fetch_beta_nanoka_json":
             return dm.fetch_beta_nanoka_json()
+        if action == "fetch_beta_nanoka_json_characters":
+            return dm.fetch_beta_nanoka_json("characters")
+        if action == "fetch_beta_nanoka_json_weapons":
+            return dm.fetch_beta_nanoka_json("weapons")
+        if action == "fetch_beta_nanoka_json_artifacts":
+            return dm.fetch_beta_nanoka_json("artifacts")
         if action == "fetch_beta_nanoka_assets":
             return dm.fetch_beta_nanoka_assets()
         if action == "fetch_beta_nanoka":
             return dm.fetch_beta_nanoka(download_images=True)
+        if action == "fetch_beta_nanoka_costumes":
+            return dm.fetch_beta_nanoka_costumes()
+        if action == "fetch_beta_nanoka_costumes_missing":
+            return dm.fetch_beta_nanoka_costumes_missing()
         if action == "fetch_live_nanoka_json":
             return dm.fetch_live_nanoka_json()
+        if action == "fetch_live_nanoka_json_characters":
+            return dm.fetch_live_nanoka_json("characters")
+        if action == "fetch_live_nanoka_json_weapons":
+            return dm.fetch_live_nanoka_json("weapons")
+        if action == "fetch_live_nanoka_json_artifacts":
+            return dm.fetch_live_nanoka_json("artifacts")
         if action == "fetch_live_nanoka_assets":
             return dm.fetch_live_nanoka_assets()
         if action == "fetch_live_nanoka":
             return dm.fetch_live_nanoka()
+        if action == "fetch_live_nanoka_costumes":
+            return dm.fetch_live_nanoka_costumes()
+        if action == "fetch_live_nanoka_costumes_missing":
+            return dm.fetch_live_nanoka_costumes_missing()
         if action == "version_upgrade_live":
             return dm.version_upgrade_live()
         if action in ("fetch_beta_lunaris", "fetch_gachabase", "promote"):

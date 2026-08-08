@@ -54,5 +54,17 @@
     {
       "icon": "UI_Talent_S_PlayerElectric_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 200501,
+      "icon": "UI_AvatarIcon_PlayerBoyCostumeCWXR",
+      "quality": 4
+    },
+    {
+      "id": 200500,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

@@ -60,5 +60,17 @@
     {
       "icon": "UI_Talent_S_Fischl_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 203101,
+      "icon": "UI_AvatarIcon_FischlCostumeHighness",
+      "quality": 4
+    },
+    {
+      "id": 203100,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

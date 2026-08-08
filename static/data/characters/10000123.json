@@ -60,5 +60,17 @@
     {
       "icon": "UI_Talent_S_Durin_06"
     }
+  ],
+  "costume": [
+    {
+      "id": 212301,
+      "icon": "UI_AvatarIcon_DurinCostumeWic",
+      "quality": 4
+    },
+    {
+      "id": 212300,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

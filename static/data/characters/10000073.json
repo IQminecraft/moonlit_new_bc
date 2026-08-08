@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Nahida_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 207300,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

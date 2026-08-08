@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Sayu_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 205300,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

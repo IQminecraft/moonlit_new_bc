@@ -10,8 +10,8 @@ from app.card.stats import (
 from app.card.special import (
     SPECIAL_ELEMENT_CHARACTERS, build_special_energy_hint_map,
     resolve_special_avatar_id, resolve_datas_path, resolve_list_path,
-    resolve_display_skill_levels, _special_raw_id, _NO_CONSTELLATION_CHARS,
-    _NO_FRIENDSHIP_CHARS, _ELEMENT_DMG_BUFF_ID,
+    resolve_display_skill_levels, resolve_costume_icon, resolve_costume_splash, _special_raw_id,
+    _NO_CONSTELLATION_CHARS, _NO_FRIENDSHIP_CHARS, _ELEMENT_DMG_BUFF_ID,
 )
 from app.card.region import build_region_info, find_regions_for_character
 
@@ -46,6 +46,12 @@ def _build_char_list_from_showcase(showcase_data: dict, beta: str) -> list:
             jsondata = _load_json_auto(json_path_char)
             icon_suffix = str(jsondata["icon"])
             icon_path = resolve_datas_path(f"static/assets/characters/{icon_suffix}.webp", beta)
+            # コスチューム装備中（costumeId あり）はコスチュームアイコンをサムネイルに使用
+            costume_icon = resolve_costume_icon(jsondata, avatar)
+            if costume_icon:
+                costume_path = resolve_datas_path(f"static/assets/characters/{costume_icon}.webp", beta)
+                if os.path.exists(costume_path):
+                    icon_path = costume_path
             char_entry = {
                 "id": current_avatar_id,
                 "icon": icon_path,
@@ -426,7 +432,9 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
     splash_path = ""
     try:
         icon_name = str(chardatas.get("icon", ""))
-        if icon_name:
+        # 展示データの costumeId があればコスチュームスプラッシュ（UI_Costume_*）を使用
+        splash_path = resolve_costume_splash(chardatas, target_avatar_info, beta)
+        if not splash_path and icon_name:
             splash_raw = f"static/assets/splash/{icon_name.replace('AvatarIcon', 'Gacha_AvatarImg')}.webp"
             splash_path = resolve_datas_path(splash_raw, beta)
     except Exception:

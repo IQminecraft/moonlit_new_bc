@@ -3,46 +3,15 @@
   "beta_version": "6.7.54",
   "source": "nanoka",
   "pending": {
-    "characters": [
-      "10000005-5",
-      "10000007-5",
-      "10000117-5",
-      "10000118-5",
-      "10000134",
-      "10000135",
-      "10000148",
-      "10000150"
-    ],
-    "weapons": [
-      "11435",
-      "11436",
-      "11520",
-      "11521",
-      "12435",
-      "12436",
-      "13435",
-      "13436",
-      "14435",
-      "14436",
-      "15435",
-      "15436",
-      "224001",
-      "224002",
-      "224003",
-      "224004",
-      "224005",
-      "224006",
-      "224007",
-      "224008",
-      "380003"
-    ],
+    "characters": [],
+    "weapons": [],
     "artifacts": [
       "15047",
       "15048"
     ]
   },
-  "last_beta_fetch": "2026-08-05T14:37:17+09:00",
-  "last_live_fetch": "2026-08-04T20:18:28+09:00",
+  "last_beta_fetch": "2026-08-08T21:32:38+09:00",
+  "last_live_fetch": "2026-08-08T21:35:10+09:00",
   "last_promote": null,
   "history": [
     {
@@ -103,6 +72,306 @@
           "15048"
         ]
       }
+    },
+    {
+      "at": "2026-08-08T20:57:42+09:00",
+      "action": "fetch_live_nanoka_costumes",
+      "detail": {
+        "source": "nanoka",
+        "ok": true,
+        "kind": "live_costume_assets",
+        "characters": 140,
+        "icons": 2,
+        "saved": 2
+      }
+    },
+    {
+      "at": "2026-08-08T21:03:12+09:00",
+      "action": "fetch_beta_nanoka_costumes",
+      "detail": {
+        "source": "nanoka",
+        "ok": true,
+        "kind": "beta_costume_assets",
+        "characters": 8,
+        "icons": 0,
+        "saved": 0
+      }
+    },
+    {
+      "at": "2026-08-08T21:03:23+09:00",
+      "action": "fetch_live_nanoka_costumes",
+      "detail": {
+        "source": "nanoka",
+        "ok": true,
+        "kind": "live_costume_assets",
+        "characters": 140,
+        "icons": 2,
+        "saved": 2
+      }
+    },
+    {
+      "at": "2026-08-08T21:08:29+09:00",
+      "action": "fetch_beta_nanoka_json",
+      "detail": {
+        "live": "6.7",
+        "beta": "6.7.54",
+        "characters": [
+          "10000005-5",
+          "10000007-5",
+          "10000117-5",
+          "10000118-5",
+          "10000134",
+          "10000135",
+          "10000148",
+          "10000150"
+        ],
+        "weapons": [
+          "11435",
+          "11436",
+          "11520",
+          "11521",
+          "12435",
+          "12436",
+          "13435",
+          "13436",
+          "14435",
+          "14436",
+          "15435",
+          "15436",
+          "224001",
+          "224002",
+          "224003",
+          "224004",
+          "224005",
+          "224006",
+          "224007",
+          "224008",
+          "380003"
+        ],
+        "artifacts": [
+          "15047",
+          "15048"
+        ]
+      }
+    },
+    {
+      "at": "2026-08-08T21:08:31+09:00",
+      "action": "fetch_beta_nanoka_assets",
+      "detail": {
+        "source": "nanoka",
+        "ok": true,
+        "kind": "beta_assets",
+        "characters": 8,
+        "character_ids": [
+          "10000005-5",
+          "10000007-5",
+          "10000117-5",
+          "10000118-5",
+          "10000134",
+          "10000135",
+          "10000148",
+          "10000150"
+        ],
+        "weapons": 21,
+        "weapon_ids": [
+          "11435",
+          "11436",
+          "11520",
+          "11521",
+          "12435",
+          "12436",
+          "13435",
+          "13436",
+          "14435",
+          "14436",
+          "15435",
+          "15436",
+          "224001",
+          "224002",
+          "224003",
+          "224004",
+          "224005",
+          "224006",
+          "224007",
+          "224008",
+          "380003"
+        ],
+        "artifacts": 10,
+        "artifact_ids": [
+          "15047",
+          "15048"
+        ]
+      }
+    },
+    {
+      "at": "2026-08-08T21:11:15+09:00",
+      "action": "fetch_live_nanoka_json",
+      "detail": {
+        "live": "6.7",
+        "characters": 140,
+        "weapons": 247,
+        "lists": [
+          "characters.json",
+          "weapons.json",
+          "artifacts.json"
+        ]
+      }
+    },
+    {
+      "at": "2026-08-08T21:11:34+09:00",
+      "action": "fetch_live_nanoka_costumes",
+      "detail": {
+        "source": "nanoka",
+        "ok": true,
+        "kind": "live_costume_assets",
+        "characters": 140,
+        "icons": 30,
+        "saved": 30
+      }
+    },
+    {
+      "at": "2026-08-08T21:32:34+09:00",
+      "action": "fetch_live_nanoka_json_artifacts",
+      "detail": {
+        "live": "6.7",
+        "scope": "artifacts",
+        "characters": 0,
+        "weapons": 0,
+        "lists": [
+          "artifacts.json"
+        ]
+      }
+    },
+    {
+      "at": "2026-08-08T21:32:38+09:00",
+      "action": "fetch_beta_nanoka_json_artifacts",
+      "detail": {
+        "live": "6.7",
+        "beta": "6.7.54",
+        "scope": "artifacts",
+        "characters": [],
+        "weapons": [],
+        "artifacts": [
+          "15047",
+          "15048"
+        ]
+      }
+    },
+    {
+      "at": "2026-08-08T21:35:09+09:00",
+      "action": "fetch_live_nanoka_costumes_missing",
+      "detail": {
+        "source": "nanoka",
+        "ok": true,
+        "kind": "live_costume_missing",
+        "characters": 140,
+        "icons": 30,
+        "missing": 28,
+        "saved": 28,
+        "failed": 0
+      }
+    },
+    {
+      "at": "2026-08-08T21:35:10+09:00",
+      "action": "fetch_live_nanoka_json_artifacts",
+      "detail": {
+        "live": "6.7",
+        "scope": "artifacts",
+        "characters": 0,
+        "weapons": 0,
+        "lists": [
+          "artifacts.json"
+        ]
+      }
+    },
+    {
+      "at": "2026-08-08T21:35:11+09:00",
+      "action": "fetch_beta_nanoka_costumes_missing",
+      "detail": {
+        "source": "nanoka",
+        "ok": true,
+        "kind": "beta_costume_missing",
+        "characters": 8,
+        "icons": 2,
+        "missing": 2,
+        "saved": 2,
+        "failed": 0
+      }
+    },
+    {
+      "at": "2026-08-08T21:37:41+09:00",
+      "action": "fetch_live_nanoka_costumes",
+      "detail": {
+        "source": "nanoka",
+        "ok": true,
+        "kind": "live_costume_assets",
+        "characters": 140,
+        "icons": 30,
+        "missing": 0,
+        "saved": 0,
+        "failed": 0
+      }
+    },
+    {
+      "at": "2026-08-08T21:37:44+09:00",
+      "action": "fetch_live_nanoka_costumes",
+      "detail": {
+        "source": "nanoka",
+        "ok": true,
+        "kind": "live_costume_assets",
+        "characters": 140,
+        "icons": 30,
+        "missing": 0,
+        "saved": 0,
+        "failed": 0
+      }
+    },
+    {
+      "at": "2026-08-08T21:37:45+09:00",
+      "action": "fetch_live_nanoka_costumes_missing",
+      "detail": {
+        "source": "nanoka",
+        "ok": true,
+        "kind": "live_costume_missing",
+        "characters": 140,
+        "icons": 30,
+        "missing": 0,
+        "saved": 0,
+        "failed": 0
+      }
+    },
+    {
+      "at": "2026-08-08T21:38:13+09:00",
+      "action": "fetch_beta_nanoka_costumes",
+      "detail": {
+        "source": "nanoka",
+        "ok": true,
+        "kind": "beta_costume_assets",
+        "characters": 8,
+        "icons": 2,
+        "missing": 0,
+        "saved": 0,
+        "failed": 0
+      }
+    },
+    {
+      "at": "2026-08-08T21:38:14+09:00",
+      "action": "fetch_beta_nanoka_costumes_missing",
+      "detail": {
+        "source": "nanoka",
+        "ok": true,
+        "kind": "beta_costume_missing",
+        "characters": 8,
+        "icons": 2,
+        "missing": 0,
+        "saved": 0,
+        "failed": 0
+      }
     }
-  ]
+  ],
+  "last_live_costume_fetch": "2026-08-08T21:37:44+09:00",
+  "last_beta_costume_fetch": "2026-08-08T21:38:13+09:00",
+  "last_beta_assets_fetch": "2026-08-08T21:08:31+09:00",
+  "last_live_costume_missing_fetch": "2026-08-08T21:37:45+09:00",
+  "last_beta_costume_missing_fetch": "2026-08-08T21:38:14+09:00"
 }

@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Jahoda_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 212400,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

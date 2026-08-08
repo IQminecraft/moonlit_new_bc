@@ -71,6 +71,19 @@ def transform_character(data: dict) -> dict:
     ]
     new_data["constellations"] = new_cons
 
+    # コスチューム: chara_info.costume から id / icon / quality のみ保持
+    costumes = data.get("chara_info", {}).get("costume") or []
+    new_costumes = []
+    for c in costumes:
+        if not isinstance(c, dict) or c.get("id") is None:
+            continue
+        new_costumes.append({
+            "id": c.get("id"),
+            "icon": c.get("icon", ""),
+            "quality": c.get("quality", 0),
+        })
+    new_data["costume"] = new_costumes
+
     return new_data
 
 

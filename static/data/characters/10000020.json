@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Razor_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 202000,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

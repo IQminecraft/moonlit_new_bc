@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Aino_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 212100,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

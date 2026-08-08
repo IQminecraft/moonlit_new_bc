@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Rosaria_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 204501,
+      "icon": "UI_AvatarIcon_RosariaCostumeWic",
+      "quality": 4
+    },
+    {
+      "id": 204500,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

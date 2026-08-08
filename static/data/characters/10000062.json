@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Aloy_Lock"
     }
+  ],
+  "costume": [
+    {
+      "id": 206200,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

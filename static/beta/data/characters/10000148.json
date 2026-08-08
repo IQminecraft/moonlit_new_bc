@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Alyosha_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 214800,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

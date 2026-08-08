@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Charlotte_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 208801,
+      "icon": "UI_AvatarIcon_CharlotteCostumeDong",
+      "quality": 4
+    },
+    {
+      "id": 208800,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

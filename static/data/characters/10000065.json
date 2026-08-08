@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Shinobu_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 206500,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

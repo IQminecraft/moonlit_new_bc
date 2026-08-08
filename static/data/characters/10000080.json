@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Mika_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 208000,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

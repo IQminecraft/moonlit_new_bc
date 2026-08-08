@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Lisa_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 200601,
+      "icon": "UI_AvatarIcon_LisaCostumeStudentin",
+      "quality": 4
+    },
+    {
+      "id": 200600,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

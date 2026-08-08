@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Ganyu_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 203701,
+      "icon": "UI_AvatarIcon_GanyuCostumeYu",
+      "quality": 4
+    },
+    {
+      "id": 203700,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Diluc_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 201601,
+      "icon": "UI_AvatarIcon_DilucCostumeFlamme",
+      "quality": 5
+    },
+    {
+      "id": 201600,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

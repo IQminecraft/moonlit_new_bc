@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Shenhe_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 206301,
+      "icon": "UI_AvatarIcon_ShenheCostumeDai",
+      "quality": 4
+    },
+    {
+      "id": 206300,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

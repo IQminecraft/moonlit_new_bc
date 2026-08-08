@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Alhatham_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 207800,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

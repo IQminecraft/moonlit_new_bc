@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Bennett_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 203201,
+      "icon": "UI_AvatarIcon_BennettCostumeSummer",
+      "quality": 4
+    },
+    {
+      "id": 203200,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

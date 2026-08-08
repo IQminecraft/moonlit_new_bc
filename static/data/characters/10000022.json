@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Venti_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 202200,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

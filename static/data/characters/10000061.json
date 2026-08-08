@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Momoka_03"
     }
+  ],
+  "costume": [
+    {
+      "id": 206101,
+      "icon": "UI_AvatarIcon_MomokaCostumeErrantry",
+      "quality": 4
+    },
+    {
+      "id": 206100,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

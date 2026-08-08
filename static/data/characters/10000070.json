@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Nilou_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 207001,
+      "icon": "UI_AvatarIcon_NilouCostumeFairy",
+      "quality": 4
+    },
+    {
+      "id": 207000,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

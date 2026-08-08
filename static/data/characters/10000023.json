@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Xiangling_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 202301,
+      "icon": "UI_AvatarIcon_XianglingCostumeWinter",
+      "quality": 4
+    },
+    {
+      "id": 202300,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

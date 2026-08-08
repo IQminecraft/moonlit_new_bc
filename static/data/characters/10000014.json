@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Barbara_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 201401,
+      "icon": "UI_AvatarIcon_BarbaraCostumeSummertime",
+      "quality": 4
+    },
+    {
+      "id": 201400,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

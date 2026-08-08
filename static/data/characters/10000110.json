@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Iansan_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 211000,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

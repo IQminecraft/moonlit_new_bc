@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Chongyun_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 203600,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

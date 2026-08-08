@@ -264,7 +264,33 @@ class DataManager:
             splash = str(avatar).replace("AvatarIcon", "Gacha_AvatarImg")
             self._download_webp(splash, splash_dir)
 
-        return {"ok": True, "icons": len(icons), "saved": saved, "name": data.get("name", char_id)}
+        # コスチューム画像（icon が空でないもののみ assets/characters へ）
+        costume_icons = list({
+            c.get("icon") for c in (data.get("costume") or [])
+            if isinstance(c, dict) and c.get("icon")
+        })
+        costume_saved = 0
+        for icon in costume_icons:
+            if self._download_webp(icon, char_img_dir):
+                costume_saved += 1
+
+        # コスチュームスプラッシュ（AvatarIcon→Costume 置換、assets/splash へ）
+        costume_splash_saved = 0
+        for icon in costume_icons:
+            splash_name = str(icon).replace("AvatarIcon", "Costume")
+            if splash_name != icon and self._download_webp(splash_name, splash_dir):
+                costume_splash_saved += 1
+
+        return {
+            "ok": True,
+            "icons": len(icons),
+            "saved": saved,
+            "costume_icons": len(costume_icons),
+            "costume_saved": costume_saved,
+            "costume_splashes": len(costume_icons),
+            "costume_splash_saved": costume_splash_saved,
+            "name": data.get("name", char_id),
+        }
 
 
     # ------------------------------------------------------------------ nanoka helpers
@@ -280,15 +306,18 @@ class DataManager:
         r.raise_for_status()
         return list(r.json().keys())
 
-    def _save_nanoka_lists(self, version: str, list_dir: str) -> List[str]:
+    def _save_nanoka_lists(self, version: str, list_dir: str, scope: str = "all") -> List[str]:
         saved = []
         mapping = [
             ("characters.json", "character", characters_list),
             ("weapons.json", "weapon", weapons_list),
             ("artifacts.json", "artifact", artifacts_list),
         ]
+        scope_kind = {"characters": "character", "weapons": "weapon", "artifacts": "artifact"}
         _ensure_dir(list_dir)
         for filename, kind, module in mapping:
+            if scope != "all" and scope_kind.get(scope) != kind:
+                continue
             try:
                 url = f"https://static.nanoka.cc/gi/{version}/{kind}.json"
                 raw = requests.get(url, timeout=20).json()
@@ -331,10 +360,11 @@ class DataManager:
         return sorted(f[:-5] for f in os.listdir(directory) if f.endswith(".json"))
 
     # ------------------------------------------------------------------ BETA JSON (nanoka 差分)
-    def fetch_beta_nanoka_json(self) -> Dict[str, Any]:
-        """beta と live の差分 JSON（キャラ/武器/リスト）のみ static/beta/data に保存。"""
+    def fetch_beta_nanoka_json(self, scope: str = "all") -> Dict[str, Any]:
+        """beta と live の差分 JSON のみ static/beta/data に保存（scope: characters/weapons/artifacts/all）。"""
         self._require_convert()
-        result: Dict[str, Any] = {"source": "nanoka", "ok": False, "kind": "beta_json"}
+        kind = "beta_json" if scope == "all" else f"beta_json_{scope}"
+        result: Dict[str, Any] = {"source": "nanoka", "ok": False, "kind": kind}
         try:
             live, beta = self._nanoka_manifest()
             result["live_version"] = live
@@ -350,54 +380,61 @@ class DataManager:
             _ensure_dir(weapon_dir)
 
             ok_chars, ok_weapons = [], []
-            for char_id in added_chars:
-                url = f"https://static.nanoka.cc/gi/{beta}/ja/character/{char_id}.json"
-                try:
-                    response = requests.get(url, timeout=15)
-                    response.raise_for_status()
-                    converted = characters.from_nanoka(response.json())
-                    _safe_json_dump(os.path.join(char_dir, f"{char_id}.json"), converted)
-                    ok_chars.append(char_id)
-                except Exception as e:
-                    print(f"[nanoka beta json] char {char_id}: {e}")
+            if scope in ("characters", "all"):
+                for char_id in added_chars:
+                    url = f"https://static.nanoka.cc/gi/{beta}/ja/character/{char_id}.json"
+                    try:
+                        response = requests.get(url, timeout=15)
+                        response.raise_for_status()
+                        converted = characters.from_nanoka(response.json())
+                        _safe_json_dump(os.path.join(char_dir, f"{char_id}.json"), converted)
+                        ok_chars.append(char_id)
+                    except Exception as e:
+                        print(f"[nanoka beta json] char {char_id}: {e}")
 
-            for weapon_id in added_weapons:
-                url = f"https://static.nanoka.cc/gi/{beta}/ja/weapon/{weapon_id}.json"
-                try:
-                    response = requests.get(url, timeout=15)
-                    response.raise_for_status()
-                    converted = weapons.from_nanoka(response.json())
-                    _safe_json_dump(os.path.join(weapon_dir, f"{weapon_id}.json"), converted)
-                    ok_weapons.append(weapon_id)
-                except Exception as e:
-                    print(f"[nanoka beta json] weapon {weapon_id}: {e}")
+            if scope in ("weapons", "all"):
+                for weapon_id in added_weapons:
+                    url = f"https://static.nanoka.cc/gi/{beta}/ja/weapon/{weapon_id}.json"
+                    try:
+                        response = requests.get(url, timeout=15)
+                        response.raise_for_status()
+                        converted = weapons.from_nanoka(response.json())
+                        _safe_json_dump(os.path.join(weapon_dir, f"{weapon_id}.json"), converted)
+                        ok_weapons.append(weapon_id)
+                    except Exception as e:
+                        print(f"[nanoka beta json] weapon {weapon_id}: {e}")
 
-            lists_saved = self._save_nanoka_lists(beta, self.beta_dir("lists"))
+            lists_saved = self._save_nanoka_lists(beta, self.beta_dir("lists"), scope)
 
             state = self.get_state()
             state["live_version"] = live
             state["beta_version"] = beta
             state["source"] = "nanoka"
-            state["pending"] = {
-                "characters": ok_chars,
-                "weapons": ok_weapons,
-                "artifacts": added_arts,
-            }
+            pending = dict(state.get("pending") or {})
+            if scope in ("characters", "all"):
+                pending["characters"] = ok_chars
+            if scope in ("weapons", "all"):
+                pending["weapons"] = ok_weapons
+            if scope in ("artifacts", "all"):
+                pending["artifacts"] = added_arts
+            state["pending"] = pending
             state["last_beta_fetch"] = _now_iso()
-            self._append_history(state, "fetch_beta_nanoka_json", {
-                "live": live, "beta": beta,
+            hist_key = "fetch_beta_nanoka_json" if scope == "all" else f"fetch_beta_nanoka_json_{scope}"
+            self._append_history(state, hist_key, {
+                "live": live, "beta": beta, "scope": scope,
                 "characters": ok_chars, "weapons": ok_weapons, "artifacts": added_arts,
             })
             self.save_state(state)
 
             result.update({
                 "ok": True,
+                "scope": scope,
                 "added_characters": ok_chars,
                 "added_weapons": ok_weapons,
                 "added_artifacts": added_arts,
                 "lists": lists_saved,
             })
-            self.append_log("fetch_beta_nanoka_json", True, f"beta={beta}", result)
+            self.append_log(hist_key, True, f"beta={beta} scope={scope}", result)
             return result
         except Exception as e:
             result["error"] = str(e)
@@ -467,18 +504,15 @@ class DataManager:
         }
 
     # ------------------------------------------------------------------ LIVE JSON
-    def fetch_live_nanoka_json(self) -> Dict[str, Any]:
-        """live バージョンの JSON（全キャラ/全武器/リスト）を static/data に保存。"""
+    def fetch_live_nanoka_json(self, scope: str = "all") -> Dict[str, Any]:
+        """live バージョンの JSON を static/data に保存（scope: characters/weapons/artifacts/all）。"""
         self._require_convert()
-        result: Dict[str, Any] = {"source": "nanoka", "ok": False, "kind": "live_json"}
+        kind = "live_json" if scope == "all" else f"live_json_{scope}"
+        result: Dict[str, Any] = {"source": "nanoka", "ok": False, "kind": kind}
         try:
             live, beta = self._nanoka_manifest()
             result["live_version"] = live
             result["beta_version"] = beta
-
-            live_chars = self._nanoka_keys(live, "character")
-            live_weapons = self._nanoka_keys(live, "weapon")
-            live_arts = self._nanoka_keys(live, "artifact")
 
             char_dir = self.live_dir("characters")
             weapon_dir = self.live_dir("weapons")
@@ -486,40 +520,45 @@ class DataManager:
             _ensure_dir(weapon_dir)
 
             ok_chars = 0
-            for m in live_chars:
-                url = f"https://static.nanoka.cc/gi/{live}/ja/character/{m}.json"
-                try:
-                    r = requests.get(url, timeout=15)
-                    r.raise_for_status()
-                    converted = characters.from_nanoka(r.json())
-                    _safe_json_dump(os.path.join(char_dir, f"{m}.json"), converted)
-                    ok_chars += 1
-                except Exception as e:
-                    print(f"[nanoka live json] char {m}: {e}")
+            if scope in ("characters", "all"):
+                for m in self._nanoka_keys(live, "character"):
+                    url = f"https://static.nanoka.cc/gi/{live}/ja/character/{m}.json"
+                    try:
+                        r = requests.get(url, timeout=15)
+                        r.raise_for_status()
+                        converted = characters.from_nanoka(r.json())
+                        _safe_json_dump(os.path.join(char_dir, f"{m}.json"), converted)
+                        ok_chars += 1
+                    except Exception as e:
+                        print(f"[nanoka live json] char {m}: {e}")
 
             ok_weapons = 0
-            for m in live_weapons:
-                url = f"https://static.nanoka.cc/gi/{live}/ja/weapon/{m}.json"
-                try:
-                    r = requests.get(url, timeout=15)
-                    r.raise_for_status()
-                    converted = weapons.from_nanoka(r.json())
-                    _safe_json_dump(os.path.join(weapon_dir, f"{m}.json"), converted)
-                    ok_weapons += 1
-                except Exception as e:
-                    print(f"[nanoka live json] weapon {m}: {e}")
+            if scope in ("weapons", "all"):
+                for m in self._nanoka_keys(live, "weapon"):
+                    url = f"https://static.nanoka.cc/gi/{live}/ja/weapon/{m}.json"
+                    try:
+                        r = requests.get(url, timeout=15)
+                        r.raise_for_status()
+                        converted = weapons.from_nanoka(r.json())
+                        _safe_json_dump(os.path.join(weapon_dir, f"{m}.json"), converted)
+                        ok_weapons += 1
+                    except Exception as e:
+                        print(f"[nanoka live json] weapon {m}: {e}")
 
-            lists_saved = self._save_nanoka_lists(live, self.live_dir("lists"))
+            lists_saved = self._save_nanoka_lists(live, self.live_dir("lists"), scope)
+            live_arts = self._nanoka_keys(live, "artifact") if scope in ("artifacts", "all") else []
 
             state = self.get_state()
             state["live_version"] = live
             state["beta_version"] = beta
             state["source"] = "nanoka"
             state["last_live_fetch"] = _now_iso()
-            # バージョンアップ後は pending をクリア
-            state["pending"] = {"characters": [], "weapons": [], "artifacts": []}
-            self._append_history(state, "fetch_live_nanoka_json", {
-                "live": live,
+            # 全件取得時のみ pending をクリア
+            if scope == "all":
+                state["pending"] = {"characters": [], "weapons": [], "artifacts": []}
+            hist_key = "fetch_live_nanoka_json" if scope == "all" else f"fetch_live_nanoka_json_{scope}"
+            self._append_history(state, hist_key, {
+                "live": live, "scope": scope,
                 "characters": ok_chars,
                 "weapons": ok_weapons,
                 "lists": lists_saved,
@@ -528,12 +567,13 @@ class DataManager:
 
             result.update({
                 "ok": True,
+                "scope": scope,
                 "character_count": ok_chars,
                 "weapon_count": ok_weapons,
                 "artifact_list_count": len(live_arts),
                 "lists": lists_saved,
             })
-            self.append_log("fetch_live_nanoka_json", True, f"live={live}", result)
+            self.append_log(hist_key, True, f"live={live} scope={scope}", result)
             return result
         except Exception as e:
             result["error"] = str(e)
@@ -600,6 +640,118 @@ class DataManager:
             "assets": assets_res,
             "live_version": json_res.get("live_version"),
         }
+
+    # ------------------------------------------------------------------ COSTUME ASSETS
+    def _costume_icons_from_json(self, char_ids: List[str], mode: str) -> List[str]:
+        """キャラJSONの costume 配列から icon が空でないものを収集（live/beta 共通）。"""
+        base = self.live_dir("characters") if mode == "live" else self.beta_dir("characters")
+        icons = set()
+        for cid in char_ids:
+            data = _safe_json_load(os.path.join(base, f"{cid}.json"))
+            if not data:
+                continue
+            for c in data.get("costume") or []:
+                if isinstance(c, dict) and c.get("icon"):
+                    icons.add(c["icon"])
+        return sorted(icons)
+
+    def _download_costume_assets(self, char_ids: List[str], mode: str, missing_only: bool = False) -> Dict[str, Any]:
+        """コスチューム画像のみ取得（アイコン→assets/characters、スプラッシュ→assets/splash）。
+        missing_only=True なら存在しない画像のみ取得する。"""
+        char_dest = self.live_assets("characters") if mode == "live" else self.beta_assets("characters")
+        splash_dest = self.live_assets("splash") if mode == "live" else self.beta_assets("splash")
+        icons = self._costume_icons_from_json(char_ids, mode)
+        missing, saved, failed = 0, 0, 0
+        for icon in icons:
+            targets = [(icon, char_dest)]
+            splash_name = str(icon).replace("AvatarIcon", "Costume")
+            if splash_name != icon:
+                targets.append((splash_name, splash_dest))
+            for name, dest in targets:
+                if os.path.exists(os.path.join(dest, f"{name}.webp")):
+                    continue  # 既存スキップ
+                missing += 1
+                if self._download_webp(name, dest):
+                    saved += 1
+                else:
+                    failed += 1
+        return {"icons": len(icons), "missing": missing, "saved": saved, "failed": failed}
+
+    def fetch_beta_nanoka_costumes(self) -> Dict[str, Any]:
+        """beta の全キャラJSONからコスチューム画像のみ取得。"""
+        result: Dict[str, Any] = {"source": "nanoka", "ok": False, "kind": "beta_costume_assets"}
+        try:
+            chars = self._list_json_ids(self.beta_dir("characters"))
+            r = self._download_costume_assets(chars, "beta")
+            result.update({"ok": True, "characters": len(chars), **r})
+            state = self.get_state()
+            state["last_beta_costume_fetch"] = _now_iso()
+            self._append_history(state, "fetch_beta_nanoka_costumes", result)
+            self.save_state(state)
+            self.append_log("fetch_beta_nanoka_costumes", True, f"costumes={r['saved']}/{r['icons']}", result)
+            return result
+        except Exception as e:
+            result["error"] = str(e)
+            result["traceback"] = traceback.format_exc()
+            self.append_log("fetch_beta_nanoka_costumes", False, str(e))
+            return result
+
+    def fetch_live_nanoka_costumes(self) -> Dict[str, Any]:
+        """live の全キャラJSONからコスチューム画像のみ取得。"""
+        result: Dict[str, Any] = {"source": "nanoka", "ok": False, "kind": "live_costume_assets"}
+        try:
+            chars = self._list_json_ids(self.live_dir("characters"))
+            r = self._download_costume_assets(chars, "live")
+            result.update({"ok": True, "characters": len(chars), **r})
+            state = self.get_state()
+            state["last_live_costume_fetch"] = _now_iso()
+            self._append_history(state, "fetch_live_nanoka_costumes", result)
+            self.save_state(state)
+            self.append_log("fetch_live_nanoka_costumes", True, f"costumes={r['saved']}/{r['icons']}", result)
+            return result
+        except Exception as e:
+            result["error"] = str(e)
+            result["traceback"] = traceback.format_exc()
+            self.append_log("fetch_live_nanoka_costumes", False, str(e))
+            return result
+
+    def fetch_beta_nanoka_costumes_missing(self) -> Dict[str, Any]:
+        """beta の全キャラJSONから、画像が存在しないコスチュームのみ取得。"""
+        result: Dict[str, Any] = {"source": "nanoka", "ok": False, "kind": "beta_costume_missing"}
+        try:
+            chars = self._list_json_ids(self.beta_dir("characters"))
+            r = self._download_costume_assets(chars, "beta", missing_only=True)
+            result.update({"ok": True, "characters": len(chars), **r})
+            state = self.get_state()
+            state["last_beta_costume_missing_fetch"] = _now_iso()
+            self._append_history(state, "fetch_beta_nanoka_costumes_missing", result)
+            self.save_state(state)
+            self.append_log("fetch_beta_nanoka_costumes_missing", True, f"missing={r['missing']} saved={r['saved']}", result)
+            return result
+        except Exception as e:
+            result["error"] = str(e)
+            result["traceback"] = traceback.format_exc()
+            self.append_log("fetch_beta_nanoka_costumes_missing", False, str(e))
+            return result
+
+    def fetch_live_nanoka_costumes_missing(self) -> Dict[str, Any]:
+        """live の全キャラJSONから、画像が存在しないコスチュームのみ取得。"""
+        result: Dict[str, Any] = {"source": "nanoka", "ok": False, "kind": "live_costume_missing"}
+        try:
+            chars = self._list_json_ids(self.live_dir("characters"))
+            r = self._download_costume_assets(chars, "live", missing_only=True)
+            result.update({"ok": True, "characters": len(chars), **r})
+            state = self.get_state()
+            state["last_live_costume_missing_fetch"] = _now_iso()
+            self._append_history(state, "fetch_live_nanoka_costumes_missing", result)
+            self.save_state(state)
+            self.append_log("fetch_live_nanoka_costumes_missing", True, f"missing={r['missing']} saved={r['saved']}", result)
+            return result
+        except Exception as e:
+            result["error"] = str(e)
+            result["traceback"] = traceback.format_exc()
+            self.append_log("fetch_live_nanoka_costumes_missing", False, str(e))
+            return result
 
     def version_upgrade_live(self) -> Dict[str, Any]:
         """

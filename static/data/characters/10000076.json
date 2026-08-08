@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Faruzan_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 207600,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

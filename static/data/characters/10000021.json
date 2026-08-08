@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Ambor_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 202101,
+      "icon": "UI_AvatarIcon_AmborCostumeWic",
+      "quality": 4
+    },
+    {
+      "id": 202100,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

@@ -57,5 +57,22 @@
     {
       "icon": "UI_Talent_S_Qin_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 200301,
+      "icon": "UI_AvatarIcon_QinCostumeSea",
+      "quality": 4
+    },
+    {
+      "id": 200302,
+      "icon": "UI_AvatarIcon_QinCostumeWic",
+      "quality": 4
+    },
+    {
+      "id": 200300,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

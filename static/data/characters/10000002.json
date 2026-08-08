@@ -60,5 +60,17 @@
     {
       "icon": "UI_Talent_S_Ayaka_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 200201,
+      "icon": "UI_AvatarIcon_AyakaCostumeFruhling",
+      "quality": 4
+    },
+    {
+      "id": 200200,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

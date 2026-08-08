@@ -54,5 +54,17 @@
     {
       "icon": "UI_Talent_S_PlayerRock_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 200701,
+      "icon": "UI_AvatarIcon_PlayerGirlCostumeCWXR",
+      "quality": 4
+    },
+    {
+      "id": 200700,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Kazuha_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 204700,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

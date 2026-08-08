@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Diona_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 203900,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

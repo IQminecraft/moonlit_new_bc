@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Tighnari_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 206900,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

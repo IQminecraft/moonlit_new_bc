@@ -38,5 +38,12 @@
       "icon": "UI_Talent_S_LittleIdol_07"
     }
   ],
-  "constellations": []
+  "constellations": [],
+  "costume": [
+    {
+      "id": 211700,
+      "icon": "",
+      "quality": 0
+    }
+  ]
 }

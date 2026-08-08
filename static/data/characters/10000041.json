@@ -63,5 +63,17 @@
     {
       "icon": "UI_Talent_S_Mona_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 204101,
+      "icon": "UI_AvatarIcon_MonaCostumeWic",
+      "quality": 4
+    },
+    {
+      "id": 204100,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

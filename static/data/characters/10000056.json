@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Sara_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 205600,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

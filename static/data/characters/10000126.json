@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Zibai_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 212600,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

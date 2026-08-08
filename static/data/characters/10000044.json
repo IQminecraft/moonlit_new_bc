@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Xinyan_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 204400,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

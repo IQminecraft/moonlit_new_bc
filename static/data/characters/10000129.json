@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Lohen_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 212900,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

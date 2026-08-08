@@ -137,9 +137,18 @@
 
             <div class="mb-6">
                 <h3 class="text-sm font-medium text-zinc-300 mb-2">Beta（差分 → static/beta/）</h3>
-                <div class="grid sm:grid-cols-3 gap-2">
+                <div class="grid sm:grid-cols-2 gap-2">
+                    <button type="button" data-action="fetch_beta_nanoka_json_characters" class="btn btn-primary w-full">
+                        Beta キャラクターjson
+                    </button>
+                    <button type="button" data-action="fetch_beta_nanoka_json_weapons" class="btn btn-primary w-full">
+                        Beta 武器json
+                    </button>
+                    <button type="button" data-action="fetch_beta_nanoka_json_artifacts" class="btn btn-primary w-full">
+                        Beta 聖遺物json
+                    </button>
                     <button type="button" data-action="fetch_beta_nanoka_json" class="btn btn-primary w-full">
-                        Beta JSON のみ
+                        Beta すべてのjson
                     </button>
                     <button type="button" data-action="fetch_beta_nanoka_assets" class="btn btn-primary w-full">
                         Beta Asset のみ
@@ -147,21 +156,42 @@
                     <button type="button" data-action="fetch_beta_nanoka" class="btn btn-primary w-full">
                         Beta JSON + Asset
                     </button>
+                    <button type="button" data-action="fetch_beta_nanoka_costumes" class="btn btn-primary w-full">
+                        Beta Costume Asset のみ
+                    </button>
+                    <button type="button" data-action="fetch_beta_nanoka_costumes_missing" class="btn btn-primary w-full">
+                        Beta Costume 不足分のみ
+                    </button>
                 </div>
                 <p class="text-xs text-zinc-500 mt-2">live に無い ID だけ beta 領域へ保存します。Asset は pending / beta JSON を参照します。</p>
             </div>
 
             <div class="mb-6">
                 <h3 class="text-sm font-medium text-zinc-300 mb-2">Live（static/data · static/assets）</h3>
-                <div class="grid sm:grid-cols-3 gap-2">
+                <div class="grid sm:grid-cols-2 gap-2">
+                    <button type="button" data-action="fetch_live_nanoka_json_characters" class="btn btn-ghost w-full">
+                        Live キャラクターjson
+                    </button>
+                    <button type="button" data-action="fetch_live_nanoka_json_weapons" class="btn btn-ghost w-full">
+                        Live 武器json
+                    </button>
+                    <button type="button" data-action="fetch_live_nanoka_json_artifacts" class="btn btn-ghost w-full">
+                        Live 聖遺物json
+                    </button>
                     <button type="button" data-action="fetch_live_nanoka_json" class="btn btn-ghost w-full">
-                        Live JSON のみ
+                        Live すべてのjson
                     </button>
                     <button type="button" data-action="fetch_live_nanoka_assets" class="btn btn-ghost w-full">
                         Live Asset のみ
                     </button>
                     <button type="button" data-action="fetch_live_nanoka" class="btn btn-ghost w-full">
                         Live JSON + Asset
+                    </button>
+                    <button type="button" data-action="fetch_live_nanoka_costumes" class="btn btn-ghost w-full">
+                        Live Costume Asset のみ
+                    </button>
+                    <button type="button" data-action="fetch_live_nanoka_costumes_missing" class="btn btn-ghost w-full">
+                        Live Costume 不足分のみ
                     </button>
                 </div>
                 <p class="text-xs text-zinc-500 mt-2">nanoka の live 版から全キャラ/武器/リスト・アセットを取得します（重い処理あり）。</p>

@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Yoimiya_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 204900,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

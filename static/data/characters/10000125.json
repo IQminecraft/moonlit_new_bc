@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Columbina_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 212500,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

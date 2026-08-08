@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Chevreuse_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 209000,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

@@ -248,6 +248,45 @@ def resolve_list_path(path, beta="false"):
     return path
 
 
+def resolve_costume_icon(chardatas: dict, avatar_info: dict) -> str:
+    """展示データの costumeId に対応するコスチューム icon を返す（該当なしは ""）。"""
+    try:
+        costume_id = (avatar_info or {}).get("costumeId")
+        if costume_id is None:
+            return ""
+        for c in chardatas.get("costume") or []:
+            if isinstance(c, dict) and str(c.get("id")) == str(costume_id):
+                return str(c.get("icon") or "")
+    except Exception:
+        pass
+    return ""
+
+
+def resolve_costume_splash(chardatas: dict, avatar_info: dict, beta="false") -> str:
+    """costumeId 対応のコスチュームスプラッシュ（UI_Costume_*）の既存パスを返す。
+    スプラッシュが無ければ既存のコスチュームアイコン（assets/characters）へフォールバック。
+    どちらも無ければ ""（呼び出し側で通常スプラッシュにフォールバック）。"""
+    try:
+        costume_icon = resolve_costume_icon(chardatas, avatar_info)
+        if not costume_icon:
+            return ""
+        splash_name = str(costume_icon).replace("AvatarIcon", "Costume")
+        candidates = [
+            f"static/assets/splash/{splash_name}.webp",
+            f"static/assets/characters/{costume_icon}.webp",
+        ]
+        if beta == "true":
+            # assets は live 優先、beta はフォールバック（resolve_datas_path と同順序）
+            candidates.append(f"static/beta/assets/splash/{splash_name}.webp")
+            candidates.append(f"static/beta/assets/characters/{costume_icon}.webp")
+        for p in candidates:
+            if os.path.exists(p):
+                return p
+    except Exception:
+        pass
+    return ""
+
+
 def resolve_display_skill_levels(avatar_info, fake_char=False):
     if fake_char:
         return [9, 9, 9], [False, False, False]

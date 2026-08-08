@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Xilonen_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 210300,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

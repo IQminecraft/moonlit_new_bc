@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Dahlia_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 211500,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

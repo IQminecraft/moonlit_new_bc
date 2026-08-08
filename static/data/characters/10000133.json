@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_MarionetteNew_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 213300,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

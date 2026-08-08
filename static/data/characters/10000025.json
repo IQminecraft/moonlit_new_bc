@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Xingqiu_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 202501,
+      "icon": "UI_AvatarIcon_XingqiuCostumeBamboo",
+      "quality": 4
+    },
+    {
+      "id": 202500,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

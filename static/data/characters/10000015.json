@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Kaeya_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 201501,
+      "icon": "UI_AvatarIcon_KaeyaCostumeDancer",
+      "quality": 4
+    },
+    {
+      "id": 201500,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

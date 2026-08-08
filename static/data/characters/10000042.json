@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Keqing_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 204201,
+      "icon": "UI_AvatarIcon_KeqingCostumeFeather",
+      "quality": 4
+    },
+    {
+      "id": 204200,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

@@ -16,5 +16,12 @@
   },
   "skills": [],
   "passives": [],
-  "constellations": []
+  "constellations": [],
+  "costume": [
+    {
+      "id": 213400,
+      "icon": "",
+      "quality": 0
+    }
+  ]
 }

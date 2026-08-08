@@ -60,5 +60,17 @@
     {
       "icon": "UI_Talent_S_Klee_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 202901,
+      "icon": "UI_AvatarIcon_KleeCostumeWitch",
+      "quality": 4
+    },
+    {
+      "id": 202900,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

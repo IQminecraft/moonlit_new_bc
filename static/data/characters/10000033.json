@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Tartaglia_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 203300,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

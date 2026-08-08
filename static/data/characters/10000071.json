@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Cyno_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 207100,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

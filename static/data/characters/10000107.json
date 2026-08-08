@@ -60,5 +60,17 @@
     {
       "icon": "UI_Talent_S_Citlali_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 210701,
+      "icon": "UI_AvatarIcon_CitlaliCostumeXia",
+      "quality": 4
+    },
+    {
+      "id": 210700,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

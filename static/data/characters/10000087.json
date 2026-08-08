@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Neuvillette_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 208701,
+      "icon": "UI_AvatarIcon_NeuvilletteCostumeWinter",
+      "quality": 4
+    },
+    {
+      "id": 208700,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

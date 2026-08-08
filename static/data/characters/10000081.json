@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Kaveh_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 208100,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

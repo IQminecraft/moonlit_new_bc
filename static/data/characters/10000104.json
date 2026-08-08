@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Chasca_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 210400,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

@@ -57,5 +57,17 @@
     {
       "icon": "UI_Talent_S_Hutao_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 204601,
+      "icon": "UI_AvatarIcon_HutaoCostumeWinter",
+      "quality": 4
+    },
+    {
+      "id": 204600,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

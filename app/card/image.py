@@ -14,8 +14,8 @@ from app.card.stats import (
 from app.card.special import (
     SPECIAL_ELEMENT_CHARACTERS, build_special_energy_hint_map,
     resolve_special_avatar_id, resolve_datas_path, resolve_list_path,
-    resolve_display_skill_levels, _special_raw_id, _NO_CONSTELLATION_CHARS,
-    _NO_FRIENDSHIP_CHARS, _ELEMENT_DMG_BUFF_ID,
+    resolve_display_skill_levels, resolve_costume_splash, _special_raw_id,
+    _NO_CONSTELLATION_CHARS, _NO_FRIENDSHIP_CHARS, _ELEMENT_DMG_BUFF_ID,
 )
 from app.card.region import find_regions_for_character
 from app.card.bg import hex_to_rgb, create_card_background, region_image_path
@@ -140,8 +140,11 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
     char_regions = find_regions_for_character(_special_raw_id(fake_char or avatar_id), element_type)
 
-    splash = f"static/assets/splash/{chardatas['icon'].replace('AvatarIcon', 'Gacha_AvatarImg')}.webp"
-    splash = resolve_datas_path(splash, beta)
+    # 展示データの costumeId があればコスチュームスプラッシュ（UI_Costume_*）を使用
+    splash = resolve_costume_splash(chardatas, target_avatar_info, beta)
+    if not splash:
+        splash = f"static/assets/splash/{chardatas['icon'].replace('AvatarIcon', 'Gacha_AvatarImg')}.webp"
+        splash = resolve_datas_path(splash, beta)
 
     char_name = chardatas["name"]
     if fake_char:

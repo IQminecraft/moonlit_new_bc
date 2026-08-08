@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Qiqi_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 203500,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

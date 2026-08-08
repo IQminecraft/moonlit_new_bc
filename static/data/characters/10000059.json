@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Heizo_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 205900,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

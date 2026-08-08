@@ -60,5 +60,12 @@
     {
       "icon": "UI_Talent_S_Nicole_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 213100,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

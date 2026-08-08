@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Furina_02"
     }
+  ],
+  "costume": [
+    {
+      "id": 208900,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }

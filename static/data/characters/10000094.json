@@ -57,5 +57,12 @@
     {
       "icon": "UI_Talent_S_Chiori_04"
     }
+  ],
+  "costume": [
+    {
+      "id": 209400,
+      "icon": "",
+      "quality": 0
+    }
   ]
 }
