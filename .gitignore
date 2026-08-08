@@ -3,3 +3,7 @@ __pycache__/
 .env
 .venv/
 venv/
+app/card/__pycache__
+app/convert/__pycache__
+app/core/__pycache__
+app/routes/__pycache__

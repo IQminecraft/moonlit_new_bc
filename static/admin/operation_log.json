@@ -81,5 +81,12 @@
     "ok": true,
     "message": "login ok from 127.0.0.1",
     "extra": null
+  },
+  {
+    "at": "2026-08-08T17:03:33+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
   }
 ]
