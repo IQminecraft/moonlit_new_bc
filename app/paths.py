@@ -22,8 +22,8 @@ try:
 except ImportError:
     print("[WARN] python-dotenv が未インストールのため .env は読み込まれません（pip install -r requirements.txt）")
 
-FONT_PATH = os.path.join(BASE_DIR, "fonts", "font_fixed.ttf")
-FONT_LIGHT_PATH = os.path.join(BASE_DIR, "fonts", "font_light.ttf")
+FONT_PATH = os.path.join(BASE_DIR, "static", "fonts", "font_fixed.ttf")
+FONT_LIGHT_PATH = os.path.join(BASE_DIR, "static", "fonts", "font_light.ttf")
 
 DESIGN_W, DESIGN_H = 1741, 1159
 CARD_W, CARD_H = 2400, 1620
