@@ -227,6 +227,18 @@
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
+  "11437": {
+    "enName": "Weapon: Sword",
+    "jaName": "武器片手剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11438": {
+    "enName": "Weapon: Sword",
+    "jaName": "武器片手剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
   "11501": {
     "enName": "Aquila Favonia",
     "jaName": "風鷹剣",
@@ -332,6 +344,12 @@
   "11521": {
     "enName": "Exaiphanes Blade",
     "jaName": "星鋒の剣",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11522": {
+    "enName": "Weapon: Sword",
+    "jaName": "武器片手剣",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
@@ -1067,6 +1085,12 @@
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CATALYST"
   },
+  "14437": {
+    "enName": "Weapon: Catalyst",
+    "jaName": "武器法器",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
   "14501": {
     "enName": "Skyward Atlas",
     "jaName": "天空の巻",
@@ -1178,6 +1202,12 @@
   "14523": {
     "enName": "Angelos' Heptades",
     "jaName": "塵と光の七つの誓約",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14524": {
+    "enName": "Weapon: Catalyst",
+    "jaName": "武器法器",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_CATALYST"
   },
@@ -1393,13 +1423,19 @@
   },
   "15435": {
     "enName": "Jade Vista",
-    "jaName": "懸黎千鈞",
+    "jaName": "千鈞懸黎",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_BOW"
   },
   "15436": {
     "enName": "Covenant of Frost and Snow",
     "jaName": "霜雪の契",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15437": {
+    "enName": "Weapon: Bow",
+    "jaName": "武器弓",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_BOW"
   },
@@ -1477,19 +1513,19 @@
   },
   "224001": {
     "enName": "Shatanaya's Frostsilver",
-    "jaName": "シャタナヤの蒼銀JP0B",
+    "jaName": "シャタナヤの蒼銀",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224002": {
     "enName": "Ashamez's Thunder",
-    "jaName": "アシャメズの千光JP0B",
+    "jaName": "アシャメズの千光",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
   "224003": {
     "enName": "Balsag's Sunwheel",
-    "jaName": "バルサグの日輪JP0B",
+    "jaName": "バルサグの日輪",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
@@ -1519,7 +1555,7 @@
   },
   "224008": {
     "enName": "Specialized Frag Crystals within the Shadow Realm",
-    "jaName": "(test)  闇域グレネードJP0F",
+    "jaName": "闇域特化晶榴弾",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },
@@ -1535,6 +1571,18 @@
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
+  "310003": {
+    "enName": "Golden Bough of Nemorensis",
+    "jaName": "ネモレンシスの金枝",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "310004": {
+    "enName": "Golden Bough of Nemorensis - Sublimation",
+    "jaName": "ネモレンシスの金枝・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
   "320001": {
     "enName": "Ardent Storm",
     "jaName": "煌烈",
@@ -1544,6 +1592,18 @@
   "320002": {
     "enName": "Ardent Storm - Sublimation",
     "jaName": "煌烈・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "320003": {
+    "enName": "Silver Radiance of Gradlon",
+    "jaName": "グラドロンの銀光",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "320004": {
+    "enName": "Silver Radiance of Gradlon - Sublimation",
+    "jaName": "グラドロンの銀光・真化",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_CLAYMORE"
   },
@@ -1559,6 +1619,18 @@
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_POLE"
   },
+  "330003": {
+    "enName": "Starlight of Fylkir",
+    "jaName": "フュルキルの星芒",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "330004": {
+    "enName": "Starlight of Fylkir - Sublimation",
+    "jaName": "フュルキルの星芒・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
   "340001": {
     "enName": "Hallowed Fetters",
     "jaName": "聖縛",
@@ -1571,6 +1643,18 @@
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_CATALYST"
   },
+  "340003": {
+    "enName": "Dawnstar of Shahar",
+    "jaName": "シャヘルの暁星",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "340004": {
+    "enName": "Dawnstar of Shahar - Sublimation",
+    "jaName": "シャヘルの暁星・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
   "350001": {
     "enName": "Starpiercer",
     "jaName": "貫星",
@@ -1580,6 +1664,18 @@
   "350002": {
     "enName": "Starpiercer - Sublimation",
     "jaName": "貫星・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "350003": {
+    "enName": "Yayu",
+    "jaName": "猰貐",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "350004": {
+    "enName": "Yayu - Sublimation",
+    "jaName": "猰貐・真化",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_BOW"
   },
@@ -1606,5 +1702,17 @@
     "jaName": "無毀・デュランガルド",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CLAYMORE"
+  },
+  "390002": {
+    "enName": "",
+    "jaName": "星鋒の剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "390003": {
+    "enName": "",
+    "jaName": "星鋒の剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
   }
 }

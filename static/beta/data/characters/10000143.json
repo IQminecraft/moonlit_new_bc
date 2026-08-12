@@ -1,0 +1,71 @@
+{
+  "name": "ヴェスナ",
+  "desc": "",
+  "weapon": "WEAPON_SWORD_ONE_HAND",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Anemo",
+  "icon": "UI_AvatarIcon_Vesna",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "stats_modifier": {
+    "hp": 13262.3220984,
+    "atk": 353.9840004,
+    "def": 730.1266515000001,
+    "extra": {
+      "fight_prop_critical": 0.192
+    }
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_01"
+    },
+    {
+      "icon": "Skill_S_Vesna_01"
+    },
+    {
+      "icon": "Skill_E_Vesna_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Vesna_05"
+    },
+    {
+      "icon": "UI_Talent_S_Vesna_06"
+    },
+    {
+      "icon": "UI_Talent_S_Vesna_07"
+    },
+    {
+      "icon": "UI_Talent_S_Vesna_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Vesna_01"
+    },
+    {
+      "icon": "UI_Talent_S_Vesna_02"
+    },
+    {
+      "icon": "UI_Talent_U_Vesna_01"
+    },
+    {
+      "icon": "UI_Talent_S_Vesna_03"
+    },
+    {
+      "icon": "UI_Talent_U_Vesna_02"
+    },
+    {
+      "icon": "UI_Talent_S_Vesna_04"
+    }
+  ],
+  "costume": [
+    {
+      "id": 214300,
+      "icon": "",
+      "quality": 0
+    }
+  ]
+}

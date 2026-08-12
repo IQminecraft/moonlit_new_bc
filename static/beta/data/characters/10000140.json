@@ -1,0 +1,71 @@
+{
+  "name": "ヴォジャニーツァ",
+  "desc": "",
+  "weapon": "WEAPON_CATALYST",
+  "rarity": "QUALITY_ORANGE",
+  "element": "Hydro",
+  "icon": "UI_AvatarIcon_Vodyanitsa",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "stats_modifier": {
+    "hp": 14817.552110800001,
+    "atk": 107.630271,
+    "def": 484.18925310000003,
+    "extra": {
+      "fight_prop_hp_percent": 0.288
+    }
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_Catalyst_MD"
+    },
+    {
+      "icon": "Skill_S_Vodyanitsa_01"
+    },
+    {
+      "icon": "Skill_E_Vodyanitsa_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Vodyanitsa_06"
+    },
+    {
+      "icon": "UI_Talent_S_Vodyanitsa_05"
+    },
+    {
+      "icon": "UI_Talent_S_Vodyanitsa_07"
+    },
+    {
+      "icon": "UI_Talent_S_Vodyanitsa_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Vodyanitsa_01"
+    },
+    {
+      "icon": "UI_Talent_S_Vodyanitsa_02"
+    },
+    {
+      "icon": "UI_Talent_U_Vodyanitsa_01"
+    },
+    {
+      "icon": "UI_Talent_S_Vodyanitsa_03"
+    },
+    {
+      "icon": "UI_Talent_U_Vodyanitsa_02"
+    },
+    {
+      "icon": "UI_Talent_S_Vodyanitsa_04"
+    }
+  ],
+  "costume": [
+    {
+      "id": 214000,
+      "icon": "",
+      "quality": 0
+    }
+  ]
+}

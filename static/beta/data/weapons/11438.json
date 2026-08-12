@@ -1,0 +1,10 @@
+{
+  "name": "武器片手剣",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Sword_Fajian",
+  "stats_modifier": {
+    "atk": 509.6059,
+    "fight_prop_attack_percent": 0.4135
+  }
+}
