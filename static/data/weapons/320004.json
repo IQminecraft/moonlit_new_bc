@@ -1,0 +1,7 @@
+{
+  "name": "グラドロンの銀光・真化",
+  "weapon_type": "WEAPON_CLAYMORE",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Claymore_MorphGradlon_Great_{0}",
+  "stats_modifier": {}
+}

@@ -5,10 +5,17 @@ from app.card.cache import get_cached_font, get_cached_image, get_resized_image
 from app.card.special import resolve_datas_path
 
 
-def draw_figma_text_right(draw, text, x, y, font, font_size=24, fill_color=(255, 255, 255), **kwargs):
+def draw_figma_text_right(draw, text, x, y, font, font_size=24, fill_color=(255, 255, 255), stroke_width=0, stroke_fill=None, shadow=False, **kwargs):
     text_str = str(text)
     # 設計座標 → キャンバス座標
-    draw.text((x * SX, y * SY), text_str, fill=fill_color, font=font, anchor="ra")
+    if shadow:
+        draw.text((x * SX + 2 * SX, y * SY + 2 * SY), text_str, fill=(0, 0, 0, 160), font=font, anchor="ra")
+    if stroke_width > 0:
+        sf = stroke_fill if stroke_fill is not None else fill_color
+        draw.text((x * SX, y * SY), text_str, fill=fill_color, font=font, anchor="ra",
+                  stroke_width=max(1, round(stroke_width * SY)), stroke_fill=sf)
+    else:
+        draw.text((x * SX, y * SY), text_str, fill=fill_color, font=font, anchor="ra")
 
 
 def draw_figma_box(img, x, y, width, height, radius=15, fill_color=(60, 64, 72, 125),
@@ -48,7 +55,7 @@ def draw_figma_box(img, x, y, width, height, radius=15, fill_color=(60, 64, 72, 
     img.alpha_composite(overlay, dest=(layer_x1, layer_y1))
 
 
-def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=(255, 255, 255), align="left", box_width=None):
+def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=(255, 255, 255), align="left", box_width=None, stroke_width=0, stroke_fill=None, shadow=False):
     text_str = str(text)
     actual_font = font
 
@@ -73,7 +80,14 @@ def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=(255, 255
     else:
         actual_x = x_s
 
-    draw.text((actual_x, y * SY), text_str, font=actual_font, fill=fill_color)
+    if shadow:
+        draw.text((actual_x + 2 * SX, y * SY + 2 * SY), text_str, font=actual_font, fill=(0, 0, 0, 160))
+    if stroke_width > 0:
+        sf = stroke_fill if stroke_fill is not None else fill_color
+        draw.text((actual_x, y * SY), text_str, font=actual_font, fill=fill_color,
+                  stroke_width=max(1, round(stroke_width * SY)), stroke_fill=sf)
+    else:
+        draw.text((actual_x, y * SY), text_str, font=actual_font, fill=fill_color)
 
 
 def draw_figma_text_with_shadow(draw, text, x, y, font, font_size=None, fill_color=(255, 255, 255),
@@ -189,7 +203,7 @@ def paste_figma_image(base_img, img_path, box_x, box_y, box_width, box_height, r
         print(f"[Error] Failed to paste image: {img_path}. Reason: {e}")
 
 
-def paste_mask_image(base_img, img_path, box_x, box_y, box_width, box_height, radius=15, zoom=1.0, beta="false"):
+def paste_mask_image(base_img, img_path, box_x, box_y, box_width, box_height, radius=15, zoom=1.0, beta="false", offset=None):
     img_path = resolve_datas_path(img_path, beta)
     if not img_path or not os.path.exists(img_path):
         return
@@ -199,8 +213,10 @@ def paste_mask_image(base_img, img_path, box_x, box_y, box_width, box_height, ra
             return
         orig_w, orig_h = paste_img.size
         bw, bh = max(1, round(box_width * SX)), max(1, round(box_height * SY))
-        new_height = int(bh * zoom)
-        new_width = int(orig_w * (new_height / orig_h))
+        # ボックスをカバーするスケールに zoom を掛け、中心を維持したまま拡大
+        cover_scale = max(bw / orig_w, bh / orig_h) * zoom
+        new_width = max(1, int(orig_w * cover_scale))
+        new_height = max(1, int(orig_h * cover_scale))
         paste_img = get_resized_image(img_path, (new_width, new_height))
         if paste_img is None:
             return
@@ -208,9 +224,18 @@ def paste_mask_image(base_img, img_path, box_x, box_y, box_width, box_height, ra
         if paste_img.mode != "RGBA":
             paste_img = paste_img.convert("RGBA")
 
+        # offset: (ox, oy) は余白スペースに対する割合(-100〜100%)。0=中心。
+        # 100% で余白スペース目一杯に画像中心がずれる
+        offset = offset or (0.0, 0.0)
+        try:
+            ox_pct = max(-100.0, min(100.0, float(offset[0]))) / 100.0
+            oy_pct = max(-100.0, min(100.0, float(offset[1]))) / 100.0
+        except (TypeError, ValueError, IndexError):
+            ox_pct = oy_pct = 0.0
+
         canvas = Image.new("RGBA", (bw, bh), (0, 0, 0, 0))
-        offset_x = (bw - new_width) // 2
-        offset_y = (bh - new_height) // 2
+        offset_x = (bw - new_width) // 2 + int((new_width - bw) // 2 * ox_pct)
+        offset_y = (bh - new_height) // 2 + int((new_height - bh) // 2 * oy_pct)
         canvas.paste(paste_img, (offset_x, offset_y), paste_img)
 
         corner_mask = Image.new("L", (bw, bh), 0)

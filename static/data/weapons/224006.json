@@ -1,0 +1,7 @@
+{
+  "name": "晶榴弾・雷",
+  "weapon_type": "ITEM_TPS_WEAPON",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Grenade_Electric",
+  "stats_modifier": {}
+}

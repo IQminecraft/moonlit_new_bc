@@ -1,0 +1,71 @@
+{
+  "name": "アリョーシャ",
+  "desc": "スネージナヤの雪原を縦横無尽に駆ける熟練の狩人。その冷静な面差しの下には、人一倍熱い「理想」を秘めている。",
+  "weapon": "WEAPON_POLE",
+  "rarity": "QUALITY_PURPLE",
+  "element": "Electro",
+  "icon": "UI_AvatarIcon_Alyosha",
+  "crit_rate": 0.05,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "stats_modifier": {
+    "hp": 11962.4064649,
+    "atk": 265.49649,
+    "def": 702.99717075,
+    "extra": {
+      "fight_prop_charge_efficiency": 0.2667
+    }
+  },
+  "skills": [
+    {
+      "icon": "Skill_A_03"
+    },
+    {
+      "icon": "Skill_S_Alyosha_01"
+    },
+    {
+      "icon": "Skill_E_Alyosha_01"
+    }
+  ],
+  "passives": [
+    {
+      "icon": "UI_Talent_S_Alyosha_05"
+    },
+    {
+      "icon": "UI_Talent_S_Alyosha_06"
+    },
+    {
+      "icon": "UI_Talent_S_Alyosha_07"
+    },
+    {
+      "icon": "UI_Talent_S_Alyosha_08"
+    }
+  ],
+  "constellations": [
+    {
+      "icon": "UI_Talent_S_Alyosha_01"
+    },
+    {
+      "icon": "UI_Talent_S_Alyosha_02"
+    },
+    {
+      "icon": "UI_Talent_U_Alyosha_01"
+    },
+    {
+      "icon": "UI_Talent_S_Alyosha_03"
+    },
+    {
+      "icon": "UI_Talent_U_Alyosha_02"
+    },
+    {
+      "icon": "UI_Talent_S_Alyosha_04"
+    }
+  ],
+  "costume": [
+    {
+      "id": 214800,
+      "icon": "",
+      "quality": 0
+    }
+  ]
+}

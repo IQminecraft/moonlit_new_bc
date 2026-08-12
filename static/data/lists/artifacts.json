@@ -376,5 +376,17 @@
     "enname": "Disenchantment in Deep Shadow",
     "quality": "QUALITY_ORANGE",
     "icon": "UI_RelicIcon_15046_4"
+  },
+  "15047": {
+    "janame": "紅血の証",
+    "enname": "Scarlet Proof",
+    "quality": "QUALITY_ORANGE",
+    "icon": "UI_RelicIcon_15047_4"
+  },
+  "15048": {
+    "janame": "炉炎溶錬の心",
+    "enname": "Heart of the Furnace",
+    "quality": "QUALITY_ORANGE",
+    "icon": "UI_RelicIcon_15048_4"
   }
 }

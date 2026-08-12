@@ -474,5 +474,117 @@
       "saved": 0,
       "failed": 0
     }
+  },
+  {
+    "at": "2026-08-09T23:37:01+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-10T19:02:43+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-10T19:43:43+09:00",
+    "action": "fetch_live_nanoka_json",
+    "ok": true,
+    "message": "live=7.0 scope=all",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "live_json",
+      "live_version": "7.0",
+      "beta_version": "7.0",
+      "scope": "all",
+      "character_count": 148,
+      "weapon_count": 278,
+      "artifact_list_count": 65,
+      "lists": [
+        "characters.json",
+        "weapons.json",
+        "artifacts.json"
+      ]
+    }
+  },
+  {
+    "at": "2026-08-10T19:44:18+09:00",
+    "action": "version_upgrade_live",
+    "ok": true,
+    "message": "live=7.0 new_chars=8 new_weapons=31 new_arts=2",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "version_upgrade_live",
+      "live_version": "7.0",
+      "beta_version": "7.0",
+      "scope": "all",
+      "character_count": 148,
+      "weapon_count": 278,
+      "artifact_list_count": 65,
+      "lists": [
+        "characters.json",
+        "weapons.json",
+        "artifacts.json"
+      ],
+      "assets": {
+        "ok": true,
+        "kind": "live_assets_new",
+        "new_characters": [
+          "10000005-5",
+          "10000007-5",
+          "10000117-5",
+          "10000118-5",
+          "10000134",
+          "10000135",
+          "10000148",
+          "10000150"
+        ],
+        "new_weapons": [
+          "11435",
+          "11436",
+          "11520",
+          "11521",
+          "12435",
+          "12436",
+          "13435",
+          "13436",
+          "14435",
+          "14436",
+          "15435",
+          "15436",
+          "224001",
+          "224002",
+          "224003",
+          "224004",
+          "224005",
+          "224006",
+          "224007",
+          "224008",
+          "310003",
+          "310004",
+          "320003",
+          "320004",
+          "330003",
+          "330004",
+          "340003",
+          "340004",
+          "350003",
+          "350004",
+          "380003"
+        ],
+        "new_artifacts": [
+          "15047",
+          "15048"
+        ],
+        "characters": 8,
+        "weapons": 20,
+        "artifacts": 10
+      }
+    }
   }
 ]

@@ -271,7 +271,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
             {"label": "元素熟知", "val": formal_round(total_em), "icon": "static/assets/props/em.png"},
             {"label": "会心率", "val": str(formal_round(total_crit_rate * 1000) / 10) + "%", "icon": "static/assets/props/rate.webp"},
             {"label": "会心ダメージ", "val": str(formal_round(total_crit_dmg * 1000) / 10) + "%", "icon": "static/assets/props/dmg.webp"},
-            {"label": "元素チャージ効率", "val": str(formal_round(total_er * 1000) / 10) + "%", "icon": "static/assets/props/er.png"},
+            {"label": "チャージ効率", "val": str(formal_round(total_er * 1000) / 10) + "%", "icon": "static/assets/props/er.png"},
             {"label": f"{element_ja}ダメバフ", "val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
         ]
     else:
@@ -293,7 +293,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
             {"label": "元素熟知", "val": formal_round(fight_prop.get('28', 1)), "icon": "static/assets/props/em.png"},
             {"label": "会心率", "val": str(formal_round(fight_prop.get('20', 1) * 1000) / 10) + "%", "icon": "static/assets/props/rate.webp"},
             {"label": "会心ダメージ", "val": str(formal_round(fight_prop.get('22', 1) * 1000) / 10) + "%", "icon": "static/assets/props/dmg.webp"},
-            {"label": "元素チャージ効率", "val": str(formal_round(fight_prop.get('23', 1) * 1000) / 10) + "%", "icon": "static/assets/props/er.png"},
+            {"label": "チャージ効率", "val": str(formal_round(fight_prop.get('23', 1) * 1000) / 10) + "%", "icon": "static/assets/props/er.png"},
             {"label": f"{element_ja}ダメバフ", "val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
         ]
 
@@ -400,7 +400,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
     set_counts = Counter(set_ids)
     active_sets = [(sid, cnt) for sid, cnt in set_counts.items() if cnt >= 2]
 
-    def get_set_name(set_id_str):
+    def get_set_info(set_id_str):
         possible_paths = [
             "static/data/lists/artifacts.json",
             os.path.join(BASE_DIR, "static", "data", "lists", "artifacts.json"),
@@ -415,10 +415,21 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
                     with open(path, "r", encoding="cp932") as f_art:
                         art_json = json.load(f_art)
                 if set_id_str in art_json:
-                    return art_json[set_id_str].get("janame", f"セット {set_id_str}")
-        return f"セット {set_id_str}"
+                    return (
+                        art_json[set_id_str].get("janame", f"セット {set_id_str}"),
+                        art_json[set_id_str].get("icon"),
+                    )
+        return f"セット {set_id_str}", None
 
-    set_bonuses = [{"name": get_set_name(sid), "count": cnt} for sid, cnt in active_sets]
+    set_bonuses = []
+    for sid, cnt in active_sets:
+        _set_name, _set_icon = get_set_info(sid)
+        set_bonuses.append({
+            "name": _set_name,
+            "count": cnt,
+            "icon": (resolve_datas_path(f"static/assets/artifacts/{_set_icon}.webp", beta) if _set_icon else ""),
+            "id": str(sid),
+        })
 
     if score_sum < 180:
         tier_sum_score = "B"
@@ -430,6 +441,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         tier_sum_score = "SS"
 
     splash_path = ""
+    costume_id = None
     try:
         icon_name = str(chardatas.get("icon", ""))
         # 展示データの costumeId があればコスチュームスプラッシュ（UI_Costume_*）を使用
@@ -437,6 +449,10 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         if not splash_path and icon_name:
             splash_raw = f"static/assets/splash/{icon_name.replace('AvatarIcon', 'Gacha_AvatarImg')}.webp"
             splash_path = resolve_datas_path(splash_raw, beta)
+        # 実際にコスチュームが適用された場合のみ costumeId を付与（オフセットキー用）
+        _raw_costume_id = (target_avatar_info or {}).get("costumeId")
+        if _raw_costume_id is not None and resolve_costume_icon(chardatas, target_avatar_info):
+            costume_id = int(_raw_costume_id)
     except Exception:
         splash_path = ""
 
@@ -508,6 +524,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         "friendship": friendship_lv,
         "constellation": constellation,
         "splash": splash_path,
+        "costumeId": costume_id,
         "skills": [{
             "icon": skill_icons[i] if i < len(skill_icons) else "",
             "level": skill_levels[i] if i < len(skill_levels) else 1,

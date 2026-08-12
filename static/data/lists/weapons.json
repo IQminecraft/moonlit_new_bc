@@ -215,6 +215,18 @@
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
+  "11435": {
+    "enName": "Heretic's Molten Blade",
+    "jaName": "異端を狩る熔刃",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11436": {
+    "enName": "Emberwell",
+    "jaName": "導炎の源",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
   "11501": {
     "enName": "Aquila Favonia",
     "jaName": "風鷹剣",
@@ -308,6 +320,18 @@
   "11519": {
     "enName": "Lightbearing Moonshard",
     "jaName": "三日月の含光",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11520": {
+    "enName": "Whitelake Frostfeather",
+    "jaName": "白銀の湖を舞う翼",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11521": {
+    "enName": "Exaiphanes Blade",
+    "jaName": "星鋒の剣",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
@@ -500,6 +524,18 @@
   "12433": {
     "enName": "Master Key",
     "jaName": "万能の鍵",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12435": {
+    "enName": "Forged by the Golden Melody",
+    "jaName": "シンフォニーの鋳影",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "12436": {
+    "enName": "Blade of Atonement",
+    "jaName": "救済の剣",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CLAYMORE"
   },
@@ -734,6 +770,18 @@
   "13434": {
     "enName": "Sacrificer's Staff",
     "jaName": "聖祭者の輝杖",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13435": {
+    "enName": "Frostbreath",
+    "jaName": "氷の吐息",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "13436": {
+    "enName": "Song of the Vigil",
+    "jaName": "遠望の歌",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_POLE"
   },
@@ -1004,6 +1052,18 @@
   "14434": {
     "enName": "Dawning Frost",
     "jaName": "霜辰",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14435": {
+    "enName": "Clash of Kings",
+    "jaName": "諸王の対局",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14436": {
+    "enName": "Echoes of the Heart",
+    "jaName": "胸中の谺",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CATALYST"
   },
@@ -1331,6 +1391,18 @@
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_BOW"
   },
+  "15435": {
+    "enName": "Jade Vista",
+    "jaName": "千鈞懸黎",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15436": {
+    "enName": "Covenant of Frost and Snow",
+    "jaName": "霜雪の契",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
   "15501": {
     "enName": "Skyward Harp",
     "jaName": "天空の翼",
@@ -1403,6 +1475,54 @@
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_BOW"
   },
+  "224001": {
+    "enName": "Shatanaya's Frostsilver",
+    "jaName": "シャタナヤの蒼銀",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "ITEM_TPS_WEAPON"
+  },
+  "224002": {
+    "enName": "Ashamez's Thunder",
+    "jaName": "アシャメズの千光",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "ITEM_TPS_WEAPON"
+  },
+  "224003": {
+    "enName": "Balsag's Sunwheel",
+    "jaName": "バルサグの日輪",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "ITEM_TPS_WEAPON"
+  },
+  "224004": {
+    "enName": "Frag Crystal - Pyro",
+    "jaName": "晶榴弾・炎",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "ITEM_TPS_WEAPON"
+  },
+  "224005": {
+    "enName": "Frag Crystal - Hydro",
+    "jaName": "晶榴弾・水",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "ITEM_TPS_WEAPON"
+  },
+  "224006": {
+    "enName": "Frag Crystal - Electro",
+    "jaName": "晶榴弾・雷",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "ITEM_TPS_WEAPON"
+  },
+  "224007": {
+    "enName": "Frag Crystal - Cryo",
+    "jaName": "晶榴弾・氷",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "ITEM_TPS_WEAPON"
+  },
+  "224008": {
+    "enName": "Specialized Frag Crystals within the Shadow Realm",
+    "jaName": "闇域特化晶榴弾",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "ITEM_TPS_WEAPON"
+  },
   "310001": {
     "enName": "Serpent Devourer",
     "jaName": "呑蛇",
@@ -1412,6 +1532,18 @@
   "310002": {
     "enName": "Serpent Devourer - Sublimation",
     "jaName": "呑蛇・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "310003": {
+    "enName": "Golden Bough of Nemorensis",
+    "jaName": "ネモレンシスの金枝",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "310004": {
+    "enName": "Golden Bough of Nemorensis - Sublimation",
+    "jaName": "ネモレンシスの金枝・真化",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
@@ -1427,6 +1559,18 @@
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_CLAYMORE"
   },
+  "320003": {
+    "enName": "Silver Radiance of Gradlon",
+    "jaName": "グラドロンの銀光",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
+  "320004": {
+    "enName": "Silver Radiance of Gradlon - Sublimation",
+    "jaName": "グラドロンの銀光・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CLAYMORE"
+  },
   "330001": {
     "enName": "Shattered Moon",
     "jaName": "砕月",
@@ -1436,6 +1580,18 @@
   "330002": {
     "enName": "Shattered Moon - Sublimation",
     "jaName": "砕月・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "330003": {
+    "enName": "Starlight of Fylkir",
+    "jaName": "フュルキルの星芒",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "330004": {
+    "enName": "Starlight of Fylkir - Sublimation",
+    "jaName": "フュルキルの星芒・真化",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_POLE"
   },
@@ -1451,6 +1607,18 @@
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_CATALYST"
   },
+  "340003": {
+    "enName": "Dawnstar of Shahar",
+    "jaName": "シャヘルの暁星",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "340004": {
+    "enName": "Dawnstar of Shahar - Sublimation",
+    "jaName": "シャヘルの暁星・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
   "350001": {
     "enName": "Starpiercer",
     "jaName": "貫星",
@@ -1460,6 +1628,18 @@
   "350002": {
     "enName": "Starpiercer - Sublimation",
     "jaName": "貫星・真化",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "350003": {
+    "enName": "Yayu",
+    "jaName": "猰貐",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "350004": {
+    "enName": "Yayu - Sublimation",
+    "jaName": "猰貐・真化",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_BOW"
   },
@@ -1474,6 +1654,12 @@
     "jaName": "「マジカルマジックキー」",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CLAYMORE"
+  },
+  "380003": {
+    "enName": "A Touch of Frost in Scorching Summer!",
+    "jaName": "真夏のアイスポップ！",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
   "390001": {
     "enName": "Unbreakable: Durandarte",

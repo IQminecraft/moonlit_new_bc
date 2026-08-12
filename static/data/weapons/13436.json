@@ -1,0 +1,10 @@
+{
+  "name": "遠望の歌",
+  "weapon_type": "WEAPON_POLE",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Pole_GlintstonePolearm",
+  "stats_modifier": {
+    "atk": 564.7837,
+    "fight_prop_element_mastery": 110.256
+  }
+}

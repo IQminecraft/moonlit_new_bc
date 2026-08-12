@@ -238,6 +238,20 @@
         }
         .tier-SS { color: #f59e0b; }
 
+        /* 編成カード選択モーダル */
+        .team-select-tile {
+            transition: transform .15s ease, border-color .15s ease;
+        }
+        .team-select-tile:hover { transform: translateY(-2px); }
+        .team-select-tile.selected { border-color: var(--accent) !important; }
+        .team-order-badge {
+            position: absolute; top: 3px; left: 3px; width: 20px; height: 20px;
+            background: var(--accent); color: var(--text-on-primary);
+            border-radius: 9999px; font-size: 12px; font-weight: 800;
+            display: flex; align-items: center; justify-content: center; z-index: 5;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        }
+
         /* server-stats-panel: dark (default) / light */
         #serverStatsPanel .ssp-card {
             border: 1px solid rgba(255, 255, 255, 0.12);
@@ -842,6 +856,13 @@
                 <span class="text-sm text-zinc-400 bg-zinc-800/60 px-3 py-1 rounded-lg border border-zinc-700">{{ ver }}</span>
             </div>
             <div class="flex items-center gap-2">
+                <button id="teamCardBtn" type="button" title="編成カード"
+                    class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all border border-zinc-700 text-sm font-semibold text-gray-300 hover:text-white flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/>
+                    </svg>
+                    編成カード
+                </button>
                 <div class="relative">
                     <button id="settingsBtn" type="button" title="設定"
                         class="p-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all border border-zinc-700 flex items-center justify-center text-gray-300 hover:text-white">
@@ -933,6 +954,16 @@
             </button>
         </div>
 
+        <!-- 編成モードバー -->
+        <div id="teamModeBar" class="hidden mb-3 p-3 bg-zinc-900/70 rounded-xl border border-cyan-800/60 flex items-center justify-between gap-2 flex-wrap">
+            <div class="text-sm font-semibold text-cyan-300">編成モード
+                <span id="teamModeSlotLabel" class="text-zinc-400 font-normal text-xs"></span>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <button id="teamExitBtn" type="button" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-sm rounded-lg border border-zinc-700 transition-all">通常モードに戻る</button>
+            </div>
+        </div>
+
         <!-- 本体：左サイドバー + メインコンテンツ -->
         <div class="flex flex-col lg:flex-row gap-5">
 
@@ -1003,15 +1034,37 @@
                     <div class="flex items-center gap-3 mb-3">
                         <span class="text-sm text-zinc-400 shrink-0">選択中</span>
                         <span id="selectedCharLabel" class="text-base font-semibold text-white truncate">—</span>
+                        <button id="abyssToggleBtn" type="button" title="幽境モード"
+                            class="ml-auto p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700 text-gray-300 hover:text-white flex items-center justify-center transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2 L20 9 L17 20 L7 20 L4 9 Z"/><path d="M9 14 L12 11 L15 14 L12 17 Z"/>
+                            </svg>
+                        </button>
+                        <button id="teamEditSlotBtn" type="button" title="編成スロット管理"
+                            class="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700 text-gray-300 hover:text-white flex items-center justify-center transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+                            </svg>
+                        </button>
                     </div>
                     <div id="charThumbRow" class="flex gap-2 overflow-x-auto py-1 pl-1">
                         {% for char in char_list %}
-                        <div class="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 cursor-pointer char-thumb" data-char-id="{{ char.id }}">
+                        <div class="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 cursor-pointer char-thumb" data-char-id="{{ char.id }}" data-char-icon="{{ char.icon }}">
                             <img src="{{ char.icon }}"
                                  class="w-full h-full bg-gradient-to-tr from-[rgba(49,43,71,0.53)] to-[rgba(102,115,150,0.42)] rounded-lg object-cover opacity-50 grayscale-[0.3] transition-all hover:opacity-100 drag-none">
                         </div>
                         {% endfor %}
                     </div>
+                </div>
+
+                <!-- 幽境モード（ボス選択行） -->
+                <div id="abyssRow" class="hidden mt-3 bg-zinc-900/60 rounded-xl border border-zinc-800 p-4">
+                    <div class="text-sm text-zinc-400 mb-2">幽境ボス</div>
+                    <button id="abyssSlotBtn" type="button"
+                        class="flex items-center gap-2 bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-white pl-2 pr-3 py-2 rounded-lg transition-all text-sm">
+                        <img id="abyssSlotIcon" src="" class="w-14 h-14 rounded-lg object-cover hidden">
+                        <span id="abyssSlotLabel" class="text-zinc-300">ボスを選択</span>
+                    </button>
                 </div>
 
                 <!-- メイン表示ボックス（ステータス / ビルドカード / 画像） -->
@@ -1082,6 +1135,38 @@
     </div>
 
     <!-- 武器差し替え選択モーダル（現在アクティブな保存枠に適用） -->
+    <!-- 編成カードモーダル（スロット一覧 + 4体選択ピッカー） -->
+    <div id="teamCardModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 items-center justify-center p-4"
+        onclick="if(event.target===this) closeTeamCardModal()">
+        <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between p-4 border-b border-zinc-800 shrink-0">
+                <h2 class="text-lg font-bold text-cyan-400">編成カード</h2>
+                <button onclick="closeTeamCardModal()" class="text-zinc-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+
+            <!-- 編成スロット一覧（最大12個） -->
+            <div id="teamSlotListWrap" class="p-4 border-b border-zinc-800 shrink-0">
+                <div class="text-xs text-zinc-500 mb-2">編成スロット（最大12個）。選択するか「+」で新規作成してください</div>
+                <div id="teamSlotList" class="grid grid-cols-4 sm:grid-cols-6 gap-2"></div>
+            </div>
+
+            <!-- 4体選択ピッカー -->
+            <div id="teamPickerWrap" class="hidden flex flex-col flex-1 min-h-0">
+                <div class="p-4 border-b border-zinc-800 shrink-0">
+                    <div class="text-xs text-zinc-500 mb-2">選択した順番が画像の左からの並びになります（クリックで取り消し）</div>
+                    <div id="teamSelectSlots" class="flex gap-2.5 flex-wrap"></div>
+                </div>
+                <div class="p-4 text-sm text-zinc-400 border-b border-zinc-800 shrink-0">ショーケースのキャラクターから選択してください</div>
+                <div id="teamSelectGrid" class="picker-grid overflow-y-auto p-4 flex flex-wrap gap-2 flex-1 min-h-0"></div>
+            </div>
+
+            <div class="flex gap-3 p-4 border-t border-zinc-800 shrink-0">
+                <button id="teamCardCancelBtn" type="button" class="flex-1 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-sm font-bold text-zinc-300 hover:bg-zinc-700 transition-all">キャンセル</button>
+                <button id="teamCardGenerateBtn" type="button" disabled class="flex-1 py-2.5 bg-emerald-600 border border-emerald-600 rounded-lg text-sm font-bold text-white hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all">この4体で編成を開始</button>
+            </div>
+        </div>
+    </div>
+
     <div id="fakeWeaponModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 items-center justify-center p-4"
         onclick="if(event.target===this) closeFakeWeaponModal()">
         <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col">
@@ -1094,8 +1179,105 @@
         </div>
     </div>
 
+    <!-- 幽境ボス選択モーダル -->
+    <div id="abyssModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 items-center justify-center p-4"
+        onclick="if(event.target===this) closeAbyssModal()">
+        <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between p-4 border-b border-zinc-800 shrink-0">
+                <h2 class="text-lg font-bold text-cyan-400">幽境ボス選択</h2>
+                <button onclick="closeAbyssModal()" class="text-zinc-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div class="p-4 text-xs text-zinc-500 border-b border-zinc-800 shrink-0">バージョンごとのレイライン敵から選んでください</div>
+            <div id="abyssVersionGroups" class="picker-grid overflow-y-auto p-4 flex-1 min-h-0 space-y-4"></div>
+            <div class="flex gap-3 p-4 border-t border-zinc-800 shrink-0">
+                <button id="abyssClearBtn" type="button" class="px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-lg">解除</button>
+                <button id="abyssCloseBtn" type="button" class="flex-1 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-sm font-bold text-zinc-300 hover:bg-zinc-700 transition-all">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 初回バージョン選択モーダル（一度選んだら表示されない。設定からのみ変更可） -->
+    <div id="verChooseModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-sm p-6 text-center">
+            <h2 class="text-lg font-bold text-white mb-2">データバージョンを選択</h2>
+            <p class="text-xs text-zinc-400 mb-5">表示するデータのバージョンを選んでください。<br>後から設定メニューから変更できます。</p>
+            <div class="flex flex-col gap-2">
+                <button type="button" onclick="chooseVer('live')"
+                    class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg transition-all">Live（正式版）</button>
+                <button type="button" onclick="chooseVer('beta')"
+                    class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold rounded-lg transition-all">Beta（先行）</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const uid = document.getElementById('currentUid').textContent.trim();
+
+        // ==========================================================
+        //  初回バージョン選択（初回のみ表示。以降は設定からのみ変更可）
+        // ==========================================================
+        const VER_PREF_KEY_FIRST = 'genshin_build_card_ver_pref';
+        function chooseVer(v) {
+            if (v !== 'live' && v !== 'beta') v = 'live';
+            try { localStorage.setItem(VER_PREF_KEY_FIRST, v); } catch (e) {}
+            const params = new URLSearchParams();
+            params.set('uid', uid);
+            params.set('ver', v);
+            window.location.href = `/fetch_uid?${params.toString()}`;
+        }
+        function maybeShowVersionChooser() {
+            let saved = null;
+            try { saved = localStorage.getItem(VER_PREF_KEY_FIRST); } catch (e) { saved = null; }
+            if (saved === 'live' || saved === 'beta') {
+                // 保存済みのバージョンと現在の ver が違う場合は自動で切り替え
+                if (saved !== ver) {
+                    const params = new URLSearchParams();
+                    params.set('uid', uid);
+                    params.set('ver', saved);
+                    window.location.href = `/fetch_uid?${params.toString()}`;
+                }
+                return;
+            }
+            // 初回: 選択モーダルを表示
+            const modal = document.getElementById('verChooseModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        // Enka API クールタイム（再取得ボタン制御）
+        let enkaCooldownTimer = null;
+        function startEnkaCooldown(seconds) {
+            const end = Date.now() + seconds * 1000;
+            const tick = () => {
+                const remain = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+                if (!regenerateApiBtn) return;
+                if (remain > 0) {
+                    regenerateApiBtn.disabled = true;
+                    regenerateApiBtn.classList.add('opacity-60', 'cursor-not-allowed');
+                    regenerateApiBtn.textContent = `再取得（${remain}s）`;
+                } else {
+                    regenerateApiBtn.disabled = false;
+                    regenerateApiBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                    regenerateApiBtn.textContent = '再取得';
+                    clearInterval(enkaCooldownTimer);
+                    enkaCooldownTimer = null;
+                }
+            };
+            if (enkaCooldownTimer) clearInterval(enkaCooldownTimer);
+            enkaCooldownTimer = setInterval(tick, 1000);
+            tick();
+        }
+        async function initEnkaCooldown() {
+            try {
+                const res = await fetch(`/api/enka_cooldown?uid=${uid}`);
+                const data = await res.json();
+                if (data && data.cooldown > 0) startEnkaCooldown(data.cooldown);
+            } catch (e) { /* ignore */ }
+        }
+
+        const teamCardBtn = document.getElementById('teamCardBtn');
         const settingsBtn = document.getElementById('settingsBtn');
         const settingsPanel = document.getElementById('settingsPanel');
         const scoreCalcSelect = document.getElementById('scoreCalcSelect');
@@ -1637,7 +1819,10 @@
 
         function realCharIconSrc(charId) {
             const thumb = document.querySelector(`.char-thumb[data-char-id="${charId}"] img`);
-            return thumb ? thumb.getAttribute('src') : '';
+            if (thumb && thumb.getAttribute('src')) return thumb.getAttribute('src');
+            // 編成モード中は .char-thumb が消えるため、ショーケース一覧から取得
+            if (typeof teamCharIconSrc === 'function') return teamCharIconSrc(charId);
+            return '';
         }
 
         function comboStorageKeys(charId) {
@@ -1771,11 +1956,16 @@
             saveComboState(currentSelectedCharId);
             renderComboRow();
             updateEditWeaponUI();
-            // デフォルトに戻したとき、実データ武器キャッシュが空なら軽量取得して左の武器表示を直す
-            if (!comboId && currentSelectedCharId && !lastKnownRealWeapon.name) {
+            // デフォルトに戻したときは、差し替えキャラの武器が残らないよう必ず実データ武器を取り直す
+            if (!comboId && currentSelectedCharId) {
+                lastKnownRealWeapon = { name: '', icon: '' };
                 ensureRealWeaponKnown(currentSelectedCharId);
             }
-            refreshCurrentCard(currentSelectedCharId, false, true);
+            if (teamMode) {
+                if (typeof updateTeamMemberLabel === 'function') updateTeamMemberLabel(currentSelectedCharId);
+            } else {
+                refreshCurrentCard(currentSelectedCharId, false, true);
+            }
         }
 
         /** 差し替え無しの実データ武器を取得して lastKnownRealWeapon を埋める */
@@ -1805,10 +1995,16 @@
             saveComboState(currentSelectedCharId);
             renderComboRow();
             updateEditWeaponUI();
-            if (!activeComboId && currentSelectedCharId && !lastKnownRealWeapon.name) {
+            // デフォルトに戻った場合は差し替えキャラの武器を残さず実データ武器を取り直す
+            if (!activeComboId && currentSelectedCharId) {
+                lastKnownRealWeapon = { name: '', icon: '' };
                 ensureRealWeaponKnown(currentSelectedCharId);
             }
-            refreshCurrentCard(currentSelectedCharId, false, true);
+            if (teamMode) {
+                if (typeof updateTeamMemberLabel === 'function') updateTeamMemberLabel(currentSelectedCharId);
+            } else {
+                refreshCurrentCard(currentSelectedCharId, false, true);
+            }
         }
 
         async function openFakeCharModal() {
@@ -1870,7 +2066,11 @@
             renderComboRow();
             updateEditWeaponUI();
             closeFakeCharModal();
-            refreshCurrentCard(currentSelectedCharId, false, true);
+            if (teamMode) {
+                if (typeof updateTeamMemberLabel === 'function') updateTeamMemberLabel(currentSelectedCharId);
+            } else {
+                refreshCurrentCard(currentSelectedCharId, false, true);
+            }
         }
 
         async function openFakeWeaponModal() {
@@ -1951,7 +2151,11 @@
             renderComboRow();
             updateEditWeaponUI();
             closeFakeWeaponModal();
-            refreshCurrentCard(currentSelectedCharId, false, true);
+            if (teamMode) {
+                if (typeof updateTeamMemberLabel === 'function') updateTeamMemberLabel(currentSelectedCharId);
+            } else {
+                refreshCurrentCard(currentSelectedCharId, false, true);
+            }
         }
 
         function applyRealWeaponToEditUI() {
@@ -2021,6 +2225,10 @@
         let pendingForceFetchFromArtifacter = false;
 
         window.addEventListener('DOMContentLoaded', async () => {
+            // 初回のみバージョン選択（未選択ならモーダルを表示）
+            maybeShowVersionChooser();
+            initEnkaCooldown();
+
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('from_artifacter')) {
                 const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?uid=${uid}`;
@@ -2033,6 +2241,11 @@
             }
 
             loadFakeLists();
+
+            // 編成モードが保存されていたら復元（単体カードの自動選択は行わない）
+            if (typeof restoreTeamMode === 'function' && restoreTeamMode()) {
+                return;
+            }
 
             const savedCharId = localStorage.getItem(`selected_char_${uid}`);
             let targetThumb = savedCharId
@@ -2064,6 +2277,29 @@
                 btn.classList.toggle('opacity-60', disabled);
                 btn.classList.toggle('cursor-not-allowed', disabled);
             });
+        }
+
+        // 画像生成中は左側のコントロール（計算方法・武器・背景・差し替え）も無効化する
+        function setGenerationControlsDisabled(disabled) {
+            setTopImageButtonsDisabled(disabled);
+            const els = [scoreCalcSelect, editWeaponBtn, bgColorModeSelect, bgColorPicker, bgRegionSelect];
+            els.forEach(el => {
+                if (!el) return;
+                el.disabled = disabled;
+                el.classList.toggle('opacity-60', disabled);
+            });
+            if (comboRow) {
+                comboRow.querySelectorAll('button, input, select').forEach(el => {
+                    el.disabled = disabled;
+                    el.classList.toggle('opacity-60', disabled);
+                });
+            }
+            if (!disabled) {
+                // 本来の状態を復元（背景のカスタム色はモード次第、武器は差し替え状態次第）
+                if (typeof applyBgColorControlsUI === 'function') applyBgColorControlsUI();
+                if (typeof updateEditWeaponUI === 'function') updateEditWeaponUI();
+                if (typeof renderComboRow === 'function') renderComboRow();
+            }
         }
 
         // 画像が未生成（またはパラメータ変更で古い）状態 → 中央に生成ボタンを出す。
@@ -2395,6 +2631,8 @@
             // 背景は URL クエリに含まれるためキャッシュキーが分かれる。
             // 背景変更時は即時画像生成（キャッシュが無ければその場で生成）
             if (!currentSelectedCharId) return;
+            // 編成モードでは単体カードをリフレッシュしない（設定は保存のみ）
+            if (teamMode) return;
             refreshCurrentCard(currentSelectedCharId, false, false, true);
         }
         if (bgColorModeSelect) {
@@ -2487,9 +2725,9 @@
 
             const requestToken = ++latestImageRequestToken;
 
-            // 生成中は右上ボタンを無効化（終了時に必ず戻す）
+            // 生成中は右上ボタン＋左側コントロールを無効化（終了時に必ず戻す）
             imageGenActiveCount++;
-            setTopImageButtonsDisabled(true);
+            setGenerationControlsDisabled(true);
 
             try {
                 // DDoS対策: 署名付きURLを取得してから画像を取得する
@@ -2539,7 +2777,7 @@
                 showImageAwaitState('画像の読み込みに失敗しました。もう一度お試しください。');
             } finally {
                 imageGenActiveCount = Math.max(0, imageGenActiveCount - 1);
-                if (imageGenActiveCount === 0) setTopImageButtonsDisabled(false);
+                if (imageGenActiveCount === 0) setGenerationControlsDisabled(false);
             }
         }
 
@@ -2673,6 +2911,8 @@
 
         viewModeButtons.forEach(btn => {
             btn.addEventListener('click', () => {
+                // 編成モード中は「画像生成」のみ有効
+                if (teamMode && btn.dataset.view !== 'image') return;
                 if (btn.dataset.view === viewMode) return;
                 viewMode = btn.dataset.view;
                 saveViewMode(viewMode);
@@ -3066,6 +3306,8 @@
         }
 
         function selectCharById(charId, forceFetch) {
+            // 編成モード中は単体カードの選択を行わない（上部は編成メンバー表示）
+            if (teamMode) return false;
             const thumb = document.querySelector(`.char-thumb[data-char-id="${charId}"]`);
             if (!thumb) return false;
 
@@ -3132,11 +3374,16 @@
         function renderCharThumbRow(charList) {
             const row = document.getElementById('charThumbRow');
             if (!row || !Array.isArray(charList) || charList.length === 0) return false;
+            // 編成モード用にショーケース一覧も更新
+            if (typeof showcaseCharList !== 'undefined') {
+                showcaseCharList = charList.map(ch => ({ id: String(ch.id), icon: ch.icon || '' }));
+            }
             row.innerHTML = '';
             for (const ch of charList) {
                 const div = document.createElement('div');
                 div.className = 'relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 cursor-pointer char-thumb';
                 div.setAttribute('data-char-id', String(ch.id));
+                div.setAttribute('data-char-icon', ch.icon || '');
                 const img = document.createElement('img');
                 img.src = ch.icon;
                 img.className = 'w-full h-full bg-gradient-to-tr from-[rgba(49,43,71,0.53)] to-[rgba(102,115,150,0.42)] rounded-lg object-cover opacity-50 grayscale-[0.3] transition-all hover:opacity-100 drag-none';
@@ -3163,13 +3410,15 @@
         scoreCalcSelect.addEventListener('change', function() {
             if (currentSelectedCharId) {
                 saveCalcMethod(currentSelectedCharId, this.value);
+                // 編成モードでは単体カードをリフレッシュしない（設定は保存のみ）
+                if (teamMode) return;
                 // 計算方法変更時は即時画像生成（キャッシュが無ければその場で生成）
                 refreshCurrentCard(currentSelectedCharId, false, false, true);
             }
         });
 
         regenerateApiBtn.addEventListener('click', async function() {
-            if (!currentSelectedCharId) return;
+            if (!teamMode && !currentSelectedCharId) return;
 
             const originalLabel = regenerateApiBtn.innerHTML;
             setTopImageButtonsDisabled(true);
@@ -3183,6 +3432,7 @@
             });
 
             let charList = null;
+            let cooldownActive = 0;
             try {
                 const res = await fetch(`/refresh_uid/${uid}?ver=${ver}`, { method: 'POST' });
                 if (!res.ok) {
@@ -3190,7 +3440,12 @@
                     throw new Error(errBody.detail || `再取得に失敗しました (status: ${res.status})`);
                 }
                 const data = await res.json();
-                if (data && Array.isArray(data.char_list)) charList = data.char_list;
+                if (data && data.cooldown) {
+                    cooldownActive = data.cooldown;
+                    if (Array.isArray(data.char_list)) charList = data.char_list;
+                } else if (data && Array.isArray(data.char_list)) {
+                    charList = data.char_list;
+                }
             } catch (e) {
                 console.error('Enka APIの再取得に失敗しました:', e);
                 alert(`データの再取得に失敗しました。\n${e.message}\n（キャッシュ済みのデータで再生成します）`);
@@ -3199,9 +3454,25 @@
                 regenerateApiBtn.innerHTML = originalLabel;
             }
 
+            if (cooldownActive > 0) {
+                alert(`Enka APIのクールタイム中です。${Math.ceil(cooldownActive)}秒後にお試しください`);
+                startEnkaCooldown(cooldownActive);
+                return;
+            }
+
             // Enka API へのリクエストが発生したタイミングでキャッシュ済み画像を破棄し、
             // 必ず作り直した画像が表示されるようにする
             await clearCardImageCache();
+
+            if (teamMode) {
+                // 編成モードは維持したままショーケース一覧を更新し、チーム行を再描画
+                if (charList && charList.length) {
+                    showcaseCharList = charList.map(ch => ({ id: String(ch.id), icon: ch.icon || '' }));
+                    renderTeamCharRow();
+                    if (typeof updateTeamMemberLabel === 'function') updateTeamMemberLabel(currentSelectedCharId);
+                }
+                return;
+            }
 
             if (charList && charList.length > 0) {
                 // 再取得でキャラ一覧が変わった場合はサムネイル行を書き換える。
@@ -3215,10 +3486,427 @@
             }
         });
 
+        // ==========================================================
+        //  編成カード（12スロット / 編成モード / 4キャラ毎に設定可能）
+        // ==========================================================
+        const teamCardModal = document.getElementById('teamCardModal');
+        const teamSelectSlots = document.getElementById('teamSelectSlots');
+        const teamSelectGrid = document.getElementById('teamSelectGrid');
+        const teamCardGenerateBtn = document.getElementById('teamCardGenerateBtn');
+        const teamCardCancelBtn = document.getElementById('teamCardCancelBtn');
+        const teamModeBar = document.getElementById('teamModeBar');
+        const teamGenBtn = document.getElementById('teamGenBtn');
+        const teamEditSlotBtn = document.getElementById('teamEditSlotBtn');
+        const teamExitBtn = document.getElementById('teamExitBtn');
+        let teamSelectedIds = [];
+
+        // ショーケース一覧（編成モード中は .char-thumb が消えるため、この配列を参照する）
+        let showcaseCharList = [];
+        document.querySelectorAll('#charThumbRow .char-thumb').forEach(t => {
+            showcaseCharList.push({ id: t.getAttribute('data-char-id'), icon: t.getAttribute('data-char-icon') || '' });
+        });
+
+        // ---- 12スロット保存 ----
+        const TEAM_SLOTS_KEY = 'team_slots_' + uid;
+        const TEAM_ACTIVE_KEY = 'team_active_' + uid;
+        let teamSlots = loadTeamSlots();
+        let activeTeamId = null;
+        let teamMode = false;
+        let teamActiveIdx = 0;
+        let pendingSlotIndex = null;
+
+        function loadTeamSlots() {
+            try {
+                const arr = JSON.parse(localStorage.getItem(TEAM_SLOTS_KEY)) || [];
+                return Array.isArray(arr) ? arr : [];
+            } catch (e) { return []; }
+        }
+        function saveTeamSlots() {
+            try { localStorage.setItem(TEAM_SLOTS_KEY, JSON.stringify(teamSlots)); } catch (e) {}
+        }
+        function teamSlotById(id) {
+            return teamSlots.find(s => s && s.id === id) || null;
+        }
+        function teamCharIconSrc(cid) {
+            const ch = showcaseCharList.find(c => String(c.id) === String(cid));
+            if (ch && ch.icon) return ch.icon;
+            const thumb = document.querySelector(`.char-thumb[data-char-id="${cid}"]`);
+            return thumb ? (thumb.getAttribute('data-char-icon') || '') : '';
+        }
+
+        // ---- モーダル：スロット一覧 ----
+        function openTeamCardModal() {
+            teamCardModal.classList.remove('hidden');
+            teamCardModal.classList.add('flex');
+            showTeamSlotList();
+        }
+        function closeTeamCardModal() {
+            teamCardModal.classList.add('hidden');
+            teamCardModal.classList.remove('flex');
+            pendingSlotIndex = null;
+        }
+        function showTeamSlotList() {
+            document.getElementById('teamSlotListWrap').classList.remove('hidden');
+            document.getElementById('teamPickerWrap').classList.add('hidden');
+            renderTeamSlotList();
+        }
+        function renderTeamSlotList() {
+            const wrap = document.getElementById('teamSlotList');
+            wrap.innerHTML = '';
+            for (let i = 0; i < 12; i++) {
+                const slot = teamSlots[i];
+                const div = document.createElement('div');
+                if (slot && slot.chars) {
+                    const imgs = slot.chars.map(c => {
+                        const src = teamCharIconSrc(c);
+                        return src
+                            ? `<img src="${src}" class="w-full h-full object-cover">`
+                            : `<div class="w-full h-full bg-zinc-800 flex items-center justify-center text-[10px] text-zinc-500">?</div>`;
+                    }).join('');
+                    div.className = 'relative aspect-square rounded-lg border border-zinc-700 bg-zinc-800/60 overflow-hidden cursor-pointer hover:border-cyan-400 transition-all';
+                    div.title = `編成${i + 1}（クリックで読み込み）`;
+                    div.innerHTML = `
+                        <div class="grid grid-cols-2 gap-0.5 p-0.5 h-full">${imgs}</div>
+                        <div class="absolute top-0.5 left-0.5 text-[9px] bg-black/70 rounded px-1 text-zinc-300">${i + 1}</div>
+                        <button type="button" class="slot-del absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-red-500/90 text-white text-[10px] leading-4 text-center" title="削除">&times;</button>
+                    `;
+                    div.onclick = () => { closeTeamCardModal(); loadTeam(slot.id); };
+                    div.querySelector('.slot-del').onclick = (e) => {
+                        e.stopPropagation();
+                        if (!confirm(`編成${i + 1}を削除しますか？`)) return;
+                        teamSlots[i] = null;
+                        saveTeamSlots();
+                        renderTeamSlotList();
+                    };
+                } else {
+                    div.className = 'aspect-square rounded-lg border-2 border-dashed border-zinc-700 bg-zinc-800/40 flex flex-col items-center justify-center text-zinc-500 cursor-pointer hover:border-cyan-400 hover:text-cyan-300 transition-all';
+                    div.innerHTML = `<div class="text-lg font-bold leading-none">+</div><div class="text-[10px] mt-0.5">編成${i + 1}</div>`;
+                    div.onclick = () => startTeamCreate(i);
+                }
+                wrap.appendChild(div);
+            }
+        }
+        function startTeamCreate(slotIndex) {
+            pendingSlotIndex = slotIndex;
+            teamSelectedIds = [];
+            document.getElementById('teamSlotListWrap').classList.add('hidden');
+            document.getElementById('teamPickerWrap').classList.remove('hidden');
+            renderTeamSelectSlots();
+            renderTeamSelectGrid();
+        }
+
+        // ---- モーダル：4体選択ピッカー ----
+        function renderTeamSelectSlots() {
+            teamSelectSlots.innerHTML = '';
+            for (let i = 0; i < 4; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'w-16 h-20 rounded-lg border-2 border-dashed border-zinc-600 bg-zinc-800/60 flex flex-col items-center justify-center overflow-hidden text-zinc-600 text-xl font-bold shrink-0';
+                if (teamSelectedIds[i]) {
+                    const cid = teamSelectedIds[i];
+                    const src = teamCharIconSrc(cid);
+                    slot.className = 'relative w-16 h-20 rounded-lg border-2 border-zinc-600 bg-zinc-800 overflow-hidden shrink-0';
+                    slot.title = 'クリックで取り消し';
+                    slot.style.cursor = 'pointer';
+                    slot.innerHTML = `
+                        ${src ? `<img src="${src}" class="w-full h-full object-cover drag-none">` : ''}
+                        <div class="team-order-badge">${i + 1}</div>
+                    `;
+                    slot.onclick = () => { teamSelectedIds.splice(i, 1); renderTeamSelectSlots(); renderTeamSelectGrid(); };
+                } else {
+                    slot.innerHTML = `<span>${i + 1}</span>`;
+                }
+                teamSelectSlots.appendChild(slot);
+            }
+            if (teamCardGenerateBtn) {
+                teamCardGenerateBtn.disabled = teamSelectedIds.length !== 4;
+            }
+        }
+        function renderTeamSelectGrid() {
+            teamSelectGrid.innerHTML = '';
+            showcaseCharList.forEach(ch => {
+                const cid = String(ch.id);
+                const src = ch.icon;
+                if (!src) return;
+                const selIdx = teamSelectedIds.indexOf(cid);
+                const selected = selIdx !== -1;
+                const tile = document.createElement('div');
+                tile.className = `team-select-tile relative w-20 h-20 shrink-0 rounded-lg border-2 overflow-hidden cursor-pointer ${selected ? 'selected border-cyan-400' : 'border-zinc-700'}`;
+                tile.innerHTML = `
+                    <img src="${src}" class="w-full h-full object-cover drag-none ${selected ? '' : 'opacity-80'}" loading="lazy">
+                    ${selected ? `<div class="team-order-badge">${selIdx + 1}</div>` : ''}
+                `;
+                tile.onclick = () => {
+                    const idx = teamSelectedIds.indexOf(cid);
+                    if (idx !== -1) {
+                        teamSelectedIds.splice(idx, 1);
+                    } else if (teamSelectedIds.length < 4) {
+                        teamSelectedIds.push(cid);
+                    } else {
+                        teamSelectedIds[3] = cid;
+                    }
+                    renderTeamSelectSlots();
+                    renderTeamSelectGrid();
+                };
+                teamSelectGrid.appendChild(tile);
+            });
+        }
+        function finishTeamCreate() {
+            if (teamSelectedIds.length !== 4) return;
+            const ids = teamSelectedIds.slice();
+            let slot = null;
+            if (pendingSlotIndex != null) {
+                slot = { id: 'team_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), chars: ids };
+                teamSlots[pendingSlotIndex] = slot;
+            } else if (activeTeamId) {
+                slot = teamSlotById(activeTeamId);
+                if (slot) slot.chars = ids;
+            }
+            saveTeamSlots();
+            pendingSlotIndex = null;
+            closeTeamCardModal();
+            if (slot) loadTeam(slot.id);
+        }
+
+        // ---- 編成モード ----
+        function setTeamViewModeRestriction(on) {
+            document.querySelectorAll('.view-mode-btn[data-view="html"], .view-mode-btn[data-view="glass"]').forEach(btn => {
+                btn.disabled = on;
+                btn.classList.toggle('opacity-40', on);
+                btn.classList.toggle('cursor-not-allowed', on);
+            });
+        }
+        function loadTeam(slotId) {
+            const slot = teamSlotById(slotId);
+            if (!slot) return;
+            activeTeamId = slotId;
+            teamMode = true;
+            teamActiveIdx = 0;
+            currentSelectedCharId = slot.chars[0];
+            // リロード後も編成モードを維持する
+            try { localStorage.setItem(TEAM_ACTIVE_KEY, slotId); } catch (e) {}
+            if (teamModeBar) teamModeBar.classList.remove('hidden');
+            // 編成モード中はヘッダーの「編成カード」ボタンを隠す（スロット管理と重複）
+            if (teamCardBtn) teamCardBtn.classList.add('hidden');
+            const idx = teamSlots.findIndex(s => s && s.id === slotId);
+            const label = document.getElementById('teamModeSlotLabel');
+            if (label) label.textContent = `（編成${idx >= 0 ? idx + 1 : ''}）`;
+            renderTeamCharRow();
+            selectTeamMember(0);
+            // 編成モードでは「画像生成」のみ有効
+            viewMode = 'image';
+            saveViewMode(viewMode);
+            applyViewModeUI();
+            setTeamViewModeRestriction(true);
+            latestGlassRequestToken++;
+            latestHtmlRequestToken++;
+            // 前の単体カード表示（ステータス等）が残らないよう、画像生成待機状態へ切り替える
+            showImageAwaitState('編成カードを生成してください（上部の「編成カード生成」ボタン）');
+            // 編成モード中は背景設定（元素/地域/カスタム色）を非表示
+            if (typeof bgColorControls !== 'undefined' && bgColorControls) bgColorControls.classList.add('hidden');
+            if (typeof updateGenerateDisable === 'function') updateGenerateDisable();
+            if (typeof updateAbyssUI === 'function') updateAbyssUI();
+        }
+        function renderTeamCharRow() {
+            const row = document.getElementById('charThumbRow');
+            const slot = teamSlotById(activeTeamId);
+            if (!row || !slot) return;
+            row.innerHTML = '';
+            slot.chars.forEach((cid, idx) => {
+                const src = teamCharIconSrc(cid);
+                const div = document.createElement('div');
+                div.className = 'relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 cursor-pointer';
+                div.setAttribute('data-team-idx', idx);
+                div.innerHTML = `
+                    ${src ? `<img src="${src}" class="w-full h-full rounded-lg object-cover ${teamActiveIdx === idx ? 'opacity-100 ring-2 ring-primary' : 'opacity-50 grayscale-[0.3]'} drag-none">` : ''}
+                    <div class="team-order-badge" style="top:2px;left:2px;">${idx + 1}</div>
+                `;
+                div.onclick = () => selectTeamMember(idx);
+                row.appendChild(div);
+            });
+            const label = document.getElementById('selectedCharLabel');
+            if (label) label.textContent = '編成モード';
+        }
+        function selectTeamMember(idx) {
+            const slot = teamSlotById(activeTeamId);
+            if (!slot) return;
+            teamActiveIdx = idx;
+            const cid = slot.chars[idx];
+            currentSelectedCharId = cid;
+            renderTeamCharRow();
+            // サイドバーをこのキャラの保存済み設定に同期
+            loadComboState(cid);
+            sanitizeCombosForVer();
+            sanitizeHiddenCombos();
+            renderComboRow();
+            updateEditWeaponUI();
+            ensureComboIconsLoaded().then(() => { renderComboRow(); updateEditWeaponUI(); });
+            scoreCalcSelect.value = getSavedCalcMethod(cid);
+            applyBgColorControlsUI();
+            updateTeamMemberLabel(cid);
+        }
+        function updateTeamMemberLabel(cid) {
+            (async () => {
+                try {
+                    const sel = getActiveSelection();
+                    const p = new URLSearchParams();
+                    p.set('calc_method', getSavedCalcMethod(cid));
+                    if (sel.fakeChar) p.set('fake_char', sel.fakeChar);
+                    if (sel.fakeWeapon) p.set('fake_weapon', sel.fakeWeapon);
+                    if (ver === 'beta') p.set('beta', 'true');
+                    const res = await fetch(`/api/card_data/${uid}/${cid}?${p}`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    if (teamMode && currentSelectedCharId === cid) {
+                        const label = document.getElementById('selectedCharLabel');
+                        if (label) label.textContent = `${data.displayName}（編成${teamActiveIdx + 1}）`;
+                        setLastKnownRealWeapon(data);
+                        setCurrentCharRegions(data.regions || []);
+                        updateEditWeaponUI();
+                    }
+                } catch (e) { /* ignore */ }
+            })();
+        }
+        function exitTeamMode() {
+            teamMode = false;
+            activeTeamId = null;
+            teamActiveIdx = 0;
+            try { localStorage.removeItem(TEAM_ACTIVE_KEY); } catch (e) {}
+            if (teamModeBar) teamModeBar.classList.add('hidden');
+            if (teamCardBtn) teamCardBtn.classList.remove('hidden');
+            setTeamViewModeRestriction(false);
+            if (typeof bgColorControls !== 'undefined' && bgColorControls) bgColorControls.classList.remove('hidden');
+            if (typeof updateGenerateDisable === 'function') updateGenerateDisable();
+            if (typeof updateAbyssUI === 'function') updateAbyssUI();
+            renderCharThumbRow(showcaseCharList);
+            if (currentSelectedCharId) selectCharById(currentSelectedCharId, false);
+        }
+        function restoreTeamMode() {
+            let savedId = null;
+            try { savedId = localStorage.getItem(TEAM_ACTIVE_KEY); } catch (e) {}
+            if (!savedId) return false;
+            const slot = teamSlotById(savedId);
+            if (!slot) return false;
+            loadTeam(savedId);
+            return true;
+        }
+
+        // ---- キャラ毎の設定を集めて configs を構築（localStorage の既存設定を流用） ----
+        function buildTeamConfigs(chars) {
+            return chars.map(cid => {
+                const keys = comboStorageKeys(cid);
+                let combos = [];
+                try { combos = JSON.parse(localStorage.getItem(keys.list)) || []; } catch (e) { combos = []; }
+                const active = localStorage.getItem(keys.active) || '';
+                const c = combos.find(x => x.id === active) || null;
+                const fakeChar = c ? (c.fakeChar || '') : '';
+                const fakeWeapon = c ? (c.fakeWeapon || '') : '';
+                const bgMap = getBgRegionMap();
+                const regKey = cid + (fakeChar ? ':' + fakeChar : '');
+                const region = bgMap[regKey] || '';
+                const bgMode = getBgColorMode();
+                return {
+                    calc_method: getSavedCalcMethod(cid),
+                    fake_char: fakeChar,
+                    fake_weapon: fakeWeapon,
+                    bg_mode: region ? 'region' : (bgMode === 'custom' ? 'custom' : 'element'),
+                    bg_color: (region ? '' : (bgMode === 'custom' ? getCustomBgColor().replace('#', '') : '')),
+                    bg_region: region,
+                };
+            });
+        }
+
+        // ---- 編成カード画像生成 ----
+        async function generateTeamCardImage(ids, configs, boss) {
+            setGenerationControlsDisabled(true);
+            try {
+                const p = new URLSearchParams();
+                p.set('uid', uid);
+                p.set('char_ids', ids.join(','));
+                if (configs && configs.length) p.set('configs', JSON.stringify(configs));
+                if (boss && boss.version) p.set('boss', JSON.stringify(boss));
+                if (ver === 'beta') p.set('beta', 'true');
+                p.set('img_format', 'png');
+                const signRes = await fetch(`/api/team_card_sign?${p.toString()}`, { cache: 'no-store' });
+                if (!signRes.ok) {
+                    const body = await signRes.json().catch(() => ({}));
+                    throw new Error(body.detail || `署名の取得に失敗しました (status: ${signRes.status})`);
+                }
+                const { url } = await signRes.json();
+
+                htmlCardContainer.classList.remove('hidden');
+                htmlCardContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center gap-3 py-20">
+                        <div class="spinner-primary w-10 h-10"></div>
+                        <div class="text-sm text-zinc-500">編成カードを生成中...</div>
+                    </div>`;
+                const glassEl = document.getElementById('glassCardContainer');
+                if (glassEl) glassEl.classList.add('hidden');
+                cardImage.classList.add('hidden');
+                placeholderText.classList.add('hidden');
+                if (imageAwaitBox) imageAwaitBox.classList.add('hidden');
+
+                let res = await fetch(url, { cache: 'no-store' });
+                if (res.status === 403) {
+                    const retry = await fetch(`/api/team_card_sign?${p.toString()}`, { cache: 'no-store' });
+                    const retryData = await retry.json();
+                    res = await fetch(retryData.url, { cache: 'no-store' });
+                }
+                if (!res.ok) {
+                    const body = await res.json().catch(() => ({}));
+                    throw new Error(body.detail || `編成カードの生成に失敗しました (status: ${res.status})`);
+                }
+                const blob = await res.blob();
+                if (currentImageObjectUrl) URL.revokeObjectURL(currentImageObjectUrl);
+                currentImageObjectUrl = URL.createObjectURL(blob);
+                currentLoadedImageUrl = url;
+                cardImage.src = currentImageObjectUrl;
+            } catch (e) {
+                console.error(e);
+                htmlCardContainer.innerHTML = `<div class="text-red-400 text-sm py-16 text-center">編成カード生成に失敗しました: ${e.message}</div>`;
+            } finally {
+                setGenerationControlsDisabled(false);
+            }
+        }
+        function generateActiveTeam() {
+            const slot = teamSlotById(activeTeamId);
+            if (!slot) return;
+            if (abyssMode && !abyssBoss) {
+                alert('幽境ボスを選択してください');
+                return;
+            }
+            const ids = slot.chars.slice();
+            generateTeamCardImage(ids, buildTeamConfigs(ids), getAbyssBossParam());
+        }
+
+        // ---- イベント ----
+        if (teamCardBtn) {
+            teamCardBtn.addEventListener('click', () => { openTeamCardModal(); });
+        }
+        if (teamCardCancelBtn) {
+            teamCardCancelBtn.addEventListener('click', closeTeamCardModal);
+        }
+        if (teamCardGenerateBtn) {
+            teamCardGenerateBtn.addEventListener('click', finishTeamCreate);
+        }
+        if (teamGenBtn) {
+            teamGenBtn.addEventListener('click', generateActiveTeam);
+        }
+        if (teamEditSlotBtn) {
+            teamEditSlotBtn.addEventListener('click', () => openTeamCardModal());
+        }
+        if (teamExitBtn) {
+            teamExitBtn.addEventListener('click', exitTeamMode);
+        }
+
         // 再生成：Enka API にはアクセスせず、カード画像だけをサーバーに作り直してもらう。
         // 画像表示モード以外なら切り替えてから生成する。
         // 古いキャッシュが残らないよう、対象URLのキャッシュは先に削除する
         regenerateImageBtn.addEventListener('click', async function() {
+            // 編成モード中は編成カードを再生成する
+            if (teamMode) {
+                generateActiveTeam();
+                return;
+            }
             if (!currentSelectedCharId) return;
             if (viewMode !== 'image') {
                 viewMode = 'image';
@@ -3231,6 +3919,172 @@
             await deleteCachedCardImage(await getSignedCardUrl(buildCardImageUrl(currentSelectedCharId)));
             loadCardImage(currentSelectedCharId, true);
         });
+
+        // ==========================================================
+        //  幽境モード（レイラインの敵ボスを編成カード下部に表示）
+        // ==========================================================
+        const ABYSS_BOSS_KEY = 'abyss_boss_' + uid;
+        const ABYSS_MODE_KEY = 'abyss_mode_' + uid;
+        const ABYSS_PRE_VERSIONS = ['5.7', '5.8', '6.0 (luna1)', '6.1 (luna2)', '6.2 (luna3)', '6.3 (luna4)', '6.4 (luna5)', '6.5 (luna6)', '6.6 (luna7)', '6.7 (luna8)'];
+        let abyssMode = false;
+        let abyssBoss = null;
+        try { abyssBoss = JSON.parse(localStorage.getItem(ABYSS_BOSS_KEY)) || null; } catch (e) { abyssBoss = null; }
+        try { abyssMode = localStorage.getItem(ABYSS_MODE_KEY) === '1'; } catch (e) { abyssMode = false; }
+        function saveAbyssMode() {
+            try {
+                if (abyssMode) localStorage.setItem(ABYSS_MODE_KEY, '1');
+                else localStorage.removeItem(ABYSS_MODE_KEY);
+            } catch (e) {}
+        }
+
+        function abyssVersionFor(id) {
+            const n = Number(id);
+            if (!Number.isFinite(n)) return '';
+            if (n <= 5269010) {
+                const idx = n - 5269001;
+                return (idx >= 0 && idx < ABYSS_PRE_VERSIONS.length) ? ABYSS_PRE_VERSIONS[idx] : '';
+            }
+            if (n <= 5269011) return '7.0';
+            return '7.' + (n - 5269011);
+        }
+        function saveAbyssBoss() {
+            try {
+                if (abyssBoss) localStorage.setItem(ABYSS_BOSS_KEY, JSON.stringify(abyssBoss));
+                else localStorage.removeItem(ABYSS_BOSS_KEY);
+            } catch (e) {}
+        }
+        function updateGenerateDisable() {
+            // 編成モード中・幽境ONでボス未選択なら生成不可
+            const needBoss = teamMode && abyssMode && !abyssBoss;
+            if (regenerateImageBtn) {
+                regenerateImageBtn.disabled = needBoss;
+                regenerateImageBtn.classList.toggle('opacity-60', needBoss);
+                regenerateImageBtn.classList.toggle('cursor-not-allowed', needBoss);
+            }
+        }
+        function updateAbyssUI() {
+            const row = document.getElementById('abyssRow');
+            const btn = document.getElementById('abyssToggleBtn');
+            const slotBtn = document.getElementById('abyssSlotBtn');
+            // 幽境モードは編成モード中のみ有効（通常モードでは無効化）
+            if (row) row.classList.toggle('hidden', !(teamMode && abyssMode));
+            if (btn) {
+                btn.disabled = !teamMode;
+                btn.classList.toggle('opacity-40', !teamMode);
+                btn.classList.toggle('cursor-not-allowed', !teamMode);
+                btn.classList.toggle('border-cyan-400', abyssMode);
+                btn.classList.toggle('bg-cyan-500/20', abyssMode);
+            }
+            const icon = document.getElementById('abyssSlotIcon');
+            const label = document.getElementById('abyssSlotLabel');
+            if (abyssBoss && abyssBoss.img) {
+                if (icon) { icon.src = abyssBoss.img; icon.classList.remove('hidden'); }
+                if (label) label.textContent = `${abyssBoss.name || 'ボス'}（${abyssBoss.version || ''}）`;
+            } else {
+                if (icon) icon.classList.add('hidden');
+                if (label) label.textContent = 'ボスを選択';
+            }
+            // ボス選択済みなら縁を明るく（選択中のように）
+            if (slotBtn) {
+                slotBtn.classList.toggle('border-cyan-400', !!abyssBoss);
+                slotBtn.classList.toggle('ring-2', !!abyssBoss);
+                slotBtn.classList.toggle('ring-cyan-400/60', !!abyssBoss);
+            }
+            updateGenerateDisable();
+        }
+        function getAbyssBossParam() {
+            if (!abyssMode || !abyssBoss || !abyssBoss.version) return null;
+            return { version: abyssBoss.version, name: abyssBoss.name || '', img: abyssBoss.img || '' };
+        }
+
+        // ---- ボス選択モーダル ----
+        function openAbyssModal() {
+            const modal = document.getElementById('abyssModal');
+            const groupsEl = document.getElementById('abyssVersionGroups');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            groupsEl.innerHTML = '<div class="text-sm text-zinc-500 py-6 text-center">読み込み中...</div>';
+            loadAbyssGroups().then(groups => renderAbyssGroups(groups));
+        }
+        function closeAbyssModal() {
+            const modal = document.getElementById('abyssModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+        async function loadAbyssGroups() {
+            const groups = [];
+            try {
+                const res = await fetch('/api/leyline_versions');
+                const data = await res.json();
+                if (!data.ok || !data.versions) return groups;
+                for (const v of data.versions) {
+                    try {
+                        const jres = await fetch(v.url);
+                        if (!jres.ok) continue;
+                        const json = await jres.json();
+                        Object.values(json || {}).forEach(entry => {
+                            const verLabel = abyssVersionFor(entry.id);
+                            if (!entry.enemies || !entry.enemies.length) return;
+                            let g = groups.find(x => x.version === verLabel);
+                            if (!g) { g = { version: verLabel, enemies: [] }; groups.push(g); }
+                            entry.enemies.forEach(e => {
+                                g.enemies.push({ leylineId: entry.id, leylineName: entry.name || '', name: e.name || '', img: e.img || '' });
+                            });
+                        });
+                    } catch (e) { /* skip */ }
+                }
+            } catch (e) { /* ignore */ }
+            groups.sort((a, b) => String(b.version || '').localeCompare(String(a.version || '')));
+            return groups;
+        }
+        function renderAbyssGroups(groups) {
+            const groupsEl = document.getElementById('abyssVersionGroups');
+            if (!groups.length) {
+                groupsEl.innerHTML = '<div class="text-sm text-zinc-500 py-6 text-center">レイラインデータがありません（管理画面で取得してください）</div>';
+                return;
+            }
+            groupsEl.innerHTML = groups.map(g => `
+                <div>
+                    <div class="text-sm font-bold text-cyan-300 mb-2">${g.version}</div>
+                    <div class="flex flex-wrap gap-2">
+                        ${g.enemies.map(e => `
+                            <button type="button" class="abyss-enemy-tile w-24 flex flex-col items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-800/60 p-1.5 hover:border-cyan-400 transition-all"
+                                data-abyss='${encodeURIComponent(JSON.stringify(e))}'>
+                                <img src="${e.img || ''}" class="w-16 h-16 rounded object-cover bg-zinc-800" onerror="this.style.visibility='hidden'">
+                                <span class="text-[10px] text-zinc-400 text-center leading-tight">${e.name}</span>
+                            </button>`).join('')}
+                    </div>
+                </div>`).join('');
+            groupsEl.querySelectorAll('.abyss-enemy-tile').forEach(tile => {
+                tile.addEventListener('click', () => {
+                    try {
+                        const e = JSON.parse(decodeURIComponent(tile.getAttribute('data-abyss')));
+                        abyssBoss = { version: abyssVersionFor(e.leylineId), name: e.name, img: e.img, leylineId: e.leylineId };
+                        saveAbyssBoss();
+                        updateAbyssUI();
+                        closeAbyssModal();
+                    } catch (err) { /* ignore */ }
+                });
+            });
+        }
+        function clearAbyssBoss() {
+            abyssBoss = null;
+            saveAbyssBoss();
+            updateAbyssUI();
+            closeAbyssModal();
+        }
+
+        const abyssToggleBtn = document.getElementById('abyssToggleBtn');
+        if (abyssToggleBtn) {
+            abyssToggleBtn.addEventListener('click', () => { abyssMode = !abyssMode; saveAbyssMode(); updateAbyssUI(); });
+        }
+        const abyssSlotBtn = document.getElementById('abyssSlotBtn');
+        if (abyssSlotBtn) abyssSlotBtn.addEventListener('click', openAbyssModal);
+        const abyssCloseBtn = document.getElementById('abyssCloseBtn');
+        if (abyssCloseBtn) abyssCloseBtn.addEventListener('click', closeAbyssModal);
+        const abyssClearBtn = document.getElementById('abyssClearBtn');
+        if (abyssClearBtn) abyssClearBtn.addEventListener('click', clearAbyssBoss);
+        updateAbyssUI();
     </script>
 </body>
 </html>

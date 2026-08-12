@@ -1,0 +1,10 @@
+{
+  "name": "千鈞懸黎",
+  "weapon_type": "WEAPON_BOW",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Bow_ShatteredMirror",
+  "stats_modifier": {
+    "atk": 509.6059,
+    "fight_prop_critical": 0.2756
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "白銀の湖を舞う翼",
+  "weapon_type": "WEAPON_SWORD_ONE_HAND",
+  "rarity": 5,
+  "icon": "UI_EquipIcon_Sword_Swanlake",
+  "stats_modifier": {
+    "atk": 674.3345,
+    "fight_prop_critical": 0.2205
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "旅人",
+  "desc": "",
+  "weapon": "WEAPON_CROSSBOW",
+  "rarity": "QUALITY_ORANGE",
+  "element": "None",
+  "icon": "UI_AvatarIcon_PlayerBoy",
+  "crit_rate": 0,
+  "crit_dmg": 0.5,
+  "elemental_mastery": 0,
+  "stats_modifier": {
+    "hp": 9749.707555500001,
+    "atk": 3249.90276897,
+    "def": 1949.94159459,
+    "extra": {}
+  },
+  "skills": [],
+  "passives": [],
+  "constellations": [],
+  "costume": [
+    {
+      "id": 213400,
+      "icon": "",
+      "quality": 0
+    }
+  ]
+}

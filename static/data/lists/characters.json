@@ -34,6 +34,13 @@
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
+  "10000005-5": {
+    "element": "Cryo",
+    "enName": "Traveler",
+    "jaName": "旅人",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
   "10000005-6": {
     "element": "Geo",
     "enName": "Traveler",
@@ -78,6 +85,13 @@
   },
   "10000007-4": {
     "element": "Anemo",
+    "enName": "Traveler",
+    "jaName": "旅人",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000007-5": {
+    "element": "Cryo",
     "enName": "Traveler",
     "jaName": "旅人",
     "qualityType": "QUALITY_ORANGE",
@@ -811,6 +825,13 @@
     "qualityType": "QUALITY_ORANGE_SP",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
+  "10000117-5": {
+    "element": "Cryo",
+    "enName": "Manekin",
+    "jaName": "ドール（男）",
+    "qualityType": "QUALITY_ORANGE_SP",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
   "10000117-6": {
     "element": "Geo",
     "enName": "Manekin",
@@ -848,6 +869,13 @@
   },
   "10000118-4": {
     "element": "Anemo",
+    "enName": "Manekina",
+    "jaName": "ドール（女）",
+    "qualityType": "QUALITY_ORANGE_SP",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "10000118-5": {
+    "element": "Cryo",
     "enName": "Manekina",
     "jaName": "ドール（女）",
     "qualityType": "QUALITY_ORANGE_SP",
@@ -978,5 +1006,33 @@
     "jaName": "サンドローネ",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_CLAYMORE"
+  },
+  "10000134": {
+    "element": "None",
+    "enName": "Traveler",
+    "jaName": "旅人",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CROSSBOW"
+  },
+  "10000135": {
+    "element": "None",
+    "enName": "Traveler",
+    "jaName": "旅人",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CROSSBOW"
+  },
+  "10000148": {
+    "element": "Electro",
+    "enName": "Alyosha",
+    "jaName": "アリョーシャ",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_POLE"
+  },
+  "10000150": {
+    "element": "Cryo",
+    "enName": "Odette",
+    "jaName": "オデット",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
   }
 }

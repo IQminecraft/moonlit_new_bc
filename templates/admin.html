@@ -41,6 +41,13 @@
             background: #27272a; border: 1px solid #3f3f46; color: #d4d4d8; cursor: pointer; transition: all .12s;
         }
         .region-tab.active { background: #0e7490; border-color: #22d3ee; color: #fff; }
+        .leyline-del {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 16px; height: 16px; border-radius: 9999px;
+            background: #dc2626; color: #fff; font-size: 11px; line-height: 1;
+            cursor: pointer; border: none;
+        }
+        .leyline-del:hover { background: #b91c1c; }
         .char-tile {
             position: relative; border-radius: 10px; border: 1px solid #27272a; background: #0f0f12;
             padding: 4px; cursor: pointer; transition: all .12s; text-align: center;
@@ -59,6 +66,21 @@
             background: #22d3ee; color: #000; font-size: 10px; font-weight: 900;
             border-radius: 9999px; width: 16px; height: 16px; line-height: 16px;
         }
+        /* 管理タブ */
+        .admin-tab {
+            padding: 0.45rem 0.9rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+            background: #27272a; border: 1px solid #3f3f46; color: #d4d4d8; cursor: pointer; transition: all .12s;
+        }
+        .admin-tab:hover { background: #3f3f46; }
+        .admin-tab.active { background: #0e7490; border-color: #22d3ee; color: #fff; }
+        /* スプラッシュオフセットの行選択 */
+        .splash-offset-row { cursor: pointer; transition: border-color .12s; }
+        .splash-offset-row:hover { border-color: #52525b; }
+        .splash-offset-row.active { border-color: #22d3ee; box-shadow: 0 0 0 1px rgba(34,211,238,.35); }
+        .splash-preview-btn { cursor: pointer; }
+        #splashPreviewBox:active { cursor: grabbing; }
+        /* Tailwind Preflight(img{max-width:100%;height:auto})に上書きされないよう固定 */
+        #splashPreviewImg { max-width: none; height: auto; }
     </style>
 </head>
 <body class="min-h-screen">
@@ -76,6 +98,15 @@
             </div>
         </header>
 
+        <!-- 管理タブ -->
+        <div class="flex flex-wrap gap-1.5 mb-6" id="adminTabs">
+            <button type="button" class="admin-tab active" data-tab="data">データ管理</button>
+            <button type="button" class="admin-tab" data-tab="region">キャラ地域設定</button>
+            <button type="button" class="admin-tab" data-tab="splash">スプラッシュオフセット</button>
+            <button type="button" class="admin-tab" data-tab="leyline">Leyline</button>
+        </div>
+
+        <div id="tab-data" class="admin-tab-panel">
         <!-- 状態 -->
         <section class="card p-5 mb-6">
             <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
@@ -221,6 +252,19 @@
             </div>
         </section>
 
+        <!-- 結果・ログ -->
+        <section class="card p-5 mb-6">
+            <h2 class="text-lg font-semibold mb-3">直近の操作結果</h2>
+            <pre class="log" id="actionResult">（操作するとここに表示されます）</pre>
+        </section>
+
+        <section class="card p-5">
+            <h2 class="text-lg font-semibold mb-3">操作ログ</h2>
+            <div id="logList" class="space-y-2 text-sm"></div>
+        </section>
+        </div><!-- /tab-data -->
+
+        <div id="tab-region" class="admin-tab-panel hidden">
         <!-- キャラ地域割り当て -->
         <section class="card p-5 mb-6">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
@@ -251,6 +295,7 @@
             <div id="regionGrid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2"></div>
             <div id="regionGridStatus" class="text-xs text-zinc-500 mt-2"></div>
         </section>
+        </div><!-- /tab-region -->
 
         <!-- 未所属キャラの割り当てモーダル -->
         <div id="assignModal" class="hidden fixed inset-0 bg-black/60 items-center justify-center z-50">
@@ -262,22 +307,435 @@
             </div>
         </div>
 
-        <!-- 結果・ログ -->
-
+        <div id="tab-splash" class="admin-tab-panel hidden">
+        <!-- チームカード スプラッシュオフセット設定 -->
         <section class="card p-5 mb-6">
-            <h2 class="text-lg font-semibold mb-3">直近の操作結果</h2>
-            <pre class="log" id="actionResult">（操作するとここに表示されます）</pre>
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 class="text-lg font-semibold">チームカード スプラッシュオフセット</h2>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="splashOffsetReloadBtn" class="btn btn-ghost text-xs">再読み込み</button>
+                    <button type="button" id="splashOffsetSaveBtn" class="btn btn-primary text-xs">保存</button>
+                </div>
+            </div>
+            <p class="text-xs text-zinc-500 mb-3">
+                編成カード生成時のキャラ立ち絵の表示中心を、幅/高さに対する割合（-100〜100%）でずらします。0% = 中央。
+                ここでの値はチームカード画像の生成に適用されます。「スプラッシュ」は通常衣装、「衣装」は各コスチュームごとに設定できます。
+            </p>
+
+            <div class="flex gap-1.5 mb-3" id="splashSubTabs">
+                <button type="button" class="admin-tab active" data-splash-tab="base">スプラッシュ</button>
+                <button type="button" class="admin-tab" data-splash-tab="costume">衣装</button>
+            </div>
+
+            <!-- ドラッグ式プレビュー（実際のカードと同じ 525×188px = IDENTITY行） -->
+            <div class="mb-4">
+                <div class="text-sm font-semibold mb-1">プレビュー（編成カード IDENTITY行と同じサイズ）</div>
+                <div class="flex flex-wrap gap-4 items-start">
+                    <div id="splashPreviewBox" class="relative overflow-hidden rounded-lg border border-zinc-700 bg-black/40 select-none"
+                        style="width:525px;height:188px;cursor:grab;touch-action:none;">
+                        <img id="splashPreviewImg" alt="" class="absolute" style="display:none;pointer-events:none;">
+                        <div class="splash-preview-center" style="position:absolute;left:0;top:50%;right:0;height:0;pointer-events:none;border-top:1px dashed rgba(255,255,255,.55);"></div>
+                        <div class="splash-preview-center" style="position:absolute;top:0;left:50%;bottom:0;width:0;pointer-events:none;border-left:1px dashed rgba(255,255,255,.55);"></div>
+                        <div id="splashPreviewEmpty" class="absolute inset-0 flex items-center justify-center text-xs text-zinc-600">プレビューするキャラを下のリストで選択してください</div>
+                    </div>
+                    <div class="flex flex-col gap-1.5 text-xs text-zinc-400">
+                        <div id="splashPreviewName" class="text-sm font-semibold text-zinc-200">未選択</div>
+                        <div id="splashPreviewLabel" class="mono">X: 0.0%  Y: 0.0%</div>
+                        <button type="button" id="splashPreviewResetBtn" class="btn btn-ghost text-xs w-fit">0%にリセット</button>
+                        <div class="text-zinc-500 max-w-[240px]">プレビュー内をドラッグするとオフセットが変わります。スライダー/数値入力とも同期します。</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-2"><input type="text" id="splashOffsetSearch" placeholder="キャラ名で絞り込み"
+                class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none"></div>
+            <div id="splashOffsetList" class="space-y-1.5 max-h-96 overflow-y-auto pr-1"></div>
+            <div id="costumeOffsetList" class="space-y-1.5 max-h-96 overflow-y-auto pr-1 hidden"></div>
+            <div id="splashOffsetStatus" class="text-xs text-zinc-500 mt-2"></div>
+            <div id="splashOffsetSaveResult" class="text-xs mt-2 hidden"></div>
+        </section>
+        </div><!-- /tab-splash -->
+
+        <div id="tab-leyline" class="admin-tab-panel hidden">
+        <!-- Leyline データ（バージョンごとに取得・閲覧） -->
+        <section class="card p-5 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 class="text-lg font-semibold">Leyline（イベント）データ</h2>
+            </div>
+            <p class="text-xs text-zinc-500 mb-3">
+                static.nanoka.cc/gi/&lt;version&gt;/leyline.json を取得します。バージョン（例: 6.7.54）を指定してください。
+            </p>
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+                <input id="leylineVersionInput" type="text" readonly placeholder="バージョン（例: 7.0）"
+                    class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm w-40 focus:outline-none cursor-not-allowed" title="バージョンは下のチップから選択してください">
+                <button type="button" id="leylineFetchBtn" class="btn btn-primary text-xs">取得</button>
+                <span id="leylineStatus" class="text-xs text-zinc-500"></span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+                <input id="leylineAddVersionInput" type="text" placeholder="追加するバージョン（例: 6.7.54）"
+                    class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm w-44 focus:outline-none">
+                <button type="button" id="leylineAddVersionBtn" class="btn btn-ghost text-xs">バージョンを追加</button>
+            </div>
+            <div class="flex flex-wrap gap-1.5 mb-3" id="leylineVersionChips"></div>
+            <div class="overflow-x-auto border border-zinc-800 rounded-lg">
+                <table class="w-full text-xs">
+                    <thead class="text-left text-zinc-400 bg-zinc-900/60">
+                        <tr>
+                            <th class="px-2 py-2">バージョン</th>
+                            <th class="px-2 py-2">ID</th>
+                            <th class="px-2 py-2">名前 (ja)</th>
+                            <th class="px-2 py-2">名前 (en)</th>
+                            <th class="px-2 py-2">期間開始</th>
+                            <th class="px-2 py-2">期間終了</th>
+                            <th class="px-2 py-2">live開始</th>
+                            <th class="px-2 py-2">live終了</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leylineTableBody"></tbody>
+                </table>
+            </div>
         </section>
 
-        <section class="card p-5">
-            <h2 class="text-lg font-semibold mb-3">操作ログ</h2>
-            <div id="logList" class="space-y-2 text-sm"></div>
-        </section>
+        <!-- レイライン敵モーダル -->
+        <div id="leylineEnemyModal" class="hidden fixed inset-0 bg-black/60 items-center justify-center z-50">
+            <div class="card p-5 w-[560px] max-w-[92vw]">
+                <div class="flex items-center justify-between mb-3 gap-2">
+                    <div id="leylineEnemyTitle" class="text-sm font-semibold">—</div>
+                    <button type="button" id="leylineEnemyClose" class="btn btn-ghost text-xs shrink-0">閉じる</button>
+                </div>
+                <div id="leylineEnemyBody" class="flex gap-4 flex-wrap items-start"></div>
+            </div>
+        </div>
+        </div><!-- /tab-leyline -->
     </div>
 
     <script>
         const resultEl = document.getElementById('actionResult');
         const refreshBtn = document.getElementById('refreshBtn');
+        const TEAM_SPLASH_BASE = '/static/data/setting/team_splash_offsets.json';
+        let splashOffsets = {};
+        let splashCatalog = [];
+
+        // ==========================================================
+        //  管理タブ切り替え
+        // ==========================================================
+        const ADMIN_TAB_KEY = 'admin_active_tab';
+        function activateAdminTab(tab) {
+            document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.add('hidden'));
+            const target = document.getElementById('tab-' + tab);
+            if (target) target.classList.remove('hidden');
+            document.querySelectorAll('.admin-tab[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+            try { localStorage.setItem(ADMIN_TAB_KEY, tab); } catch (e) {}
+        }
+        document.querySelectorAll('.admin-tab[data-tab]').forEach(btn => {
+            btn.addEventListener('click', () => activateAdminTab(btn.dataset.tab));
+        });
+        let savedAdminTab = 'data';
+        try { savedAdminTab = localStorage.getItem(ADMIN_TAB_KEY) || 'data'; } catch (e) {}
+        activateAdminTab(['data', 'region', 'splash'].includes(savedAdminTab) ? savedAdminTab : 'data');
+
+        // ==========================================================
+        //  スプラッシュオフセット プレビュー（実際のカードと同じサイズ）
+        // ==========================================================
+        const SPLASH_PREVIEW_W = 525;  // _COL_W(420) * 1.25
+        const SPLASH_PREVIEW_H = 188;  // _IDENTITY_H(150) * 1.25
+        const SPLASH_ZOOM = 3.0;       // team_image.TEAM_SPLASH_ZOOM と同じ
+        let previewCharId = null;
+        let previewBase = { x: 0, y: 0, rangeX: 0, rangeY: 0 };
+        let previewDragging = false;
+        let previewDrag = { startX: 0, startY: 0, pctX: 0, pctY: 0 };
+
+        function clampPct(v) {
+            return Math.max(-100, Math.min(100, Math.round(v * 10) / 10));
+        }
+
+        function previewTargetFor(key) {
+            // key: "10000042"（通常スプラッシュ）または "10000042:200201"（衣装）
+            const colon = String(key).indexOf(':');
+            if (colon > 0) {
+                const base = String(key).slice(0, colon);
+                const cid = String(key).slice(colon + 1);
+                const c = splashCatalog.find(e => e.raw_id === base);
+                const cost = c && (c.costumes || []).find(x => String(x.id) === cid);
+                if (cost) {
+                    const url = cost.splash || cost.icon || '';
+                    return { name: `${c.name} / 衣装${cid}`, splash: url.startsWith('/') ? url : '/' + url };
+                }
+            }
+            const c = splashCatalog.find(e => e.raw_id === String(key));
+            if (!c) return null;
+            const url = c.splash || '';
+            return { name: c.name, splash: url.startsWith('/') ? url : '/' + url };
+        }
+
+        function syncOffsetInputs(cid) {
+            const pos = splashOffsets[cid] || { x: 0, y: 0 };
+            document.querySelectorAll(`input[data-char-id="${cid}"]`).forEach(el => {
+                el.value = pos[el.getAttribute('data-offset-field')] ?? 0;
+            });
+        }
+
+        function applyPreviewPosition() {
+            if (!previewCharId) return;
+            const img = document.getElementById('splashPreviewImg');
+            if (!img) return;
+            const pos = splashOffsets[previewCharId] || { x: 0, y: 0 };
+            const ox = previewBase.x + previewBase.rangeX * (pos.x / 100);
+            const oy = previewBase.y + previewBase.rangeY * (pos.y / 100);
+            img.style.left = ox + 'px';
+            img.style.top = oy + 'px';
+            const lbl = document.getElementById('splashPreviewLabel');
+            if (lbl) lbl.textContent = `X: ${pos.x.toFixed(1)}%  Y: ${pos.y.toFixed(1)}%`;
+            syncOffsetInputs(previewCharId);
+            document.querySelectorAll('.splash-offset-row').forEach(row => {
+                row.classList.toggle('active', row.getAttribute('data-preview-char') === previewCharId);
+            });
+        }
+
+        function setupSplashPreview(key) {
+            previewCharId = key;
+            const t = previewTargetFor(key);
+            const img = document.getElementById('splashPreviewImg');
+            const empty = document.getElementById('splashPreviewEmpty');
+            const nameEl = document.getElementById('splashPreviewName');
+            if (!img || !empty) return;
+            if (nameEl) nameEl.textContent = t ? t.name : key;
+            const url = (t && t.splash) || '';
+            if (!url) {
+                img.style.display = 'none';
+                empty.style.display = 'flex';
+                return;
+            }
+            empty.style.display = 'none';
+            img.style.display = 'block';
+            img.onload = () => {
+                const natW = img.naturalWidth;
+                const natH = img.naturalHeight;
+                const cover = Math.max(SPLASH_PREVIEW_W / natW, SPLASH_PREVIEW_H / natH) * SPLASH_ZOOM;
+                const nw = natW * cover;
+                const nh = natH * cover;
+                img.style.width = nw + 'px';
+                img.style.height = nh + 'px';
+                previewBase.x = (SPLASH_PREVIEW_W - nw) / 2;
+                previewBase.y = (SPLASH_PREVIEW_H - nh) / 2;
+                previewBase.rangeX = (nw - SPLASH_PREVIEW_W) / 2;
+                previewBase.rangeY = (nh - SPLASH_PREVIEW_H) / 2;
+                applyPreviewPosition();
+            };
+            img.onerror = () => {
+                // beta アセットにフォールバック（1回だけ）
+                if (!img.dataset.betaTried) {
+                    img.dataset.betaTried = '1';
+                    img.src = url.replace('/static/assets/', '/static/beta/assets/');
+                } else {
+                    img.style.display = 'none';
+                    empty.style.display = 'flex';
+                }
+            };
+            img.src = url;
+            applyPreviewPosition();
+        }
+
+        (function bindSplashPreviewEvents() {
+            const box = document.getElementById('splashPreviewBox');
+            if (!box) return;
+            box.addEventListener('pointerdown', (e) => {
+                if (!previewCharId) return;
+                const pos = splashOffsets[previewCharId] || { x: 0, y: 0 };
+                previewDragging = true;
+                previewDrag.startX = e.clientX;
+                previewDrag.startY = e.clientY;
+                previewDrag.pctX = pos.x;
+                previewDrag.pctY = pos.y;
+                try { box.setPointerCapture(e.pointerId); } catch (err) {}
+            });
+            box.addEventListener('pointermove', (e) => {
+                if (!previewDragging || !previewCharId) return;
+                const dx = e.clientX - previewDrag.startX;
+                const dy = e.clientY - previewDrag.startY;
+                const px = previewDrag.pctX + (previewBase.rangeX ? (dx / previewBase.rangeX) * 100 : 0);
+                const py = previewDrag.pctY + (previewBase.rangeY ? (dy / previewBase.rangeY) * 100 : 0);
+                const prev = splashOffsets[previewCharId] || { x: 0, y: 0 };
+                splashOffsets[previewCharId] = { x: clampPct(px), y: clampPct(py) };
+                applyPreviewPosition();
+            });
+            const endDrag = () => { previewDragging = false; };
+            box.addEventListener('pointerup', endDrag);
+            box.addEventListener('pointercancel', endDrag);
+            document.getElementById('splashPreviewResetBtn')?.addEventListener('click', () => {
+                if (!previewCharId) return;
+                splashOffsets[previewCharId] = { x: 0, y: 0 };
+                applyPreviewPosition();
+            });
+        })();
+
+        function offsetRowHTML(key, label, iconPath, cur) {
+            const iconHtml = iconPath
+                ? `<img src="${iconPath.startsWith('/') ? '' : '/'}${iconPath}" class="w-9 h-9 rounded-md object-cover bg-zinc-800" loading="lazy">`
+                : `<div class="w-9 h-9 rounded-md bg-zinc-800 flex items-center justify-center text-xs text-zinc-500">?</div>`;
+            return `
+                <div class="splash-offset-row flex flex-wrap items-center gap-3 px-2 py-1.5 bg-zinc-900/60 rounded-lg border border-zinc-800${previewCharId === key ? ' active' : ''}"
+                    data-preview-char="${key}">
+                    ${iconHtml}
+                    <span class="w-24 text-sm font-medium truncate" title="${label}">${label}</span>
+                    <div class="flex items-center gap-2 text-xs text-zinc-400">
+                        <span class="w-14">X %</span>
+                        <input type="range" min="-100" max="100" step="0.5" value="${cur.x}"
+                            data-offset-field="x" data-char-id="${key}" class="splash-range w-40">
+                        <input type="number" min="-100" max="100" step="0.5" value="${cur.x}"
+                            data-offset-field="x" data-char-id="${key}" class="splash-num w-14 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-center">
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-zinc-400">
+                        <span class="w-14">Y %</span>
+                        <input type="range" min="-100" max="100" step="0.5" value="${cur.y}"
+                            data-offset-field="y" data-char-id="${key}" class="splash-range w-40">
+                        <input type="number" min="-100" max="100" step="0.5" value="${cur.y}"
+                            data-offset-field="y" data-char-id="${key}" class="splash-num w-14 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-center">
+                    </div>
+                    <button type="button" class="btn btn-ghost text-xs splash-preview-btn" data-preview-char="${key}">プレビュー</button>
+                </div>`;
+        }
+
+        function bindOffsetList(listEl) {
+            if (!listEl) return;
+            listEl.querySelectorAll('.splash-range, .splash-num').forEach(el => {
+                el.addEventListener('input', () => {
+                    const cid = el.getAttribute('data-char-id');
+                    const field = el.getAttribute('data-offset-field');
+                    const v = parseFloat(el.value) || 0;
+                    const prev = splashOffsets[cid] || { x: 0, y: 0 };
+                    splashOffsets[cid] = { ...prev, [field]: Math.max(-100, Math.min(100, v)) };
+                    const siblingSel = el.classList.contains('splash-range') ? 'input.splash-num' : 'input.splash-range';
+                    const sibling = listEl.querySelector(`${siblingSel}[data-char-id="${cid}"][data-offset-field="${field}"]`);
+                    if (sibling) sibling.value = splashOffsets[cid][field];
+                    if (previewCharId === cid) applyPreviewPosition();
+                });
+            });
+            listEl.querySelectorAll('.splash-preview-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    setupSplashPreview(btn.getAttribute('data-preview-char'));
+                });
+            });
+            listEl.querySelectorAll('.splash-offset-row').forEach(row => {
+                row.addEventListener('click', (e) => {
+                    if (e.target.closest('input') || e.target.closest('.splash-preview-btn')) return;
+                    setupSplashPreview(row.getAttribute('data-preview-char'));
+                });
+            });
+        }
+
+        function renderBaseList() {
+            const listEl = document.getElementById('splashOffsetList');
+            if (!listEl) return;
+            const query = (document.getElementById('splashOffsetSearch')?.value || '').toLowerCase().trim();
+            const filtered = query
+                ? splashCatalog.filter(c => (c.name || '').toLowerCase().includes(query))
+                : splashCatalog;
+            listEl.innerHTML = filtered.length
+                ? filtered.map(c => offsetRowHTML(c.raw_id, c.name, c.icon, splashOffsets[c.raw_id] || { x: 0, y: 0 })).join('')
+                : '<div class="text-zinc-600 text-xs">該当キャラがいません</div>';
+            bindOffsetList(listEl);
+        }
+
+        function renderCostumeList() {
+            const listEl = document.getElementById('costumeOffsetList');
+            if (!listEl) return;
+            const query = (document.getElementById('splashOffsetSearch')?.value || '').toLowerCase().trim();
+            const rows = [];
+            splashCatalog.forEach(c => {
+                (c.costumes || []).forEach(cost => {
+                    const key = `${c.raw_id}:${cost.id}`;
+                    const label = `${c.name} / 衣装${cost.id}`;
+                    if (query && !label.toLowerCase().includes(query)) return;
+                    rows.push(offsetRowHTML(key, label, cost.icon, splashOffsets[key] || { x: 0, y: 0 }));
+                });
+            });
+            listEl.innerHTML = rows.length
+                ? rows.join('')
+                : '<div class="text-zinc-600 text-xs">該当する衣装がありません</div>';
+            bindOffsetList(listEl);
+        }
+
+        function renderSplashOffsets() {
+            renderBaseList();
+            renderCostumeList();
+        }
+
+        // スプラッシュ / 衣装 サブタブ
+        function activateSplashSubTab(tab) {
+            document.querySelectorAll('#splashSubTabs .admin-tab').forEach(b => b.classList.toggle('active', b.dataset.splashTab === tab));
+            document.getElementById('splashOffsetList')?.classList.toggle('hidden', tab !== 'base');
+            document.getElementById('costumeOffsetList')?.classList.toggle('hidden', tab !== 'costume');
+        }
+        document.querySelectorAll('#splashSubTabs .admin-tab').forEach(btn => {
+            btn.addEventListener('click', () => activateSplashSubTab(btn.dataset.splashTab));
+        });
+        activateSplashSubTab('base');
+
+        async function loadSplashOffsets() {
+            try {
+                const res = await fetch('/admin/api/team_splash_offsets');
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const data = await res.json();
+                if (!data.ok) throw new Error(data.error || 'failed');
+                splashCatalog = data.catalog || [];
+                const rows = data.offsets || {};
+                splashOffsets = {};
+                Object.keys(rows).forEach(k => {
+                    splashOffsets[k] = { x: rows[k].x, y: rows[k].y };
+                });
+                const costumeCount = splashCatalog.reduce((n, c) => n + (c.costumes || []).length, 0);
+                document.getElementById('splashOffsetStatus').textContent =
+                    `${splashCatalog.length}キャラ / 衣装${costumeCount}件 / 設定${Object.keys(splashOffsets).length}件`;
+                renderSplashOffsets();
+            } catch (e) {
+                document.getElementById('splashOffsetStatus').textContent = `読み込み失敗: ${e}`;
+            }
+        }
+
+        function setSplashSaveResult(ok, text) {
+            const el = document.getElementById('splashOffsetSaveResult');
+            if (!el) return;
+            el.classList.remove('hidden');
+            if (ok === null) {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-zinc-700/60 bg-zinc-900/40 text-zinc-300';
+            } else if (ok) {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-emerald-800/60 bg-emerald-950/30 text-emerald-400';
+            } else {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-red-800/60 bg-red-950/30 text-red-400';
+            }
+            el.textContent = text;
+        }
+
+        async function saveSplashOffsets() {
+            setSplashSaveResult(null, '保存中...');
+            try {
+                const res = await fetch('/admin/api/team_splash_offsets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(splashOffsets),
+                });
+                const data = await res.json();
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const ts = new Date().toLocaleTimeString('ja-JP');
+                if (res.ok && data.ok) {
+                    const updated = data.updated ?? Object.keys(splashOffsets).length;
+                    setSplashSaveResult(true, `${ts} 保存成功: ${updated}件を保存しました`);
+                } else {
+                    setSplashSaveResult(false, `${ts} 保存失敗: ${data.error || `status ${res.status}`}`);
+                }
+                resultEl.textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                setSplashSaveResult(false, `保存エラー: ${e}`);
+                resultEl.textContent = String(e);
+            }
+        }
+
+        document.getElementById('splashOffsetReloadBtn')?.addEventListener('click', loadSplashOffsets);
+        document.getElementById('splashOffsetSaveBtn')?.addEventListener('click', saveSplashOffsets);
+        document.getElementById('splashOffsetSearch')?.addEventListener('input', renderSplashOffsets);
+        loadSplashOffsets();
 
         function chips(ids) {
             if (!ids || !ids.length) return '<span class="text-zinc-600 text-xs">なし</span>';
@@ -623,6 +1081,222 @@
         }
 
         loadRegionMap();
+
+        // ==========================================================
+        //  Leyline（イベント）データ取得・表示
+        // ==========================================================
+        //  Leyline バージョン管理（admin で追加した一覧はサーバーに保存）
+        let leylineAvailable = { live: null, latest: null, available: [], saved_versions: [] };
+        function leylineSavedVersions() {
+            return (leylineAvailable.saved_versions || []).slice();
+        }
+        function renderLeylineChips() {
+            const el = document.getElementById('leylineVersionChips');
+            if (!el) return;
+            const vers = [];
+            const add = (v, label) => { if (v && !vers.find(c => c.v === v)) vers.push({ v, label: label || v }); };
+            // 最新（beta含む）→ live → admin追加 → available の順に表示
+            add(leylineAvailable.latest, leylineAvailable.latest + (leylineAvailable.latest === leylineAvailable.live ? '（最新）' : '（最新/beta）'));
+            if (leylineAvailable.live && leylineAvailable.live !== leylineAvailable.latest) add(leylineAvailable.live, leylineAvailable.live + '（live）');
+            (leylineAvailable.saved_versions || []).forEach(v => add(v));
+            (leylineAvailable.available || []).forEach(v => add(v));
+            const savedSet = new Set(leylineAvailable.saved_versions || []);
+            el.innerHTML = vers.map(c => {
+                const delBtn = savedSet.has(c.v)
+                    ? `<button type="button" class="leyline-del" data-del-ver="${c.v}" title="削除">&times;</button>`
+                    : '';
+                return `<span class="inline-flex items-center gap-0.5">
+                    <button type="button" class="region-tab" data-leyline-ver="${c.v}" title="${c.label}">${c.label}</button>${delBtn}
+                </span>`;
+            }).join('');
+            el.querySelectorAll('[data-leyline-ver]').forEach(b => {
+                b.addEventListener('click', () => {
+                    const v = b.getAttribute('data-leyline-ver');
+                    document.getElementById('leylineVersionInput').value = v;
+                    // 取得ボタンを押さなくても保存済みデータがあれば表示
+                    loadLeylineData(v);
+                });
+            });
+            el.querySelectorAll('[data-del-ver]').forEach(b => {
+                b.addEventListener('click', () => removeLeylineVersion(b.getAttribute('data-del-ver')));
+            });
+        }
+        async function initLeylineVersions() {
+            try {
+                const res = await fetch('/admin/api/leyline_versions');
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const data = await res.json();
+                if (data.ok) {
+                    leylineAvailable = data;
+                    const input = document.getElementById('leylineVersionInput');
+                    // 最新バージョン（beta含む）を初期値にする
+                    if (input) input.value = data.latest || data.live || ((data.saved_versions || [])[0] || '7.0');
+                }
+            } catch (e) { /* ignore */ }
+            renderLeylineChips();
+            // 取得ボタンを押さなくても保存済みデータがあれば表示（無ければ表示しない）
+            const v = document.getElementById('leylineVersionInput').value;
+            if (v) loadLeylineData(v);
+        }
+        async function loadLeylineData(version) {
+            const status = document.getElementById('leylineStatus');
+            const body = document.getElementById('leylineTableBody');
+            try {
+                const res = await fetch(`/admin/api/leyline_data?version=${encodeURIComponent(version)}`);
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const data = await res.json();
+                if (!data.ok || data.not_found) {
+                    renderLeylineTable({}, version);
+                    if (status) status.textContent = `${version}：データなし（取得ボタンで取得）`;
+                    return;
+                }
+                renderLeylineTable(data.data || {}, version);
+                if (status) status.textContent = `${version}：${data.count}件（保存済み）`;
+            } catch (e) {
+                renderLeylineTable({}, version);
+                if (status) status.textContent = `読み込み失敗: ${e}`;
+                if (body) body.innerHTML = `<tr><td colspan="8" class="px-2 py-4 text-center text-red-400">${e}</td></tr>`;
+            }
+        }
+        async function addLeylineVersion() {
+            const input = document.getElementById('leylineAddVersionInput');
+            const v = (input.value || '').trim();
+            if (!v) return;
+            if (!/^\d+\.\d+(?:\.\d+)?$/.test(v)) { alert('バージョン形式が不正です（例: 7.0）'); return; }
+            const list = [...new Set([...(leylineAvailable.saved_versions || []), v])];
+            try {
+                const res = await fetch('/admin/api/leyline_versions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ versions: list }),
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    leylineAvailable.saved_versions = data.saved_versions || [];
+                    renderLeylineChips();
+                    input.value = '';
+                    loadLeylineData(v);
+                } else {
+                    alert(data.error || '保存失敗');
+                }
+            } catch (e) { alert('保存失敗: ' + e); }
+        }
+        async function removeLeylineVersion(v) {
+            const list = (leylineAvailable.saved_versions || []).filter(x => x !== v);
+            try {
+                const res = await fetch('/admin/api/leyline_versions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ versions: list }),
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    leylineAvailable.saved_versions = data.saved_versions || [];
+                    renderLeylineChips();
+                }
+            } catch (e) { alert('削除失敗: ' + e); }
+        }
+        // レイラインID → バージョン（5269011 = 7.0 を基準に前後関係で割り当て）
+        // 5269001=5.7, 5269002=5.8, 5269003=6.0(luna1) ... 5269010=6.7(luna8), 5269011=7.0
+        // 5269012 以降は 7.1, 7.2, ... と自動で続く
+        const LEYLINE_PRE_VERSIONS = ['5.7', '5.8', '6.0 (luna1)', '6.1 (luna2)', '6.2 (luna3)', '6.3 (luna4)', '6.4 (luna5)', '6.5 (luna6)', '6.6 (luna7)', '6.7 (luna8)'];
+        function leylineVersionFor(id) {
+            const n = Number(id);
+            if (!Number.isFinite(n)) return '';
+            if (n <= 5269010) {
+                const idx = n - 5269001;
+                return (idx >= 0 && idx < LEYLINE_PRE_VERSIONS.length) ? LEYLINE_PRE_VERSIONS[idx] : '';
+            }
+            if (n <= 5269011) return '7.0';
+            // 5269012 → 7.1, 5269013 → 7.2 ...
+            return '7.' + (n - 5269011);
+        }
+        let leylineConvertedData = {};
+        function renderLeylineTable(data, version) {
+            leylineConvertedData = data || {};
+            const body = document.getElementById('leylineTableBody');
+            const rows = Object.values(data || {})
+                // 開始日時でソート
+                .sort((a, b) => String(a.begin || '').localeCompare(String(b.begin || '')));
+            body.innerHTML = rows.length ? rows.map(e => `
+                <tr class="border-t border-zinc-800 hover:bg-zinc-900/40">
+                    <td class="px-2 py-1.5 mono text-cyan-400 cursor-pointer hover:underline" title="敵画像を表示" onclick="showLeylineEnemies('${e.id}')">${leylineVersionFor(e.id) || version || '—'}</td>
+                    <td class="px-2 py-1.5 mono text-zinc-500">${e.id}</td>
+                    <td class="px-2 py-1.5 text-zinc-200">${e.name || ''}</td>
+                    <td class="px-2 py-1.5 text-zinc-500">${e.en || ''}</td>
+                    <td class="px-2 py-1.5 mono text-zinc-400">${e.begin || '—'}</td>
+                    <td class="px-2 py-1.5 mono text-zinc-400">${e.end || '—'}</td>
+                    <td class="px-2 py-1.5 mono text-zinc-500">${e.live_begin || '—'}</td>
+                    <td class="px-2 py-1.5 mono text-zinc-500">${e.live_end || '—'}</td>
+                </tr>`).join('')
+                : '<tr><td colspan="8" class="px-2 py-4 text-center text-zinc-500">データなし</td></tr>';
+        }
+        async function fetchLeyline() {
+            const input = document.getElementById('leylineVersionInput');
+            const v = (input.value || '').trim();
+            const status = document.getElementById('leylineStatus');
+            const body = document.getElementById('leylineTableBody');
+            if (!v) { status.textContent = 'バージョンを入力してください'; return; }
+            status.textContent = '取得中...';
+            try {
+                const res = await fetch(`/admin/api/leyline?version=${encodeURIComponent(v)}`);
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const data = await res.json();
+                if (!data.ok) throw new Error(data.error || '取得失敗');
+                renderLeylineChips();
+                renderLeylineTable(data.data || {}, v);
+                let msg = `${v}：${data.count ?? Object.keys(data.data || {}).length}件`;
+                if (data.enemy_downloaded != null) msg += `　敵画像 ${data.enemy_downloaded} 枚を取得`;
+                if (data.cached) msg += '（キャッシュ）';
+                if (data.warning) msg += '　' + data.warning;
+                status.textContent = msg;
+            } catch (e) {
+                status.textContent = `失敗: ${e}`;
+                body.innerHTML = `<tr><td colspan="8" class="px-2 py-4 text-center text-red-400">${e}</td></tr>`;
+            }
+        }
+        const leylineFetchBtn = document.getElementById('leylineFetchBtn');
+        const leylineVersionInput = document.getElementById('leylineVersionInput');
+        const leylineAddVersionBtn = document.getElementById('leylineAddVersionBtn');
+        const leylineAddVersionInput = document.getElementById('leylineAddVersionInput');
+        if (leylineFetchBtn) leylineFetchBtn.addEventListener('click', fetchLeyline);
+        if (leylineVersionInput) {
+            leylineVersionInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') fetchLeyline(); });
+        }
+        if (leylineAddVersionBtn) leylineAddVersionBtn.addEventListener('click', addLeylineVersion);
+        if (leylineAddVersionInput) {
+            leylineAddVersionInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addLeylineVersion(); });
+        }
+        initLeylineVersions();
+
+        // ==========================================================
+        //  レイラインの敵3体画像表示（サーバーがローカルへダウンロード済みの画像を使う）
+        // ==========================================================
+        function leylineCloseEnemyModal() {
+            const m = document.getElementById('leylineEnemyModal');
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+        }
+        function showLeylineEnemies(id) {
+            const modal = document.getElementById('leylineEnemyModal');
+            const title = document.getElementById('leylineEnemyTitle');
+            const body = document.getElementById('leylineEnemyBody');
+            if (!modal || !title || !body) return;
+            const entry = leylineConvertedData[String(id)] || {};
+            const monsters = (entry.enemies || []);
+            title.textContent = `${entry.name || id}　(ID ${id} / ${leylineVersionFor(id) || ''})`;
+            body.innerHTML = monsters.length ? monsters.map(m => `
+                <div class="flex flex-col items-center gap-1">
+                    <img src="${m.img || ''}" alt="${m.name}" class="w-28 h-28 rounded-lg object-cover bg-zinc-800 border border-zinc-700"
+                        onerror="this.style.visibility='hidden'">
+                    <div class="text-[10px] text-zinc-400 text-center max-w-[112px] leading-tight">${m.name}</div>
+                </div>`).join('') : '<div class="text-xs text-zinc-500">敵データなし（このレイラインのデータが未取得の可能性があります）</div>';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        const leylineEnemyCloseBtn = document.getElementById('leylineEnemyClose');
+        if (leylineEnemyCloseBtn) leylineEnemyCloseBtn.addEventListener('click', leylineCloseEnemyModal);
+        const leylineEnemyModal = document.getElementById('leylineEnemyModal');
+        if (leylineEnemyModal) leylineEnemyModal.addEventListener('click', (e) => { if (e.target === leylineEnemyModal) leylineCloseEnemyModal(); });
     </script>
 </body>
 </html>

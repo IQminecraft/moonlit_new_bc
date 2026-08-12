@@ -1,0 +1,7 @@
+{
+  "name": "晶榴弾・水",
+  "weapon_type": "ITEM_TPS_WEAPON",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Grenade_Water",
+  "stats_modifier": {}
+}

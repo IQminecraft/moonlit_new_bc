@@ -1,0 +1,10 @@
+{
+  "name": "胸中の谺",
+  "weapon_type": "WEAPON_CATALYST",
+  "rarity": 4,
+  "icon": "UI_EquipIcon_Catalyst_GlintstoneCatalyst",
+  "stats_modifier": {
+    "atk": 564.7837,
+    "fight_prop_attack_percent": 0.2756
+  }
+}
