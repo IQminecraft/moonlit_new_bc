@@ -520,6 +520,8 @@ def _generate_team_image_sync(uid: str, char_ids: list, configs=None, boss=None,
     datas = []
     for i, cid in enumerate(char_ids):
         cfg = (configs[i] if configs and i < len(configs) and isinstance(configs[i], dict) else {}) or {}
+        # 差し替えキャラ表示時はオフセット等を「表示中キャラ」に紐付ける
+        _display_id = str(cfg.get("fake_char") or cid)
         try:
             d = _get_card_data_sync(
                 uid, str(cid),
@@ -528,7 +530,7 @@ def _generate_team_image_sync(uid: str, char_ids: list, configs=None, boss=None,
                 fake_weapon=cfg.get("fake_weapon") or None,
                 beta=beta,
             )
-            d["id"] = str(cid)
+            d["id"] = _display_id
         except Exception as e:
             print(f"[TeamCard] card_data fetch failed for {cid}: {e}", flush=True)
             d = {

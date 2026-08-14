@@ -1225,19 +1225,26 @@
             params.set('ver', v);
             window.location.href = `/fetch_uid?${params.toString()}`;
         }
-        function maybeShowVersionChooser() {
+        function applySavedVersionRedirect() {
+            // 保存済みのバージョンと現在の ver が違う場合、即時（描画前）に切り替える
             let saved = null;
             try { saved = localStorage.getItem(VER_PREF_KEY_FIRST); } catch (e) { saved = null; }
-            if (saved === 'live' || saved === 'beta') {
-                // 保存済みのバージョンと現在の ver が違う場合は自動で切り替え
-                if (saved !== ver) {
-                    const params = new URLSearchParams();
-                    params.set('uid', uid);
-                    params.set('ver', saved);
-                    window.location.href = `/fetch_uid?${params.toString()}`;
-                }
-                return;
+            if ((saved === 'live' || saved === 'beta') && saved !== ver) {
+                const params = new URLSearchParams();
+                params.set('uid', uid);
+                params.set('ver', saved);
+                window.location.replace(`/fetch_uid?${params.toString()}`);
+                return true;
             }
+            return false;
+        }
+        // スクリプト評価時に即時適用（Shift+R のハードリロードでも維持される）
+        applySavedVersionRedirect();
+        function maybeShowVersionChooser() {
+            // 保存済みがあれば（一致 or リダイレクト済み）何もしない
+            let saved = null;
+            try { saved = localStorage.getItem(VER_PREF_KEY_FIRST); } catch (e) { saved = null; }
+            if (saved === 'live' || saved === 'beta') return;
             // 初回: 選択モーダルを表示
             const modal = document.getElementById('verChooseModal');
             if (modal) {
@@ -1962,6 +1969,7 @@
                 ensureRealWeaponKnown(currentSelectedCharId);
             }
             if (teamMode) {
+                if (typeof renderTeamCharRow === 'function') renderTeamCharRow();
                 if (typeof updateTeamMemberLabel === 'function') updateTeamMemberLabel(currentSelectedCharId);
             } else {
                 refreshCurrentCard(currentSelectedCharId, false, true);
@@ -2001,6 +2009,7 @@
                 ensureRealWeaponKnown(currentSelectedCharId);
             }
             if (teamMode) {
+                if (typeof renderTeamCharRow === 'function') renderTeamCharRow();
                 if (typeof updateTeamMemberLabel === 'function') updateTeamMemberLabel(currentSelectedCharId);
             } else {
                 refreshCurrentCard(currentSelectedCharId, false, true);
@@ -2067,6 +2076,7 @@
             updateEditWeaponUI();
             closeFakeCharModal();
             if (teamMode) {
+                if (typeof renderTeamCharRow === 'function') renderTeamCharRow();
                 if (typeof updateTeamMemberLabel === 'function') updateTeamMemberLabel(currentSelectedCharId);
             } else {
                 refreshCurrentCard(currentSelectedCharId, false, true);
@@ -2152,6 +2162,7 @@
             updateEditWeaponUI();
             closeFakeWeaponModal();
             if (teamMode) {
+                if (typeof renderTeamCharRow === 'function') renderTeamCharRow();
                 if (typeof updateTeamMemberLabel === 'function') updateTeamMemberLabel(currentSelectedCharId);
             } else {
                 refreshCurrentCard(currentSelectedCharId, false, true);
@@ -3706,19 +3717,42 @@
             if (typeof updateGenerateDisable === 'function') updateGenerateDisable();
             if (typeof updateAbyssUI === 'function') updateAbyssUI();
         }
+        function teamMemberCombo(cid) {
+            const keys = comboStorageKeys(cid);
+            let combos = [];
+            try { combos = JSON.parse(localStorage.getItem(keys.list)) || []; } catch (e) { combos = []; }
+            const active = localStorage.getItem(keys.active) || '';
+            const c = combos.find(x => x.id === active) || null;
+            return c ? { fakeChar: c.fakeChar || '', fakeWeapon: c.fakeWeapon || '' } : { fakeChar: '', fakeWeapon: '' };
+        }
         function renderTeamCharRow() {
             const row = document.getElementById('charThumbRow');
             const slot = teamSlotById(activeTeamId);
             if (!row || !slot) return;
+            // 差し替えキャラのアイコン読み込みを先に確保
+            const fakeChars = slot.chars.map(cid => teamMemberCombo(cid).fakeChar).filter(Boolean);
+            if (fakeChars.length) {
+                ensureCharIconsLoaded(fakeChars).then(() => renderTeamCharRowBody(slot));
+            }
+            renderTeamCharRowBody(slot);
+        }
+        function renderTeamCharRowBody(slot) {
+            const row = document.getElementById('charThumbRow');
+            if (!row) return;
             row.innerHTML = '';
             slot.chars.forEach((cid, idx) => {
-                const src = teamCharIconSrc(cid);
+                const combo = teamMemberCombo(cid);
+                // 差し替えキャラならそのアイコン、そうでなければ実データのアイコン
+                const src = combo.fakeChar ? charAssetUrl(combo.fakeChar) : teamCharIconSrc(cid);
+                // 差し替え武器があれば右下に武器バッジ
+                const wsrc = (combo.fakeWeapon && !isSwapHiddenWeapon(combo.fakeWeapon)) ? weaponAssetUrl(combo.fakeWeapon) : '';
                 const div = document.createElement('div');
                 div.className = 'relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 cursor-pointer';
                 div.setAttribute('data-team-idx', idx);
                 div.innerHTML = `
                     ${src ? `<img src="${src}" class="w-full h-full rounded-lg object-cover ${teamActiveIdx === idx ? 'opacity-100 ring-2 ring-primary' : 'opacity-50 grayscale-[0.3]'} drag-none">` : ''}
                     <div class="team-order-badge" style="top:2px;left:2px;">${idx + 1}</div>
+                    ${wsrc ? `<div class="weapon-badge"><img src="${wsrc}" class="w-full h-full object-cover"></div>` : ''}
                 `;
                 div.onclick = () => selectTeamMember(idx);
                 row.appendChild(div);
