@@ -899,6 +899,13 @@
                             <span id="settingsServerStatsLabel">📊 非表示</span>
                             <span class="text-[10px] text-gray-500">タップで切替</span>
                         </button>
+
+                        <div class="text-xs font-semibold text-gray-400 mb-2 mt-3 px-1">生成画像の保存先</div>
+                        <button type="button" id="settingsSaveModeBtn"
+                            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                            <span id="settingsSaveModeLabel">💾 クライアント</span>
+                            <span class="text-[10px] text-gray-500">タップで切替</span>
+                        </button>
                     </div>
                 </div>
                 <a href="/" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-sm rounded-lg transition-all border border-zinc-700">← 戻る</a>
@@ -1322,6 +1329,20 @@
         const THEME_PREF_KEY = 'genshin_build_card_theme_pref';
         const FORMAT_PREF_KEY = 'genshin_build_card_img_format_pref';
         const SERVER_STATS_PREF_KEY = 'genshin_build_card_server_stats_pref';
+        const SAVE_MODE_KEY = 'genshin_build_card_save_mode';
+
+        // 生成画像の保存先（client=ブラウザにキャッシュ / server=サーバーに保存）
+        function getSavedSaveMode() {
+            try { return localStorage.getItem(SAVE_MODE_KEY) === 'server' ? 'server' : 'client'; } catch (e) { return 'client'; }
+        }
+        function setSaveMode(m) {
+            try { localStorage.setItem(SAVE_MODE_KEY, m === 'server' ? 'server' : 'client'); } catch (e) {}
+        }
+        function applySaveModeLabel() {
+            if (settingsSaveModeLabel) {
+                settingsSaveModeLabel.textContent = getSavedSaveMode() === 'server' ? '🖥️ サーバー' : '💾 クライアント';
+            }
+        }
 
         const settingsVerBtn = document.getElementById('settingsVerBtn');
         const settingsVerLabel = document.getElementById('settingsVerLabel');
@@ -1331,6 +1352,8 @@
         const settingsFormatLabel = document.getElementById('settingsFormatLabel');
         const settingsServerStatsBtn = document.getElementById('settingsServerStatsBtn');
         const settingsServerStatsLabel = document.getElementById('settingsServerStatsLabel');
+        const settingsSaveModeBtn = document.getElementById('settingsSaveModeBtn');
+        const settingsSaveModeLabel = document.getElementById('settingsSaveModeLabel');
         const serverStatsPanel = document.getElementById('serverStatsPanel');
         const serverStatsCpuVal = document.getElementById('serverStatsCpuVal');
         const serverStatsCpuBar = document.getElementById('serverStatsCpuBar');
@@ -1370,10 +1393,8 @@
         if (betaConsentAgreeBtn) betaConsentAgreeBtn.addEventListener('click', () => closeBetaConsentModal(true));
         if (betaConsentDeclineBtn) betaConsentDeclineBtn.addEventListener('click', () => closeBetaConsentModal(false));
 
-        try {
-            // このページで今実際に表示している ver を「最後に見ていた ver」として記録
-            localStorage.setItem(VER_PREF_KEY, ver === 'beta' ? 'beta' : 'live');
-        } catch (e) { /* ignore storage errors */ }
+        // 注意: ここで VER_PREF_KEY を自動上書きしないこと（選択済みの live/beta を
+        // 現在の ver で毎回上書きすると、applySavedVersionRedirect とリダイレクトループする）
 
         function getSavedThemePref() {
             try {
@@ -1578,7 +1599,16 @@
                 });
             }
 
+            if (settingsSaveModeBtn) {
+                settingsSaveModeBtn.addEventListener('click', () => {
+                    setSaveMode(getSavedSaveMode() === 'server' ? 'client' : 'server');
+                    applySettingsPanelUI();
+                    applySaveModeLabel();
+                });
+            }
+
             applySettingsPanelUI();
+            applySaveModeLabel();
             applyServerStatsVisibility();
         }
 
@@ -2742,8 +2772,11 @@
 
             try {
                 // DDoS対策: 署名付きURLを取得してから画像を取得する
+                const saveMode = getSavedSaveMode();
                 let url = await getSignedCardUrl(baseUrl);
-                let blob = forceFetch ? null : await getCachedCardImage(url);
+                const fetchUrl = saveMode === 'server' ? (url + (url.includes('?') ? '&' : '?') + 'cache=server') : url;
+                let blob = null;
+                if (saveMode === 'client') blob = forceFetch ? null : await getCachedCardImage(url);
 
                 if (!blob && cacheOnly) {
                     // 差し替え切替時は、過去に1枚でも生成実績があれば自動生成する。
@@ -2757,16 +2790,17 @@
                 }
 
                 if (!blob) {
-                    let res = await fetch(url, { cache: forceFetch ? 'reload' : 'default' });
+                    let res = await fetch(fetchUrl, { cache: forceFetch ? 'reload' : 'default' });
                     if (res.status === 403) {
                         // 署名期限切れ・サーバー再起動などで署名が無効化された場合は
                         // 署名を取り直して1回だけ再試行する
                         signedCardUrlCache.delete(baseUrl);
                         url = await getSignedCardUrl(baseUrl);
-                        res = await fetch(url, { cache: forceFetch ? 'reload' : 'default' });
+                        const retryUrl = saveMode === 'server' ? (url + (url.includes('?') ? '&' : '?') + 'cache=server') : url;
+                        res = await fetch(retryUrl, { cache: forceFetch ? 'reload' : 'default' });
                     }
                     if (!res.ok) throw new Error(`画像の取得に失敗しました (status: ${res.status})`);
-                    putCachedCardImage(url, res.clone());
+                    if (saveMode === 'client') putCachedCardImage(url, res.clone());
                     blob = await res.blob();
                 }
 
@@ -3865,7 +3899,12 @@
                     const body = await signRes.json().catch(() => ({}));
                     throw new Error(body.detail || `署名の取得に失敗しました (status: ${signRes.status})`);
                 }
-                const { url } = await signRes.json();
+                const signData = await signRes.json();
+                const url = signData.url;
+                const saveMode = getSavedSaveMode();
+                const fetchUrl = saveMode === 'server' ? (url + (url.includes('?') ? '&' : '?') + 'cache=server') : url;
+                let blob = null;
+                if (saveMode === 'client') blob = await getCachedCardImage(url);
 
                 htmlCardContainer.classList.remove('hidden');
                 htmlCardContainer.innerHTML = `
@@ -3879,17 +3918,21 @@
                 placeholderText.classList.add('hidden');
                 if (imageAwaitBox) imageAwaitBox.classList.add('hidden');
 
-                let res = await fetch(url, { cache: 'no-store' });
-                if (res.status === 403) {
-                    const retry = await fetch(`/api/team_card_sign?${p.toString()}`, { cache: 'no-store' });
-                    const retryData = await retry.json();
-                    res = await fetch(retryData.url, { cache: 'no-store' });
+                if (!blob) {
+                    let res = await fetch(fetchUrl, { cache: 'no-store' });
+                    if (res.status === 403) {
+                        const retry = await fetch(`/api/team_card_sign?${p.toString()}`, { cache: 'no-store' });
+                        const retryData = await retry.json();
+                        const retryUrl = saveMode === 'server' ? (retryData.url + (retryData.url.includes('?') ? '&' : '?') + 'cache=server') : retryData.url;
+                        res = await fetch(retryUrl, { cache: 'no-store' });
+                    }
+                    if (!res.ok) {
+                        const body = await res.json().catch(() => ({}));
+                        throw new Error(body.detail || `編成カードの生成に失敗しました (status: ${res.status})`);
+                    }
+                    if (saveMode === 'client') putCachedCardImage(url, res.clone());
+                    blob = await res.blob();
                 }
-                if (!res.ok) {
-                    const body = await res.json().catch(() => ({}));
-                    throw new Error(body.detail || `編成カードの生成に失敗しました (status: ${res.status})`);
-                }
-                const blob = await res.blob();
                 if (currentImageObjectUrl) URL.revokeObjectURL(currentImageObjectUrl);
                 currentImageObjectUrl = URL.createObjectURL(blob);
                 currentLoadedImageUrl = url;

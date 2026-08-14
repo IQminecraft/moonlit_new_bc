@@ -30,6 +30,26 @@ async def startup_event():
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.middleware("http")(_admin_security_middleware)
+
+# 静的アセットのクライアントキャッシュ（画像は長めにキャッシュ。JSONは都度取得）
+_STATIC_IMAGE_CACHE_MAX_AGE = os.environ.get("STATIC_IMAGE_CACHE_MAX_AGE", "604800")
+
+
+@app.middleware("http")
+async def _static_cache_middleware(request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path.startswith("/static/"):
+        low = path.lower()
+        if low.endswith((".webp", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico")):
+            response.headers["Cache-Control"] = f"public, max-age={_STATIC_IMAGE_CACHE_MAX_AGE}"
+        elif low.endswith(".json"):
+            response.headers["Cache-Control"] = "no-cache"
+        else:
+            response.headers["Cache-Control"] = "public, max-age=3600"
+    return response
+
+
 app.include_router(admin_router)
 app.include_router(api_router)
 

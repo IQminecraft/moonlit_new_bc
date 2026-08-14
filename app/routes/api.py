@@ -3,6 +3,7 @@
 import os
 import json
 import time
+import hashlib as _hashlib
 from urllib.parse import urlencode, quote
 
 from fastapi import APIRouter, Request, Response, HTTPException
@@ -43,6 +44,37 @@ def _enka_cooldown_remaining(uid):
     if last is None:
         return 0.0
     return max(0.0, last + _ENKA_COOLDOWN_SEC - time.time())
+
+
+# ---- 生成カード画像のサーバー側ディスクキャッシュ（cache=server 時） ----
+_CARDS_CACHE_DIR = os.path.join(STATIC_DIR, "cache", "cards")
+
+
+def _card_disk_path(params):
+    h = _hashlib.sha256()
+    for k in sorted(params.keys()):
+        h.update(f"{k}={params.get(k) or ''}|".encode("utf-8"))
+    return os.path.join(_CARDS_CACHE_DIR, h.hexdigest() + ".png")
+
+
+def _serve_card_disk(params):
+    path = _card_disk_path(params)
+    if os.path.exists(path):
+        try:
+            with open(path, "rb") as f:
+                return f.read()
+        except Exception:
+            return None
+    return None
+
+
+def _save_card_disk(params, data):
+    try:
+        os.makedirs(_CARDS_CACHE_DIR, exist_ok=True)
+        with open(_card_disk_path(params), "wb") as f:
+            f.write(data)
+    except Exception as e:
+        print(f"[cache] card disk save failed: {e}")
 
 _TEAM_CFG_KEYS = {"calc_method", "fake_char", "fake_weapon", "bg_mode", "bg_color", "bg_region"}
 
@@ -388,7 +420,7 @@ async def team_card_sign(uid: str, char_ids: str, configs: str = "", boss: str =
 
 
 @api_router.get("/generate_team_image/{uid}")
-async def generate_team_image(uid: str, char_ids: str, configs: str = "", boss: str = "", beta: str = "false", img_format: str = "png", card_exp: str = None, card_sig: str = None, request: Request = None):
+async def generate_team_image(uid: str, char_ids: str, configs: str = "", boss: str = "", beta: str = "false", img_format: str = "png", cache: str = "", card_exp: str = None, card_sig: str = None, request: Request = None):
     """4キャラ分の編成カード画像を生成。専用スレッドプール・署名検証・レート制限は単体カードと同様。"""
     img_format = str(img_format or "png").lower()
     if img_format != "png":
@@ -406,6 +438,17 @@ async def generate_team_image(uid: str, char_ids: str, configs: str = "", boss: 
             raise HTTPException(status_code=403, detail="編成カードURLの署名が無効です。ページを再読み込みしてください。")
     if _rate_limited(f"gen:{_client_ip(request)}", _CARD_GEN_RATE_LIMIT_PER_MIN):
         raise HTTPException(status_code=429, detail="画像生成のリクエストが頻繁すぎます。しばらく待って再試行してください。")
+
+    # サーバー側ディスクキャッシュ（cache=server）: 同一パラメータなら再生成せず返す
+    if cache == "server":
+        team_cache_params = {
+            "uid": uid, "char_ids": ",".join(ids), "configs": configs_clean,
+            "boss": boss_clean, "beta": beta, "img_format": img_format,
+        }
+        hit = _serve_card_disk(team_cache_params)
+        if hit is not None:
+            return Response(content=hit, media_type="image/png")
+
     try:
         img_bytes = await _run_in_card_gen_pool(
             _generate_team_image_sync,
@@ -437,11 +480,14 @@ async def generate_team_image(uid: str, char_ids: str, configs: str = "", boss: 
             level="error",
         )
         raise HTTPException(status_code=500, detail=f"編成カード生成に失敗しました: {e}") from e
+
+    if cache == "server":
+        _save_card_disk(team_cache_params, img_bytes)
     return Response(content=img_bytes, media_type="image/png")
 
 
 @api_router.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")
-async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, card_exp: str = None, card_sig: str = None, request: Request = None):
+async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, cache: str = "", card_exp: str = None, card_sig: str = None, request: Request = None):
     """カード画像生成。専用スレッドプールで同時実行数を制限し、超過分は列待ち。
     待ち行列が満杯のときは 503 を返す（デフォルトの threadpool は占有しない）。
     署名検証（安価）→ IPレート制限 → プール投入の順で、
@@ -469,6 +515,19 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
             raise HTTPException(status_code=403, detail="カード画像URLの署名が無効です。ページを再読み込みしてください。")
     if _rate_limited(f"gen:{_client_ip(request)}", _CARD_GEN_RATE_LIMIT_PER_MIN):
         raise HTTPException(status_code=429, detail="画像生成のリクエストが頻繁すぎます。しばらく待って再試行してください。")
+
+    # サーバー側ディスクキャッシュ（cache=server）: 同一パラメータなら再生成せず返す
+    if cache == "server":
+        cache_params = {
+            "uid": uid, "avatar_id": avatar_id, "calc_method": calc_method,
+            "fake_char": fake_char, "fake_weapon": fake_weapon, "beta": beta,
+            "bg_color": bg_color, "img_format": img_format, "bg_mode": bg_mode,
+            "bg_region": bg_region,
+        }
+        hit = _serve_card_disk(cache_params)
+        if hit is not None:
+            return Response(content=hit, media_type="image/png")
+
     try:
         img_bytes = await _run_in_card_gen_pool(
             _generate_card_image_sync,
@@ -524,6 +583,9 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
             level="error",
         )
         raise HTTPException(status_code=500, detail=f"カード生成に失敗しました: {e}") from e
+
+    if cache == "server":
+        _save_card_disk(cache_params, img_bytes)
     # StreamingResponse(io.BytesIO) はバイナリを改行(0x0A)ごとに分割して
     # チャンク毎にスレッドプール往復するため、4MB 級の PNG で転送に数秒かかる。
     # 生成済みの bytes を丸ごと返す Response にすることで Content-Length も付き即完了。
