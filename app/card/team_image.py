@@ -15,6 +15,7 @@ from app.card.data import _get_card_data_sync
 from app.card.draw import (
     draw_figma_box, draw_figma_circle, paste_mask_image, draw_figma_text_with_shadow,
     paste_figma_image, draw_figma_text, draw_figma_text_right, draw_figma_line,
+    figma_draw_scale,
 )
 
 # ----------------------------------------------------------------
@@ -23,7 +24,6 @@ from app.card.draw import (
 # 1920 x 1625 @ scale 1.25 -> 2400 x 2031
 # ----------------------------------------------------------------
 TEAM_DESIGN_W, TEAM_DESIGN_H = 1920, 1625
-TEAM_SCALE = 1.25
 TEAM_SCALE = 1.25
 TEAM_W = int(TEAM_DESIGN_W * TEAM_SCALE)
 TEAM_H = int(TEAM_DESIGN_H * TEAM_SCALE)
@@ -77,25 +77,23 @@ def _build_team_column_bg(w_px, h_px, elem_rgb):
 
 
 class _DrawCtx:
-    """このモジュールだけの SX/SY を draw_figma_* に注入するための軽量差し替え。
-    app.card.draw はモジュール import 時に SX/SY を固定するため、
-    チームカード用スケールで描くには一時的に差し替える必要がある。
+    """スレッドローカルな SX/SY 差し替えコンテキスト（draw.figma_draw_scale のラッパー）。
+
+    従来は app.card.draw のモジュール属性 SX/SY を直接書き換えていたため、
+    カード生成プールの別スレッド（単体カード生成）と競合して描画スケールが
+    混ざるデータレースがあった。draw.figma_draw_scale は threading.local を
+    使うため、このスレッド中だけ効果が及び、並行する単体カード生成には
+    影響しない。
     """
     def __init__(self):
-        import app.card.draw as _draw_mod
-        self._mod = _draw_mod
-        self._old_sx = _draw_mod.SX
-        self._old_sy = _draw_mod.SY
+        self._ctx = figma_draw_scale(SX_TEAM, SY_TEAM)
 
     def __enter__(self):
-        self._mod.SX = SX_TEAM
-        self._mod.SY = SY_TEAM
+        self._ctx.__enter__()
         return self
 
     def __exit__(self, exc_type, exc, tb):
-        self._mod.SX = self._old_sx
-        self._mod.SY = self._old_sy
-        return False
+        return self._ctx.__exit__(exc_type, exc, tb)
 
 
 def _col_x(col: int) -> int:
@@ -443,7 +441,7 @@ def _draw_total_row(img, data, col, beta):
                     fill_color=(255, 255, 255))
     # ランク画像（右端。スコア値は箱全体の中央に揃える）
     tier_path = os.path.join("static", "assets", "tiers", f"{data.get('tierSum', 'B')}.png")
-    _t(draw, text=f"{round(data.get('scoreSum', 0), 1)}", x=x, y=y + 32,
+    _t(draw, text=f"{round(data.get('scoreSum', 0), 1):.1f}", x=x, y=y + 32,
                     font=_font(42), align="center", box_width=_COL_W, font_size=42)
     if os.path.exists(tier_path):
         paste_figma_image(img, tier_path, box_x=x + _COL_W - 58, box_y=y + 30,
@@ -529,6 +527,7 @@ def _generate_team_image_sync(uid: str, char_ids: list, configs=None, boss=None,
                 fake_char=cfg.get("fake_char") or None,
                 fake_weapon=cfg.get("fake_weapon") or None,
                 beta=beta,
+                base_prec=cfg.get("base_prec") or "0",
             )
             d["id"] = _display_id
         except Exception as e:

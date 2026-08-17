@@ -68,6 +68,30 @@ def convert(data):
 
     result["stats_modifier"] = stats_mod
 
+    # レベル1～100の基礎ステータス（HP/ATK/DEF）を保存する。
+    # info.attributes はレベル別リスト。欠落レベルは前後のエントリで補間する。
+    attrs_by_level = {}
+    if isinstance(attrs, list):
+        for a in attrs:
+            lvl = a.get("level")
+            if isinstance(lvl, (int, float)) and (a.get("hp") is not None
+                                                  or a.get("atk") is not None
+                                                  or a.get("def") is not None):
+                attrs_by_level[int(lvl)] = a
+    attrs_levels = sorted(attrs_by_level.keys())
+    base_stats = {}
+    for lvl in range(1, 101):
+        a = attrs_by_level.get(lvl)
+        if a is None and attrs_levels:
+            near = min(attrs_levels, key=lambda x: abs(x - lvl))
+            a = attrs_by_level[near]
+        base_stats[str(lvl)] = {
+            "hp": round(float(a.get("hp") or 0), 4),
+            "atk": round(float(a.get("atk") or 0), 4),
+            "def": round(float(a.get("def") or 0), 4),
+        }
+    result["base_stats"] = base_stats
+
     def pick_icons(src):
         out = []
         if isinstance(src, list):

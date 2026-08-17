@@ -104,6 +104,7 @@
             <button type="button" class="admin-tab" data-tab="region">キャラ地域設定</button>
             <button type="button" class="admin-tab" data-tab="splash">スプラッシュオフセット</button>
             <button type="button" class="admin-tab" data-tab="leyline">Leyline</button>
+            <button type="button" class="admin-tab" data-tab="setbuffs">聖遺物2setバフ</button>
         </div>
 
         <div id="tab-data" class="admin-tab-panel">
@@ -407,6 +408,35 @@
             </div>
         </div>
         </div><!-- /tab-leyline -->
+
+        <div id="tab-setbuffs" class="admin-tab-panel hidden">
+        <!-- 聖遺物 2セット効果バフ設定 -->
+        <section class="card p-5 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 class="text-lg font-semibold">聖遺物 2セット効果バフ</h2>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="setBuffsReloadBtn" class="btn btn-ghost text-xs">再読み込み</button>
+                    <button type="button" id="setBuffsSaveBtn" class="btn btn-primary text-xs">保存</button>
+                </div>
+            </div>
+            <p class="text-xs text-zinc-500 mb-3">
+                各聖遺物セットの 2セット効果バフを選択します。ステータスに反映できる内容のみ候補にしています
+                （元素ダメージ・攻撃力%/HP%/防御力%/会心率/熟知 など。条件付きの与ダメージ系・耐性・治療などは除外）。
+                自動判定された候補があれば「判定」欄に表示されます。保存内容はカード生成（差し替え時）のステータス計算に反映されます。
+            </p>
+            <div class="flex items-center gap-2 mb-3">
+                <input id="setBuffsSearch" type="text" placeholder="セット名で絞り込み"
+                    class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm w-64 focus:outline-none">
+                <label class="flex items-center gap-1.5 text-xs text-zinc-400">
+                    <input type="checkbox" id="setBuffsOnlyReflectable" class="accent-cyan-500">
+                    反映可能のみ表示
+                </label>
+            </div>
+            <div id="setBuffsStatus" class="text-xs text-zinc-500 mb-2"></div>
+            <div id="setBuffsList" class="space-y-1.5 max-h-[70vh] overflow-y-auto pr-1"></div>
+            <div id="setBuffsResult" class="text-xs mt-2 hidden"></div>
+        </section>
+        </div><!-- /tab-setbuffs -->
     </div>
 
     <script>
@@ -432,7 +462,7 @@
         });
         let savedAdminTab = 'data';
         try { savedAdminTab = localStorage.getItem(ADMIN_TAB_KEY) || 'data'; } catch (e) {}
-        activateAdminTab(['data', 'region', 'splash'].includes(savedAdminTab) ? savedAdminTab : 'data');
+        activateAdminTab(['data', 'region', 'splash', 'leyline', 'setbuffs'].includes(savedAdminTab) ? savedAdminTab : 'data');
 
         // ==========================================================
         //  スプラッシュオフセット プレビュー（実際のカードと同じサイズ）
@@ -1297,6 +1327,144 @@
         if (leylineEnemyCloseBtn) leylineEnemyCloseBtn.addEventListener('click', leylineCloseEnemyModal);
         const leylineEnemyModal = document.getElementById('leylineEnemyModal');
         if (leylineEnemyModal) leylineEnemyModal.addEventListener('click', (e) => { if (e.target === leylineEnemyModal) leylineCloseEnemyModal(); });
+
+        // ==========================================================
+        //  聖遺物 2セット効果バフ設定
+        // ==========================================================
+        let setBuffTypes = [];
+        let setBuffRows = [];
+        function setBuffTypeLabel(type) {
+            const t = setBuffTypes.find(x => x.type === type);
+            return t ? `${t.jatype}` : '';
+        }
+        function renderSetBuffs() {
+            const listEl = document.getElementById('setBuffsList');
+            if (!listEl || !setBuffRows.length) {
+                if (listEl) listEl.innerHTML = '<div class="text-zinc-600 text-xs">聖遺物データがありません</div>';
+                return;
+            }
+            const query = (document.getElementById('setBuffsSearch')?.value || '').toLowerCase().trim();
+            const onlyRef = document.getElementById('setBuffsOnlyReflectable')?.checked || false;
+            const filtered = setBuffRows.filter(r => {
+                if (onlyRef && !r.detected) return false;
+                if (query && !(r.janame || '').toLowerCase().includes(query) && !String(r.id).includes(query)) return false;
+                return true;
+            });
+            listEl.innerHTML = filtered.length
+                ? filtered.map(r => setBuffRowHTML(r)).join('')
+                : (onlyRef ? '<div class="text-zinc-600 text-xs">反映可能なセットがありません</div>'
+                           : '<div class="text-zinc-600 text-xs">該当セットがありません</div>');
+            listEl.querySelectorAll('select.set-buff-type').forEach(el => {
+                el.addEventListener('change', () => {
+                    const sid = el.getAttribute('data-set-id');
+                    const row = setBuffRows.find(x => String(x.id) === sid);
+                    if (!row) return;
+                    const newType = el.value;
+                    const valueInput = listEl.querySelector(`input.set-buff-value[data-set-id="${sid}"]`);
+                    let value = parseFloat(valueInput?.value || '') || 0;
+                    if (!value && newType) {
+                        const det = row.detected;
+                        if (det && det.type === newType) value = det.value;
+                        else if (row.selected && row.selected.type === newType) value = row.selected.value;
+                        if (valueInput) valueInput.value = value;
+                    }
+                    renderSetBuffs();
+                });
+            });
+        }
+        function setBuffRowHTML(r) {
+            const selType = (r.selected && r.selected.type) || '';
+            const selVal = (r.selected && r.selected.value) || '';
+            const curType = selType || (r.detected && !selType ? r.detected.type : '');
+            // 自動判定があって保存済みでない場合、値欄に判定値の候補を初期表示（未保存扱い）
+            const initialVal = selVal || (r.detected && !selType ? r.detected.value : '');
+            const showDetected = r.detected
+                ? `<div class="text-[10px] ${curType === r.detected.type && String(initialVal) === String(r.detected.value) ? 'text-emerald-400' : 'text-amber-400'}">
+                    判定: ${r.detected_label}${curType === r.detected.type && String(initialVal) === String(r.detected.value) ? '（一致）' : ''}
+                  </div>` : '';
+            const options = ['', ...setBuffTypes.map(t => t.type)].map(t => {
+                const selected = t === curType ? ' selected' : '';
+                return `<option value="${t}"${selected}>${t ? setBuffTypeLabel(t) : '— なし —'}</option>`;
+            }).join('');
+            return `<div class="set-buff-row flex flex-wrap items-center gap-3 bg-zinc-900/60 rounded-lg p-2.5 border border-zinc-800" data-set-id="${esc(r.id)}">
+                <img src="/static/assets/artifacts/${esc(r.icon)}.webp" alt="" class="w-9 h-9 rounded object-cover border border-zinc-700"
+                    onerror="this.style.visibility='hidden'">
+                <div class="flex-1 min-w-[200px]">
+                    <div class="text-xs text-zinc-200 font-medium">${esc(r.janame)} <span class="text-[10px] text-zinc-500 mono">${esc(r.id)}</span></div>
+                    <div class="text-[10px] text-zinc-500 leading-tight">${esc(r.set2_desc_ja || '（2セット効果なし）')}</div>
+                    ${showDetected}
+                </div>
+                <div class="flex items-center gap-1.5 min-w-[220px]">
+                    <select class="set-buff-type bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-xs focus:outline-none"
+                        data-set-id="${esc(r.id)}">
+                        ${options}
+                    </select>
+                    <input type="text" inputmode="decimal" class="set-buff-value bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-xs w-16 focus:outline-none"
+                        data-set-id="${esc(r.id)}" value="${initialVal}"
+                        placeholder="値">
+                    <span class="text-xs text-zinc-500">${curType && initialVal ? esc(buffLabelFor(curType, initialVal)) : ''}</span>
+                </div>
+            </div>`;
+        }
+        function buffLabelFor(type, value) {
+            const t = setBuffTypes.find(x => x.type === type);
+            return t ? t.label_placeholder.replace('{v}', value) : '';
+        }
+        function esc(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+        async function loadSetBuffs() {
+            const statusEl = document.getElementById('setBuffsStatus');
+            const resultEl2 = document.getElementById('setBuffsResult');
+            statusEl.textContent = '読み込み中...';
+            if (resultEl2) resultEl2.classList.add('hidden');
+            try {
+                const res = await fetch('/admin/api/artifact_2set_buffs');
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const data = await res.json();
+                if (!data.ok) throw new Error(data.error || '取得失敗');
+                setBuffTypes = data.types || [];
+                setBuffRows = (data.sets || []).map(s => ({ ...s }));
+                statusEl.textContent = `${data.count ?? setBuffRows.length} セット`;
+                renderSetBuffs();
+            } catch (e) {
+                statusEl.textContent = `読み込み失敗: ${e}`;
+            }
+        }
+        document.getElementById('setBuffsReloadBtn').addEventListener('click', loadSetBuffs);
+        document.getElementById('setBuffsSaveBtn').addEventListener('click', async () => {
+            const resultEl2 = document.getElementById('setBuffsResult');
+            resultEl2.classList.remove('hidden');
+            resultEl2.textContent = '保存中...';
+            try {
+                const payload = {};
+                const listEl = document.getElementById('setBuffsList');
+                listEl.querySelectorAll('.set-buff-row').forEach(rowEl => {
+                    const sid = rowEl.getAttribute('data-set-id');
+                    const type = rowEl.querySelector('select.set-buff-type')?.value || '';
+                    const value = parseFloat(rowEl.querySelector('input.set-buff-value')?.value || '') || 0;
+                    if (type && value > 0) {
+                        payload[sid] = { type, value };
+                    }
+                });
+                const res = await fetch('/admin/api/artifact_2set_buffs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ buff_map: payload }),
+                });
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const data = await res.json();
+                resultEl2.textContent = data.ok ? `保存しました（${data.updated} 件）` : `保存失敗: ${data.error || ''}`;
+                if (data.ok) loadSetBuffs();
+            } catch (e) {
+                resultEl2.textContent = `保存失敗: ${e}`;
+            }
+        });
+        document.getElementById('setBuffsSearch').addEventListener('input', renderSetBuffs);
+        document.getElementById('setBuffsOnlyReflectable').addEventListener('change', renderSetBuffs);
+        loadSetBuffs();
     </script>
 </body>
 </html>

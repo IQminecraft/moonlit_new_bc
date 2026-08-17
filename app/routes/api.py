@@ -76,7 +76,7 @@ def _save_card_disk(params, data):
     except Exception as e:
         print(f"[cache] card disk save failed: {e}")
 
-_TEAM_CFG_KEYS = {"calc_method", "fake_char", "fake_weapon", "bg_mode", "bg_color", "bg_region"}
+_TEAM_CFG_KEYS = {"calc_method", "fake_char", "fake_weapon", "bg_mode", "bg_color", "bg_region", "base_prec"}
 
 
 def _clean_team_configs(configs: str, n: int) -> str:
@@ -304,9 +304,9 @@ async def get_char_list(uid: str, beta: str = "false"):
 
 
 @api_router.get("/api/card_data/{uid}/{avatar_id}")
-async def get_card_data(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false"):
+async def get_card_data(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", growth: str = "false", base_prec: str = "0"):
     return await run_in_threadpool(
-        _get_card_data_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta
+        _get_card_data_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta, growth, base_prec
     )
 
 
@@ -315,7 +315,7 @@ async def get_card_data(uid: str, avatar_id: str, calc_method: str = "crit", fak
 
 
 @api_router.get("/api/card_sign")
-async def card_sign(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, request: Request = None):
+async def card_sign(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", request: Request = None):
     """署名付きカード画像URLの発行（安価・IP毎レート制限付き）。
     このエンドポイントは画像生成も外部通信もしないため、
     ここへの集中攻撃はレート制限で吸収する。
@@ -337,6 +337,8 @@ async def card_sign(uid: str, avatar_id: str, calc_method: str = "crit", fake_ch
         "img_format": img_format,
         "bg_mode": bg_mode,
         "bg_region": bg_region,
+        "growth": growth,
+        "base_prec": base_prec,
     }
     if _CARD_URL_SECRET:
         exp = int(time.time()) + int(_CARD_SIGN_VALIDITY_SEC)
@@ -487,7 +489,7 @@ async def generate_team_image(uid: str, char_ids: str, configs: str = "", boss: 
 
 
 @api_router.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")
-async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, cache: str = "", card_exp: str = None, card_sig: str = None, request: Request = None):
+async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", cache: str = "", card_exp: str = None, card_sig: str = None, request: Request = None):
     """カード画像生成。専用スレッドプールで同時実行数を制限し、超過分は列待ち。
     待ち行列が満杯のときは 503 を返す（デフォルトの threadpool は占有しない）。
     署名検証（安価）→ IPレート制限 → プール投入の順で、
@@ -510,6 +512,8 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
             "img_format": img_format,
             "bg_mode": bg_mode,
             "bg_region": bg_region,
+            "growth": growth,
+            "base_prec": base_prec,
         }
         if not _verify_card_sign(card_exp, card_sig, params):
             raise HTTPException(status_code=403, detail="カード画像URLの署名が無効です。ページを再読み込みしてください。")
@@ -522,7 +526,7 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
             "uid": uid, "avatar_id": avatar_id, "calc_method": calc_method,
             "fake_char": fake_char, "fake_weapon": fake_weapon, "beta": beta,
             "bg_color": bg_color, "img_format": img_format, "bg_mode": bg_mode,
-            "bg_region": bg_region,
+            "bg_region": bg_region, "growth": growth, "base_prec": base_prec,
         }
         hit = _serve_card_disk(cache_params)
         if hit is not None:
@@ -541,6 +545,8 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
             img_format,
             bg_mode,
             bg_region,
+            growth,
+            base_prec,
         )
     except HTTPException as he:
         if he.status_code >= 500:

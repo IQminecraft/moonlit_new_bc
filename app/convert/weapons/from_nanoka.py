@@ -1,5 +1,15 @@
 import json
+import re
 import sys
+
+_COLOR_TAG_RE = re.compile(r"<color=#[0-9A-Fa-f]+>(.*?)</color>")
+
+
+def _strip_color_tags(text: str) -> str:
+    """ナノカの説明文に含まれる <color=#...>...</color> タグを除去して素の文字列にする。"""
+    if not text:
+        return ""
+    return _COLOR_TAG_RE.sub(r"\1", text)
 
 PROP_CONFIG = {
     "FIGHT_PROP_BASE_ATTACK": {
@@ -36,6 +46,20 @@ PROP_CONFIG = {
     }
 }
 
+def _refinement_ja(data: dict) -> dict:
+    """精錬効果（日本語のみ）を抽出する。refinement = {1..5: {name, desc, param_list}}。"""
+    refinement = data.get("refinement") or {}
+    out = {}
+    for level in sorted(refinement.keys(), key=lambda x: int(x)):
+        entry = refinement[level] or {}
+        name = _strip_color_tags(entry.get("name") or "")
+        desc = _strip_color_tags(entry.get("desc") or "")
+        if not name and not desc:
+            continue
+        out[str(level)] = {"name": name, "desc": desc}
+    return out
+
+
 def transform_weapon(data: dict) -> dict:
     result = {
         "name": data.get("name"),
@@ -69,6 +93,11 @@ def transform_weapon(data: dict) -> dict:
             stats_modifier[out_key] = round(final_value, 4)
 
     result["stats_modifier"] = stats_modifier
+
+    refinement = _refinement_ja(data)
+    if refinement:
+        result["refinement"] = refinement
+
     return result
 
 def main():

@@ -4,16 +4,20 @@ from collections import Counter
 from fastapi import HTTPException
 from app.paths import BASE_DIR
 from app.card.stats import (
-    text_map_data, get_stat_japanese, formal_round, get_char_level,
-    new_stat_totals, to_ratio_if_percent, apply_stat_bonus, score_calc,
+    text_map_data, get_stat_japanese, get_char_level,
+    score_calc,
+    sum_affix_substat_values, is_percent_prop, format_substat_value, format_base_value, format_decimal_value,
 )
 from app.card.special import (
     SPECIAL_ELEMENT_CHARACTERS, build_special_energy_hint_map,
     resolve_special_avatar_id, resolve_datas_path, resolve_list_path,
     resolve_display_skill_levels, resolve_costume_icon, resolve_costume_splash, _special_raw_id,
-    _NO_CONSTELLATION_CHARS, _NO_FRIENDSHIP_CHARS, _ELEMENT_DMG_BUFF_ID,
+    _NO_CONSTELLATION_CHARS, _NO_FRIENDSHIP_CHARS,
 )
 from app.card.region import build_region_info, find_regions_for_character
+from app.card.set_buffs import set_buff_label
+from app.card.stat_calc import compute_manual_totals
+from app.card.growth import build_growth_panel, build_growth_from_fake
 
 
 def _load_json_auto(path: str) -> dict:
@@ -65,9 +69,13 @@ def _build_char_list_from_showcase(showcase_data: dict, beta: str) -> list:
     return char_list
 
 
-def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false"):
+def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", growth: str = "false", base_prec: str = "0"):
     if beta != "true":
         beta = "false"
+    growth = "true" if str(growth or "") == "true" else "false"
+    base_prec = str(base_prec or "0")
+    if base_prec not in ("0", "2", "4"):
+        base_prec = "0"
 
     json_path = os.path.join("static", "cache", f"showcase_{uid}.json")
     json_path = resolve_datas_path(json_path, beta)
@@ -207,6 +215,8 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
             base_crit_rate = chardatas.get("crit_rate", 0.05)
             base_crit_dmg = chardatas.get("crit_dmg", 0.5)
             base_em = chardatas.get("elemental_mastery", 0.0)
+            # 差し替えキャラの基礎攻撃力には武器基礎攻撃力が含まれないため加算する
+            weapon_base_included = False
         else:
             base_hp = target_avatar_info.get('fightPropMap', {}).get('1', 1)
             base_atk = target_avatar_info.get('fightPropMap', {}).get('4', 1)
@@ -214,86 +224,73 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
             base_crit_rate = 0.05
             base_crit_dmg = 0.5
             base_em = 0.0
-        base_er = 1.0
+            # 差し替え武器の基礎攻撃力を別途加算する
+            weapon_base_included = False
 
-        stat_totals = new_stat_totals()
-        char_stats_mod_for_bonus = chardatas.get("stats_modifier", {}) or {}
-
-        extra_bonus = char_stats_mod_for_bonus.get("extra")
-        if isinstance(extra_bonus, dict):
-            for asc_key, asc_val in extra_bonus.items():
-                apply_stat_bonus(stat_totals, asc_key, asc_val)
-        elif isinstance(extra_bonus, list):
-            for asc_entry in extra_bonus:
-                for asc_key, asc_val in asc_entry.items():
-                    apply_stat_bonus(stat_totals, asc_key, asc_val)
-
-        for asc_entry in char_stats_mod_for_bonus.get("ascension", []):
-            for asc_key, asc_val in asc_entry.items():
-                apply_stat_bonus(stat_totals, asc_key, asc_val)
-
-        weapon_base_atk = 0.0
-        for w_entry in weapon_stats_list:
-            w_prop_id = w_entry.get("appendPropId", "")
-            w_val = w_entry.get("statValue", 0.0)
-            if w_prop_id.upper() in ("FIGHT_PROP_BASE_ATTACK", "FIGHT_PROP_ATTACK"):
-                weapon_base_atk = w_val
-            else:
-                apply_stat_bonus(stat_totals, w_prop_id, to_ratio_if_percent(w_prop_id, w_val))
-
-        for art_raw in raw_artifacts:
-            art_flat = art_raw.get("flat", {})
-            art_main = art_flat.get("reliquaryMainstat", {})
-            art_main_id = art_main.get("mainPropId", "")
-            apply_stat_bonus(stat_totals, art_main_id, to_ratio_if_percent(art_main_id, art_main.get("statValue", 0.0)))
-            for art_sub in art_flat.get("reliquarySubstats", []):
-                art_sub_id = art_sub.get("appendPropId", "")
-                apply_stat_bonus(stat_totals, art_sub_id, to_ratio_if_percent(art_sub_id, art_sub.get("statValue", 0.0)))
-
-        total_hp = base_hp * (1 + stat_totals["hp_percent"]) + stat_totals["hp_flat"]
-        total_atk = (base_atk + weapon_base_atk) * (1 + stat_totals["atk_percent"]) + stat_totals["atk_flat"]
-        total_def = base_def * (1 + stat_totals["def_percent"]) + stat_totals["def_flat"]
-        total_em = base_em + stat_totals["em"]
-        total_crit_rate = base_crit_rate + stat_totals["crit_rate"]
-        total_crit_dmg = base_crit_dmg + stat_totals["crit_dmg"]
-        total_er = base_er + stat_totals["energy_recharge"]
+        totals = compute_manual_totals(
+            base_hp=base_hp,
+            base_atk=base_atk,
+            base_def=base_def,
+            base_crit_rate=base_crit_rate,
+            base_crit_dmg=base_crit_dmg,
+            base_em=base_em,
+            weapon_stats_list=weapon_stats_list,
+            raw_artifacts=raw_artifacts,
+            chardatas=chardatas,
+            element_type=element_type,
+            beta=beta,
+            weapon_base_included_in_base_atk=weapon_base_included,
+        )
 
         dmg_buff_val = "0%"
         if element_type in ("Pyro", "Hydro", "Anemo", "Electro", "Dendro", "Geo", "Cryo"):
-            buff_val = stat_totals["dmg_bonus_by_element"].get(element_type, 0.0)
+            buff_val = totals["dmg_buff"]["val"]
             if buff_val > 0:
-                dmg_buff_val = str(formal_round(buff_val * 1000) / 10) + "%"
+                dmg_buff_val = f"{format_decimal_value(buff_val * 100, base_prec)}%"
 
         main_stats = [
-            {"label": "HP", "val": formal_round(total_hp), "base": formal_round(base_hp), "icon": "static/assets/props/hp.png"},
-            {"label": "攻撃力", "val": formal_round(total_atk), "base": formal_round(base_atk + weapon_base_atk), "icon": "static/assets/props/atk.png"},
-            {"label": "防御力", "val": formal_round(total_def), "base": formal_round(base_def), "icon": "static/assets/props/def.png"},
-            {"label": "元素熟知", "val": formal_round(total_em), "icon": "static/assets/props/em.png"},
-            {"label": "会心率", "val": str(formal_round(total_crit_rate * 1000) / 10) + "%", "icon": "static/assets/props/rate.webp"},
-            {"label": "会心ダメージ", "val": str(formal_round(total_crit_dmg * 1000) / 10) + "%", "icon": "static/assets/props/dmg.webp"},
-            {"label": "チャージ効率", "val": str(formal_round(total_er * 1000) / 10) + "%", "icon": "static/assets/props/er.png"},
+            {"label": "HP", "val": format_base_value(totals["hp"]["val"], base_prec), "base": format_base_value(totals["hp"]["base"], base_prec), "icon": "static/assets/props/hp.png"},
+            {"label": "攻撃力", "val": format_base_value(totals["atk"]["val"], base_prec), "base": format_base_value(totals["atk"]["base"], base_prec), "icon": "static/assets/props/atk.png"},
+            {"label": "防御力", "val": format_base_value(totals["def"]["val"], base_prec), "base": format_base_value(totals["def"]["base"], base_prec), "icon": "static/assets/props/def.png"},
+            {"label": "元素熟知", "val": format_base_value(totals["em"]["val"], base_prec), "icon": "static/assets/props/em.png"},
+            {"label": "会心率", "val": f"{format_decimal_value(totals['crit_rate']['val'] * 100, base_prec)}%", "icon": "static/assets/props/rate.webp"},
+            {"label": "会心ダメージ", "val": f"{format_decimal_value(totals['crit_dmg']['val'] * 100, base_prec)}%", "icon": "static/assets/props/dmg.webp"},
+            {"label": "チャージ効率", "val": f"{format_decimal_value(totals['er']['val'] * 100, base_prec)}%", "icon": "static/assets/props/er.png"},
             {"label": f"{element_ja}ダメバフ", "val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
         ]
     else:
         fight_prop = target_avatar_info.get('fightPropMap', {})
 
-        # 表示キャラの元素に対応するダメバフだけを参照する。
-        # 全元素で最大値を取ると、装備由来の別元素バフ（例: 岩元素キャラの
-        # 物理/氷バフ）が {element_ja}ダメバフ に混入してしまうため。
-        buff_id = _ELEMENT_DMG_BUFF_ID.get(element_type, "30")
-        max_dmg_val = fight_prop.get(buff_id, 0.0)
+        # 実キャラも差し替えと同一の手動計算でステータスを導出する。
+        # fightPropMap['4'](基礎攻撃力) には武器基礎攻撃力が既に含まれるため、
+        # weapon_base_included_in_base_atk=True で二重加算を防ぐ。
+        totals = compute_manual_totals(
+            base_hp=fight_prop.get('1', 1),
+            base_atk=fight_prop.get('4', 1),
+            base_def=fight_prop.get('7', 1),
+            base_crit_rate=0.05,
+            base_crit_dmg=0.5,
+            base_em=0.0,
+            weapon_stats_list=weapon_stats_list,
+            raw_artifacts=raw_artifacts,
+            chardatas=chardatas,
+            element_type=element_type,
+            beta=beta,
+            weapon_base_included_in_base_atk=True,
+        )
+
         dmg_buff_val = "0%"
-        if max_dmg_val > 0:
-            dmg_buff_val = str(formal_round(max_dmg_val * 1000) / 10) + "%"
+        if totals["dmg_buff"]["val"] > 0:
+            dmg_buff_val = f"{format_decimal_value(totals['dmg_buff']['val'] * 100, base_prec)}%"
 
         main_stats = [
-            {"label": "HP", "val": formal_round(fight_prop.get('2000', 1)), "base": formal_round(fight_prop.get('1', 1)), "icon": "static/assets/props/hp.png"},
-            {"label": "攻撃力", "val": formal_round(fight_prop.get('2001', 1)), "base": formal_round(fight_prop.get('4', 1)), "icon": "static/assets/props/atk.png"},
-            {"label": "防御力", "val": formal_round(fight_prop.get('2002', 1)), "base": formal_round(fight_prop.get('7', 1)), "icon": "static/assets/props/def.png"},
-            {"label": "元素熟知", "val": formal_round(fight_prop.get('28', 1)), "icon": "static/assets/props/em.png"},
-            {"label": "会心率", "val": str(formal_round(fight_prop.get('20', 1) * 1000) / 10) + "%", "icon": "static/assets/props/rate.webp"},
-            {"label": "会心ダメージ", "val": str(formal_round(fight_prop.get('22', 1) * 1000) / 10) + "%", "icon": "static/assets/props/dmg.webp"},
-            {"label": "チャージ効率", "val": str(formal_round(fight_prop.get('23', 1) * 1000) / 10) + "%", "icon": "static/assets/props/er.png"},
+            {"label": "HP", "val": format_base_value(totals["hp"]["val"], base_prec), "base": format_base_value(totals["hp"]["base"], base_prec), "icon": "static/assets/props/hp.png"},
+            {"label": "攻撃力", "val": format_base_value(totals["atk"]["val"], base_prec), "base": format_base_value(totals["atk"]["base"], base_prec), "icon": "static/assets/props/atk.png"},
+            {"label": "防御力", "val": format_base_value(totals["def"]["val"], base_prec), "base": format_base_value(totals["def"]["base"], base_prec), "icon": "static/assets/props/def.png"},
+            {"label": "元素熟知", "val": format_base_value(totals["em"]["val"], base_prec), "icon": "static/assets/props/em.png"},
+            {"label": "会心率", "val": f"{format_decimal_value(totals['crit_rate']['val'] * 100, base_prec)}%", "icon": "static/assets/props/rate.webp"},
+            {"label": "会心ダメージ", "val": f"{format_decimal_value(totals['crit_dmg']['val'] * 100, base_prec)}%", "icon": "static/assets/props/dmg.webp"},
+            {"label": "チャージ効率", "val": f"{format_decimal_value(totals['er']['val'] * 100, base_prec)}%", "icon": "static/assets/props/er.png"},
             {"label": f"{element_ja}ダメバフ", "val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
         ]
 
@@ -335,16 +332,17 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         main_name = get_stat_japanese(main_prop_id)
         main_val = main_stat_raw.get("statValue", 0)
         if "PERCENT" in main_prop_id or "CRITICAL" in main_prop_id or "CHARGE" in main_prop_id or "HURT" in main_prop_id:
-            main_value_str = f"{main_val}%"
+            main_value_str = f"{format_decimal_value(main_val, base_prec)}%"
         else:
-            main_value_str = f"{int(main_val):,}"
+            main_value_str = format_decimal_value(main_val, base_prec)
 
         crit_rate, crit_dmg, target_stat_val = 0.0, 0.0, 0.0
         substats_out = []
+        sub_sums = sum_affix_substat_values(reliquary.get("appendPropIdList"))
         for sub_data in flat.get("reliquarySubstats", []):
             sub_prop_id = sub_data.get("appendPropId", "")
             sub_name = get_stat_japanese(sub_prop_id)
-            sub_val = sub_data.get("statValue", 0)
+            sub_val = sub_sums.get(sub_prop_id, sub_data.get("statValue", 0))
 
             if sub_prop_id == "FIGHT_PROP_CRITICAL":
                 crit_rate = sub_val
@@ -362,10 +360,10 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
             elif "ATTACK" in sub_prop_id: icon_file = "atk_per.png" if "PERCENT" in sub_prop_id else "atk.png"
             elif "DEFENSE" in sub_prop_id: icon_file = "def_per.png" if "PERCENT" in sub_prop_id else "def.png"
 
-            if "PERCENT" in sub_prop_id or "CRITICAL" in sub_prop_id or "CHARGE" in sub_prop_id or "HURT" in sub_prop_id:
-                sub_value_str = f"{sub_val}%"
+            if is_percent_prop(sub_prop_id):
+                sub_value_str = f"{format_decimal_value(sub_val, base_prec)}%"
             else:
-                sub_value_str = f"{int(sub_val)}"
+                sub_value_str = format_decimal_value(sub_val, base_prec)
 
             substats_out.append({
                 "name": sub_name, "value": sub_value_str,
@@ -390,7 +388,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
             "upgrade": reliquary.get("level", 1) - 1,
             "main": {"name": main_name, "value": main_value_str},
             "substats": substats_out,
-            "score": art_score,
+            "score": round(art_score, 1),
             "tier": art_tier,
             "icon": resolve_datas_path(f"static/assets/artifacts/UI_RelicIcon_{flat.get('setId','')}_{icon_name.split('_')[-1]}.webp", beta)
         }
@@ -429,7 +427,36 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
             "count": cnt,
             "icon": (resolve_datas_path(f"static/assets/artifacts/{_set_icon}.webp", beta) if _set_icon else ""),
             "id": str(sid),
+            "buff": set_buff_label(sid),
         })
+
+    # 育成モード: 右側パネル用データ（card_data API → HTML/glass 表示に使用）
+    growth_panel = {}
+    if growth == "true":
+        if fake_char or fake_weapon:
+            growth_panel = build_growth_from_fake(
+                calc_method,
+                base_hp=base_hp,
+                base_atk=base_atk,
+                base_def=base_def,
+                weapon_affix=weapon_affix,
+                weapon_jsondata=weapon_jsondata if "weapon_jsondata" in locals() else None,
+                raw_artifacts=raw_artifacts,
+                set_bonuses=set_bonuses,
+                beta=beta,
+            )
+        else:
+            growth_panel = build_growth_panel(
+                calc_method,
+                base_hp=fight_prop.get("1", 0),
+                base_atk=fight_prop.get("4", 0),
+                base_def=fight_prop.get("7", 0),
+                weapon_affix=weapon_affix,
+                weapon_refinement=(weapon_jsondata.get("refinement") or {} if "weapon_jsondata" in locals() and weapon_jsondata else {}),
+                raw_artifacts=raw_artifacts,
+                set_bonuses=set_bonuses,
+                beta=beta,
+            )
 
     if score_sum < 180:
         tier_sum_score = "B"
@@ -496,8 +523,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         w_name = get_stat_japanese(w_prop)
         if "PERCENT" in str(w_prop).upper() or "CRITICAL" in str(w_prop).upper() or "CHARGE" in str(w_prop).upper() or "HURT" in str(w_prop).upper():
             try:
-                fv = float(w_val)
-                w_val_str = f"{fv}%" if fv < 1000 else str(int(fv))
+                w_val_str = f"{format_decimal_value(float(w_val), base_prec)}%"
             except Exception:
                 w_val_str = str(w_val)
         else:
@@ -543,5 +569,6 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         "tierSum": tier_sum_score,
         "calcMethod": calc_method,
         "calcMethodLabel": display_score_way,
+        "growth": growth_panel,
         "regions": build_region_info(find_regions_for_character(_special_raw_id(fake_char or avatar_id), element_type)),
     }

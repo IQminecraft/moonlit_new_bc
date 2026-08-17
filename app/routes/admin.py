@@ -819,3 +819,100 @@ async def admin_region_map_save(request: Request):
         return JSONResponse(await run_in_threadpool(_run))
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ==========================================================
+#  聖遺物 2セット効果バフ管理 API
+# ==========================================================
+from app.card.set_buffs import (
+    BUFF_TYPES, detect_2set_buff, buff_label,
+    load_2set_buff_map, save_2set_buff_map,
+)
+
+
+def _load_artifact_sets():
+    """ローカルの artifacts.json（live と beta）から全セット情報を読む（beta 優先マージ）。"""
+    merged = {}
+    for raw_path, prio in (
+        (os.path.join(STATIC_DIR, "data", "lists", "artifacts.json"), 0),
+        (os.path.join(STATIC_DIR, "beta", "data", "lists", "artifacts.json"), 1),
+    ):
+        if not os.path.exists(raw_path):
+            continue
+        try:
+            with open(raw_path, "r", encoding="utf-8") as f:
+                d = json.load(f)
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            try:
+                with open(raw_path, "r", encoding="cp932") as f:
+                    d = json.load(f)
+            except Exception:
+                continue
+        for sid, ent in (d or {}).items():
+            if isinstance(ent, dict):
+                prev_prio = merged.get(str(sid), {}).get("_prio", -1)
+                if prio >= prev_prio:
+                    merged[str(sid)] = {**ent, "_prio": prio}
+    return merged
+
+
+@admin_router.get("/admin/api/artifact_2set_buffs")
+async def admin_artifact_2set_buffs_get(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    try:
+        def _run():
+            sets = _load_artifact_sets()
+            saved = load_2set_buff_map()
+            catalog = []
+            for sid in sorted(sets, key=lambda s: (len(s), s)):
+                ent = sets[sid]
+                if not isinstance(ent, dict) or not ent.get("janame"):
+                    continue
+                desc_ja = ent.get("set2_desc_ja") or ""
+                detected = detect_2set_buff(desc_ja)
+                cur = saved.get(str(sid))
+                catalog.append({
+                    "id": str(sid),
+                    "janame": ent.get("janame", ""),
+                    "enname": ent.get("enname", ""),
+                    "icon": ent.get("icon", ""),
+                    "set2_desc_ja": desc_ja,
+                    "detected": detected,
+                    "detected_label": (buff_label(detected["type"], detected["value"]) if detected else ""),
+                    "selected": cur,
+                    "selected_label": (buff_label(cur.get("type", ""), cur.get("value", 0)) if cur else ""),
+                })
+            type_options = [
+                {"type": t, "jatype": info["jatype"], "label_placeholder": info["label"].format(v=0)}
+                for t, info in BUFF_TYPES.items()
+            ]
+            return {
+                "ok": True,
+                "count": len(catalog),
+                "types": type_options,
+                "sets": catalog,
+            }
+        return JSONResponse(await run_in_threadpool(_run))
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@admin_router.post("/admin/api/artifact_2set_buffs")
+async def admin_artifact_2set_buffs_save(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "invalid JSON"}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"ok": False, "error": "body must be {setId: {type, value}}"}, status_code=400)
+    buff_map = body.get("buff_map", body)
+    if not isinstance(buff_map, dict):
+        return JSONResponse({"ok": False, "error": "buff_map required"}, status_code=400)
+    try:
+        cleaned = await run_in_threadpool(save_2set_buff_map, buff_map)
+        return JSONResponse({"ok": True, "updated": len(cleaned)})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)

@@ -44,6 +44,42 @@ def transform_character(data: dict) -> dict:
             "extra": extra_stats
         }
 
+    # レベル1～100の基礎ステータス（HP/ATK/DEF）を保存する。
+    # 計算式: base_stat(L) = base * mult[L] + ascension_bonus(phase(L))
+    # phase はレベル閾値(20/40/50/60/70/80)で切り替わる。
+    hp_mults = stats.get("hp", {})
+    atk_mults = stats.get("atk", {})
+    def_mults = stats.get("def", {})
+
+    def _phase_index(level: int) -> int:
+        if level >= 80:
+            return 6
+        if level >= 70:
+            return 5
+        if level >= 60:
+            return 4
+        if level >= 50:
+            return 3
+        if level >= 40:
+            return 2
+        if level >= 20:
+            return 1
+        return 0
+
+    def _mult(mults: dict, level: int) -> float:
+        return float(mults.get(str(level), mults.get("90", 1.0)))
+
+    base_stats = {}
+    for lvl in range(1, 101):
+        pi = _phase_index(lvl)
+        asc = asc_list[pi - 1] if 1 <= pi <= len(asc_list) else {}
+        base_stats[str(lvl)] = {
+            "hp": round(base_hp * _mult(hp_mults, lvl) + asc.get("fight_prop_base_hp", 0), 4),
+            "atk": round(base_atk * _mult(atk_mults, lvl) + asc.get("fight_prop_base_attack", 0), 4),
+            "def": round(base_def * _mult(def_mults, lvl) + asc.get("fight_prop_base_defense", 0), 4),
+        }
+    new_data["base_stats"] = base_stats
+
     skills = data.get("skills", [])
     new_skills = []
     for sk in skills:

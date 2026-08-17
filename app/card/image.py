@@ -2,31 +2,245 @@ import json
 import os
 import io
 import time
+import math
 from collections import Counter
 from fastapi import HTTPException
 from PIL import Image, ImageDraw
 from app.paths import BASE_DIR, CARD_W, CARD_H, SX, SY, FONT_PATH, FONT_LIGHT_PATH
 from app.card.cache import get_cached_font, get_resized_image
 from app.card.stats import (
-    text_map_data, get_stat_japanese, formal_round, get_char_level,
-    new_stat_totals, to_ratio_if_percent, apply_stat_bonus, score_calc,
+    text_map_data, get_stat_japanese, get_char_level,
+    score_calc,
+    sum_affix_substat_values, is_percent_prop, format_substat_value, format_base_value, format_var_base_add,
+    format_decimal_value,
 )
 from app.card.special import (
     SPECIAL_ELEMENT_CHARACTERS, build_special_energy_hint_map,
     resolve_special_avatar_id, resolve_datas_path, resolve_list_path,
     resolve_display_skill_levels, resolve_costume_splash, _special_raw_id,
-    _NO_CONSTELLATION_CHARS, _NO_FRIENDSHIP_CHARS, _ELEMENT_DMG_BUFF_ID,
+    _NO_CONSTELLATION_CHARS, _NO_FRIENDSHIP_CHARS,
 )
 from app.card.region import find_regions_for_character
+from app.card.set_buffs import set_buff_label
+from app.card.stat_calc import compute_manual_totals
+from app.card.growth import build_growth_panel, build_growth_from_fake
 from app.card.bg import hex_to_rgb, create_card_background, region_image_path
 from app.card.draw import (
     draw_figma_box, paste_mask_image, draw_figma_text_with_shadow,
     draw_figma_circle, paste_figma_image, draw_figma_text, draw_figma_line,
-    draw_figma_text_right,
+    draw_figma_text_right, figma_draw_scale, _sx, _sy,
 )
 
+# 育成モードの右パネル寸法（キャンバスピクセル）: 全体を等方縮小して右に追加する
+# HTML 版（1200px デザイン: カード930 + パネル270、余白なし）を 2400px キャンバスに 2倍で再現
+_GROWTH_PANEL_W = 540
+_GROWTH_PANEL_GAP = 0
+_GROWTH_PANEL_MARGIN = 0
 
-def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None):
+
+def _wrap_jp(draw, text, font, max_w):
+    """JP テキストを幅に合わせて折り返す（禁則処理なしの簡易版）。"""
+    lines = []
+    cur = ""
+    for ch in str(text):
+        if not cur:
+            cur = ch
+            continue
+        if draw.textlength(cur + ch, font=font) <= max_w:
+            cur += ch
+        else:
+            lines.append(cur)
+            cur = ch
+    if cur:
+        lines.append(cur)
+    return lines
+
+
+def _draw_wrapped(draw, text, x, y, font, fill, max_w, line_h):
+    lines = _wrap_jp(draw, text, font, max_w)
+    for ln in lines:
+        draw.text((x, y), ln, font=font, fill=fill)
+        y += line_h
+    return y
+
+
+def _r2(v) -> float | None:
+    """HTML版 roundTo2 相当: 小数第2位まで（Math.round(v*100)/100）"""
+    if v is None:
+        return None
+    if v >= 0:
+        return math.floor(v * 100 + 0.5) / 100.0
+    return math.ceil(v * 100 - 0.5) / 100.0
+
+
+def _draw_panel_text_with_shadow(draw, xy, text, font, fill, shadow=(0, 0, 0, 200), offset=2, anchor=None):
+    """1px〜2px の黒影を付けてテキストを描く（HTML の text-shadow 相当）。"""
+    x, y = xy
+    sx, sy = int(offset), int(offset)
+    draw.text((x + sx, y + sy), text, font=font, fill=shadow, anchor=anchor)
+    draw.text((x, y), text, font=font, fill=fill, anchor=anchor)
+
+
+def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb):
+    """カード右側に育成パネルを描画する。HTML 版 growth-panel と同レイアウト。
+
+    - パネル幅 = 540（HTML の 270px を 2400px キャンバスに 2倍で再現）
+    - 高さ = 縮小カードと同じ panel_h（HTML の 620px 相当）
+    - セクション: 聖遺物セット効果 / 基礎ステータス %換算 / サブステ伸び平均
+      （「1回あたりの平均」サブヘッド + HP/攻撃/防御 の %・実数を緑で表示）
+    - 武器（精錬効果）セクションは HTML と同様に非表示
+    """
+    x0 = panel_x0
+    w = panel_x1 - x0
+    h = int(panel_h)
+    y0, y1 = 0, h
+
+    # パネル背景（HTML の linear-gradient + border 相当）
+    top_rgb = (20, 24, 34)
+    bot_rgb = (14, 16, 24)
+    gradient = Image.new("RGBA", (1, h), (0, 0, 0, 0))
+    gd = ImageDraw.Draw(gradient)
+    for yy in range(h):
+        t = yy / max(1, h - 1)
+        col = tuple(int(top_rgb[i] + (bot_rgb[i] - top_rgb[i]) * t) for i in range(3))
+        gd.point((0, yy), fill=(col[0], col[1], col[2], 255))
+    gradient = gradient.resize((w, h), Image.LANCZOS)
+
+    radius = 32
+    mask = Image.new("L", (w, h), 0)
+    md = ImageDraw.Draw(mask)
+    md.rounded_rectangle([0, 0, w - 1, h - 1], radius=radius, fill=255)
+    gradient.putalpha(mask.point(lambda p: int(p * 0.92)))
+
+    layer = Image.new("RGBA", (w + 2, h + 2), (0, 0, 0, 0))
+    ld = ImageDraw.Draw(layer)
+    ld.rounded_rectangle(
+        [0, 0, w, h], radius=radius,
+        outline=(255, 255, 255, 46), width=2,
+    )
+    layer.alpha_composite(gradient, (1, 1))
+    img.alpha_composite(layer, dest=(x0 - 1, y0 - 1))
+
+    draw = ImageDraw.Draw(img)
+    pad = 28
+    inner_x = x0 + pad
+    right_x = panel_x1 - pad
+    max_w = w - pad * 2
+    cur_y = y0 + pad
+
+    gold = (255, 205, 120, 255)
+    head_c = (125, 210, 255, 255)
+    white = (240, 244, 250, 255)
+    label_c = (205, 211, 222, 255)          # rgba(255,255,255,0.8) 相当
+    desc_c = (168, 176, 190, 255)           # rgba(255,255,255,0.65) 相当
+    subhead_c = (150, 158, 174, 255)        # rgba(255,255,255,0.55) 相当
+    green = (110, 230, 160, 255)
+
+    title_font = get_cached_font(FONT_PATH, 48)
+    head_font = get_cached_font(FONT_PATH, 32)
+    subhead_font = get_cached_font(FONT_PATH, 28)
+    set_name_font = get_cached_font(FONT_PATH, 36)
+    set_desc_font = get_cached_font(FONT_LIGHT_PATH, 30)
+    stat_label_font = get_cached_font(FONT_LIGHT_PATH, 34)
+    stat_value_font = get_cached_font(FONT_PATH, 34)
+
+    def _section_head(label):
+        nonlocal cur_y
+        _draw_panel_text_with_shadow(draw, (inner_x, cur_y), label, head_font, head_c)
+        cur_y += int(head_font.size * 1.35) + 8
+        draw.line((inner_x, cur_y, right_x, cur_y), fill=(255, 255, 255, 255), width=2)
+        cur_y += 14
+
+    def _stat_row(label, value):
+        nonlocal cur_y
+        _draw_panel_text_with_shadow(draw, (inner_x, cur_y), label, stat_label_font, label_c, offset=1)
+        _draw_panel_text_with_shadow(draw, (right_x, cur_y), value, stat_value_font, green, offset=1, anchor="ra")
+        cur_y += int(stat_value_font.size * 1.4) + 10
+
+    # タイトル
+    _draw_panel_text_with_shadow(draw, (inner_x, cur_y), "育成メモ", title_font, gold)
+    cur_y += int(title_font.size * 1.4) + 10
+
+    if not panel:
+        return
+    cur_y += 2
+
+    # 1) 聖遺物セット効果
+    if panel.get("sets"):
+        _section_head("聖遺物セット効果")
+        for st in panel["sets"]:
+            _draw_panel_text_with_shadow(draw, (inner_x, cur_y), f"{st['name']} ×{st['count']}", set_name_font, white, offset=1)
+            cur_y += int(set_name_font.size * 1.35) + 6
+            if st.get("set2"):
+                # ステータス反映済み（apply_2set_buffs）の2セット効果は白文字で強調
+                _2set_c = white if st.get("buff_applied") else desc_c
+                cur_y = _draw_wrapped(draw, f"2セット: {st['set2']}", inner_x, cur_y, set_desc_font, _2set_c, max_w, int(set_desc_font.size * 1.5))
+            # 4セット効果は4点以上装備時のみ表示（2セット/2セット 編成では非表示）
+            if int(st.get("count", 0)) >= 4 and st.get("set4"):
+                cur_y = _draw_wrapped(draw, f"4セット: {st['set4']}", inner_x, cur_y, set_desc_font, desc_c, max_w, int(set_desc_font.size * 1.5))
+            cur_y += 8
+        cur_y += 18
+
+    # 2) 基礎ステータス %換算
+    sp = panel.get("stat1pct")
+    if sp:
+        _section_head("基礎ステータス %換算")
+        _stat_row(f"{sp['label']} 1%あたり", str(sp["value"]))
+        cur_y += 18
+
+    # 3) サブステ伸び平均（1回あたり）: HP / 攻撃 / 防御 を % と実数で表示
+    sub_list = panel.get("subavg_all") or []
+    rows = []
+    short = {"hp": "HP", "atk": "攻撃", "def": "防御"}
+    for s in sub_list:
+        label = short.get(s.get("key"), s.get("label") or "")
+        if s.get("pct_avg") is not None:
+            paren = f" ({_r2(s['flat_equiv']):.2f})" if s.get("flat_equiv") is not None else ""
+            rows.append((f"{label}%", f"{_r2(s['pct_avg']):.2f}%{paren}"))
+        if s.get("flat_avg") is not None:
+            rows.append((f"{label}実数", f"{_r2(s['flat_avg']):.2f}"))
+    if rows:
+        _section_head("サブステ伸び平均")
+        _draw_panel_text_with_shadow(draw, (inner_x, cur_y), "1回あたりの平均", subhead_font, subhead_c, offset=1)
+        cur_y += int(subhead_font.size * 1.4) + 8
+        for label, value in rows:
+            _stat_row(label, value)
+
+
+def _attach_growth_panel(img, panel, bg_base_rgb, splash_path, element_type,
+                         use_prebuilt, region, panel_w=_GROWTH_PANEL_W,
+                         gap=_GROWTH_PANEL_GAP, margin=_GROWTH_PANEL_MARGIN):
+    """カード全体を等方縮小し、右側に育成パネルを追加する（幅は変えない）。
+
+    元 img は CARD_W x CARD_H。縮小率 k = (CARD_W - panel_w - gap - margin) / CARD_W で
+    縦横同じ割合で縮小し、右の余白に panel_w 分のパネルを描く。
+    """
+    card_w, card_h = CARD_W, CARD_H
+    content_w = max(1200, int(round(card_w * ((card_w - panel_w - gap - margin) / card_w))))
+    k = content_w / card_w
+    content_h = max(1, int(round(card_h * k)))
+
+    skinned = img.resize((content_w, content_h), Image.LANCZOS)
+
+    # 新しいキャンバス（背景は同じ設定で再生成 → 縮小領域外を覆う）
+    bg_full = create_card_background(
+        card_w, card_h, bg_base_rgb,
+        splash_path=splash_path,
+        element_type=element_type,
+        use_prebuilt=use_prebuilt,
+        region=region,
+    )
+    bg_full.paste(skinned, (0, 0), skinned)
+
+    panel_x0 = content_w + gap
+    panel_x1 = card_w - margin
+    _draw_growth_panel(bg_full, panel, panel_x0, panel_x1, content_h, bg_base_rgb)
+    # 縮小カード+パネルの下端（content_h）で切り抜き、下部の余白を除去する
+    bg_full = bg_full.crop((0, 0, card_w, content_h))
+    return bg_full
+
+
+def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0"):
     _total_start = time.perf_counter()
 
     def _plog(msg: str) -> None:
@@ -36,9 +250,13 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
     if beta != "true":
         beta = "false"
+    growth = "true" if str(growth or "") == "true" else "false"
+    base_prec = str(base_prec or "0")
+    if base_prec not in ("0", "2", "4"):
+        base_prec = "0"
     _plog(
         f"START uid={uid} avatar={avatar_id} method={calc_method} "
-        f"format={img_format} beta={beta} fake_char={fake_char} bg_mode={bg_mode} bg_region={bg_region}"
+        f"format={img_format} beta={beta} fake_char={fake_char} bg_mode={bg_mode} bg_region={bg_region} growth={growth}"
     )
     print(
         f"[Cache Miss] 初回生成のため、PILで気合を入れて画像を作ります...: "
@@ -244,7 +462,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             stat_val1 = entry1.get("statValue", 0.0)
             try:
                 if "PERCENT" in prop_id1 or "CRITICAL" in prop_id1 or "CHARGE" in prop_id1:
-                    stat_val1_str = f"{stat_val1}%"
+                    stat_val1_str = f"{format_decimal_value(float(stat_val1), base_prec)}%"
                 else:
                     stat_val1_str = f"{int(stat_val1)}"
             except Exception:
@@ -260,7 +478,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             stat_val2 = entry2.get("statValue", 0.0)
             try:
                 if "PERCENT" in prop_id2 or "CRITICAL" in prop_id2 or "CHARGE" in prop_id2 or "HURT" in prop_id2:
-                    stat_val2_str = f"{stat_val2}%"
+                    stat_val2_str = f"{format_decimal_value(float(stat_val2), base_prec)}%"
                 else:
                     stat_val2_str = f"{int(stat_val2)}"
             except Exception:
@@ -281,6 +499,8 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             base_crit_rate = chardatas.get("crit_rate", 0.05)
             base_crit_dmg = chardatas.get("crit_dmg", 0.5)
             base_em = chardatas.get("elemental_mastery", 0.0)
+            # 差し替えキャラの基礎攻撃力には武器基礎攻撃力が含まれないため加算する
+            weapon_base_included = False
         else:
             base_hp = target_avatar_info.get('fightPropMap', {}).get('1', 1)
             base_atk = target_avatar_info.get('fightPropMap', {}).get('4', 1)
@@ -288,84 +508,79 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             base_crit_rate = 0.05
             base_crit_dmg = 0.5
             base_em = 0.0
-        base_er = 1.0
+            # 差し替え武器の基礎攻撃力を別途加算する
+            weapon_base_included = False
 
-        stat_totals = new_stat_totals()
-        char_stats_mod_for_bonus = chardatas.get("stats_modifier", {}) or {}
-
-        extra_bonus = char_stats_mod_for_bonus.get("extra")
-        if isinstance(extra_bonus, dict):
-            for asc_key, asc_val in extra_bonus.items():
-                apply_stat_bonus(stat_totals, asc_key, asc_val)
-        elif isinstance(extra_bonus, list):
-            for asc_entry in extra_bonus:
-                for asc_key, asc_val in asc_entry.items():
-                    apply_stat_bonus(stat_totals, asc_key, asc_val)
-
-        for asc_entry in char_stats_mod_for_bonus.get("ascension", []):
-            for asc_key, asc_val in asc_entry.items():
-                apply_stat_bonus(stat_totals, asc_key, asc_val)
-
-        weapon_base_atk = 0.0
-        for w_entry in weapon_stats_list:
-            w_prop_id = w_entry.get("appendPropId", "")
-            w_val = w_entry.get("statValue", 0.0)
-            if w_prop_id.upper() in ("FIGHT_PROP_BASE_ATTACK", "FIGHT_PROP_ATTACK"):
-                weapon_base_atk = w_val
-            else:
-                apply_stat_bonus(stat_totals, w_prop_id, to_ratio_if_percent(w_prop_id, w_val))
-
-        for art_raw in raw_artifacts:
-            art_flat = art_raw.get("flat", {})
-            art_main = art_flat.get("reliquaryMainstat", {})
-            art_main_id = art_main.get("mainPropId", "")
-            apply_stat_bonus(stat_totals, art_main_id, to_ratio_if_percent(art_main_id, art_main.get("statValue", 0.0)))
-            for art_sub in art_flat.get("reliquarySubstats", []):
-                art_sub_id = art_sub.get("appendPropId", "")
-                apply_stat_bonus(stat_totals, art_sub_id, to_ratio_if_percent(art_sub_id, art_sub.get("statValue", 0.0)))
-
-        total_hp = base_hp * (1 + stat_totals["hp_percent"]) + stat_totals["hp_flat"]
-        total_atk = (base_atk + weapon_base_atk) * (1 + stat_totals["atk_percent"]) + stat_totals["atk_flat"]
-        total_def = base_def * (1 + stat_totals["def_percent"]) + stat_totals["def_flat"]
-        total_em = base_em + stat_totals["em"]
-        total_crit_rate = base_crit_rate + stat_totals["crit_rate"]
-        total_crit_dmg = base_crit_dmg + stat_totals["crit_dmg"]
-        total_er = base_er + stat_totals["energy_recharge"]
+        totals = compute_manual_totals(
+            base_hp=base_hp,
+            base_atk=base_atk,
+            base_def=base_def,
+            base_crit_rate=base_crit_rate,
+            base_crit_dmg=base_crit_dmg,
+            base_em=base_em,
+            weapon_stats_list=weapon_stats_list,
+            raw_artifacts=raw_artifacts,
+            chardatas=chardatas,
+            element_type=element_type,
+            beta=beta,
+            weapon_base_included_in_base_atk=weapon_base_included,
+        )
 
         dmg_buff_val = "0%"
         if element_type in ("Pyro", "Hydro", "Anemo", "Electro", "Dendro", "Geo", "Cryo"):
-            buff_val = stat_totals["dmg_bonus_by_element"].get(element_type, 0.0)
+            buff_val = totals["dmg_buff"]["val"]
             if buff_val > 0:
-                dmg_buff_val = str(formal_round(buff_val * 1000) / 10) + "%"
+                dmg_buff_val = f"{format_decimal_value(buff_val * 100, base_prec)}%"
 
+        _hp_v, _hp_b, _hp_a = format_var_base_add(totals["hp"]["val"], totals["hp"]["base"], base_prec)
+        _atk_v, _atk_b, _atk_a = format_var_base_add(totals["atk"]["val"], totals["atk"]["base"], base_prec)
+        _def_v, _def_b, _def_a = format_var_base_add(totals["def"]["val"], totals["def"]["base"], base_prec)
         stats_mock = {
-            "HP": {"val": formal_round(total_hp), "base": formal_round(base_hp), "add": "+" + str(formal_round(total_hp - base_hp)), "icon": "static/assets/props/hp.png"},
-            "攻撃力": {"val": formal_round(total_atk), "base": formal_round(base_atk + weapon_base_atk), "add": "+" + str(formal_round(total_atk - (base_atk + weapon_base_atk))), "icon": "static/assets/props/atk.png"},
-            "防御力": {"val": formal_round(total_def), "base": formal_round(base_def), "add": "+" + str(formal_round(total_def - base_def)), "icon": "static/assets/props/def.png"},
-            "元素熟知": {"val": formal_round(total_em), "icon": "static/assets/props/em.png"},
-            "会心率": {"val": str(formal_round(total_crit_rate * 1000) / 10) + "%", "icon": "static/assets/props/rate.webp"},
-            "会心ダメージ": {"val": str(formal_round(total_crit_dmg * 1000) / 10) + "%", "icon": "static/assets/props/dmg.webp"},
-            "元素チャージ効率": {"val": str(formal_round(total_er * 1000) / 10) + "%", "icon": "static/assets/props/er.png"},
+            "HP": {"val": _hp_v, "base": _hp_b, "add": "+" + _hp_a, "icon": "static/assets/props/hp.png"},
+            "攻撃力": {"val": _atk_v, "base": _atk_b, "add": "+" + _atk_a, "icon": "static/assets/props/atk.png"},
+            "防御力": {"val": _def_v, "base": _def_b, "add": "+" + _def_a, "icon": "static/assets/props/def.png"},
+            "元素熟知": {"val": format_base_value(totals["em"]["val"], base_prec), "icon": "static/assets/props/em.png"},
+            "会心率": {"val": f"{format_decimal_value(totals['crit_rate']['val'] * 100, base_prec)}%", "icon": "static/assets/props/rate.webp"},
+            "会心ダメージ": {"val": f"{format_decimal_value(totals['crit_dmg']['val'] * 100, base_prec)}%", "icon": "static/assets/props/dmg.webp"},
+            "元素チャージ効率": {"val": f"{format_decimal_value(totals['er']['val'] * 100, base_prec)}%", "icon": "static/assets/props/er.png"},
             f"{element_ja}ダメバフ": {"val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
         }
     else:
         prop_map = target_avatar_info.get('fightPropMap', {})
 
-        # 表示キャラの元素に対応するダメバフだけを参照する（card_data 側と同様）
-        buff_id = _ELEMENT_DMG_BUFF_ID.get(element_type, "30")
-        max_dmg_val = prop_map.get(buff_id, 0.0)
-        dmg_buff_val = "0%"
-        if max_dmg_val > 0:
-            dmg_buff_val = str(formal_round(max_dmg_val * 1000) / 10) + "%"
+        # 実キャラも差し替えと同一の手動計算でステータスを導出する。
+        # fightPropMap['4'](基礎攻撃力) には武器基礎攻撃力が既に含まれるため、
+        # weapon_base_included_in_base_atk=True で二重加算を防ぐ。
+        totals = compute_manual_totals(
+            base_hp=prop_map.get('1', 1),
+            base_atk=prop_map.get('4', 1),
+            base_def=prop_map.get('7', 1),
+            base_crit_rate=0.05,
+            base_crit_dmg=0.5,
+            base_em=0.0,
+            weapon_stats_list=weapon_stats_list,
+            raw_artifacts=raw_artifacts,
+            chardatas=chardatas,
+            element_type=element_type,
+            beta=beta,
+            weapon_base_included_in_base_atk=True,
+        )
 
+        dmg_buff_val = "0%"
+        if totals["dmg_buff"]["val"] > 0:
+            dmg_buff_val = f"{format_decimal_value(totals['dmg_buff']['val'] * 100, base_prec)}%"
+
+        _hp_v, _hp_b, _hp_a = format_var_base_add(totals["hp"]["val"], totals["hp"]["base"], base_prec)
+        _atk_v, _atk_b, _atk_a = format_var_base_add(totals["atk"]["val"], totals["atk"]["base"], base_prec)
+        _def_v, _def_b, _def_a = format_var_base_add(totals["def"]["val"], totals["def"]["base"], base_prec)
         stats_mock = {
-            "HP": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2000', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('1', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2000', 1) - target_avatar_info.get('fightPropMap', {}).get('1', 1))), "icon": "static/assets/props/hp.png"},
-            "攻撃力": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2001', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('4', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2001', 1) - target_avatar_info.get('fightPropMap', {}).get('4', 1))), "icon": "static/assets/props/atk.png"},
-            "防御力": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('2002', 1)), "base": formal_round(target_avatar_info.get('fightPropMap', {}).get('7', 1)), "add": "+" + str(formal_round(target_avatar_info.get('fightPropMap', {}).get('2002', 1) - target_avatar_info.get('fightPropMap', {}).get('7', 1))), "icon": "static/assets/props/def.png"},
-            "元素熟知": {"val": formal_round(target_avatar_info.get('fightPropMap', {}).get('28', 1)), "icon": "static/assets/props/em.png"},
-            "会心率": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('20', 1) * 1000) / 10) + "%", "icon": "static/assets/props/rate.webp"},
-            "会心ダメージ": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('22', 1) * 1000) / 10) + "%", "icon": "static/assets/props/dmg.webp"},
-            "元素チャージ効率": {"val": str(formal_round(target_avatar_info.get('fightPropMap', {}).get('23', 1) * 1000) / 10) + "%", "icon": "static/assets/props/er.png"},
+            "HP": {"val": _hp_v, "base": _hp_b, "add": "+" + _hp_a, "icon": "static/assets/props/hp.png"},
+            "攻撃力": {"val": _atk_v, "base": _atk_b, "add": "+" + _atk_a, "icon": "static/assets/props/atk.png"},
+            "防御力": {"val": _def_v, "base": _def_b, "add": "+" + _def_a, "icon": "static/assets/props/def.png"},
+            "元素熟知": {"val": format_base_value(totals["em"]["val"], base_prec), "icon": "static/assets/props/em.png"},
+            "会心率": {"val": f"{format_decimal_value(totals['crit_rate']['val'] * 100, base_prec)}%", "icon": "static/assets/props/rate.webp"},
+            "会心ダメージ": {"val": f"{format_decimal_value(totals['crit_dmg']['val'] * 100, base_prec)}%", "icon": "static/assets/props/dmg.webp"},
+            "元素チャージ効率": {"val": f"{format_decimal_value(totals['er']['val'] * 100, base_prec)}%", "icon": "static/assets/props/er.png"},
             f"{element_ja}ダメバフ": {"val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
         }
 
@@ -410,22 +625,23 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         main_name = get_stat_japanese(main_prop_id)
         main_val = main_stat_raw.get("statValue", 0)
         if "PERCENT" in main_prop_id or "CRITICAL" in main_prop_id or "CHARGE" in main_prop_id or "HURT" in main_prop_id:
-            main_value_str = f"{main_val}%"
+            main_value_str = f"{format_decimal_value(main_val, base_prec)}%"
         else:
-            main_value_str = f"{int(main_val):,}"
+            main_value_str = format_decimal_value(main_val, base_prec)
 
         crit_rate = 0.0
         crit_dmg = 0.0
         target_stat_val = 0.0
         sub_stats_dict = {}
         sub_list = flat.get("reliquarySubstats", [])
+        sub_sums = sum_affix_substat_values(reliquary.get("appendPropIdList"))
 
         for idx in range(4):
             if idx < len(sub_list):
                 sub_data = sub_list[idx]
                 sub_prop_id = sub_data.get("appendPropId", "")
                 sub_name = get_stat_japanese(sub_prop_id)
-                sub_val = sub_data.get("statValue", 0)
+                sub_val = sub_sums.get(sub_prop_id, sub_data.get("statValue", 0))
 
                 if sub_prop_id == "FIGHT_PROP_CRITICAL":
                     crit_rate = sub_val
@@ -444,10 +660,10 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
                 elif "DEFENSE" in sub_prop_id: icon_file = "def_per.png" if "PERCENT" in sub_prop_id else "def.png"
 
                 sub_icon_path = f"static/assets/props/{icon_file}"
-                if "PERCENT" in sub_prop_id or "CRITICAL" in sub_prop_id or "CHARGE" in sub_prop_id or "HURT" in sub_prop_id:
-                    sub_value_str = f"{sub_val}%"
+                if is_percent_prop(sub_prop_id):
+                    sub_value_str = f"{format_decimal_value(sub_val, base_prec)}%"
                 else:
-                    sub_value_str = f"{int(sub_val)}"
+                    sub_value_str = format_decimal_value(sub_val, base_prec)
                 sub_stats_dict[idx] = [sub_icon_path, sub_name, sub_value_str]
             else:
                 sub_stats_dict[idx] = ["static/assets/props/atk_per.png", "-", "-"]
@@ -469,7 +685,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             "upgrade": reliquary.get("level", 1) - 1,
             "Main": [main_name, main_value_str],
             "stats": sub_stats_dict,
-            "score": art_score,
+            "score": round(art_score, 1),
             "tier": art_tier,
             "icon": icon_name
         }
@@ -538,6 +754,39 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     display_score_way = display_map[calc_method]
     t_end = time.perf_counter()
     print(f"[Perf] セット効果処理: {(t_end - t_start)*1000:.1f}ms", flush=True)
+
+    # 育成モード: 右側パネル用データ（画像描画で使用）
+    growth_panel = {}
+    if growth == "true":
+        _g_set_bonuses = []
+        for _sid, _cnt in active_sets:
+            _g_name, _g_icon = get_set_info(_sid)
+            _g_set_bonuses.append({"id": str(_sid), "name": _g_name, "count": _cnt, "buff": set_buff_label(str(_sid))})
+        _wjsondata = weapon_jsondata if "weapon_jsondata" in locals() else None
+        if fake_char or fake_weapon:
+            growth_panel = build_growth_from_fake(
+                calc_method,
+                base_hp=base_hp,
+                base_atk=base_atk,
+                base_def=base_def,
+                weapon_affix=weapon_affix,
+                weapon_jsondata=_wjsondata,
+                raw_artifacts=raw_artifacts,
+                set_bonuses=_g_set_bonuses,
+                beta=beta,
+            )
+        else:
+            growth_panel = build_growth_panel(
+                calc_method,
+                base_hp=target_avatar_info.get("fightPropMap", {}).get("1", 0),
+                base_atk=target_avatar_info.get("fightPropMap", {}).get("4", 0),
+                base_def=target_avatar_info.get("fightPropMap", {}).get("7", 0),
+                weapon_affix=weapon_affix,
+                weapon_refinement=(_wjsondata.get("refinement") or {} if _wjsondata else {}),
+                raw_artifacts=raw_artifacts,
+                set_bonuses=_g_set_bonuses,
+                beta=beta,
+            )
 
     t_start = time.perf_counter()
     # 背景選択: bg_color > bg_mode=element > 地域（bg_region指定 → 所属地域の先頭）> 元素背景
@@ -709,9 +958,10 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         draw_figma_text(draw, text=f"+{artifact_data['upgrade']}", x=box_x + 237, y=793, font=font_stats, align="left")
 
         y_base = 855
+        sub_val_font_size = 23 if base_prec == "2" else 25
         for j in range(4):
             draw_figma_text(draw, text=artifact_data["stats"][j][1], x=box_x + 47, y=y_base + 50 * j, font=font_stats, font_size=25, align="left")
-            draw_figma_text(draw, text=artifact_data["stats"][j][2], x=box_x + 218, y=y_base + 50 * j, font=font_stats, font_size=25, align="left")
+            draw_figma_text(draw, text=artifact_data["stats"][j][2], x=box_x + 218, y=y_base + 50 * j, font=font_stats, font_size=sub_val_font_size, align="left")
             paste_figma_image(img, artifact_data["stats"][j][0], box_x=box_x + 12, box_y=y_base + 50 * j, box_width=30, box_height=30, radius=5, beta=beta)
 
         draw_figma_line(img, x1=box_x + 27, y1=1065, x2=box_x + 287, y2=1065, fill_color=(255, 255, 255, 50), width=1)
@@ -744,6 +994,18 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     t_end = time.perf_counter()
     print(f"[Perf] 描画：セット効果・総合スコア: {(t_end - t_start)*1000:.1f}ms", flush=True)
     _plog(f"描画完了 size={img.size} mode={img.mode}")
+
+    # 育成モード: カード全体を等方縮小し右側にパネルを追加（幅は変えない）
+    if growth == "true" and growth_panel:
+        t_start = time.perf_counter()
+        img = _attach_growth_panel(
+            img, growth_panel, bg_base_rgb, splash, element_type,
+            use_prebuilt=(bg_color is None and selected_region is None),
+            region=selected_region,
+        )
+        t_end = time.perf_counter()
+        print(f"[Perf] 育成パネル追加: {(t_end - t_start)*1000:.1f}ms", flush=True)
+        _plog(f"育成パネル追加後 size={img.size}")
 
     # 透明を維持するため RGBA のまま保存。ハングしやすい区間なので段階ログを細かく出す。
     t_start = time.perf_counter()

@@ -688,5 +688,116 @@
       "saved": 0,
       "failed": 0
     }
+  },
+  {
+    "at": "2026-08-16T20:43:54+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-16T20:53:34+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-16T20:53:50+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-16T20:54:14+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-16T20:54:55+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-16T20:55:05+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-16T20:56:15+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-16T20:56:46+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-16T20:56:54+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-16T21:31:52+09:00",
+    "action": "admin_login_failed",
+    "ok": false,
+    "message": "login failed from 127.0.0.1 (user='System.Object[]')",
+    "extra": null
+  },
+  {
+    "at": "2026-08-16T21:32:11+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-17T00:26:35+09:00",
+    "action": "fetch_beta_nanoka_json",
+    "ok": true,
+    "message": "beta=7.0.50 scope=all",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "beta_json",
+      "live_version": "7.0",
+      "beta_version": "7.0.50",
+      "scope": "all",
+      "added_characters": [
+        "10000140",
+        "10000143"
+      ],
+      "added_weapons": [
+        "11437",
+        "11438",
+        "11522",
+        "14437",
+        "14524",
+        "15437",
+        "390002",
+        "390003"
+      ],
+      "added_artifacts": [],
+      "lists": [
+        "characters.json",
+        "weapons.json",
+        "artifacts.json"
+      ]
+    }
   }
 ]

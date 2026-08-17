@@ -78,8 +78,9 @@ def clean_showcase_data(data):
             if "equipList" in avatar:
                 for equip in avatar["equipList"]:
                     if "reliquary" in equip:
-                        if "appendPropIdList" in equip["reliquary"]:
-                            del equip["reliquary"]["appendPropIdList"]
+                        #if "appendPropIdList" in equip["reliquary"]:
+                        #    del equip["reliquary"]["appendPropIdList"]
+                        pass
                     
                     pass
     return data

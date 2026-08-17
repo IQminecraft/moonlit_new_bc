@@ -663,6 +663,7 @@
             font-weight: 600;
         }
         .glass-card-root .set-name { color: #7dffaf; font-weight: 700; }
+        .glass-card-root .set-buff { color: #ffd27d; font-size: 0.72rem; font-weight: 600; }
         .glass-card-root .set-count { color: rgba(255, 255, 255, 0.7); font-weight: 700; }
         .glass-card-root .set-none {
             color: rgba(255, 255, 255, 0.4);
@@ -738,6 +739,248 @@
             height: 100%;
             min-height: 0;
         }
+        /* 育成モード: カード全体を等方縮小し右側にパネルを追加（横幅は変えない） */
+        .glass-card-root .glass-growth-layout {
+            display: flex;
+            width: 1200px;
+            align-items: stretch;
+        }
+        .glass-card-root .glass-growth-left {
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .glass-card-root .glass-growth-left .build-card {
+            transform-origin: top left;
+        }
+        .glass-card-root .growth-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 14px;
+            overflow: hidden;
+            background: linear-gradient(160deg, rgba(20, 24, 34, 0.92) 0%, rgba(14, 16, 24, 0.88) 100%);
+            border: 1px solid var(--gc-glass-border);
+            border-radius: 16px;
+            box-sizing: border-box;
+        }
+        .glass-card-root .growth-panel-title {
+            font-family: var(--gc-font-title);
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--element-color, #ffcd78);
+            margin-bottom: 2px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85), 0 0 2px rgba(0, 0, 0, 0.9);
+        }
+        .glass-card-root .growth-panel-body {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 0;
+            flex: 1;
+            overflow: hidden;
+        }
+        .glass-card-root .growth-panel-section {
+            min-width: 0;
+        }
+        .glass-card-root .growth-panel-head {
+            font-size: 0.92rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            color: var(--element-color, #7dd2ff);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        }
+        .glass-card-root .gp-ring {
+            font-weight: 800;
+            font-size: 1.6rem;
+            line-height: 1.15;
+            color: #ffcd78;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85), 0 0 2px rgba(0, 0, 0, 0.9);
+        }
+        .glass-card-root .gp-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            line-height: 1.25;
+            color: #fff;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        }
+        .glass-card-root .gp-desc {
+            font-size: 0.92rem;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.72);
+            white-space: normal;
+            word-break: break-word;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+        }
+        .glass-card-root .gp-subhead {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.55);
+            margin-bottom: 4px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+        .glass-card-root .gp-set-row {
+            margin-bottom: 6px;
+            min-width: 0;
+        }
+        .glass-card-root .gp-set-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        }
+        .glass-card-root .gp-set-desc {
+            font-size: 0.86rem;
+            line-height: 1.45;
+            color: rgba(255, 255, 255, 0.65);
+            white-space: normal;
+            word-break: break-word;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+        }
+        .glass-card-root .gp-set-desc.applied {
+            color: #fff;
+        }
+        .glass-card-root .gp-stat-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .glass-card-root .gp-stat-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 1.02rem;
+        }
+        .glass-card-root .gp-stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            white-space: nowrap;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+        .glass-card-root .gp-stat-value {
+            font-weight: 800;
+            color: #6ee6a0;
+            white-space: nowrap;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+        }
+        /* HTML 表示モード用の育成メモパネル（glass card のクラスを再利用） */
+        .growth-panel-html {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: linear-gradient(160deg, rgba(20, 24, 34, 0.92) 0%, rgba(14, 16, 24, 0.88) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 16px;
+            padding: 14px;
+            overflow: hidden;
+        }
+        .growth-panel-html .growth-panel-title {
+            font-family: 'Outfit', 'Inter', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #ffcd78;
+            margin-bottom: 2px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85), 0 0 2px rgba(0, 0, 0, 0.9);
+        }
+        .growth-panel-html .growth-panel-body {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 0;
+            flex: 1;
+        }
+        .growth-panel-html .growth-panel-section {
+            min-width: 0;
+        }
+        .growth-panel-html .growth-panel-head {
+            font-size: 0.92rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            color: #7dd2ff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        }
+        .growth-panel-html .gp-ring {
+            font-weight: 800;
+            font-size: 1.6rem;
+            line-height: 1.15;
+            color: #ffcd78;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85), 0 0 2px rgba(0, 0, 0, 0.9);
+        }
+        .growth-panel-html .gp-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            line-height: 1.25;
+            color: #fff;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        }
+        .growth-panel-html .gp-desc {
+            font-size: 0.92rem;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.72);
+            white-space: normal;
+            word-break: break-word;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+        }
+        .growth-panel-html .gp-subhead {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.55);
+            margin-bottom: 4px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+        .growth-panel-html .gp-set-row {
+            margin-bottom: 6px;
+            min-width: 0;
+        }
+        .growth-panel-html .gp-set-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        }
+        .growth-panel-html .gp-set-desc {
+            font-size: 0.86rem;
+            line-height: 1.45;
+            color: rgba(255, 255, 255, 0.65);
+            white-space: normal;
+            word-break: break-word;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+        }
+        .growth-panel-html .gp-set-desc.applied {
+            color: #fff;
+        }
+        .growth-panel-html .gp-stat-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .growth-panel-html .gp-stat-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 1.02rem;
+        }
+        .growth-panel-html .gp-stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            white-space: nowrap;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+        .growth-panel-html .gp-stat-value {
+            font-weight: 800;
+            color: #6ee6a0;
+            white-space: nowrap;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+        }
         /* 注: ビルドカードは常に1200px固定で描画し、JS(scaleGlassCard)が
            コンテナ幅に合わせて縮小するため、ビューポート幅基準のブレーク
            ポイントは使用しない（スマホで固定レイアウトが崩れる原因になる） */
@@ -803,6 +1046,9 @@
             color: #fff;
             padding-bottom: 2%;
         }
+        .glass-card-root.glass-prec-detail .substat-val {
+            font-size: 1.05rem;
+        }
         .glass-card-root .art-footer {
             margin-top: auto;
             display: flex;
@@ -844,6 +1090,98 @@
             align-items: flex-end;
         }
 
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==========================================================
+           モバイル最適化（スマホ・タブレット）
+        ========================================================== */
+        /* タッチ操作: 押下ハイライトを消し、ダブルタップズームを防止 */
+        @media (hover: none) and (pointer: coarse) {
+            * { -webkit-tap-highlight-color: transparent; }
+            button, a, select, input[type="color"], label { touch-action: manipulation; }
+            /* コントロール類をタップしやすく */
+            button, select { min-height: 44px; }
+            .view-mode-btn { min-height: 44px; }
+        }
+
+        /* セーフエリア（iPhoneノッチ・ホームインジケータ） */
+        .safe-area-bottom {
+            padding-bottom: max(env(safe-area-inset-bottom), 12px);
+        }
+        .safe-area-side {
+            padding-left: max(env(safe-area-inset-left), 0px);
+            padding-right: max(env(safe-area-inset-right), 0px);
+        }
+
+        /* キャラサムネイル行: スムーズな横スクロール */
+        #charThumbRow {
+            scroll-snap-type: x proximity;
+            -webkit-overflow-scrolling: touch;
+        }
+        #charThumbRow > * { scroll-snap-align: start; }
+
+        /* サイドバー アコーディオン */
+        .accordion-body {
+            display: grid;
+            grid-template-rows: 1fr;
+            transition: grid-template-rows 0.2s ease;
+        }
+        .accordion-body.collapsed {
+            grid-template-rows: 0fr;
+        }
+        .accordion-body > .accordion-inner {
+            overflow: hidden;
+            min-height: 0;
+        }
+        .accordion-body.collapsed > .accordion-inner {
+            visibility: hidden;
+        }
+        [data-sidebar-accordion-btn] .accordion-chevron {
+            transition: transform 0.2s ease;
+        }
+        [data-sidebar-accordion-btn][aria-expanded="false"] .accordion-chevron {
+            transform: rotate(-90deg);
+        }
+
+        /* メインカード表示: スマホではパディングを詰めてカード領域を広げる */
+        @media (max-width: 640px) {
+            .mobile-px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+            /* メイン表示ボックス・カード画像・グラスカードを横幅いっぱいに */
+            #cardImage, #glassCardContainer, #htmlCardContainer {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            /* メイン表示エリアの余白を-0.5rem相殺して横幅いっぱいにする */
+            .flex-1.min-w-0 > .bg-zinc-950 { margin-left: -0.5rem; margin-right: -0.5rem; }
+        }
+
+        /* スマホ下部固定アクションバー（デフォルト非表示） */
+        #mobileActionBar {
+            display: none;
+        }
+        @media (max-width: 640px) {
+            #mobileActionBar {
+                display: flex;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 70;
+                background: rgba(12, 15, 24, 0.92);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border-top: 1px solid var(--border-strong);
+                padding: 10px 12px max(env(safe-area-inset-bottom), 10px) 12px;
+                gap: 10px;
+                align-items: center;
+            }
+            /* アクションバー表示時はページ下部に余白を空ける */
+            body.mobile-action-bar-visible { padding-bottom: 84px; }
+        }
+
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -857,11 +1195,10 @@
             </div>
             <div class="flex items-center gap-2">
                 <button id="teamCardBtn" type="button" title="編成カード"
-                    class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all border border-zinc-700 text-sm font-semibold text-gray-300 hover:text-white flex items-center gap-1.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    class="p-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all border border-zinc-700 text-gray-300 hover:text-white flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/>
                     </svg>
-                    編成カード
                 </button>
                 <div class="relative">
                     <button id="settingsBtn" type="button" title="設定"
@@ -871,42 +1208,6 @@
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                         </svg>
                     </button>
-                    <div id="settingsPanel" class="hidden absolute right-0 mt-2 w-56 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-3 z-30">
-                        <div class="text-xs font-semibold text-gray-400 mb-2 px-1">バージョン</div>
-                        <button type="button" id="settingsVerBtn"
-                            class="w-full flex items-center justify-between px-3 py-2 mb-3 rounded-lg text-sm font-mono bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                            <span id="settingsVerLabel">🚀 Live</span>
-                            <span class="text-[10px] text-gray-500">タップで切替</span>
-                        </button>
-
-                        <div class="text-xs font-semibold text-gray-400 mb-2 px-1">表示テーマ</div>
-                        <button type="button" id="settingsThemeBtn"
-                            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                            <span id="settingsThemeLabel">🌙 ダーク</span>
-                            <span class="text-[10px] text-gray-500">タップで切替</span>
-                        </button>
-
-                        <div class="text-xs font-semibold text-gray-400 mb-2 mt-3 px-1">生成画像形式</div>
-                        <button type="button" id="settingsFormatBtn" disabled
-                            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 text-gray-500 opacity-60 cursor-not-allowed transition-all">
-                            <span id="settingsFormatLabel">PNG（無圧縮）</span>
-                            <span class="text-[10px] text-gray-500">WEBP は廃止</span>
-                        </button>
-
-                        <div class="text-xs font-semibold text-gray-400 mb-2 mt-3 px-1">サーバー負荷表示</div>
-                        <button type="button" id="settingsServerStatsBtn"
-                            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                            <span id="settingsServerStatsLabel">📊 非表示</span>
-                            <span class="text-[10px] text-gray-500">タップで切替</span>
-                        </button>
-
-                        <div class="text-xs font-semibold text-gray-400 mb-2 mt-3 px-1">生成画像の保存先</div>
-                        <button type="button" id="settingsSaveModeBtn"
-                            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                            <span id="settingsSaveModeLabel">💾 クライアント</span>
-                            <span class="text-[10px] text-gray-500">タップで切替</span>
-                        </button>
-                    </div>
                 </div>
                 <a href="/" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-sm rounded-lg transition-all border border-zinc-700">← 戻る</a>
             </div>
@@ -948,11 +1249,8 @@
             </div>
         </div>
 
-        <!-- メインタブ -->
+        <!-- メインタブ（ステータス表示は設定モーダルから ON にできる） -->
         <div class="flex gap-2 p-1.5 bg-zinc-900/60 rounded-xl border border-zinc-800 mb-5" id="viewModeToggle">
-            <button type="button" data-view="html" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap">
-                ステータス
-            </button>
             <button type="button" data-view="glass" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap">
                 ビルドカード
             </button>
@@ -976,61 +1274,97 @@
 
             <!-- ===== 左サイドバー（計算方法・武器・背景・差し替え・再取得） ===== -->
             <aside class="w-full lg:w-64 shrink-0 space-y-4">
-                <div class="p-4 bg-zinc-900/80 rounded-xl border border-zinc-800 space-y-4">
-                    <div class="text-sm font-semibold text-zinc-300">キャラクター</div>
+                <div class="bg-zinc-900/80 rounded-xl border border-zinc-800 overflow-hidden">
+                    <button type="button" id="sidebarCharsBtn" aria-expanded="true" aria-controls="sidebarCharsBody" data-sidebar-accordion-btn
+                        class="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer">
+                        <span>キャラクター</span>
+                        <svg class="accordion-chevron shrink-0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </button>
+                    <div id="sidebarCharsBody" class="accordion-body">
+                        <div class="accordion-inner space-y-4 px-4 pb-4 pt-1">
+                            <div>
+                                <label for="scoreCalcSelect" class="block text-sm text-zinc-400 mb-1.5">計算方法</label>
+                                <select id="scoreCalcSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer">
+                                    <option value="crit">会心</option>
+                                    <option value="atk">攻撃力%</option>
+                                    <option value="hp">HP%</option>
+                                    <option value="def">防御%</option>
+                                    <option value="em">元素熟知</option>
+                                    <option value="charge">チャージ効率</option>
+                                </select>
+                            </div>
 
-                    <div>
-                        <label for="scoreCalcSelect" class="block text-sm text-zinc-400 mb-1.5">計算方法</label>
-                        <select id="scoreCalcSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer">
-                            <option value="crit">会心</option>
-                            <option value="atk">攻撃力%</option>
-                            <option value="hp">HP%</option>
-                            <option value="def">防御%</option>
-                            <option value="em">元素熟知</option>
-                            <option value="charge">チャージ効率</option>
-                        </select>
-                    </div>
+                            <div>
+                                <label class="block text-sm text-zinc-400 mb-1.5">武器</label>
+                                <button id="editWeaponBtn" type="button"
+                                    class="w-full flex items-center gap-2 bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-white pl-2 pr-3 py-2 rounded-lg transition-all text-sm">
+                                    <img id="editWeaponIcon" src="" class="w-7 h-7 rounded object-cover hidden">
+                                    <span id="editWeaponLabel" class="truncate">—</span>
+                                </button>
+                            </div>
 
-                    <div>
-                        <label class="block text-sm text-zinc-400 mb-1.5">武器</label>
-                        <button id="editWeaponBtn" type="button"
-                            class="w-full flex items-center gap-2 bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-white pl-2 pr-3 py-2 rounded-lg transition-all text-sm">
-                            <img id="editWeaponIcon" src="" class="w-7 h-7 rounded object-cover hidden">
-                            <span id="editWeaponLabel" class="truncate">—</span>
-                        </button>
-                    </div>
+                            <div>
+                                <label for="basePrecSelect" class="block text-sm text-zinc-400 mb-1.5">表示の精度</label>
+                                <select id="basePrecSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer">
+                                    <option value="0">標準</option>
+                                    <option value="2">詳細(第2位)</option>
+                                </select>
+                            </div>
 
-                    <div id="bgColorControls" title="ビルドカード生成の背景">
-                        <label class="block text-sm text-zinc-400 mb-1.5">背景</label>
-                        <div class="flex items-center gap-2">
-                            <select id="bgColorModeSelect" class="flex-1 bg-zinc-800 border border-zinc-700 text-white px-2.5 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer">
-                                <option value="element">元素背景</option>
-                                <option value="region">地域背景</option>
-                                <option value="custom">カスタム色</option>
-                            </select>
-                            <input type="color" id="bgColorPicker" value="#4a5568" class="h-9 w-10 cursor-pointer rounded border border-zinc-700 bg-zinc-800 p-0.5 disabled:opacity-40" disabled title="任意の背景色">
+                            <div>
+                                <label class="block text-sm text-zinc-400 mb-1.5">育成情報</label>
+                                <button type="button" id="settingsGrowthBtn"
+                                    class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                                    <span>📈 育成情報を表示</span>
+                                    <span id="settingsGrowthLabel" class="text-[10px] text-gray-500">タップで切替</span>
+                                </button>
+                            </div>
+
+                            <div id="bgColorControls" title="ビルドカード生成の背景">
+                                <label class="block text-sm text-zinc-400 mb-1.5">背景</label>
+                                <div class="flex items-center gap-2">
+                                    <select id="bgColorModeSelect" class="flex-1 bg-zinc-800 border border-zinc-700 text-white px-2.5 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer">
+                                        <option value="element">元素背景</option>
+                                        <option value="region">地域背景</option>
+                                        <option value="custom">カスタム色</option>
+                                    </select>
+                                    <input type="color" id="bgColorPicker" value="#4a5568" class="h-9 w-10 cursor-pointer rounded border border-zinc-700 bg-zinc-800 p-0.5 disabled:opacity-40" disabled title="任意の背景色">
+                                </div>
+                                <div id="bgRegionControls" class="mt-2 hidden">
+                                    <select id="bgRegionSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-2.5 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer hidden" title="背景に使う地域"></select>
+                                    <div id="bgRegionAutoLabel" class="text-sm text-zinc-300 hidden"></div>
+                                    <div id="bgRegionNote" class="text-xs text-zinc-500 mt-1.5 hidden"></div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col gap-2 pt-1">
+                                <button id="regenerateImageBtn" class="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-emerald-600/10 transition-all">
+                                    再生成
+                                </button>
+                                <button id="regenerateApiBtn" class="px-3 py-2.5 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-cyan-600/10 transition-all">
+                                    再取得
+                                </button>
+                            </div>
                         </div>
-                        <div id="bgRegionControls" class="mt-2 hidden">
-                            <select id="bgRegionSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-2.5 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer hidden" title="背景に使う地域"></select>
-                            <div id="bgRegionAutoLabel" class="text-sm text-zinc-300 hidden"></div>
-                            <div id="bgRegionNote" class="text-xs text-zinc-500 mt-1.5 hidden"></div>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col gap-2 pt-1">
-                        <button id="regenerateImageBtn" class="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-emerald-600/10 transition-all">
-                            再生成
-                        </button>
-                        <button id="regenerateApiBtn" class="px-3 py-2.5 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-cyan-600/10 transition-all">
-                            再取得
-                        </button>
                     </div>
                 </div>
 
                 <!-- キャラ差し替え -->
-                <div class="p-4 bg-zinc-900/60 rounded-xl border border-zinc-800">
-                    <div class="text-sm font-semibold text-zinc-300 mb-2.5">キャラ差し替え</div>
-                    <div id="comboRow" class="flex flex-wrap gap-2.5"></div>
+                <div class="bg-zinc-900/60 rounded-xl border border-zinc-800 overflow-hidden">
+                    <button type="button" id="sidebarSwapBtn" aria-expanded="true" aria-controls="sidebarSwapBody" data-sidebar-accordion-btn
+                        class="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer">
+                        <span>キャラ差し替え</span>
+                        <svg class="accordion-chevron shrink-0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </button>
+                    <div id="sidebarSwapBody" class="accordion-body">
+                        <div class="accordion-inner px-4 pb-4 pt-1">
+                            <div id="comboRow" class="flex flex-wrap gap-2.5"></div>
+                        </div>
+                    </div>
                 </div>
             </aside>
 
@@ -1087,9 +1421,8 @@
                     </div>
                 </div>
 
-                <div id="disclaimerFooter" class="hidden text-right text-[10px] text-red-500 px-1">
-                    ※ゲーム内データの仕様上、聖遺物のサブオプションは四捨五入された数値で計算されるため、実際のステータスとわずかな差異が生じる場合があります。
-                    また、聖遺物の2セット効果はステータスには反映されていません。
+                <div id="disclaimerFooter" class="hidden text-right text-[10px] text-red-500 px-1 leading-relaxed">
+                    ※他のビルドカード生成サイトとは違い、武器の恒常ステータスなどは反映されていません。また、小数第二位まで表示している場合は他サイトとスコアが異なる可能性があります。
                 </div>
             </div>
         </div>
@@ -1217,8 +1550,254 @@
         </div>
     </div>
 
+    <!-- 確認ダイアログ（alert/confirm 置き換え用） -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black/65 backdrop-blur-sm z-[80] items-center justify-center p-4"
+        onclick="if(event.target===this) closeConfirmModal(false)">
+        <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-sm p-5">
+            <h2 id="confirmModalTitle" class="text-base font-bold text-white mb-2">確認</h2>
+            <p id="confirmModalBody" class="text-sm text-zinc-300 leading-relaxed mb-5 whitespace-pre-line"></p>
+            <div class="flex gap-2">
+                <button id="confirmModalCancelBtn" type="button"
+                    class="flex-1 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-sm font-bold text-zinc-300 hover:bg-zinc-700 transition-all">キャンセル</button>
+                <button id="confirmModalOkBtn" type="button"
+                    class="flex-1 py-2.5 bg-zinc-100 border border-zinc-100 rounded-lg text-sm font-bold text-zinc-900 hover:bg-zinc-200 transition-all">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- トースト通知 -->
+    <div id="toastBox" class="fixed left-1/2 -translate-x-1/2 bottom-5 z-[90] pointer-events-none flex flex-col items-center gap-2 px-4"></div>
+
+    <!-- 設定モーダル -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-black/65 backdrop-blur-sm z-50 items-center justify-center p-4"
+        onclick="if(event.target===this) closeSettingsPanel()">
+        <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-sm max-h-[85vh] flex flex-col overflow-hidden" role="dialog" aria-modal="true" aria-label="設定">
+            <div class="flex items-center justify-between p-4 border-b border-zinc-800 shrink-0">
+                <h2 class="text-base font-bold text-gray-100">設定</h2>
+                <button type="button" onclick="closeSettingsPanel()" class="text-zinc-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div class="p-4 space-y-3.5 overflow-y-auto">
+                <div>
+                    <div class="text-xs font-semibold text-gray-400 mb-2 px-1">バージョン</div>
+                    <button type="button" id="settingsVerBtn"
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-mono bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                        <span id="settingsVerLabel">🚀 Live</span>
+                        <span class="text-[10px] text-gray-500">タップで切替</span>
+                    </button>
+                </div>
+
+                <div>
+                    <div class="text-xs font-semibold text-gray-400 mb-2 px-1">表示テーマ</div>
+                    <button type="button" id="settingsThemeBtn"
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                        <span id="settingsThemeLabel">🌙 ダーク</span>
+                        <span class="text-[10px] text-gray-500">タップで切替</span>
+                    </button>
+                </div>
+
+                <div>
+                    <div class="text-xs font-semibold text-gray-400 mb-2 px-1">生成画像形式</div>
+                    <button type="button" id="settingsFormatBtn" disabled
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 text-gray-500 opacity-60 cursor-not-allowed transition-all">
+                        <span id="settingsFormatLabel">PNG（無圧縮）</span>
+                        <span class="text-[10px] text-gray-500">WEBP は廃止</span>
+                    </button>
+                </div>
+
+                <div>
+                    <div class="text-xs font-semibold text-gray-400 mb-2 px-1">表示モード</div>
+                    <button type="button" id="settingsStatusViewBtn"
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                        <span>📋 ステータス表示</span>
+                        <span id="settingsStatusViewLabel" class="text-[10px] text-gray-500">タップで切替</span>
+                    </button>
+                </div>
+
+                <div>
+                    <div class="text-xs font-semibold text-gray-400 mb-2 px-1">サーバー負荷表示</div>
+                    <button type="button" id="settingsServerStatsBtn"
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                        <span id="settingsServerStatsLabel">📊 非表示</span>
+                        <span class="text-[10px] text-gray-500">タップで切替</span>
+                    </button>
+                </div>
+
+                <div>
+                    <div class="text-xs font-semibold text-gray-400 mb-2 px-1">生成画像の保存先</div>
+                    <button type="button" id="settingsSaveModeBtn"
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                        <span id="settingsSaveModeLabel">💾 クライアント</span>
+                        <span class="text-[10px] text-gray-500">タップで切替</span>
+                    </button>
+                </div>
+
+                <p class="text-xs text-zinc-600 leading-relaxed px-1 pt-1">※ ステータス表示を ON にすると、現在のキャラを画像生成なしのテキスト形式で表示します。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- スマホ下部固定アクションバー（スマホのみ表示） -->
+    <div id="mobileActionBar">
+        <button id="mobileActionRefreshBtn" type="button"
+            class="flex-1 flex items-center justify-center gap-1.5 py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-sm font-bold rounded-xl shadow-lg transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
+            </svg>
+            <span id="mobileActionRefreshLabel">生成</span>
+        </button>
+        <button id="mobileActionFetchBtn" type="button"
+            class="flex-1 flex items-center justify-center gap-1.5 py-3 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-sm font-bold rounded-xl transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 0 1 15.36-6.36L21 8"/><path d="M21 8V3"/><path d="M21 12a9 9 0 0 1-15.36 6.36L3 20"/><path d="M3 20v-5"/>
+            </svg>
+            <span>再取得</span>
+        </button>
+        <button id="mobileActionSettingsBtn" type="button"
+            class="flex-1 flex items-center justify-center gap-1.5 py-3 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-gray-200 text-sm font-bold rounded-xl border border-zinc-700 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span>設定</span>
+        </button>
+    </div>
+
     <script>
         const uid = document.getElementById('currentUid').textContent.trim();
+        const sidebarAccordionStorageKey = `sidebar_accordion_${uid}`;
+
+        // サーバー由来・ユーザー入力系の文字列を innerHTML に埋め込む前に必ず通す。
+        // これを挟まないと JSON 内の `<img onerror=...>` がそのまま HTML として実行される。
+        function esc(v) {
+            return String(v == null ? '' : v)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // CSS url('...') に埋め込む文字列。クォート・改行・CSS 構文を壊す文字を除去する。
+        function cssUrlSanitize(v) {
+            return String(v == null ? '' : v)
+                .replace(/\\/g, '')
+                .replace(/['"]/g, '')
+                .replace(/[\r\n;(),]/g, '');
+        }
+
+        // ---- モーダル共通ヘルパー ----
+        // Escape で閉じる / 背景のスクロールを固定 / フォーカスをモーダル内に閉じ込める / aria を付与。
+        // 生成UIはファクトチェック用のダミーであり、ここでは他UIの挙動を崩さないように最小限に保つ。
+        const _modalStack = [];
+        let _modalLastFocus = null;
+
+        function _modalFocusables(el) {
+            return Array.from(el.querySelectorAll(
+                'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            ));
+        }
+
+        function modalGlobalKeydown(e) {
+            const top = _modalStack[_modalStack.length - 1];
+            if (!top) return;
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                if (top.onEscape) top.onEscape();
+                return;
+            }
+            if (e.key === 'Tab') {
+                const items = _modalFocusables(top.el);
+                if (!items.length) { e.preventDefault(); return; }
+                const first = items[0];
+                const last = items[items.length - 1];
+                const active = document.activeElement;
+                if (e.shiftKey) {
+                    if (active === first || !top.el.contains(active)) { e.preventDefault(); last.focus(); }
+                } else {
+                    if (active === last || !top.el.contains(active)) { e.preventDefault(); first.focus(); }
+                }
+            }
+        }
+
+        /** モーダルを開く。onEscape 省略時は closeModal を呼ぶ。false を渡すと Escape では閉じない(必須選択など) */
+        function openModal(el, onEscape) {
+            if (!el || el.classList.contains('flex')) return;
+            _modalLastFocus = document.activeElement;
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+            el.setAttribute('role', 'dialog');
+            el.setAttribute('aria-modal', 'true');
+            if (!_modalStack.length) document.addEventListener('keydown', modalGlobalKeydown);
+            _modalStack.push({ el, onEscape: typeof onEscape === 'function' ? onEscape : (onEscape === false ? null : () => closeModal(el)) });
+            document.body.style.overflow = 'hidden';
+            const f = _modalFocusables(el)[0];
+            if (f) f.focus();
+        }
+
+        function closeModal(el) {
+            if (!el) return;
+            const i = _modalStack.findIndex(m => m.el === el);
+            if (i !== -1) _modalStack.splice(i, 1);
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+            el.removeAttribute('role');
+            el.removeAttribute('aria-modal');
+            if (!_modalStack.length) {
+                document.body.style.overflow = '';
+                document.removeEventListener('keydown', modalGlobalKeydown);
+            }
+            if (_modalLastFocus && _modalLastFocus.focus) _modalLastFocus.focus();
+        }
+
+        // ---- 確認ダイアログとトースト（原生 alert/confirm の置き換え）----
+        let confirmModalResolve = null;
+        const confirmModalEl = document.getElementById('confirmModal');
+        const confirmModalBody = document.getElementById('confirmModalBody');
+        const confirmModalTitle = document.getElementById('confirmModalTitle');
+        const confirmModalOkBtn = document.getElementById('confirmModalOkBtn');
+        const confirmModalCancelBtn = document.getElementById('confirmModalCancelBtn');
+
+        function closeConfirmModal(result) {
+            closeModal(confirmModalEl);
+            if (confirmModalResolve) {
+                confirmModalResolve(result);
+                confirmModalResolve = null;
+            }
+        }
+
+        /** confirm() の代替。戻り値は Promise<boolean> */
+        function requestConfirmation(message, { title = '確認', confirmText = 'OK', cancelText = 'キャンセル' } = {}) {
+            if (confirmModalTitle) confirmModalTitle.textContent = title;
+            if (confirmModalBody) confirmModalBody.textContent = message;
+            if (confirmModalOkBtn) confirmModalOkBtn.textContent = confirmText;
+            if (confirmModalCancelBtn) confirmModalCancelBtn.textContent = cancelText;
+            return new Promise((resolve) => {
+                confirmModalResolve = resolve;
+                openModal(confirmModalEl, () => closeConfirmModal(false));
+                if (confirmModalOkBtn) confirmModalOkBtn.focus();
+            });
+        }
+        if (confirmModalOkBtn) confirmModalOkBtn.addEventListener('click', () => closeConfirmModal(true));
+        if (confirmModalCancelBtn) confirmModalCancelBtn.addEventListener('click', () => closeConfirmModal(false));
+
+        /** alert() の代替。自動で消えるトースト通知。type: 'info' | 'error' | 'success' */
+        function showToast(message, type = 'info') {
+            const box = document.getElementById('toastBox');
+            if (!box) return;
+            const el = document.createElement('div');
+            const color = {
+                info: 'border-zinc-600 bg-zinc-900/95 text-zinc-100',
+                error: 'border-red-500/60 bg-red-950/95 text-red-100',
+                success: 'border-emerald-500/60 bg-emerald-950/95 text-emerald-100'
+            }[type] || 'border-zinc-600 bg-zinc-900/95 text-zinc-100';
+            el.className = `pointer-events-auto max-w-sm rounded-xl border px-4 py-3 text-sm shadow-xl animate-[toastIn_.18s_ease-out] ${color}`;
+            el.textContent = message;
+            box.appendChild(el);
+            setTimeout(() => {
+                el.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                setTimeout(() => el.remove(), 320);
+            }, 3200);
+        }
 
         // ==========================================================
         //  初回バージョン選択（初回のみ表示。以降は設定からのみ変更可）
@@ -1252,11 +1831,10 @@
             let saved = null;
             try { saved = localStorage.getItem(VER_PREF_KEY_FIRST); } catch (e) { saved = null; }
             if (saved === 'live' || saved === 'beta') return;
-            // 初回: 選択モーダルを表示
+            // 初回: 選択モーダルを表示（必須選択なので Escape では閉じない）
             const modal = document.getElementById('verChooseModal');
             if (modal) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
+                openModal(modal, false);
             }
         }
 
@@ -1291,9 +1869,95 @@
             } catch (e) { /* ignore */ }
         }
 
+        // ---- モバイル下部アクションバー連携 ----
+        const mobileActionBar = document.getElementById('mobileActionBar');
+        const mobileActionRefreshBtn = document.getElementById('mobileActionRefreshBtn');
+        const mobileActionRefreshLabel = document.getElementById('mobileActionRefreshLabel');
+        const mobileActionFetchBtn = document.getElementById('mobileActionFetchBtn');
+        const mobileActionSettingsBtn = document.getElementById('mobileActionSettingsBtn');
+        function applyMobileActionBarVisibility() {
+            // スマホ幅（640px以下）かつアクションバーがCSSで表示されている場合のみ余白を追加
+            if (mobileActionBar && window.matchMedia('(max-width: 640px)').matches) {
+                document.body.classList.add('mobile-action-bar-visible');
+            } else {
+                document.body.classList.remove('mobile-action-bar-visible');
+            }
+        }
+        function syncMobileRefreshLabel() {
+            if (mobileActionRefreshLabel) {
+                mobileActionRefreshLabel.textContent = (viewMode === 'image' && currentSelectedCharId) ? '再生成' : '生成';
+            }
+        }
+        if (mobileActionRefreshBtn) {
+            mobileActionRefreshBtn.addEventListener('click', async () => {
+                if (teamMode) { generateActiveTeam(); return; }
+                if (!currentSelectedCharId) { showToast('キャラクターを選択してください', 'error'); return; }
+                if (viewMode !== 'image') {
+                    viewMode = 'image';
+                    saveViewMode(viewMode);
+                    applyViewModeUI();
+                    applySettingsPanelUI();
+                    latestGlassRequestToken++;
+                    latestHtmlRequestToken++;
+                }
+                await deleteCachedCardImage(await getSignedCardUrl(buildCardImageUrl(currentSelectedCharId)));
+                loadCardImage(currentSelectedCharId, true);
+            });
+        }
+        if (mobileActionFetchBtn) {
+            mobileActionFetchBtn.addEventListener('click', () => {
+                if (regenerateApiBtn) regenerateApiBtn.click();
+            });
+        }
+        if (mobileActionSettingsBtn) {
+            mobileActionSettingsBtn.addEventListener('click', () => {
+                if (settingsBtn) settingsBtn.click();
+            });
+        }
+        // 画面幅変化時に余白クラスを再評価
+        window.addEventListener('resize', () => {
+            applyMobileActionBarVisibility();
+            syncMobileRefreshLabel();
+        });
+        applyMobileActionBarVisibility();
+
+        // ---- サイドバー アコーディオン（開閉状態は localStorage に保存） ----
+        function saveSidebarAccordionState() {
+            const state = {};
+            document.querySelectorAll('[data-sidebar-accordion-btn]').forEach(btn => {
+                const body = document.getElementById(btn.getAttribute('aria-controls'));
+                state[btn.id] = body ? !body.classList.contains('collapsed') : true;
+            });
+            try { localStorage.setItem(sidebarAccordionStorageKey, JSON.stringify(state)); } catch (e) { /* ignore */ }
+        }
+
+        function initSidebarAccordion() {
+            const btns = document.querySelectorAll('[data-sidebar-accordion-btn]');
+            btns.forEach(btn => {
+                const body = document.getElementById(btn.getAttribute('aria-controls'));
+                if (!body) return;
+                btn.addEventListener('click', () => {
+                    const collapsed = body.classList.toggle('collapsed');
+                    btn.setAttribute('aria-expanded', String(!collapsed));
+                    saveSidebarAccordionState();
+                });
+            });
+            // 保存済みの開閉状態を復元（デフォルトはすべて展開）
+            try {
+                const saved = JSON.parse(localStorage.getItem(sidebarAccordionStorageKey)) || {};
+                btns.forEach(btn => {
+                    const body = document.getElementById(btn.getAttribute('aria-controls'));
+                    if (!body || saved[btn.id] !== false) return;
+                    body.classList.add('collapsed');
+                    btn.setAttribute('aria-expanded', 'false');
+                });
+            } catch (e) { /* ignore */ }
+        }
+        initSidebarAccordion();
+
         const teamCardBtn = document.getElementById('teamCardBtn');
         const settingsBtn = document.getElementById('settingsBtn');
-        const settingsPanel = document.getElementById('settingsPanel');
+        const settingsModal = document.getElementById('settingsModal');
         const scoreCalcSelect = document.getElementById('scoreCalcSelect');
         const regenerateApiBtn = document.getElementById('regenerateApiBtn');
         const regenerateImageBtn = document.getElementById('regenerateImageBtn');
@@ -1330,6 +1994,8 @@
         const FORMAT_PREF_KEY = 'genshin_build_card_img_format_pref';
         const SERVER_STATS_PREF_KEY = 'genshin_build_card_server_stats_pref';
         const SAVE_MODE_KEY = 'genshin_build_card_save_mode';
+        const GROWTH_PREF_KEY = 'genshin_build_card_growth_mode';
+        const BASE_PREC_PREF_KEY = 'genshin_build_card_base_prec';
 
         // 生成画像の保存先（client=ブラウザにキャッシュ / server=サーバーに保存）
         function getSavedSaveMode() {
@@ -1354,6 +2020,8 @@
         const settingsServerStatsLabel = document.getElementById('settingsServerStatsLabel');
         const settingsSaveModeBtn = document.getElementById('settingsSaveModeBtn');
         const settingsSaveModeLabel = document.getElementById('settingsSaveModeLabel');
+        const settingsStatusViewBtn = document.getElementById('settingsStatusViewBtn');
+        const settingsStatusViewLabel = document.getElementById('settingsStatusViewLabel');
         const serverStatsPanel = document.getElementById('serverStatsPanel');
         const serverStatsCpuVal = document.getElementById('serverStatsCpuVal');
         const serverStatsCpuBar = document.getElementById('serverStatsCpuBar');
@@ -1376,14 +2044,12 @@
         function openBetaConsentModal() {
             return new Promise((resolve) => {
                 betaConsentResolve = resolve;
-                betaConsentModal.classList.remove('hidden');
-                betaConsentModal.classList.add('flex');
+                openModal(betaConsentModal, () => closeBetaConsentModal(false));
             });
         }
 
         function closeBetaConsentModal(agreed) {
-            betaConsentModal.classList.add('hidden');
-            betaConsentModal.classList.remove('flex');
+            closeModal(betaConsentModal);
             if (betaConsentResolve) {
                 betaConsentResolve(agreed);
                 betaConsentResolve = null;
@@ -1435,6 +2101,35 @@
         function setServerStatsPref(on) {
             try {
                 localStorage.setItem(SERVER_STATS_PREF_KEY, on ? '1' : '0');
+            } catch (e) { /* ignore */ }
+        }
+
+        function getSavedGrowthPref() {
+            try {
+                return localStorage.getItem(GROWTH_PREF_KEY) === '1';
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function setGrowthPref(on) {
+            try {
+                localStorage.setItem(GROWTH_PREF_KEY, on ? '1' : '0');
+            } catch (e) { /* ignore */ }
+        }
+
+        function getSavedBasePrec() {
+            try {
+                const v = localStorage.getItem(BASE_PREC_PREF_KEY);
+                return (v === '0' || v === '2') ? v : '0';
+            } catch (e) {
+                return '0';
+            }
+        }
+
+        function setBasePrec(prec) {
+            try {
+                localStorage.setItem(BASE_PREC_PREF_KEY, (prec === '0' || prec === '2') ? prec : '0');
             } catch (e) { /* ignore */ }
         }
 
@@ -1526,41 +2221,59 @@
         }
 
         function closeSettingsPanel() {
-            if (settingsPanel) settingsPanel.classList.add('hidden');
+            if (settingsModal) closeModal(settingsModal);
         }
 
         function toggleSettingsPanel() {
-            if (settingsPanel) settingsPanel.classList.toggle('hidden');
+            if (!settingsModal) return;
+            if (settingsModal.classList.contains('flex')) closeModal(settingsModal);
+            else {
+                applySettingsPanelUI();
+                openModal(settingsModal, closeSettingsPanel);
+            }
         }
 
         function applySettingsPanelUI() {
             if (settingsVerLabel) {
-                settingsVerLabel.textContent = (ver === 'beta') ? 'Beta' : 'Live';
+                settingsVerLabel.textContent = (ver === 'beta') ? '⚡ Beta' : '🚀 Live';
             }
             if (settingsThemeLabel) {
-                settingsThemeLabel.textContent = (getSavedThemePref() === 'light') ? 'ライト' : 'ダーク';
+                settingsThemeLabel.textContent = (getSavedThemePref() === 'light') ? '☀️ ライト' : '🌙 ダーク';
             }
             if (settingsFormatLabel) {
                 settingsFormatLabel.textContent = 'PNG（無圧縮）';
             }
             if (settingsServerStatsLabel) {
-                settingsServerStatsLabel.textContent = getSavedServerStatsPref() ? '表示中' : '非表示';
+                settingsServerStatsLabel.textContent = getSavedServerStatsPref() ? '📊 表示中' : '📊 非表示';
+            }
+            if (settingsSaveModeLabel) {
+                settingsSaveModeLabel.textContent = `💾 ${getSavedSaveMode() === 'server' ? 'サーバー' : 'クライアント'}`;
+            }
+            if (settingsStatusViewLabel) {
+                settingsStatusViewLabel.textContent = (typeof viewMode !== 'undefined' && viewMode === 'html') ? 'ON' : 'OFF';
+            }
+            if (settingsGrowthLabel) {
+                settingsGrowthLabel.textContent = getSavedGrowthPref() ? '✅ 表示中' : '❎ 非表示';
             }
         }
 
-        if (settingsBtn && settingsPanel) {
+        if (settingsBtn && settingsModal) {
             settingsBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 toggleSettingsPanel();
             });
 
-            document.addEventListener('click', (e) => {
-                if (!settingsPanel.classList.contains('hidden') &&
-                    !settingsPanel.contains(e.target) &&
-                    e.target !== settingsBtn && !settingsBtn.contains(e.target)) {
-                    closeSettingsPanel();
-                }
-            });
+            // モーダル化したため、外側クリックでの close は backdrop onclick に任せる
+            // （従来の document click リスナーは不要になった）
+
+            if (settingsStatusViewBtn) {
+                settingsStatusViewBtn.addEventListener('click', () => {
+                    // ON ⇔ OFF をトグル。OFF に戻すときは前回のタブ(保存値)へ
+                    const next = (viewMode === 'html') ? (getSavedViewMode() === 'html' ? 'glass' : getSavedViewMode()) : 'html';
+                    setViewMode(next);
+                    applySettingsPanelUI();
+                });
+            }
 
             if (settingsVerBtn) {
                 settingsVerBtn.addEventListener('click', async () => {
@@ -1607,10 +2320,28 @@
                 });
             }
 
-            applySettingsPanelUI();
+            if (settingsGrowthBtn) {
+                settingsGrowthBtn.addEventListener('click', () => {
+                    const next = !getSavedGrowthPref();
+                    setGrowthPref(next);
+                    applySettingsPanelUI();
+                    // 育成モード切替後は表示中のカードを更新する
+                    if (typeof reloadCurrentCard === 'function') reloadCurrentCard();
+                    else if (typeof loadCurrentCardByViewMode === 'function') loadCurrentCardByViewMode();
+                    else if (currentSelectedCharId) {
+                        if (viewMode === 'glass') loadGlassCard(currentSelectedCharId);
+                        else if (viewMode === 'html') loadHtmlCard(currentSelectedCharId);
+                        else loadCardImage(currentSelectedCharId, true);
+                    }
+                });
+            }
+
             applySaveModeLabel();
             applyServerStatsVisibility();
         }
+
+        // applySettingsPanelUI() は viewMode に依存するため、viewMode が定義された後
+        // （スクリプト末尾の applyViewModeUI() 直後）に呼ぶ。ここでは呼ばない。
 
         document.addEventListener('visibilitychange', () => {
             if (!getSavedServerStatsPref()) return;
@@ -1968,8 +2699,8 @@
                 const weaponIconUrl = (combo.fakeWeapon && !isSwapHiddenWeapon(combo.fakeWeapon)) ? weaponAssetUrl(combo.fakeWeapon) : '';
                 tile.innerHTML = `
                     <div class="relative w-full h-full rounded-md overflow-hidden">
-                        ${iconUrl ? `<img src="${iconUrl}" class="w-full h-full object-cover drag-none">` : `<div class="w-full h-full flex items-center justify-center text-[9px] text-zinc-400 text-center px-0.5">${data.jaName}</div>`}
-                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[9px] leading-tight text-center truncate px-0.5">${data.jaName}</div>
+                        ${iconUrl ? `<img src="${iconUrl}" class="w-full h-full object-cover drag-none">` : `<div class="w-full h-full flex items-center justify-center text-[9px] text-zinc-400 text-center px-0.5">${esc(data.jaName)}</div>`}
+                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[9px] leading-tight text-center truncate px-0.5">${esc(data.jaName)}</div>
                     </div>
                     <div class="combo-remove" onclick="event.stopPropagation(); removeCombo('${combo.id}')">&times;</div>
                     ${weaponIconUrl ? `<div class="weapon-badge"><img src="${weaponIconUrl}" class="w-full h-full object-cover"></div>` : ''}
@@ -2047,8 +2778,7 @@
         }
 
         async function openFakeCharModal() {
-            fakeCharModal.classList.remove('hidden');
-            fakeCharModal.classList.add('flex');
+            openModal(fakeCharModal, closeFakeCharModal);
             renderFakeCharGrid();
 
             const missingIds = Object.keys(allCharList).filter(id => charIconCache[id] === undefined);
@@ -2061,8 +2791,7 @@
         }
 
         function closeFakeCharModal() {
-            fakeCharModal.classList.add('hidden');
-            fakeCharModal.classList.remove('flex');
+            closeModal(fakeCharModal);
         }
 
         function renderFakeCharGrid() {
@@ -2081,10 +2810,10 @@
                 if (iconUrl) {
                     tile.innerHTML = `
                         <img src="${iconUrl}" class="w-full h-full object-cover drag-none" loading="lazy">
-                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[10px] leading-tight text-center truncate px-0.5 py-0.5">${data.jaName}</div>
+                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[10px] leading-tight text-center truncate px-0.5 py-0.5">${esc(data.jaName)}</div>
                     `;
                 } else {
-                    tile.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 text-center px-1">${data.jaName}</div>`;
+                    tile.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 text-center px-1">${esc(data.jaName)}</div>`;
                 }
                 if (isBetaOnlyChar(id)) {
                     tile.insertAdjacentHTML('beforeend', betaNewBadgeHTML('lg'));
@@ -2115,8 +2844,7 @@
 
         async function openFakeWeaponModal() {
             if (!activeComboId) return;
-            fakeWeaponModal.classList.remove('hidden');
-            fakeWeaponModal.classList.add('flex');
+            openModal(fakeWeaponModal, closeFakeWeaponModal);
             renderFakeWeaponGrid();
 
             const weaponType = getActiveWeaponType(currentSelectedCharId);
@@ -2133,8 +2861,7 @@
         }
 
         function closeFakeWeaponModal() {
-            fakeWeaponModal.classList.add('hidden');
-            fakeWeaponModal.classList.remove('flex');
+            closeModal(fakeWeaponModal);
         }
 
         function renderFakeWeaponGrid() {
@@ -2171,10 +2898,10 @@
                 if (iconUrl) {
                     tile.innerHTML = `
                         <img src="${iconUrl}" class="w-full h-full object-cover drag-none" loading="lazy">
-                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[10px] leading-tight text-center truncate px-0.5 py-0.5">${data.jaName}</div>
+                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[10px] leading-tight text-center truncate px-0.5 py-0.5">${esc(data.jaName)}</div>
                     `;
                 } else {
-                    tile.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 text-center px-1">${data.jaName}</div>`;
+                    tile.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 text-center px-1">${esc(data.jaName)}</div>`;
                 }
                 if (isBetaOnlyWeapon(id)) {
                     tile.insertAdjacentHTML('beforeend', betaNewBadgeHTML('md'));
@@ -2634,7 +3361,7 @@
                 if (bgRegionSelect) {
                     bgRegionSelect.classList.remove('hidden');
                     bgRegionSelect.innerHTML = usable.map(r =>
-                        `<option value="${r.name}"${r.name === current ? ' selected' : ''}>${bgRegionLabel(r.name)}</option>`
+                        `<option value="${esc(r.name)}"${r.name === current ? ' selected' : ''}>${esc(bgRegionLabel(r.name))}</option>`
                     ).join('');
                 }
             }
@@ -2715,6 +3442,8 @@
                 }
             }
             params.set('img_format', getSavedFormatPref());
+            if (getSavedGrowthPref()) params.set('growth', 'true');
+            params.set('base_prec', getSavedBasePrec());
             const query = params.toString() ? `?${params.toString()}` : '';
             return `/generate_card_image/${uid}/${charId}/${currentMethod}${query}`;
         }
@@ -2852,7 +3581,8 @@
                 const v = localStorage.getItem(VIEW_MODE_PREF_KEY);
                 if (VALID_VIEW_MODES.includes(v)) return v;
             } catch (e) { /* ignore */ }
-            return 'html';
+            // デフォルトはビルドカード（glass）。ステータス表示は設定から ON にできる
+            return 'glass';
         }
 
         function saveViewMode(mode) {
@@ -2862,10 +3592,9 @@
         }
 
         let viewMode = getSavedViewMode();
-        if (viewMode === 'image' && !new URLSearchParams(window.location.search).has('from_artifacter')) {
-            viewMode = 'html';
-            saveViewMode(viewMode);
-        }
+        // 以前はリロード時に image タブを html へ強制リセットしていたが、
+        // loadCardImage が「キャッシュなしなら生成ボタン待ち」で自動生成しないよう
+        // になったため、表示タブは保存値のまま復元してよい。
         const viewModeButtons = document.querySelectorAll('.view-mode-btn');
 
         function applyViewModeUI() {
@@ -2954,20 +3683,27 @@
             }
         }
 
+        /** 表示モードを切り替える。編成モード中は「画像生成」(image) のみ有効 */
+        function setViewMode(mode) {
+            if (!VALID_VIEW_MODES.includes(mode)) return;
+            if (teamMode && mode !== 'image') return;
+            if (mode === viewMode) return;
+            viewMode = mode;
+            saveViewMode(viewMode);
+            applyViewModeUI();
+            // 切替前にタブで進行中だった生成リクエストをすべて無効化し、
+            // 完了コールバックが切替後のタブの表示を壊さないようにする
+            latestImageRequestToken++;
+            latestGlassRequestToken++;
+            latestHtmlRequestToken++;
+            refreshCurrentCard(currentSelectedCharId, false);
+        }
+
         viewModeButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 // 編成モード中は「画像生成」のみ有効
                 if (teamMode && btn.dataset.view !== 'image') return;
-                if (btn.dataset.view === viewMode) return;
-                viewMode = btn.dataset.view;
-                saveViewMode(viewMode);
-                applyViewModeUI();
-                // 切替前にタブで進行中だった生成リクエストをすべて無効化し、
-                // 完了コールバックが切替後のタブの表示を壊さないようにする
-                latestImageRequestToken++;
-                latestGlassRequestToken++;
-                latestHtmlRequestToken++;
-                refreshCurrentCard(currentSelectedCharId, false);
+                setViewMode(btn.dataset.view);
             });
         });
 
@@ -2998,7 +3734,7 @@
                 const saved = getSavedBgRegion();
                 const picked = usable.find(r => r.name === saved) || usable[0];
                 if (picked) {
-                    return `background-image:url('${assetUrl(picked.image)}');background-size:cover;background-position:center;`;
+                    return `background-image:url('${cssUrlSanitize(assetUrl(picked.image))}');background-size:cover;background-position:center;`;
                 }
             }
             const c = ELEMENT_BG_COLORS[data.element] || ELEMENT_BG_COLORS.None;
@@ -3024,6 +3760,8 @@
             if (selection.fakeChar) params.set('fake_char', selection.fakeChar);
             if (selection.fakeWeapon) params.set('fake_weapon', selection.fakeWeapon);
             if (ver === 'beta') params.set('beta', 'true');
+            if (getSavedGrowthPref()) params.set('growth', 'true');
+            params.set('base_prec', getSavedBasePrec());
 
             const requestToken = ++latestGlassRequestToken;
             try {
@@ -3038,7 +3776,7 @@
             } catch (e) {
                 if (requestToken !== latestGlassRequestToken) return;
                 console.error('グラスカードの読み込みに失敗しました:', e);
-                glassEl.innerHTML = `<div class="text-red-400 text-sm py-16 text-center">読み込みに失敗しました: ${e.message}</div>`;
+                glassEl.innerHTML = `<div class="text-red-400 text-sm py-16 text-center">読み込みに失敗しました: ${esc(e.message)}</div>`;
                 disclaimerFooter.classList.add('hidden');
             }
         }
@@ -3049,6 +3787,70 @@
             return '/' + path;
         }
 
+        // 育成モード右パネルの HTML 本文（glass / HTML カード共通）
+        function roundTo2(n) {
+            const v = Number(n);
+            return Number.isFinite(v) ? (Math.round(v * 100) / 100).toFixed(2) : '';
+        }
+        function growthPanelHtml(growth) {
+            if (!growth) return '';
+            const g = growth;
+            const blocks = [];
+
+            // セット効果
+            if (g.sets && g.sets.length) {
+                const setRows = g.sets.map(s => {
+                    const count = Number(s.count) || 2;
+                    const desc2 = s.set2 ? `<div class="gp-set-desc${s.buff_applied ? ' applied' : ''}">2セット: ${esc(s.set2)}</div>` : '';
+                    // 4セット効果は4点以上装備時のみ表示（2セット/2セット編成では非表示）
+                    const desc4 = (count >= 4 && s.set4) ? `<div class="gp-set-desc">4セット: ${esc(s.set4)}</div>` : '';
+                    return `<div class="gp-set-row">
+                        <div class="gp-set-name">${esc(s.name)} ×${esc(s.count)}</div>
+                        ${desc2}
+                        ${desc4}
+                    </div>`;
+                }).join('');
+                blocks.push(`<div class="growth-panel-section"><div class="growth-panel-head">聖遺物セット効果</div>${setRows}</div>`);
+            }
+
+            // 基礎ステータス → %換算（1%あたり）
+            const sp = g.stat1pct;
+            if (sp) {
+                blocks.push(`<div class="growth-panel-section">
+                    <div class="growth-panel-head">基礎ステータス %換算</div>
+                    <div class="gp-stat-rows">
+                        <div class="gp-stat-row"><span class="gp-stat-label">${esc(sp.label)} 1%あたり</span><span class="gp-stat-value">${esc(sp.value)}</span></div>
+                    </div></div>`);
+            }
+
+            // サブステ伸び平均（1回あたり）: HP / 攻撃 / 防御 を % と実数で表示
+            const subList = g.subavg_all || (g.subavg ? [g.subavg] : []);
+            if (subList.length) {
+                const rows = [];
+                subList.forEach(s => {
+                    if (s.pct_avg != null || s.flat_avg != null) {
+                        const short = { hp: 'HP', atk: '攻撃', def: '防御' }[s.key] || s.label || '';
+                        const label = esc(short);
+                        if (s.pct_avg != null) {
+                            const paren = (s.flat_equiv != null) ? ` (${roundTo2(s.flat_equiv)})` : '';
+                            rows.push(`<div class="gp-stat-row"><span class="gp-stat-label">${label}%</span><span class="gp-stat-value">${roundTo2(s.pct_avg)}%${paren}</span></div>`);
+                        }
+                        if (s.flat_avg != null) {
+                            rows.push(`<div class="gp-stat-row"><span class="gp-stat-label">${label}実数</span><span class="gp-stat-value">${roundTo2(s.flat_avg)}</span></div>`);
+                        }
+                    }
+                });
+                if (rows.length) blocks.push(`<div class="growth-panel-section">
+                    <div class="growth-panel-head">サブステ伸び平均</div>
+                    <div class="gp-subhead">1回あたりの平均</div>
+                    <div class="gp-stat-rows">${rows.join('')}</div></div>`);
+            }
+
+            if (!blocks.length) return '';
+            return `<div class="growth-panel-title">育成メモ</div>${''}
+                <div class="growth-panel-body">${blocks.join('<div style="height:1px;background:rgba(255,255,255,0.08);margin:2px 0 6px;"></div>')}</div>`;
+        }
+
         function renderGlassCard(data) {
             const glassEl = document.getElementById('glassCardContainer');
             if (!glassEl) return;
@@ -3056,10 +3858,11 @@
             setLastKnownRealWeapon(data);
             setCurrentCharRegions(data.regions || []);
 
+            const baseBgStyle = glassBaseBgStyle(data);
             const elemColor = ELEMENT_COLORS[data.element] || '#aaaaaa';
             const elemDim = elemColor + '55';
-            const splash = assetUrl(data.splash);
-            const baseBgStyle = glassBaseBgStyle(data);
+            const splash = cssUrlSanitize(assetUrl(data.splash));
+            const splashAttr = esc(assetUrl(data.splash));
             const skills = data.skills || [];
             const constIcons = data.constellationIcons || [];
             const unlocked = Number.isFinite(data.constellation) ? data.constellation : 0;
@@ -3080,7 +3883,7 @@
             }).join('');
 
             const statsHtml = (data.mainStats || []).map(s => {
-                const base = s.base != null ? `<div class="stat-breakdown"><span class="stat-base">${s.base}</span>${s.add ? `<span class="stat-plus">${s.add}</span>` : (s.val != null && s.base != null ? '' : '')}</div>` : '';
+                const base = s.base != null ? `<div class="stat-breakdown"><span class="stat-base">${esc(s.base)}</span>${s.add ? `<span class="stat-plus">${esc(s.add)}</span>` : (s.val != null && s.base != null ? '' : '')}</div>` : '';
                 // base/add may not exist for all; show if available
                 let breakdown = '';
                 if (s.base != null) {
@@ -3088,8 +3891,8 @@
                         ? (s.val - s.base)
                         : null;
                     breakdown = `<div class="stat-breakdown">
-                        <span class="stat-base">${s.base}</span>
-                        ${addVal != null ? `<span class="stat-plus">+${addVal}</span>` : ''}
+                        <span class="stat-base">${esc(s.base)}</span>
+                        ${addVal != null ? `<span class="stat-plus">+${esc(addVal)}</span>` : ''}
                     </div>`;
                 }
                 return `
@@ -3097,8 +3900,8 @@
                     <div class="stat-icon">${s.icon ? `<img src="${assetUrl(s.icon)}" alt="">` : ''}</div>
                     <div class="stat-content">
                         <div class="stat-label-wrap">
-                            <span class="stat-name">${s.label}</span>
-                            <span class="stat-total">${s.val}</span>
+                            <span class="stat-name">${esc(s.label)}</span>
+                            <span class="stat-total">${esc(s.val)}</span>
                         </div>
                         ${breakdown}
                     </div>
@@ -3106,11 +3909,11 @@
             }).join('');
 
             const weaponStatsHtml = (data.weaponStats || []).map(w =>
-                `<div class="w-stat"><span>${w.name}</span> <span>${w.value}</span></div>`
+                `<div class="w-stat"><span>${esc(w.name)}</span> <span>${esc(w.value)}</span></div>`
             ).join('');
 
             const setHtml = (data.setBonuses && data.setBonuses.length)
-                ? data.setBonuses.map(s => `<div class="set-row"><span class="set-name">${s.name}</span><span class="set-count">${s.count}</span></div>`).join('')
+                ? data.setBonuses.map(s => `<div class="set-row"><span class="set-name">${esc(s.name)}</span>${s.buff ? `<span class="set-buff">${esc(s.buff)}</span>` : ''}<span class="set-count">${esc(s.count)}</span></div>`).join('')
                 : `<div class="set-none">セット効果なし</div>`;
 
             const arts = data.artifacts || [];
@@ -3119,15 +3922,15 @@
                     return `<div class="art-card"><div style="margin:auto;opacity:0.3">未装備</div></div>`;
                 }
                 const subs = (a.substats || []).map(sub =>
-                    `<div class="substat-item"><span>${sub.name}</span><span>${sub.value}</span></div>`
+                    `<div class="substat-item"><span>${esc(sub.name)}</span><span class="substat-val">${esc(sub.value)}</span></div>`
                 ).join('');
                 return `
                 <div class="art-card">
                     <div class="art-header">
                         ${a.icon ? `<img class="art-icon" src="${assetUrl(a.icon)}" alt="">` : '<div class="art-icon"></div>'}
                         <div class="art-main-info">
-                            <div class="art-main-label">${a.main ? a.main.name : ''}</div>
-                            <div class="art-main-val">${a.main ? a.main.value : ''}</div>
+                            <div class="art-main-label">${a.main ? esc(a.main.name) : ''}</div>
+                            <div class="art-main-val">${a.main ? esc(a.main.value) : ''}</div>
                         </div>
                         <div class="art-level">+${a.upgrade ?? 0}</div>
                     </div>
@@ -3139,20 +3942,42 @@
                 </div>`;
             }).join('');
 
+            // 育成（growth）レイアウト: ON かつ growth データがあれば右側にパネルを追加し、
+            // build-card を全幅基準に縮小してスペースを作る
+            let growthData = null, growthBody = '', growthK = 1, growthLeftW = 1200, growthLeftH = 800, growthPanelW = 0;
+            const growthMode = getSavedGrowthPref();
+            if (growthMode && data) {
+                growthData = data.growth || data.progress || null;
+                if (growthData) {
+                    growthBody = growthPanelHtml(growthData);
+                    if (growthBody) {
+                        // 総合スコア列（right-section = 270px / 1200）と同じ横幅にする
+                        growthK = 0.775;
+                        growthLeftW = Math.round(1200 * growthK);
+                        growthLeftH = Math.round(800 * growthK);
+                        growthPanelW = 270;
+                    } else {
+                        growthData = null;
+                    }
+                }
+            }
+
             glassEl.innerHTML = `
-            <div class="glass-card-root" style="--element-color:${elemColor};--element-color-dim:${elemDim}">
-              <div class="glass-scale-wrap" id="glassScaleWrap">
-              <div class="build-card">
+            <div class="glass-card-root${getSavedBasePrec() === '2' ? ' glass-prec-detail' : ''}" style="--element-color:${elemColor};--element-color-dim:${elemDim}">
+              <div class="glass-scale-wrap" id="glassScaleWrap"${growthData && growthBody ? ` data-growth="1"` : ''}>
+              ${growthData && growthBody ? `<div class="glass-growth-layout">
+              <div class="glass-growth-left" style="width:${growthLeftW}px;height:${growthLeftH}px;--gc-growth-k:${growthK}">` : ''}
+              <div class="build-card"${growthData && growthBody ? ` style="transform:scale(${growthK});"` : ''}>
                 <div class="glass-card-base-bg" style="${baseBgStyle}"></div>
                 <div class="glass-card-bg" style="background-image:url('${splash || ''}')"></div>
                 <div class="top-section">
                   <div class="splash-container">
-                    ${splash ? `<img class="splash-art" src="${splash}" alt="">` : ''}
+                    ${splash ? `<img class="splash-art" src="${splashAttr}" alt="">` : ''}
                     <div class="char-overlay-info">
-                      <div class="char-name">${data.displayName || ''}</div>
+                      <div class="char-name">${esc(data.displayName)}</div>
                       <div class="char-meta">
-                        <span>Lv. ${data.level != null ? data.level : '?'}</span>
-                        ${data.friendship != null ? `<div class="friendship-pill"><span>❤</span><span>${data.friendship}</span></div>` : ''}
+                        <span>Lv. ${data.level != null ? esc(data.level) : '?'}</span>
+                        ${data.friendship != null ? `<div class="friendship-pill"><span>❤</span><span>${esc(data.friendship)}</span></div>` : ''}
                       </div>
                     </div>
                     <div class="talents-stack">${talentsHtml}</div>
@@ -3165,7 +3990,7 @@
                         ${data.weaponIcon ? `<img src="${assetUrl(data.weaponIcon)}" alt="">` : ''}
                       </div>
                       <div class="weapon-details">
-                        <div class="weapon-title">${data.weaponName || ''}</div>
+                        <div class="weapon-title">${esc(data.weaponName)}</div>
                         <div class="weapon-lvl-refine">
                           <span>Lv.${data.weaponLevel != null ? data.weaponLevel : '?'}</span>
                           <span>R${data.weaponAffix != null ? data.weaponAffix : 1}</span>
@@ -3175,16 +4000,19 @@
                     </div>
                     <div class="set-info-box">${setHtml}</div>
                     <div class="score-box">
-                      <div class="rank-badge"><img src="/static/assets/tiers/${data.tierSum || 'B'}.png" alt="${data.tierSum || 'B'}"></div>
+                      <div class="rank-badge"><img src="/static/assets/tiers/${esc(data.tierSum || 'B')}.png" alt="${esc(data.tierSum || 'B')}"></div>
                       <div class="score-label">総合スコア</div>
-                      <div class="score-value">${data.scoreSum != null ? data.scoreSum : 0}</div>
+                      <div class="score-value">${(Number(data.scoreSum) || 0).toFixed(1)}</div>
                       <div class="score-method-title">計算方法</div>
-                      <div class="score-method-label">${data.calcMethodLabel || data.calcMethod || ''}</div>
+                      <div class="score-method-label">${esc(data.calcMethodLabel || data.calcMethod || '')}</div>
                     </div>
                   </div>
                 </div>
                 <div class="artifacts-grid">${artsHtml}</div>
               </div>
+              ${growthData && growthBody ? `</div>
+              <div class="growth-panel" style="width:${growthPanelW}px;height:${growthLeftH}px;--element-color:${elemColor}">${growthBody}</div>
+              </div>` : ''}
               </div>
             </div>`;
             requestAnimationFrame(() => scaleGlassCard());
@@ -3200,7 +4028,8 @@
             const padX = (parseFloat(parentStyle.paddingLeft) || 0) + (parseFloat(parentStyle.paddingRight) || 0);
             const available = Math.max(280, parent.clientWidth - padX);
             const baseW = 1200;
-            const baseH = 800;
+            const left = wrap.querySelector('.glass-growth-left');
+            const baseH = left ? Math.round(800 * (parseFloat(left.style.height) / 800 || 1)) : 800;
             const scale = Math.min(1, available / baseW);
             // 左上基準で縮小し、レイアウト上の占有サイズも縮小後に合わせる
             wrap.style.transformOrigin = 'top left';
@@ -3224,8 +4053,7 @@
         let latestHtmlRequestToken = 0;
 
         function updateDisclaimerFooter(selection) {
-            const show = !!(selection && (selection.fakeChar || selection.fakeWeapon));
-            disclaimerFooter.classList.toggle('hidden', !show);
+            disclaimerFooter.classList.remove('hidden');
         }
 
         async function loadHtmlCard(charId) {
@@ -3245,6 +4073,8 @@
             if (selection.fakeChar) params.set('fake_char', selection.fakeChar);
             if (selection.fakeWeapon) params.set('fake_weapon', selection.fakeWeapon);
             if (ver === 'beta') params.set('beta', 'true');
+            if (getSavedGrowthPref()) params.set('growth', 'true');
+            params.set('base_prec', getSavedBasePrec());
 
             const requestToken = ++latestHtmlRequestToken;
             try {
@@ -3259,7 +4089,7 @@
             } catch (e) {
                 if (requestToken !== latestHtmlRequestToken) return;
                 console.error('ビルドカード(HTML)の読み込みに失敗しました:', e);
-                htmlCardContainer.innerHTML = `<div class="text-red-400 text-sm py-16 text-center">読み込みに失敗しました: ${e.message}</div>`;
+                htmlCardContainer.innerHTML = `<div class="text-red-400 text-sm py-16 text-center">読み込みに失敗しました: ${esc(e.message)}</div>`;
                 disclaimerFooter.classList.add('hidden');
             }
         }
@@ -3274,9 +4104,9 @@
             setCurrentCharRegions(data.regions || []);
             const mainStatsHtml = data.mainStats.map(s => `
                 <div class="flex items-center gap-2 bg-zinc-900/60 rounded-lg px-3 py-2 border border-zinc-800">
-                    <span class="icon-chip-lg inline-flex items-center justify-center w-7 h-7 rounded-md shrink-0"><img src="/${s.icon}" class="w-6 h-6 object-contain"></span>
-                    <span class="text-xs text-zinc-400 flex-1">${s.label}</span>
-                    <span class="text-sm font-bold text-white">${s.val}</span>
+                    <span class="icon-chip-lg inline-flex items-center justify-center w-7 h-7 rounded-md shrink-0"><img src="/${esc(s.icon)}" class="w-6 h-6 object-contain"></span>
+                    <span class="text-xs text-zinc-400 flex-1">${esc(s.label)}</span>
+                    <span class="text-sm font-bold text-white">${esc(s.val)}</span>
                 </div>
             `).join('');
 
@@ -3284,22 +4114,22 @@
                 if (!a) return `<div class="bg-zinc-900/40 rounded-lg p-3 border border-zinc-800 text-xs text-zinc-600 flex items-center justify-center">未装備</div>`;
                 const subsHtml = a.substats.map(s => `
                     <div class="flex items-center gap-1.5 text-xs text-zinc-400">
-                        <span class="icon-chip inline-flex items-center justify-center w-5 h-5 rounded-md shrink-0"><img src="/${s.icon}" class="w-4 h-4 object-contain"></span>
-                        <span>${s.name}</span>
-                        <span class="ml-auto text-zinc-200">${s.value}</span>
+                        <span class="icon-chip inline-flex items-center justify-center w-5 h-5 rounded-md shrink-0"><img src="/${esc(s.icon)}" class="w-4 h-4 object-contain"></span>
+                        <span>${esc(s.name)}</span>
+                        <span class="ml-auto text-zinc-200">${esc(s.value)}</span>
                     </div>
                 `).join('');
                 return `
                 <div class="bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
                     <div class="flex items-center gap-2 mb-1.5">
-                        <img src="/${a.icon}" class="w-10 h-10 rounded object-cover border border-zinc-700">
+                        <img src="/${esc(a.icon)}" class="w-10 h-10 rounded object-cover border border-zinc-700">
                         <div class="flex-1 min-w-0">
-                            <div class="text-xs text-zinc-500">${a.slot} +${a.upgrade}</div>
-                            <div class="text-xs text-zinc-300 truncate">${a.main.name} ${a.main.value}</div>
+                            <div class="text-xs text-zinc-500">${esc(a.slot)} +${esc(a.upgrade)}</div>
+                            <div class="text-xs text-zinc-300 truncate">${esc(a.main.name)} ${esc(a.main.value)}</div>
                         </div>
                         <div class="text-right shrink-0">
-                            <div class="text-lg font-bold ${tierClass(a.tier)}">${a.tier}</div>
-                            <div class="text-[10px] text-zinc-500">${a.score}</div>
+                            <div class="text-lg font-bold ${tierClass(a.tier)}">${esc(a.tier)}</div>
+                            <div class="text-[10px] text-zinc-500">${(Number(a.score) || 0).toFixed(1)}</div>
                         </div>
                     </div>
                     <div class="space-y-1 pt-1.5 border-t border-zinc-800">${subsHtml}</div>
@@ -3307,18 +4137,24 @@
             }).join('');
 
             const setBonusHtml = data.setBonuses.length
-                ? data.setBonuses.map(s => `<div class="text-xs text-cyan-300">${s.name} ×${s.count}</div>`).join('')
+                ? data.setBonuses.map(s => `<div class="text-xs text-cyan-300">${esc(s.name)}${s.buff ? ` <span class="text-amber-300">${esc(s.buff)}</span>` : ''} ×${esc(s.count)}</div>`).join('')
                 : `<div class="text-xs text-zinc-600">セット効果なし</div>`;
 
+            // 育成（growth）モード: ON かつデータがあれば右列にパネルを追加
+            let growthHtml = '';
+            if (getSavedGrowthPref()) {
+                growthHtml = growthPanelHtml(data.growth || data.progress || null);
+            }
+
             htmlCardContainer.innerHTML = `
-                <div class="grid md:grid-cols-3 gap-4">
+                <div class="grid ${growthHtml ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4">
                     <div class="md:col-span-1 space-y-3">
                         <div class="flex items-center gap-3 bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
                             <div class="flex-1">
-                                <div class="text-lg font-bold text-primary">${data.displayName} ${data.level != null ? `Lv.${data.level}` : ''}${(data.constellationIcons && data.constellationIcons.length && Number.isFinite(data.constellation)) ? ` ${data.constellation}凸` : ''}</div>
-                                <div class="text-xs text-zinc-400">${data.weaponName}${data.weaponLevel ? ` Lv.${data.weaponLevel}` : ''}${data.weaponAffix ? ` (精錬${data.weaponAffix})` : ''}</div>
+                                <div class="text-lg font-bold text-primary">${esc(data.displayName)} ${data.level != null ? `Lv.${esc(data.level)}` : ''}${(data.constellationIcons && data.constellationIcons.length && Number.isFinite(data.constellation)) ? ` ${esc(data.constellation)}凸` : ''}</div>
+                                <div class="text-xs text-zinc-400">${esc(data.weaponName)}${data.weaponLevel ? ` Lv.${esc(data.weaponLevel)}` : ''}${data.weaponAffix ? ` (精錬${esc(data.weaponAffix)})` : ''}</div>
                             </div>
-                            ${data.weaponIcon ? `<img src="/${data.weaponIcon}" class="w-12 h-12 rounded object-cover border border-zinc-700">` : ''}
+                            ${data.weaponIcon ? `<img src="/${esc(data.weaponIcon)}" class="w-12 h-12 rounded object-cover border border-zinc-700">` : ''}
                         </div>
                         <div class="grid grid-cols-2 gap-1.5">${mainStatsHtml}</div>
                         <div class="bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
@@ -3327,12 +4163,13 @@
                         </div>
                         <div class="flex items-center justify-between bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
                             <span class="text-xs text-zinc-400">総合スコア</span>
-                            <span class="text-2xl font-bold ${tierClass(data.tierSum)}">${data.scoreSum} <span class="text-sm">${data.tierSum}</span></span>
+                            <span class="text-2xl font-bold ${tierClass(data.tierSum)}">${(Number(data.scoreSum) || 0).toFixed(1)} <span class="text-sm">${esc(data.tierSum)}</span></span>
                         </div>
                     </div>
                     <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
                         ${artifactsHtml}
                     </div>
+                    ${growthHtml ? `<div class="growth-panel-html">${growthHtml}</div>` : ''}
                 </div>
             `;
         }
@@ -3462,6 +4299,17 @@
             }
         });
 
+        const basePrecSelect = document.getElementById('basePrecSelect');
+        if (basePrecSelect) {
+            basePrecSelect.value = getSavedBasePrec();
+            basePrecSelect.addEventListener('change', function() {
+                setBasePrec(this.value);
+                if (teamMode) return;
+                // 表示精度の変更はキャッシュを無視して再取得して反映する
+                refreshCurrentCard(currentSelectedCharId, true, false);
+            });
+        }
+
         regenerateApiBtn.addEventListener('click', async function() {
             if (!teamMode && !currentSelectedCharId) return;
 
@@ -3493,14 +4341,14 @@
                 }
             } catch (e) {
                 console.error('Enka APIの再取得に失敗しました:', e);
-                alert(`データの再取得に失敗しました。\n${e.message}\n（キャッシュ済みのデータで再生成します）`);
+                showToast(`データの再取得に失敗しました。\n${e.message}\n（キャッシュ済みのデータで再生成します）`, 'error');
             } finally {
                 setTopImageButtonsDisabled(false);
                 regenerateApiBtn.innerHTML = originalLabel;
             }
 
             if (cooldownActive > 0) {
-                alert(`Enka APIのクールタイム中です。${Math.ceil(cooldownActive)}秒後にお試しください`);
+                showToast(`Enka APIのクールタイム中です。${Math.ceil(cooldownActive)}秒後にお試しください`, 'info');
                 startEnkaCooldown(cooldownActive);
                 return;
             }
@@ -3581,13 +4429,11 @@
 
         // ---- モーダル：スロット一覧 ----
         function openTeamCardModal() {
-            teamCardModal.classList.remove('hidden');
-            teamCardModal.classList.add('flex');
+            openModal(teamCardModal, closeTeamCardModal);
             showTeamSlotList();
         }
         function closeTeamCardModal() {
-            teamCardModal.classList.add('hidden');
-            teamCardModal.classList.remove('flex');
+            closeModal(teamCardModal);
             pendingSlotIndex = null;
         }
         function showTeamSlotList() {
@@ -3605,7 +4451,7 @@
                     const imgs = slot.chars.map(c => {
                         const src = teamCharIconSrc(c);
                         return src
-                            ? `<img src="${src}" class="w-full h-full object-cover">`
+                            ? `<img src="${esc(src)}" class="w-full h-full object-cover">`
                             : `<div class="w-full h-full bg-zinc-800 flex items-center justify-center text-[10px] text-zinc-500">?</div>`;
                     }).join('');
                     div.className = 'relative aspect-square rounded-lg border border-zinc-700 bg-zinc-800/60 overflow-hidden cursor-pointer hover:border-cyan-400 transition-all';
@@ -3616,9 +4462,14 @@
                         <button type="button" class="slot-del absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-red-500/90 text-white text-[10px] leading-4 text-center" title="削除">&times;</button>
                     `;
                     div.onclick = () => { closeTeamCardModal(); loadTeam(slot.id); };
-                    div.querySelector('.slot-del').onclick = (e) => {
+                    div.querySelector('.slot-del').onclick = async (e) => {
                         e.stopPropagation();
-                        if (!confirm(`編成${i + 1}を削除しますか？`)) return;
+                        const ok = await requestConfirmation(`編成${i + 1}を削除しますか？`, {
+                            title: '編成スロットの削除',
+                            confirmText: '削除',
+                            cancelText: 'キャンセル'
+                        });
+                        if (!ok) return;
                         teamSlots[i] = null;
                         saveTeamSlots();
                         renderTeamSlotList();
@@ -3653,7 +4504,7 @@
                     slot.title = 'クリックで取り消し';
                     slot.style.cursor = 'pointer';
                     slot.innerHTML = `
-                        ${src ? `<img src="${src}" class="w-full h-full object-cover drag-none">` : ''}
+                        ${src ? `<img src="${esc(src)}" class="w-full h-full object-cover drag-none">` : ''}
                         <div class="team-order-badge">${i + 1}</div>
                     `;
                     slot.onclick = () => { teamSelectedIds.splice(i, 1); renderTeamSelectSlots(); renderTeamSelectGrid(); };
@@ -3677,7 +4528,7 @@
                 const tile = document.createElement('div');
                 tile.className = `team-select-tile relative w-20 h-20 shrink-0 rounded-lg border-2 overflow-hidden cursor-pointer ${selected ? 'selected border-cyan-400' : 'border-zinc-700'}`;
                 tile.innerHTML = `
-                    <img src="${src}" class="w-full h-full object-cover drag-none ${selected ? '' : 'opacity-80'}" loading="lazy">
+                    <img src="${esc(src)}" class="w-full h-full object-cover drag-none ${selected ? '' : 'opacity-80'}" loading="lazy">
                     ${selected ? `<div class="team-order-badge">${selIdx + 1}</div>` : ''}
                 `;
                 tile.onclick = () => {
@@ -3714,7 +4565,7 @@
 
         // ---- 編成モード ----
         function setTeamViewModeRestriction(on) {
-            document.querySelectorAll('.view-mode-btn[data-view="html"], .view-mode-btn[data-view="glass"]').forEach(btn => {
+            document.querySelectorAll('.view-mode-btn[data-view="glass"]').forEach(btn => {
                 btn.disabled = on;
                 btn.classList.toggle('opacity-40', on);
                 btn.classList.toggle('cursor-not-allowed', on);
@@ -3784,9 +4635,9 @@
                 div.className = 'relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 cursor-pointer';
                 div.setAttribute('data-team-idx', idx);
                 div.innerHTML = `
-                    ${src ? `<img src="${src}" class="w-full h-full rounded-lg object-cover ${teamActiveIdx === idx ? 'opacity-100 ring-2 ring-primary' : 'opacity-50 grayscale-[0.3]'} drag-none">` : ''}
+                    ${src ? `<img src="${esc(src)}" class="w-full h-full rounded-lg object-cover ${teamActiveIdx === idx ? 'opacity-100 ring-2 ring-primary' : 'opacity-50 grayscale-[0.3]'} drag-none">` : ''}
                     <div class="team-order-badge" style="top:2px;left:2px;">${idx + 1}</div>
-                    ${wsrc ? `<div class="weapon-badge"><img src="${wsrc}" class="w-full h-full object-cover"></div>` : ''}
+                    ${wsrc ? `<div class="weapon-badge"><img src="${esc(wsrc)}" class="w-full h-full object-cover"></div>` : ''}
                 `;
                 div.onclick = () => selectTeamMember(idx);
                 row.appendChild(div);
@@ -3879,6 +4730,7 @@
                     bg_mode: region ? 'region' : (bgMode === 'custom' ? 'custom' : 'element'),
                     bg_color: (region ? '' : (bgMode === 'custom' ? getCustomBgColor().replace('#', '') : '')),
                     bg_region: region,
+                    base_prec: getSavedBasePrec(),
                 };
             });
         }
@@ -3939,7 +4791,7 @@
                 cardImage.src = currentImageObjectUrl;
             } catch (e) {
                 console.error(e);
-                htmlCardContainer.innerHTML = `<div class="text-red-400 text-sm py-16 text-center">編成カード生成に失敗しました: ${e.message}</div>`;
+                htmlCardContainer.innerHTML = `<div class="text-red-400 text-sm py-16 text-center">編成カード生成に失敗しました: ${esc(e.message)}</div>`;
             } finally {
                 setGenerationControlsDisabled(false);
             }
@@ -3948,7 +4800,7 @@
             const slot = teamSlotById(activeTeamId);
             if (!slot) return;
             if (abyssMode && !abyssBoss) {
-                alert('幽境ボスを選択してください');
+                showToast('幽境ボスを選択してください', 'error');
                 return;
             }
             const ids = slot.chars.slice();
@@ -3989,6 +4841,7 @@
                 viewMode = 'image';
                 saveViewMode(viewMode);
                 applyViewModeUI();
+                applySettingsPanelUI();
                 latestGlassRequestToken++;
                 latestHtmlRequestToken++;
             }
@@ -4078,15 +4931,13 @@
         function openAbyssModal() {
             const modal = document.getElementById('abyssModal');
             const groupsEl = document.getElementById('abyssVersionGroups');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            openModal(modal, closeAbyssModal);
             groupsEl.innerHTML = '<div class="text-sm text-zinc-500 py-6 text-center">読み込み中...</div>';
             loadAbyssGroups().then(groups => renderAbyssGroups(groups));
         }
         function closeAbyssModal() {
             const modal = document.getElementById('abyssModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            closeModal(modal);
         }
         async function loadAbyssGroups() {
             const groups = [];
@@ -4122,13 +4973,13 @@
             }
             groupsEl.innerHTML = groups.map(g => `
                 <div>
-                    <div class="text-sm font-bold text-cyan-300 mb-2">${g.version}</div>
+                    <div class="text-sm font-bold text-cyan-300 mb-2">${esc(g.version)}</div>
                     <div class="flex flex-wrap gap-2">
                         ${g.enemies.map(e => `
                             <button type="button" class="abyss-enemy-tile w-24 flex flex-col items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-800/60 p-1.5 hover:border-cyan-400 transition-all"
                                 data-abyss='${encodeURIComponent(JSON.stringify(e))}'>
-                                <img src="${e.img || ''}" class="w-16 h-16 rounded object-cover bg-zinc-800" onerror="this.style.visibility='hidden'">
-                                <span class="text-[10px] text-zinc-400 text-center leading-tight">${e.name}</span>
+                                <img src="${esc(e.img || '')}" class="w-16 h-16 rounded object-cover bg-zinc-800" onerror="this.style.visibility='hidden'">
+                                <span class="text-[10px] text-zinc-400 text-center leading-tight">${esc(e.name)}</span>
                             </button>`).join('')}
                     </div>
                 </div>`).join('');
