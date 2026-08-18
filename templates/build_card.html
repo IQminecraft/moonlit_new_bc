@@ -1315,10 +1315,12 @@
 
                             <div>
                                 <label class="block text-sm text-zinc-400 mb-1.5">育成情報</label>
-                                <button type="button" id="settingsGrowthBtn"
+                                <button type="button" id="settingsGrowthBtn" role="switch" aria-checked="false"
                                     class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                                    <span>📈 育成情報を表示</span>
-                                    <span id="settingsGrowthLabel" class="text-[10px] text-gray-500">タップで切替</span>
+                                    <span>育成情報を表示</span>
+                                    <span id="settingsGrowthToggle" class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-zinc-600 transition-colors">
+                                        <span id="settingsGrowthKnob" class="inline-block h-3.5 w-3.5 transform rounded-full bg-gray-300 transition-transform"></span>
+                                    </span>
                                 </button>
                             </div>
 
@@ -2252,8 +2254,18 @@
             if (settingsStatusViewLabel) {
                 settingsStatusViewLabel.textContent = (typeof viewMode !== 'undefined' && viewMode === 'html') ? 'ON' : 'OFF';
             }
-            if (settingsGrowthLabel) {
-                settingsGrowthLabel.textContent = getSavedGrowthPref() ? '✅ 表示中' : '❎ 非表示';
+            if (settingsGrowthToggle) {
+                const growthOn = getSavedGrowthPref();
+                settingsGrowthToggle.classList.toggle('bg-cyan-500', growthOn);
+                settingsGrowthToggle.classList.toggle('bg-zinc-600', !growthOn);
+                const settingsGrowthKnob = document.getElementById('settingsGrowthKnob');
+                if (settingsGrowthKnob) {
+                    settingsGrowthKnob.classList.toggle('translate-x-4', growthOn);
+                    settingsGrowthKnob.classList.toggle('bg-white', growthOn);
+                    settingsGrowthKnob.classList.toggle('bg-gray-300', !growthOn);
+                }
+                const settingsGrowthBtn = document.getElementById('settingsGrowthBtn');
+                if (settingsGrowthBtn) settingsGrowthBtn.setAttribute('aria-checked', growthOn ? 'true' : 'false');
             }
         }
 
