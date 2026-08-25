@@ -1,5 +1,6 @@
 {
   "name": "キィニチ",
+  "en_name": "Kinich",
   "desc": "ウィッツトランの竜狩り人。代償を量ることに長けている。",
   "weapon": "WEAPON_CLAYMORE",
   "rarity": "QUALITY_ORANGE",

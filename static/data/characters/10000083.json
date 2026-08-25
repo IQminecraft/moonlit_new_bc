@@ -1,5 +1,6 @@
 {
   "name": "リネット",
+  "en_name": "Lynette",
   "desc": "口数が少なく、表情に乏しいマジックアシスタント。その性格は猫のようにつかみどころがない。",
   "weapon": "WEAPON_SWORD_ONE_HAND",
   "rarity": "QUALITY_PURPLE",

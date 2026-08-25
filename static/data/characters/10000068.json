@@ -1,5 +1,6 @@
 {
   "name": "ドリー",
+  "en_name": "Dori",
   "desc": "神出鬼没の旅商人。一番好きなものは、キラキラと輝くモラ。",
   "weapon": "WEAPON_CLAYMORE",
   "rarity": "QUALITY_PURPLE",

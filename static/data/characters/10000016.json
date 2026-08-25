@@ -1,5 +1,6 @@
 {
   "name": "ディルック",
+  "en_name": "Diluc",
   "desc": "モンドの大半の酒造を掌握する貴公子。財力も人望も実力も、見くびってはならない。",
   "weapon": "WEAPON_CLAYMORE",
   "rarity": "QUALITY_ORANGE",

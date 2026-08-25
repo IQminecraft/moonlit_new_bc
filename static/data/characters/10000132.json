@@ -1,5 +1,6 @@
 {
   "name": "プルーネ",
+  "en_name": "Prune",
   "desc": "小さな「魔女ハンター」。「弱い者いじめばかりして、悪行の限りを尽くす」魔女を討伐するため、はるばるナド・クライからやってきた。",
   "weapon": "WEAPON_CATALYST",
   "rarity": "QUALITY_PURPLE",

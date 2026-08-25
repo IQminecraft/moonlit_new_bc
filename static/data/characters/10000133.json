@@ -1,5 +1,6 @@
 {
   "name": "サンドローネ",
+  "en_name": "Sandrone",
   "desc": "ファデュイ執行官第七位「傀儡」。数理をもって万象を解析し、お茶会には決まって顔を出す優雅な淑女。",
   "weapon": "WEAPON_CLAYMORE",
   "rarity": "QUALITY_ORANGE",

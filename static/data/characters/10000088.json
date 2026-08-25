@@ -1,5 +1,6 @@
 {
   "name": "シャルロット",
+  "en_name": "Charlotte",
   "desc": "元気に満ち溢れるスチームバード新聞の記者。いつも「真相」を求めて駆け回っている。",
   "weapon": "WEAPON_CATALYST",
   "rarity": "QUALITY_PURPLE",

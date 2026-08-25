@@ -1,5 +1,6 @@
 {
   "name": "ベネット",
+  "en_name": "Bennett",
   "desc": "モンドの少年冒険者。その優しさにそぐわない不運の持ち主。",
   "weapon": "WEAPON_SWORD_ONE_HAND",
   "rarity": "QUALITY_PURPLE",

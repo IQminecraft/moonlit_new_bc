@@ -1,5 +1,6 @@
 {
   "name": "ファルカ",
+  "en_name": "Varka",
   "desc": "西風騎士団の大団長——モンドを守る北風騎士。",
   "weapon": "WEAPON_CLAYMORE",
   "rarity": "QUALITY_ORANGE",

@@ -6,13 +6,68 @@
 ReliquaryAffixExcelConfigData の合算値を使い、最後にフォーマット側で
 「小数点3位四捨五入 → 小数2位表示」する構成は共通。
 """
+import json
+import os
 from collections import Counter
 
+from app.paths import STATIC_DIR
 from app.card.stats import (
     new_stat_totals, apply_stat_bonus, to_ratio_if_percent,
     sum_affix_substat_values,
 )
 from app.card.set_buffs import apply_2set_buffs
+
+
+# ----------------------------------------------------------------
+# 固有元素熟知（admin 管理）
+# レベル・突破段階に依存せず、特定のキャラに常に付与される元素熟知。
+# 保存先: static/data/setting/innate_em.json
+# 形式: {"characters": {"<charId>": <number>}}
+# ----------------------------------------------------------------
+INNATE_EM_PATH = os.path.join(STATIC_DIR, "data", "setting", "innate_em.json")
+_innate_em_cache = {"map": {}, "mtime": None}
+
+
+def load_innate_em_map() -> dict:
+    """mtime キャッシュ付きで固有元素熟知マップ {charId: float} を読み込む。"""
+    if not os.path.exists(INNATE_EM_PATH):
+        _innate_em_cache["map"] = {}
+        _innate_em_cache["mtime"] = None
+        return {}
+    try:
+        mtime = os.path.getmtime(INNATE_EM_PATH)
+        if _innate_em_cache["mtime"] == mtime:
+            return _innate_em_cache["map"]
+        with open(INNATE_EM_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict):
+            chars = data.get("characters")
+            raw_map = chars if isinstance(chars, dict) else data
+        else:
+            raw_map = {}
+        cleaned = {}
+        for key, val in raw_map.items():
+            try:
+                v = float(val)
+            except (TypeError, ValueError):
+                continue
+            if v > 0:
+                cleaned[str(key)] = v
+        _innate_em_cache["map"] = cleaned
+        _innate_em_cache["mtime"] = mtime
+        return _innate_em_cache["map"]
+    except Exception:
+        return _innate_em_cache["map"] or {}
+
+
+def get_innate_em(char_id) -> float:
+    """キャラの固有元素熟知を返す。未設定は 0.0。"""
+    if char_id is None:
+        return 0.0
+    try:
+        return float(load_innate_em_map().get(str(char_id), 0.0))
+    except (TypeError, ValueError):
+        return 0.0
 
 
 def get_char_base_stats(chardatas, level):
@@ -61,6 +116,12 @@ def compute_manual_totals(*, base_hp, base_atk, base_def, base_crit_rate, base_c
         ※ dmg_buff.val は率（0.0～）なので表示時 ×100 で "%"。
     """
     stat_totals = new_stat_totals()
+
+    # 固有元素熟知（admin 管理）: レベル・突破に依存しない基礎熟知として
+    # base_em に合算し、最終ステータス（total_em）へ反映する。
+    innate_em = get_innate_em(chardatas.get("id") if isinstance(chardatas, dict) else None)
+    if innate_em:
+        base_em = base_em + innate_em
 
     char_stats_mod = chardatas.get("stats_modifier", {}) or {} if isinstance(chardatas, dict) else {}
     extra_bonus = char_stats_mod.get("extra")

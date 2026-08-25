@@ -1,5 +1,6 @@
 {
   "name": "オデット",
+  "en_name": "Odette",
   "desc": "スネージナヤの有名なバレリーナ。雪の中で凛と咲き誇る花。",
   "weapon": "WEAPON_SWORD_ONE_HAND",
   "rarity": "QUALITY_ORANGE",

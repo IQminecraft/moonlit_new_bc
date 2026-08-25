@@ -1,5 +1,6 @@
 {
   "name": "スカーク",
+  "en_name": "Skirk",
   "desc": "かつて深淵の裂け目や原始胎海に足を踏み入れた来訪者であり、タルタリヤに武芸を仕込んだ師。孤独に戦う。",
   "weapon": "WEAPON_SWORD_ONE_HAND",
   "rarity": "QUALITY_ORANGE",

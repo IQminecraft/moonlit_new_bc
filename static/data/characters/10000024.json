@@ -1,5 +1,6 @@
 {
   "name": "北斗",
+  "en_name": "Beidou",
   "desc": "武装船隊「南十字」の頭領。豪快な姉貴。",
   "weapon": "WEAPON_CLAYMORE",
   "rarity": "QUALITY_PURPLE",

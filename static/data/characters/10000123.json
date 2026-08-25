@@ -1,5 +1,6 @@
 {
   "name": "ドゥリン",
+  "en_name": "Durin",
   "desc": "魔女Mの物語から生まれた龍は、ついに人の世界にたどり着いた。彼の「物語」は、これからも紡がれていく。",
   "weapon": "WEAPON_SWORD_ONE_HAND",
   "rarity": "QUALITY_ORANGE",

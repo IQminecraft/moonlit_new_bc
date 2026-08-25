@@ -1,5 +1,6 @@
 {
   "name": "早柚",
+  "en_name": "Sayu",
   "desc": "「終末番」に所属する忍。小柄で、いつも眠たそうにしている。",
   "weapon": "WEAPON_CLAYMORE",
   "rarity": "QUALITY_PURPLE",

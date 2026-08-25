@@ -232,6 +232,71 @@ def get_reliquary_affix_map():
     return _RELIQUARY_AFFIX_MAP
 
 
+_AFFIX_TIER_SCALE_CACHE = {}
+
+
+def _affix_tier_scale(affix_map, depot_id, prop_type):
+    """指定 Depot + PropType の伸び値タイア一覧（昇順）を返す（e.g. 5★HP: [209.13, 239, 268.88, 298.75]）。"""
+    key = (depot_id, prop_type)
+    if key not in _AFFIX_TIER_SCALE_CACHE:
+        vals = sorted({
+            round(float(e.get("PropValue", 0.0)), 5)
+            for e in affix_map.values()
+            if e.get("DepotId") == depot_id and e.get("PropType") == prop_type
+        })
+        _AFFIX_TIER_SCALE_CACHE[key] = vals
+    return _AFFIX_TIER_SCALE_CACHE[key]
+
+
+def artifact_substat_rolls(reliquary):
+    """appendPropIdList からサブステ毎のロール情報を返す。
+
+    appendPropIdList は「ロール1回 = affix 1件」を保持するため、同一 PropType の
+    出現回数がそのサブステのロール回数＝初期値 + 強化回数となる。
+    強化のみのタイア一覧（値が小さい順に 0=青 / 1=黄緑 / 2=黄 / 3=赤）を
+    {'rolls_all': [{tier, value}, ...], 'upgrades': [tier, ...]} の形で返す。
+
+    戻り値: {prop_type: {'rolls_all': [...], 'upgrades': [...]}}
+    """
+    app_ids = reliquary.get("appendPropIdList") or []
+    result = {}
+    if not app_ids:
+        return result
+    affix_map = get_reliquary_affix_map()
+    entries = []
+    for aid in app_ids:
+        e = affix_map.get(aid)
+        if e:
+            entries.append(e)
+    if not entries:
+        return result
+    depot_ids = {e.get("DepotId") for e in entries if e.get("DepotId")}
+    depot_id = next(iter(depot_ids)) if depot_ids else None
+
+    from collections import OrderedDict
+    per_prop = OrderedDict()
+    for e in entries:
+        pt = e.get("PropType")
+        if not pt:
+            continue
+        per_prop.setdefault(pt, []).append(round(float(e.get("PropValue", 0.0)), 5))
+
+    for pt, raw_values in per_prop.items():
+        scale = _affix_tier_scale(affix_map, depot_id, pt) if depot_id else []
+        rolls_all = []
+        for v in raw_values:
+            tier = 0
+            if scale:
+                tier = min(range(len(scale)), key=lambda i: abs(scale[i] - v))
+            rolls_all.append({"tier": tier, "value": v})
+        result[pt] = {
+            "rolls_all": rolls_all,
+            "tiers": [r["tier"] for r in rolls_all],  # 初期値+強化 全ロール
+            "upgrades": [r["tier"] for r in rolls_all[1:]],  # 先頭 = 初期値
+        }
+    return result
+
+
 def sum_affix_substat_values(app_id_list):
     """enka の reliquary.appendPropIdList の各 affix ID に対応する値を
     PropType ごとに合計し、表示単位の辞書を返す（％系は ×100）。

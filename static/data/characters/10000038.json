@@ -1,5 +1,6 @@
 {
   "name": "アルベド",
+  "en_name": "Albedo",
   "desc": "西風騎士団の首席錬金術師兼調査小隊隊長。「白亜の申し子」と呼ばれる天才。",
   "weapon": "WEAPON_SWORD_ONE_HAND",
   "rarity": "QUALITY_ORANGE",

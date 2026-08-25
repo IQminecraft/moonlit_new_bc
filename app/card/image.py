@@ -12,7 +12,7 @@ from app.card.stats import (
     text_map_data, get_stat_japanese, get_char_level,
     score_calc,
     sum_affix_substat_values, is_percent_prop, format_substat_value, format_base_value, format_var_base_add,
-    format_decimal_value,
+    format_decimal_value, artifact_substat_rolls,
 )
 from app.card.special import (
     SPECIAL_ELEMENT_CHARACTERS, build_special_energy_hint_map,
@@ -29,6 +29,7 @@ from app.card.draw import (
     draw_figma_box, paste_mask_image, draw_figma_text_with_shadow,
     draw_figma_circle, paste_figma_image, draw_figma_text, draw_figma_line,
     draw_figma_text_right, figma_draw_scale, _sx, _sy,
+    draw_figma_dot,
 )
 
 # 育成モードの右パネル寸法（キャンバスピクセル）: 全体を等方縮小して右に追加する
@@ -36,6 +37,9 @@ from app.card.draw import (
 _GROWTH_PANEL_W = 540
 _GROWTH_PANEL_GAP = 0
 _GROWTH_PANEL_MARGIN = 0
+
+# サブステ伸び値タイアの色（0=青 / 1=黄緑 / 2=黄 / 3=赤）
+ROLL_DOT_COLORS = [(34, 197, 94, 255), (59, 130, 246, 255), (168, 85, 247, 255), (249, 115, 22, 255)]
 
 
 def _wrap_jp(draw, text, font, max_w):
@@ -81,7 +85,7 @@ def _draw_panel_text_with_shadow(draw, xy, text, font, fill, shadow=(0, 0, 0, 20
     draw.text((x, y), text, font=font, fill=fill, anchor=anchor)
 
 
-def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb):
+def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, base_prec="0"):
     """カード右側に育成パネルを描画する。HTML 版 growth-panel と同レイアウト。
 
     - パネル幅 = 540（HTML の 270px を 2400px キャンバスに 2倍で再現）
@@ -195,10 +199,10 @@ def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb):
     for s in sub_list:
         label = short.get(s.get("key"), s.get("label") or "")
         if s.get("pct_avg") is not None:
-            paren = f" ({_r2(s['flat_equiv']):.2f})" if s.get("flat_equiv") is not None else ""
+            paren = f" ({format_decimal_value(s['flat_equiv'], base_prec)})" if s.get("flat_equiv") is not None else ""
             rows.append((f"{label}%", f"{_r2(s['pct_avg']):.2f}%{paren}"))
         if s.get("flat_avg") is not None:
-            rows.append((f"{label}実数", f"{_r2(s['flat_avg']):.2f}"))
+            rows.append((f"{label}実数", format_decimal_value(s['flat_avg'], base_prec)))
     if rows:
         _section_head("サブステ伸び平均")
         _draw_panel_text_with_shadow(draw, (inner_x, cur_y), "1回あたりの平均", subhead_font, subhead_c, offset=1)
@@ -209,7 +213,8 @@ def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb):
 
 def _attach_growth_panel(img, panel, bg_base_rgb, splash_path, element_type,
                          use_prebuilt, region, panel_w=_GROWTH_PANEL_W,
-                         gap=_GROWTH_PANEL_GAP, margin=_GROWTH_PANEL_MARGIN):
+                         gap=_GROWTH_PANEL_GAP, margin=_GROWTH_PANEL_MARGIN,
+                         base_prec="0"):
     """カード全体を等方縮小し、右側に育成パネルを追加する（幅は変えない）。
 
     元 img は CARD_W x CARD_H。縮小率 k = (CARD_W - panel_w - gap - margin) / CARD_W で
@@ -234,13 +239,13 @@ def _attach_growth_panel(img, panel, bg_base_rgb, splash_path, element_type,
 
     panel_x0 = content_w + gap
     panel_x1 = card_w - margin
-    _draw_growth_panel(bg_full, panel, panel_x0, panel_x1, content_h, bg_base_rgb)
+    _draw_growth_panel(bg_full, panel, panel_x0, panel_x1, content_h, bg_base_rgb, base_prec)
     # 縮小カード+パネルの下端（content_h）で切り抜き、下部の余白を除去する
     bg_full = bg_full.crop((0, 0, card_w, content_h))
     return bg_full
 
 
-def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0"):
+def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1"):
     _total_start = time.perf_counter()
 
     def _plog(msg: str) -> None:
@@ -254,6 +259,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     base_prec = str(base_prec or "0")
     if base_prec not in ("0", "2", "4"):
         base_prec = "0"
+    substat_dots = "1" if str(substat_dots or "") in ("1", "true") else "0"
     _plog(
         f"START uid={uid} avatar={avatar_id} method={calc_method} "
         f"format={img_format} beta={beta} fake_char={fake_char} bg_mode={bg_mode} bg_region={bg_region} growth={growth}"
@@ -592,7 +598,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         artifacts_mock.append({
             "set": "0", "name": "未装備", "upgrade": 0,
             "Main": ["-", "-"],
-            "stats": {i: ["static/assets/props/atk_per.png", "-", "-"] for i in range(4)},
+            "stats": {i: ["static/assets/props/atk_per.png", "-", "-", []] for i in range(4)},
             "score": 0.0, "tier": "-", "icon": ""
         })
 
@@ -635,6 +641,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         sub_stats_dict = {}
         sub_list = flat.get("reliquarySubstats", [])
         sub_sums = sum_affix_substat_values(reliquary.get("appendPropIdList"))
+        sub_rolls = artifact_substat_rolls(reliquary)
 
         for idx in range(4):
             if idx < len(sub_list):
@@ -664,9 +671,10 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
                     sub_value_str = f"{format_decimal_value(sub_val, base_prec)}%"
                 else:
                     sub_value_str = format_decimal_value(sub_val, base_prec)
-                sub_stats_dict[idx] = [sub_icon_path, sub_name, sub_value_str]
+                sub_roll_tiers = (sub_rolls.get(sub_prop_id) or {}).get("tiers", [])
+                sub_stats_dict[idx] = [sub_icon_path, sub_name, sub_value_str, list(sub_roll_tiers)]
             else:
-                sub_stats_dict[idx] = ["static/assets/props/atk_per.png", "-", "-"]
+                sub_stats_dict[idx] = ["static/assets/props/atk_per.png", "-", "-", []]
 
         art_score = round(score_calc(stat=target_stat_val, critrate=crit_rate, critdmg=crit_dmg, method=calc_method), 1)
 
@@ -836,17 +844,32 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     _od.rounded_rectangle([33 * SX - _ol_x1, 30 * SY - _ol_y1, 727 * SX - _ol_x1, 701 * SY - _ol_y1], radius=round(15 * SY), outline=(0, 0, 0, 220), width=max(1, round(1 * SY)))
     img.alpha_composite(_outline_layer, dest=(_ol_x1, _ol_y1))
 
-    draw_figma_text_with_shadow(draw, text=char_name, x=53, y=53, font=font_stats, font_size=50)
-    draw_figma_text_with_shadow(draw, text=f"Lv.{char_level}", x=53, y=117, font=font_stats, font_size=30)
+    if substat_dots == "1":
+        # 伸び値凡例: スプラッシュ枠（y=701）と聖遺物（y=738）の間の空間に4色の連結バーを並べる
+        legend_y = 719
+        legend_dot_size = 10
+        legend_seg_w = round(legend_dot_size * 2.2)
+        legend_total = len(ROLL_DOT_COLORS) * legend_seg_w
+        legend_x0 = 380 - legend_total / 2
+        draw_figma_text(draw, text="伸び値", x=legend_x0 - 70, y=legend_y - 4, font=font_stats, align="left", font_size=22, fill_color=(255, 255, 255, 220))
+        for li, color in enumerate(ROLL_DOT_COLORS):
+            corners = (True, False, False, True) if li == 0 else ((False, True, True, False) if li == len(ROLL_DOT_COLORS) - 1 else (False, False, False, False))
+            draw_figma_dot(img, x=legend_x0 + li * legend_seg_w, y=legend_y, size=legend_dot_size, fill_color=color, corners=corners)
+
+    draw_figma_text(draw, text=char_name, x=56, y=57, font=font_stats, font_size=50, fill_color=(0, 0, 0, 190))
+    draw_figma_text(draw, text=char_name, x=53, y=53, font=font_stats, font_size=50)
+    draw_figma_text(draw, text=f"Lv.{char_level}", x=56, y=121, font=font_stats, font_size=30, fill_color=(0, 0, 0, 190))
+    draw_figma_text(draw, text=f"Lv.{char_level}", x=53, y=117, font=font_stats, font_size=30)
     if friendship_lv is not None:
-        draw_figma_text_with_shadow(draw, text=f"♥ {friendship_lv}", x=53, y=162, font=font_stats, font_size=30)
+        draw_figma_text(draw, text=f"♥ {friendship_lv}", x=56, y=166, font=font_stats, font_size=30, fill_color=(0, 0, 0, 190))
+        draw_figma_text(draw, text=f"♥ {friendship_lv}", x=53, y=162, font=font_stats, font_size=30)
 
     y_skill_base = 389
     for i in range(3):
         draw_figma_circle(img, x=49, y=y_skill_base + 79 * i, size=68, fill_color=(0, 0, 0, 150), outline_color=base_color, outline_width=4)
         paste_figma_image(img, f"static/assets/skills/{skill_icon[i]}.webp", box_x=49 + 5, box_y=y_skill_base + 79 * i + 4, box_width=60, box_height=60, radius=15, beta=beta)
         lv_color = (125, 210, 255) if (i < len(skill_boosted) and skill_boosted[i]) else (255, 255, 255)
-        draw_figma_text_with_shadow(draw, text=f"Lv.{skill_level[i]}", x=48, y=y_skill_base + 79 * i + 45, font=font_stats, align="center", font_size=20, box_width=68, fill_color=lv_color)
+        draw_figma_text(draw, text=f"Lv.{skill_level[i]}", x=48, y=y_skill_base + 79 * i + 45, font=font_stats, align="center", font_size=20, box_width=68, fill_color=lv_color, stroke_width=2, stroke_fill=(0, 0, 0, 200))
 
     for i in range(6 if Constellation_icon else 0):
         circle_x = 637
@@ -963,6 +986,21 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             draw_figma_text(draw, text=artifact_data["stats"][j][1], x=box_x + 47, y=y_base + 50 * j, font=font_stats, font_size=25, align="left")
             draw_figma_text(draw, text=artifact_data["stats"][j][2], x=box_x + 218, y=y_base + 50 * j, font=font_stats, font_size=sub_val_font_size, align="left")
             paste_figma_image(img, artifact_data["stats"][j][0], box_x=box_x + 12, box_y=y_base + 50 * j, box_width=30, box_height=30, radius=5, beta=beta)
+            roll_tiers = artifact_data["stats"][j][3] if len(artifact_data["stats"][j]) > 3 else []
+            if substat_dots == "1":
+                _tiers = [dt for dt in roll_tiers if 0 <= dt < 4]
+                if _tiers:
+                    _seg_w = 24
+                    for dk, dt in enumerate(_tiers):
+                        if len(_tiers) == 1:
+                            corners = (True, True, True, True)
+                        elif dk == 0:
+                            corners = (True, False, False, True)
+                        elif dk == len(_tiers) - 1:
+                            corners = (False, True, True, False)
+                        else:
+                            corners = (False, False, False, False)
+                        draw_figma_dot(img, x=box_x + 47 + dk * _seg_w, y=y_base + 50 * j + 36, size=11, fill_color=ROLL_DOT_COLORS[dt], corners=corners)
 
         draw_figma_line(img, x1=box_x + 27, y1=1065, x2=box_x + 287, y2=1065, fill_color=(255, 255, 255, 50), width=1)
         _num_font_path = getattr(font_stats, "path", None)
@@ -1002,6 +1040,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             img, growth_panel, bg_base_rgb, splash, element_type,
             use_prebuilt=(bg_color is None and selected_region is None),
             region=selected_region,
+            base_prec=base_prec,
         )
         t_end = time.perf_counter()
         print(f"[Perf] 育成パネル追加: {(t_end - t_start)*1000:.1f}ms", flush=True)

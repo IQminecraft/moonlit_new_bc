@@ -1,5 +1,6 @@
 {
   "name": "フリーナ",
+  "en_name": "Furina",
   "desc": "審判の舞台で、誰よりもスポットライトを浴びる存在——拍手が鳴り響き、その幕が閉じられるまで。",
   "weapon": "WEAPON_SWORD_ONE_HAND",
   "rarity": "QUALITY_ORANGE",

@@ -1,5 +1,6 @@
 {
   "name": "セトス",
+  "en_name": "Sethos",
   "desc": "沈黙の殿の継承者。砂漠より訪れ、秘密を背負っている。",
   "weapon": "WEAPON_BOW",
   "rarity": "QUALITY_PURPLE",

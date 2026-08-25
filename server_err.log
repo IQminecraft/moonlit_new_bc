@@ -1,0 +1,13 @@
+D:\system\desktop2\py_dev\__moonlit__\moonlit_new_bc\server.py:26: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+INFO:     Will watch for changes in these directories: ['D:\\system\\desktop2\\py_dev\\__moonlit__\\moonlit_new_bc']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [11828] using StatReload
+INFO:     Started server process [17692]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

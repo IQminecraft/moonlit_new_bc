@@ -1,5 +1,6 @@
 {
   "name": "チャスカ",
+  "en_name": "Chasca",
   "desc": "トラロカンの「調停者」。幾千万の争いを終結させる者。",
   "weapon": "WEAPON_BOW",
   "rarity": "QUALITY_ORANGE",

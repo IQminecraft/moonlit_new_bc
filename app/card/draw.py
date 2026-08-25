@@ -218,6 +218,35 @@ def draw_figma_circle(img, x, y, size, fill_color=(60, 64, 72, 125), outline_col
     img.alpha_composite(overlay, dest=(layer_x1, layer_y1))
 
 
+def draw_figma_dot(img, x, y, size, ratio=2.2, fill_color=(60, 64, 72, 125), outline_color=None, outline_width=0, corners=None):
+    """横長の丸角ドット。size は高さ、ratio は幅の倍率（丸1.5個分=横長）。y は上端。
+    corners: (左上, 右上, 右下, 左下) の丸める有無。None なら全角丸。"""
+    x, y = x * _sx(), y * _sy()
+    size = size * _sy()
+    dot_w = max(1, round(size * ratio))
+    outline_width = max(1, round(outline_width * _sy())) if outline_width else 0
+    canvas_w, canvas_h = img.size
+    margin = max(1, outline_width) + 1
+    layer_x1 = int(max(0, x - margin))
+    layer_y1 = int(max(0, y - margin))
+    layer_x2 = int(min(canvas_w, x + dot_w + margin))
+    layer_y2 = int(min(canvas_h, y + size + margin))
+    if layer_x2 <= layer_x1 or layer_y2 <= layer_y1:
+        return
+    overlay = Image.new("RGBA", (layer_x2 - layer_x1, layer_y2 - layer_y1), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    _dot_radius = max(1, min(round(min(size, dot_w) / 2), max(1, round(size) // 2 - 1)))
+    draw.rounded_rectangle(
+        [x - layer_x1, y - layer_y1, x + dot_w - layer_x1, y + size - layer_y1],
+        radius=_dot_radius,
+        fill=fill_color,
+        outline=outline_color,
+        corners=corners,
+        width=outline_width,
+    )
+    img.alpha_composite(overlay, dest=(layer_x1, layer_y1))
+
+
 def paste_figma_image(base_img, img_path, box_x, box_y, box_width, box_height, radius=15, beta="false"):
     img_path = resolve_datas_path(img_path, beta)
     if not img_path or not os.path.exists(img_path):

@@ -1,5 +1,6 @@
 {
   "name": "ミカ",
+  "en_name": "Mika",
   "desc": "平凡な家庭に生まれた若い騎士。小隊では「前進測量士」を担当している。控えめで慎重な性格の持ち主。",
   "weapon": "WEAPON_POLE",
   "rarity": "QUALITY_PURPLE",

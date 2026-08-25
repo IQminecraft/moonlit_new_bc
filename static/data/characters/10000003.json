@@ -1,5 +1,6 @@
 {
   "name": "ジン",
+  "en_name": "Jean",
   "desc": "正直で真面目な蒲公英騎士。モンド西風騎士団の代理団長。",
   "weapon": "WEAPON_SWORD_ONE_HAND",
   "rarity": "QUALITY_ORANGE",

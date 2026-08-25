@@ -1,5 +1,6 @@
 {
   "name": "嘉明",
+  "en_name": "Gaming",
   "desc": "剣鞘鏢局の鏢師であり、威水獣舞隊の責任者。",
   "weapon": "WEAPON_CLAYMORE",
   "rarity": "QUALITY_PURPLE",

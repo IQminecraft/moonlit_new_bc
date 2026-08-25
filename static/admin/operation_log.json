@@ -799,5 +799,19 @@
         "artifacts.json"
       ]
     }
+  },
+  {
+    "at": "2026-08-25T01:47:53+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-25T21:02:06+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
   }
 ]

@@ -1,5 +1,6 @@
 {
   "name": "ネフェル",
+  "en_name": "Nefer",
   "desc": "博識で有能な「秘聞の館」のオーナー。",
   "weapon": "WEAPON_CATALYST",
   "rarity": "QUALITY_ORANGE",

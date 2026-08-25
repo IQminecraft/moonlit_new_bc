@@ -7,6 +7,7 @@ from app.card.stats import (
     text_map_data, get_stat_japanese, get_char_level,
     score_calc,
     sum_affix_substat_values, is_percent_prop, format_substat_value, format_base_value, format_decimal_value,
+    artifact_substat_rolls,
 )
 from app.card.special import (
     SPECIAL_ELEMENT_CHARACTERS, build_special_energy_hint_map,
@@ -17,6 +18,7 @@ from app.card.special import (
 from app.card.region import build_region_info, find_regions_for_character
 from app.card.set_buffs import set_buff_label
 from app.card.stat_calc import compute_manual_totals
+from app.card.scorecard_splash import get_scorecard_splash_offset
 from app.card.growth import build_growth_panel, build_growth_from_fake
 
 
@@ -339,6 +341,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         crit_rate, crit_dmg, target_stat_val = 0.0, 0.0, 0.0
         substats_out = []
         sub_sums = sum_affix_substat_values(reliquary.get("appendPropIdList"))
+        sub_rolls = artifact_substat_rolls(reliquary)
         for sub_data in flat.get("reliquarySubstats", []):
             sub_prop_id = sub_data.get("appendPropId", "")
             sub_name = get_stat_japanese(sub_prop_id)
@@ -367,7 +370,8 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
 
             substats_out.append({
                 "name": sub_name, "value": sub_value_str,
-                "icon": resolve_datas_path(f"static/assets/props/{icon_file}", beta)
+                "icon": resolve_datas_path(f"static/assets/props/{icon_file}", beta),
+                "rolls": (sub_rolls.get(sub_prop_id) or {}).get("tiers", [])
             })
 
         art_score = round(score_calc(stat=target_stat_val, critrate=crit_rate, critdmg=crit_dmg, method=calc_method), 1)
@@ -543,6 +547,29 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
     }
     display_score_way = display_map.get(calc_method, calc_method)
 
+    # HTML カードテーマ（cinema / scorecard 提案デザイン）用の追加フィールド
+    rarity_val = 5 if str(chardatas.get("rarity", "")) == "QUALITY_ORANGE" else 4
+    weapon_type_ja_map = {
+        "WEAPON_SWORD_ONE_HAND": "片手剣",
+        "WEAPON_CLAYMORE": "両手剣",
+        "WEAPON_POLE": "長柄武器",
+        "WEAPON_CATALYST": "法器",
+        "WEAPON_BOW": "弓",
+    }
+    weapon_type_ja = weapon_type_ja_map.get(str(chardatas.get("weapon", "")), "")
+    char_icon_path = ""
+    try:
+        _costume_icon = resolve_costume_icon(chardatas, target_avatar_info)
+        _face_icon_name = _costume_icon or str(chardatas.get("icon", ""))
+        if _face_icon_name:
+            char_icon_path = resolve_datas_path(f"static/assets/characters/{_face_icon_name}.webp", beta)
+    except Exception:
+        char_icon_path = ""
+    try:
+        crit_value = round(totals["crit_rate"]["val"] * 100 + totals["crit_dmg"]["val"] * 100, 1)
+    except Exception:
+        crit_value = None
+
     return {
         "displayName": (chardatas.get("name", avatar_id) + "(swap)") if fake_char else chardatas.get("name", avatar_id),
         "element": element_type,
@@ -569,6 +596,12 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         "tierSum": tier_sum_score,
         "calcMethod": calc_method,
         "calcMethodLabel": display_score_way,
+        "rarity": rarity_val,
+        "weaponType": weapon_type_ja,
+        "charIcon": char_icon_path,
+        "critValue": crit_value,
         "growth": growth_panel,
         "regions": build_region_info(find_regions_for_character(_special_raw_id(fake_char or avatar_id), element_type)),
+        # SCORECARD テーマ用スプラッシュオフセット（admin 管理・未設定は null）
+        "splashOffset": get_scorecard_splash_offset(chardatas.get("id") if isinstance(chardatas, dict) else None),
     }

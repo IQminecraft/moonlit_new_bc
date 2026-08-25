@@ -1,5 +1,6 @@
 {
   "name": "リオセスリ",
+  "en_name": "Wriothesley",
   "desc": "メロピデ要塞の公爵。漆黒の海底に潜む領主。",
   "weapon": "WEAPON_CATALYST",
   "rarity": "QUALITY_ORANGE",

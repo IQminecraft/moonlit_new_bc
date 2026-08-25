@@ -1,5 +1,6 @@
 {
   "name": "ガイア",
+  "en_name": "Kaeya",
   "desc": "異国の顔を持つ剣士。西風騎士団の頭脳派である。",
   "weapon": "WEAPON_SWORD_ONE_HAND",
   "rarity": "QUALITY_PURPLE",

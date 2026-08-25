@@ -1,5 +1,6 @@
 {
   "name": "ローエン",
+  "en_name": "Lohen",
   "desc": "西風騎士団遠距離小隊副隊長。型破りな行動を取り、常軌を逸した戦術を好む騎士。",
   "weapon": "WEAPON_POLE",
   "rarity": "QUALITY_ORANGE",

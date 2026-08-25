@@ -1,5 +1,6 @@
 {
   "name": "ラウマ",
+  "en_name": "Lauma",
   "desc": "月光と森の祝福を受けて、「霜月の子」に生まれた聖女。民にとっての希望である。",
   "weapon": "WEAPON_CATALYST",
   "rarity": "QUALITY_ORANGE",

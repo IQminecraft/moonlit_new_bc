@@ -1,5 +1,6 @@
 {
   "name": "放浪者",
+  "en_name": "Wanderer",
   "desc": "正体が謎に包まれた放浪者。修験者のような身なりをしているが、それらしき言動は見られない。",
   "weapon": "WEAPON_CATALYST",
   "rarity": "QUALITY_ORANGE",

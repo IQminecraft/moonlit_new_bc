@@ -1,5 +1,6 @@
 {
   "name": "エスコフィエ",
+  "en_name": "Escoffier",
   "desc": "フォンテーヌに名を馳せる「元ホテル・ドゥボールのシェフ」。「カーネル・デセール」の肩書きを持つ「科学料理」の先駆者でもある。料理に関する要求が非常に高い。",
   "weapon": "WEAPON_POLE",
   "rarity": "QUALITY_ORANGE",

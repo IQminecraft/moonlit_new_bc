@@ -3,7 +3,7 @@ import sys
 
 def transform_character(data: dict) -> dict:
     top_keys = [
-        "name", "desc", "weapon", "rarity", "element", "icon",
+        "name", "en_name", "desc", "weapon", "rarity", "element", "icon",
         "crit_rate", "crit_dmg", "elemental_mastery"
     ]
     new_data = {k: data.get(k) for k in top_keys if k in data}

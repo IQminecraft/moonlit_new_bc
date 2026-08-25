@@ -1,5 +1,6 @@
 {
   "name": "フリンズ",
+  "en_name": "Flins",
   "desc": "ナド・クライの「ライトキーパー」として、北の島で灯台と墓地を守り続ける謎の紳士。言葉や仕草の端々に教養が垣間見える。",
   "weapon": "WEAPON_POLE",
   "rarity": "QUALITY_ORANGE",

@@ -1,5 +1,6 @@
 {
   "name": "コレイ",
+  "en_name": "Collei",
   "desc": "アビディアの森で活躍する見習いレンジャー。親切な言動の裏には、少し内向的な性格が隠されている。",
   "weapon": "WEAPON_BOW",
   "rarity": "QUALITY_PURPLE",

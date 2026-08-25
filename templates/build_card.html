@@ -17,6 +17,9 @@
         })();
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
     <script>
         const ver = "{{ ver }}";
         console.log("現在のデータ:", ver);
@@ -360,6 +363,10 @@
             box-shadow: 0 50px 100px rgba(0, 0, 0, 0.9);
             padding: 20px;
             gap: 25px;
+        }
+        .glass-card-root .build-card.has-legend {
+            height: 880px;
+            grid-template-rows: 460px 30px 215px;
         }
         /* 下層：選択された背景（元素グラデーション / 地域画像 / カスタム色） */
         .glass-card-root .glass-card-base-bg {
@@ -739,6 +746,351 @@
             height: 100%;
             min-height: 0;
         }
+        /* ========== カードテーマ: CINEMA（static/proposals/ui1_cinema.html 移植） ========== */
+        .theme-cinema .cine-card {
+            --elem: var(--element-color, #4aa4ff);
+            --elem-dim: var(--element-color-dim, rgba(74, 164, 255, 0.35));
+            --gold: #ffd27d;
+            --glass: rgba(8, 12, 22, 0.55);
+            --glass-brd: rgba(255, 255, 255, 0.16);
+            --txt: #f4f7fc;
+            --txt-dim: rgba(244, 247, 252, 0.66);
+            --txt-faint: rgba(244, 247, 252, 0.42);
+            position: relative; width: 1200px; height: 780px; border-radius: 28px;
+            overflow: hidden; isolation: isolate;
+            box-shadow: 0 60px 120px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08);
+            background: #05070d; color: var(--txt);
+            font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+        }
+        .theme-cinema .num { font-family: "Sora", "Noto Sans JP", sans-serif; }
+        .theme-cinema .cine-bg {
+            position: absolute; inset: 0; z-index: 0;
+            background-position: center 22%; background-size: cover; background-repeat: no-repeat;
+            transform: scale(1.04);
+        }
+        /* 可読性スクリーン：左・下・右を暗く落とす */
+        .theme-cinema .cine-scrim {
+            position: absolute; inset: 0; z-index: 1; pointer-events: none;
+            background:
+                radial-gradient(120% 90% at 78% 18%, transparent 30%, rgba(3, 5, 10, 0.42) 78%),
+                linear-gradient(90deg, rgba(3, 5, 10, 0.88) 0%, rgba(3, 5, 10, 0.55) 30%, rgba(3, 5, 10, 0.12) 55%, rgba(3, 5, 10, 0.30) 100%),
+                linear-gradient(0deg, rgba(3, 5, 10, 0.94) 0%, rgba(3, 5, 10, 0.55) 26%, rgba(3, 5, 10, 0) 52%);
+        }
+        .theme-cinema .cine-tint {
+            position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: soft-light;
+            background: radial-gradient(90% 70% at 20% 100%, var(--elem-dim), transparent 60%);
+        }
+        /* 左上：キャラ名 */
+        .theme-cinema .cine-head { position: absolute; top: 40px; left: 44px; z-index: 5; max-width: 560px; }
+        .theme-cinema .cine-elem-line { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .theme-cinema .cine-elem-chip {
+            display: flex; align-items: center; gap: 7px; padding: 5px 13px; border-radius: 999px;
+            background: rgba(8, 14, 26, 0.55); border: 1px solid var(--glass-brd); backdrop-filter: blur(8px);
+            font-size: 13px; font-weight: 700; letter-spacing: 0.06em;
+        }
+        .theme-cinema .cine-elem-chip img { width: 18px; height: 18px; }
+        .theme-cinema .cine-stars { display: flex; gap: 2px; }
+        .theme-cinema .cine-stars svg { width: 15px; height: 15px; fill: var(--gold); }
+        .theme-cinema .cine-name {
+            font-size: 64px; font-weight: 900; line-height: 1.02; letter-spacing: 0.01em; margin: 0;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.75);
+        }
+        .theme-cinema .cine-name .cine-latin {
+            display: block; font-family: "Sora", sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.42em;
+            color: var(--elem); text-transform: uppercase; margin-bottom: 10px;
+        }
+        /* (swap) 表示: 総合スコア数値（.cine-sv）と同じサイズ感 */
+        .theme-cinema .cine-swap {
+            font-size: 42px; font-weight: 800; letter-spacing: -0.01em; color: var(--txt-dim);
+            margin-left: 10px; vertical-align: baseline;
+        }
+        .theme-cinema .cine-meta { display: flex; align-items: center; gap: 10px; margin-top: 16px; font-size: 15px; font-weight: 600; color: var(--txt-dim); }
+        .theme-cinema .cine-meta .cine-lv { font-size: 22px; font-weight: 800; color: var(--txt); }
+        .theme-cinema .cine-meta .cine-sep { width: 1px; height: 16px; background: rgba(255, 255, 255, 0.28); }
+        .theme-cinema .cine-friend { display: flex; align-items: center; gap: 5px; }
+        .theme-cinema .cine-friend svg { width: 14px; height: 14px; fill: #ff7dab; }
+        /* 左レール：天賦/命ノ星座 */
+        .theme-cinema .cine-rail { position: absolute; left: 44px; top: 282px; z-index: 5; display: flex; flex-direction: column; gap: 22px; }
+        .theme-cinema .cine-rail-group { display: flex; flex-direction: column; gap: 9px; }
+        .theme-cinema .cine-rail-label { font-size: 11px; font-weight: 700; letter-spacing: 0.28em; color: var(--txt-faint); text-transform: uppercase; margin-bottom: 2px; }
+        .theme-cinema .cine-bubbles { display: flex; gap: 9px; }
+        .theme-cinema .cine-bubble {
+            position: relative; width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+            background: rgba(8, 12, 22, 0.62); border: 1px solid var(--glass-brd); backdrop-filter: blur(10px);
+        }
+        .theme-cinema .cine-bubble img { width: 30px; height: 30px; object-fit: contain; }
+        .theme-cinema .cine-lvb {
+            position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%);
+            font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 7px; background: #0a0f1c; border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .theme-cinema .cine-lvb.boosted { color: #7ee0a3; border-color: rgba(126, 224, 163, 0.65); }
+        .theme-cinema .cine-const-row { display: flex; gap: 8px; }
+        .theme-cinema .cine-const {
+            width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle at 30% 25%, var(--elem-dim), rgba(5, 8, 16, 0.85) 70%);
+            border: 1.5px solid var(--elem); box-shadow: 0 0 12px var(--elem-dim);
+        }
+        .theme-cinema .cine-const img { width: 21px; height: 21px; object-fit: contain; }
+        .theme-cinema .cine-const.off { opacity: 0.38; filter: grayscale(0.7); box-shadow: none; border-color: rgba(255, 255, 255, 0.25); }
+        /* 右カラム：武器＋スコア＋セット */
+        .theme-cinema .cine-right { position: absolute; top: 40px; right: 40px; z-index: 5; width: 300px; display: flex; flex-direction: column; gap: 14px; }
+        .theme-cinema .cine-panel {
+            background: var(--glass); border: 1px solid var(--glass-brd); border-radius: 20px; backdrop-filter: blur(18px);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+        }
+        .theme-cinema .cine-weapon { display: flex; gap: 14px; padding: 16px; align-items: center; }
+        .theme-cinema .cine-wimg {
+            width: 64px; height: 64px; border-radius: 14px; overflow: hidden; flex-shrink: 0;
+            background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.14), transparent 65%), #0a0f1c;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .theme-cinema .cine-wimg img { width: 100%; height: 100%; object-fit: cover; }
+        .theme-cinema .cine-wbody { min-width: 0; }
+        .theme-cinema .cine-wname { font-size: 17px; font-weight: 800; line-height: 1.2; }
+        .theme-cinema .cine-wsub { font-size: 12px; color: var(--txt-dim); margin-top: 3px; font-weight: 600; }
+        .theme-cinema .cine-wr { margin-left: auto; text-align: right; font-size: 12px; color: var(--txt-faint); font-weight: 700; }
+        .theme-cinema .cine-wr b { display: block; font-size: 15px; color: var(--gold); }
+        .theme-cinema .cine-score { padding: 18px 20px; display: flex; align-items: center; gap: 16px; }
+        .theme-cinema .cine-score .cine-tier { width: 64px; height: 64px; flex-shrink: 0; }
+        .theme-cinema .cine-score .cine-tier img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 14px rgba(255, 210, 125, 0.4)); }
+        .theme-cinema .cine-sv { font-size: 42px; font-weight: 800; line-height: 1; letter-spacing: -0.01em; }
+        .theme-cinema .cine-sl { font-size: 11px; letter-spacing: 0.2em; color: var(--txt-faint); font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }
+        .theme-cinema .cine-sm { font-size: 11px; color: var(--txt-dim); margin-top: 6px; font-weight: 600; }
+        /* セット効果チップ（右カラム下部） */
+        .theme-cinema .cine-setchip { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+        .theme-cinema .cine-set {
+            display: flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px;
+            background: rgba(8, 12, 22, 0.55); border: 1px solid var(--glass-brd); backdrop-filter: blur(10px);
+            font-size: 12px; font-weight: 700;
+        }
+        .theme-cinema .cine-set-cnt { color: var(--elem); font-weight: 800; }
+        /* ステータス：横並びバー */
+        .theme-cinema .cine-stats {
+            position: absolute; left: 44px; right: 40px; bottom: 246px; z-index: 5;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+        }
+        .theme-cinema .cine-stat {
+            background: rgba(8, 12, 22, 0.5); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px;
+            padding: 11px 13px; backdrop-filter: blur(12px); display: flex; flex-direction: column; gap: 5px;
+        }
+        .theme-cinema .cine-k { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--txt-dim); font-weight: 600; }
+        .theme-cinema .cine-k img { width: 15px; height: 15px; object-fit: contain; }
+        .theme-cinema .cine-v { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
+        .theme-cinema .cine-stat.hl .cine-v { color: var(--elem); }
+        /* 聖遺物フィルムストリップ */
+        .theme-cinema .cine-arts {
+            position: absolute; left: 40px; right: 40px; bottom: 34px; z-index: 5;
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+        }
+        .theme-cinema .cine-art {
+            position: relative; background: rgba(8, 12, 22, 0.62); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 18px;
+            padding: 13px 14px 12px; backdrop-filter: blur(16px); overflow: hidden; transition: transform 0.25s, border-color 0.25s;
+        }
+        .theme-cinema .cine-art:hover { transform: translateY(-5px); border-color: var(--elem); }
+        .theme-cinema .cine-art-empty { opacity: 0.3; text-align: center; padding: 40px 0; font-size: 12px; }
+        .theme-cinema .cine-art-top { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+        .theme-cinema .cine-aicon { width: 42px; height: 42px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, 0.2); }
+        .theme-cinema .cine-aicon img { width: 100%; height: 100%; object-fit: cover; }
+        .theme-cinema .cine-amain { min-width: 0; }
+        .theme-cinema .cine-aslot { font-size: 11px; color: var(--txt-faint); font-weight: 700; letter-spacing: 0.05em; }
+        .theme-cinema .cine-amname { font-size: 13px; font-weight: 800; line-height: 1.25; }
+        .theme-cinema .cine-atier { margin-left: auto; text-align: center; flex-shrink: 0; }
+        .theme-cinema .cine-atier img { width: 26px; height: 26px; object-fit: contain; }
+        .theme-cinema .cine-subs { display: flex; flex-direction: column; gap: 5px; }
+        .theme-cinema .cine-sub { display: flex; align-items: center; gap: 6px; font-size: 11.5px; }
+        .theme-cinema .cine-nm { color: var(--txt-dim); font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .theme-cinema .cine-vl { font-weight: 700; color: var(--txt); }
+        .theme-cinema .cine-dots { display: inline-flex; gap: 2px; margin-top: 1px; }
+        .theme-cinema .cine-dot { width: 11px; height: 3.5px; border-radius: 2px; }
+        .theme-cinema .cine-dot-1 { background: #22c55e; }
+        .theme-cinema .cine-dot-2 { background: #3b82f6; }
+        .theme-cinema .cine-dot-3 { background: #a855f7; }
+        .theme-cinema .cine-dot-4 { background: #f97316; }
+        .theme-cinema .cine-afoot {
+            display: flex; align-items: center; justify-content: space-between; margin-top: 9px; padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .theme-cinema .cine-fs { font-size: 10px; color: var(--txt-faint); font-weight: 700; letter-spacing: 0.08em; }
+        .theme-cinema .cine-fv { font-size: 16px; font-weight: 800; color: var(--gold); }
+        /* ========== カードテーマ: SCORECARD（static/proposals/ui2v2_scorecard.html 移植） ========== */
+        .theme-scorecard .scc-card {
+            --elem: var(--element-color, #4aa4ff);
+            --elem-dim: var(--element-color-dim, rgba(74, 164, 255, 0.35));
+            --gold: #ffcd78;
+            --txt: #edf1f9;
+            --txt-dim: #8a93ad;
+            --txt-faint: rgba(237, 241, 249, 0.35);
+            position: relative; width: 1200px; border-radius: 28px; overflow: hidden;
+            background: linear-gradient(160deg, #0e1424 0%, #090d18 60%, #0c1120 100%);
+            box-shadow: 0 60px 120px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.06);
+            color: var(--txt);
+            font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+        }
+        .theme-scorecard .num { font-family: "Sora", "Noto Sans JP", sans-serif; }
+        /* 上部バナー（キャラ名＋チップ＋ゲージ） */
+        .theme-scorecard .scc-banner { position: relative; height: 216px; overflow: hidden; }
+        .theme-scorecard .scc-bbg {
+            position: absolute; inset: 0;
+            background-position: center 18%; background-size: cover; background-repeat: no-repeat;
+            transform: scale(1.03); filter: brightness(0.9) saturate(1.1);
+        }
+        .theme-scorecard .scc-grid-lines {
+            position: absolute; inset: 0; z-index: 1; opacity: 0.15;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+            background-size: 40px 40px;
+            -webkit-mask-image: linear-gradient(180deg, black 0%, transparent 90%);
+            mask-image: linear-gradient(180deg, black 0%, transparent 90%);
+        }
+        .theme-scorecard .scc-scrim {
+            position: absolute; inset: 0; z-index: 1;
+            background: linear-gradient(90deg, rgba(9, 13, 24, 0.96) 0%, rgba(9, 13, 24, 0.55) 45%, rgba(9, 13, 24, 0.10) 75%, rgba(9, 13, 24, 0.45) 100%),
+                linear-gradient(0deg, #090d18 0%, rgba(9, 13, 24, 0) 30%);
+        }
+        .theme-scorecard .scc-bwrap {
+            position: absolute; inset: 0; z-index: 2;
+            display: flex; align-items: center; padding: 24px 44px 20px 44px; gap: 18px;
+        }
+        .theme-scorecard .scc-cicon {
+            width: 118px; height: 118px; border-radius: 24px; overflow: hidden; flex-shrink: 0;
+            border: 2px solid rgba(255, 255, 255, 0.2); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.12), transparent 70%), #10162a;
+        }
+        .theme-scorecard .scc-cicon img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+        .theme-scorecard .scc-bid { min-width: 0; }
+        .theme-scorecard .scc-bname {
+            font-size: 44px; font-weight: 900; letter-spacing: 0.01em; line-height: 1.05;
+            text-shadow: 0 3px 20px rgba(0, 0, 0, 0.8);
+        }
+        .theme-scorecard .scc-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .theme-scorecard .scc-chip {
+            display: flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 9px;
+            background: rgba(10, 16, 30, 0.7); border: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 12px; font-weight: 600; color: rgba(237, 241, 249, 0.85);
+        }
+        .theme-scorecard .scc-chip img { width: 14px; height: 14px; }
+        .theme-scorecard .scc-chip b { color: #fff; font-weight: 700; }
+        /* 円形スコアゲージ */
+        .theme-scorecard .scc-gauge { position: relative; width: 150px; height: 150px; margin-left: auto; flex-shrink: 0; }
+        .theme-scorecard .scc-gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .theme-scorecard .scc-gauge circle { fill: none; stroke-width: 10; stroke-linecap: round; }
+        .theme-scorecard .scc-track { stroke: rgba(255, 255, 255, 0.08); }
+        .theme-scorecard .scc-arc { stroke: url(#sccGaugeGrad); stroke-dasharray: 408; filter: drop-shadow(0 0 8px rgba(255, 205, 120, 0.35)); }
+        .theme-scorecard .scc-core {
+            position: absolute; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 2px;
+        }
+        .theme-scorecard .scc-core .scc-tier { width: 30px; height: 30px; }
+        .theme-scorecard .scc-core .scc-tier img { width: 100%; height: 100%; object-fit: contain; }
+        .theme-scorecard .scc-sv { font-size: 30px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.1; }
+        .theme-scorecard .scc-sl { font-size: 10px; letter-spacing: 0.18em; color: var(--txt-dim); font-weight: 700; text-transform: uppercase; }
+        /* Crit Value 帯 */
+        .theme-scorecard .scc-cvbar {
+            display: flex; align-items: center; gap: 12px; padding: 12px 44px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05); border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .theme-scorecard .scc-cvlbl { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: var(--txt-dim); text-transform: uppercase; flex-shrink: 0; }
+        .theme-scorecard .scc-cvval { font-size: 20px; font-weight: 800; color: var(--gold); min-width: 64px; }
+        .theme-scorecard .scc-cvtrack { flex: 1; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.07); overflow: hidden; }
+        .theme-scorecard .scc-cvtrack i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--elem), var(--gold)); }
+        .theme-scorecard .scc-cvnote { font-size: 11px; color: var(--txt-dim); flex-shrink: 0; }
+        /* 中段グリッド: ステータス(2列) + 武器 + 天賦/星座 = 4カラム */
+        .theme-scorecard .scc-mid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 18px 44px 0; }
+        .theme-scorecard .scc-tile-status { grid-column: span 2; }
+        .theme-scorecard .scc-tile {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 20px; padding: 16px;
+        }
+        .theme-scorecard .scc-tlabel { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; color: var(--txt-dim); text-transform: uppercase; margin-bottom: 12px; }
+        .theme-scorecard .scc-srow {
+            display: flex; align-items: center; justify-content: space-between; padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .theme-scorecard .scc-srow:last-child { border-bottom: none; }
+        .theme-scorecard .scc-k { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--txt-dim); font-weight: 600; }
+        .theme-scorecard .scc-k img { width: 15px; height: 15px; object-fit: contain; }
+        .theme-scorecard .scc-v { font-size: 14px; font-weight: 700; }
+        .theme-scorecard .scc-hl .scc-v { color: var(--gold); }
+        /* ステータス2列表示 */
+        .theme-scorecard .scc-sgrid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 26px; }
+        .theme-scorecard .scc-sgrid .scc-srow { border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+        /* 武器・セット・天賦・命ノ星座（中段タイル内） */
+        .theme-scorecard .scc-wrow { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .theme-scorecard .scc-wimg {
+            width: 56px; height: 56px; border-radius: 13px; overflow: hidden; flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.15); background: #10162a;
+        }
+        .theme-scorecard .scc-wimg img { width: 100%; height: 100%; object-fit: cover; }
+        .theme-scorecard .scc-wname { font-size: 15px; font-weight: 800; line-height: 1.2; }
+        .theme-scorecard .scc-wsub { font-size: 11px; color: var(--txt-dim); margin-top: 3px; font-weight: 600; }
+        .theme-scorecard .scc-wr { margin-left: auto; text-align: right; flex-shrink: 0; }
+        .theme-scorecard .scc-wlv { font-size: 14px; font-weight: 800; }
+        .theme-scorecard .scc-wrf { font-size: 12px; font-weight: 800; color: var(--gold); margin-top: 2px; }
+        .theme-scorecard .scc-setrow {
+            display: flex; align-items: center; gap: 7px; padding: 5px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .theme-scorecard .scc-setcnt { font-size: 12px; font-weight: 800; color: var(--elem); }
+        .theme-scorecard .scc-setname { font-size: 12px; font-weight: 700; }
+        .theme-scorecard .scc-setbuff { font-size: 10.5px; color: var(--txt-dim); margin-left: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+        .theme-scorecard .scc-setrow.scc-off { opacity: 0.35; }
+        .theme-scorecard .scc-bubbles { display: flex; gap: 8px; margin-bottom: 14px; }
+        .theme-scorecard .scc-bubble {
+            position: relative; width: 44px; height: 44px; border-radius: 13px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .theme-scorecard .scc-bubble img { width: 28px; height: 28px; object-fit: contain; }
+        .theme-scorecard .scc-lvb {
+            position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+            font-size: 10px; font-weight: 800; padding: 1px 5px; border-radius: 6px;
+            background: #0d1222; border: 1px solid rgba(255, 255, 255, 0.45);
+        }
+        .theme-scorecard .scc-lvb.boosted { color: #7ee0a3; border-color: rgba(126, 224, 163, 0.6); }
+        .theme-scorecard .scc-consts { display: flex; gap: 7px; justify-content: center; }
+        .theme-scorecard .scc-const {
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle at 30% 25%, var(--elem-dim), rgba(9, 13, 24, 0.9) 70%);
+            border: 1.5px solid var(--elem); box-shadow: 0 0 10px var(--elem-dim);
+        }
+        .theme-scorecard .scc-const img { width: 20px; height: 20px; object-fit: contain; }
+        .theme-scorecard .scc-const.off { opacity: 0.35; filter: grayscale(0.7); box-shadow: none; border-color: rgba(255, 255, 255, 0.2); }
+        .theme-scorecard .scc-tile-tc { display: flex; flex-direction: column; }
+        .theme-scorecard .scc-clabel { display: flex; align-items: center; margin-top: auto; margin-bottom: 10px; }
+        .theme-scorecard .scc-clabel .scc-cnum { margin-left: auto; font-size: 11px; font-weight: 800; letter-spacing: 0.06em; color: var(--gold); }
+        /* 聖遺物グリッド */
+        .theme-scorecard .scc-arts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; padding: 14px 44px 26px; }
+        .theme-scorecard .scc-art {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 18px;
+            padding: 12px 13px 11px; position: relative; overflow: hidden; transition: transform 0.25s, border-color 0.25s;
+        }
+        .theme-scorecard .scc-art:hover { transform: translateY(-4px); border-color: rgba(255, 255, 255, 0.18); }
+        .theme-scorecard .scc-art.best { border-color: rgba(255, 205, 120, 0.55); box-shadow: 0 0 0 1px rgba(255, 205, 120, 0.25), 0 14px 34px rgba(0, 0, 0, 0.35); }
+        .theme-scorecard .scc-art-empty { opacity: 0.3; text-align: center; padding: 46px 0; font-size: 12px; }
+        .theme-scorecard .scc-atop { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+        .theme-scorecard .scc-aicon { width: 40px; height: 40px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, 0.15); }
+        .theme-scorecard .scc-aicon img { width: 100%; height: 100%; object-fit: cover; }
+        .theme-scorecard .scc-aslot { font-size: 10.5px; color: var(--txt-dim); font-weight: 700; letter-spacing: 0.04em; }
+        .theme-scorecard .scc-amain { font-size: 12.5px; font-weight: 800; line-height: 1.25; }
+        .theme-scorecard .scc-atier { margin-left: auto; flex-shrink: 0; }
+        .theme-scorecard .scc-atier img { width: 24px; height: 24px; object-fit: contain; }
+        .theme-scorecard .scc-asubs { display: flex; flex-direction: column; gap: 4px; min-height: 78px; }
+        .theme-scorecard .scc-sub { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+        .theme-scorecard .scc-nm { color: var(--txt-dim); font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .theme-scorecard .scc-vl { font-weight: 700; }
+        .theme-scorecard .scc-dots { display: inline-flex; gap: 2px; margin-top: 1px; }
+        .theme-scorecard .scc-dot { width: 10px; height: 3px; border-radius: 2px; }
+        .theme-scorecard .scc-dot-1 { background: #22c55e; }
+        .theme-scorecard .scc-dot-2 { background: #3b82f6; }
+        .theme-scorecard .scc-dot-3 { background: #a855f7; }
+        .theme-scorecard .scc-dot-4 { background: #f97316; }
+        .theme-scorecard .scc-afoot {
+            display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 7px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .theme-scorecard .scc-l { font-size: 9.5px; color: var(--txt-dim); font-weight: 700; letter-spacing: 0.08em; }
+        .theme-scorecard .scc-s { font-size: 15px; font-weight: 800; color: var(--gold); }
         /* 育成モード: カード全体を等方縮小し右側にパネルを追加（横幅は変えない） */
         .glass-card-root .glass-growth-layout {
             display: flex;
@@ -1038,13 +1390,69 @@
             gap: 4px;
             flex: 0 0 auto;
         }
+.substat-dots {
+            display: inline-flex;
+            gap: 0;
+        }
+        .substat-dot {
+            width: 26px;
+            height: 8px;
+            border-radius: 0;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .substat-dot:not(:last-child) { border-radius: 0; }
+        .substat-dot:first-child {
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+        .substat-dot:last-child {
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+.substat-dot:only-child {
+            border-radius: 4px;
+        }
+        .substat-dot-1 { background: #22c55e; }
+        .substat-dot-2 { background: #3b82f6; }
+        .substat-dot-3 { background: #a855f7; }
+        .substat-dot-4 { background: #f97316; }
+        .glass-card-root .substat-dot-legend {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 8px 0 4px;
+        }
+        .glass-card-root .substat-dot-legend-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.85);
+            margin-right: 4px;
+        }
+        .glass-card-root .substat-dot-legend-bars {
+            display: inline-flex;
+            gap: 0;
+        }
+        .glass-card-root .substat-dot-legend .substat-dot {
+            width: 20px;
+            height: 10px;
+        }
         .glass-card-root .substat-item {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             font-size: 1.1rem;
             font-weight: 600;
             color: #fff;
             padding-bottom: 2%;
+        }
+        .glass-card-root .substat-name-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+            min-width: 0;
         }
         .glass-card-root.glass-prec-detail .substat-val {
             font-size: 1.05rem;
@@ -1181,6 +1589,39 @@
             /* アクションバー表示時はページ下部に余白を空ける */
             body.mobile-action-bar-visible { padding-bottom: 84px; }
         }
+
+        /* ========== ページテーマ: メイン表示ボックスの雰囲気をカードテーマに合わせる ========== */
+        #mainDisplayBox { transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease; }
+
+        /* シネマ: 漆黒の映写室＋ゴールドのほのかな灯り */
+        #mainDisplayBox.page-theme-cinema {
+            background:
+                radial-gradient(120% 85% at 50% 8%, rgba(255, 210, 125, 0.10) 0%, rgba(255, 210, 125, 0.02) 42%, transparent 68%),
+                radial-gradient(150% 120% at 50% 115%, rgba(90, 60, 20, 0.16) 0%, transparent 55%),
+                #050505;
+            border-color: rgba(212, 175, 55, 0.38);
+            box-shadow:
+                0 0 0 1px rgba(0, 0, 0, 0.6),
+                inset 0 0 90px rgba(0, 0, 0, 0.55),
+                0 18px 50px rgba(0, 0, 0, 0.5);
+        }
+        #mainDisplayBox.page-theme-cinema #placeholderText,
+        #mainDisplayBox.page-theme-cinema #imageAwaitText { color: rgba(244, 247, 252, 0.45); }
+
+        /* スコアカード: ディープネイビー＋クールな青の光 */
+        #mainDisplayBox.page-theme-scorecard {
+            background:
+                radial-gradient(130% 90% at 12% 0%, rgba(96, 165, 250, 0.12) 0%, transparent 55%),
+                radial-gradient(130% 90% at 92% 105%, rgba(59, 130, 246, 0.10) 0%, transparent 55%),
+                linear-gradient(160deg, #0b1122 0%, #080c18 58%, #0a1020 100%);
+            border-color: rgba(96, 165, 250, 0.34);
+            box-shadow:
+                0 0 0 1px rgba(8, 12, 24, 0.65),
+                inset 0 0 80px rgba(10, 18, 40, 0.5),
+                0 18px 50px rgba(0, 0, 0, 0.45);
+        }
+        #mainDisplayBox.page-theme-scorecard #placeholderText,
+        #mainDisplayBox.page-theme-scorecard #imageAwaitText { color: #8a93ad; }
 
     </style>
 </head>
@@ -1324,6 +1765,17 @@
                                 </button>
                             </div>
 
+                            <div>
+                                <label class="block text-sm text-zinc-400 mb-1.5">サブステ伸び値</label>
+                                <button type="button" id="settingsSubstatDotsBtn" role="switch" aria-checked="true"
+                                    class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                                    <span>伸び値ドットを表示</span>
+                                    <span id="settingsSubstatDotsToggle" class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-cyan-500 transition-colors">
+                                        <span id="settingsSubstatDotsKnob" class="inline-block h-3.5 w-3.5 transform translate-x-4 rounded-full bg-white transition-transform"></span>
+                                    </span>
+                                </button>
+                            </div>
+
                             <div id="bgColorControls" title="ビルドカード生成の背景">
                                 <label class="block text-sm text-zinc-400 mb-1.5">背景</label>
                                 <div class="flex items-center gap-2">
@@ -1411,7 +1863,7 @@
                 </div>
 
                 <!-- メイン表示ボックス（ステータス / ビルドカード / 画像） -->
-                <div class="bg-zinc-950 rounded-2xl border border-zinc-800 min-h-[480px] relative overflow-hidden flex flex-col">
+                <div id="mainDisplayBox" class="bg-zinc-950 rounded-2xl border border-zinc-800 min-h-[480px] relative overflow-hidden flex flex-col">
                     <div class="flex-1 flex justify-center items-center p-4 md:p-6 relative overflow-auto">
                         <img id="cardImage" src="" class="max-w-full h-auto rounded-lg shadow-2xl drag-none hidden">
                         <div id="htmlCardContainer" class="hidden w-full"></div>
@@ -1613,6 +2065,25 @@
                         <span>📋 ステータス表示</span>
                         <span id="settingsStatusViewLabel" class="text-[10px] text-gray-500">タップで切替</span>
                     </button>
+                </div>
+
+                <div>
+                    <div class="text-xs font-semibold text-gray-400 mb-2 px-1">カードテーマ</div>
+                    <div id="settingsCardThemeGroup" class="grid grid-cols-3 gap-2" role="radiogroup" aria-label="カードテーマ">
+                        <button type="button" data-card-theme="glass" class="settings-card-theme-btn flex flex-col items-center gap-0.5 px-2 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                            <span class="text-base leading-none">🪟</span>
+                            <span class="text-[11px] font-semibold">ガラス</span>
+                        </button>
+                        <button type="button" data-card-theme="cinema" class="settings-card-theme-btn flex flex-col items-center gap-0.5 px-2 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                            <span class="text-base leading-none">🎬</span>
+                            <span class="text-[11px] font-semibold">シネマ</span>
+                        </button>
+                        <button type="button" data-card-theme="scorecard" class="settings-card-theme-btn flex flex-col items-center gap-0.5 px-2 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                            <span class="text-base leading-none">📊</span>
+                            <span class="text-[11px] font-semibold">スコア</span>
+                        </button>
+                    </div>
+                    <div class="text-[10px] text-gray-500 mt-1.5 px-1">ビルドカード（HTML表示）と表示欄のデザインです。画像生成には適用されません。</div>
                 </div>
 
                 <div>
@@ -1899,6 +2370,7 @@
                     saveViewMode(viewMode);
                     applyViewModeUI();
                     applySettingsPanelUI();
+                    applyPageThemeUi();
                     latestGlassRequestToken++;
                     latestHtmlRequestToken++;
                 }
@@ -1998,6 +2470,9 @@
         const SAVE_MODE_KEY = 'genshin_build_card_save_mode';
         const GROWTH_PREF_KEY = 'genshin_build_card_growth_mode';
         const BASE_PREC_PREF_KEY = 'genshin_build_card_base_prec';
+        const SUBSTAT_DOTS_PREF_KEY = 'genshin_build_card_substat_dots';
+        const CARD_THEME_PREF_KEY = 'genshin_build_card_card_theme';
+        const VALID_CARD_THEMES = ['glass', 'cinema', 'scorecard'];
 
         // 生成画像の保存先（client=ブラウザにキャッシュ / server=サーバーに保存）
         function getSavedSaveMode() {
@@ -2024,6 +2499,10 @@
         const settingsSaveModeLabel = document.getElementById('settingsSaveModeLabel');
         const settingsStatusViewBtn = document.getElementById('settingsStatusViewBtn');
         const settingsStatusViewLabel = document.getElementById('settingsStatusViewLabel');
+        const settingsCardThemeBtns = document.querySelectorAll('.settings-card-theme-btn');
+        const settingsSubstatDotsBtn = document.getElementById('settingsSubstatDotsBtn');
+        const settingsSubstatDotsToggle = document.getElementById('settingsSubstatDotsToggle');
+        const settingsSubstatDotsKnob = document.getElementById('settingsSubstatDotsKnob');
         const serverStatsPanel = document.getElementById('serverStatsPanel');
         const serverStatsCpuVal = document.getElementById('serverStatsCpuVal');
         const serverStatsCpuBar = document.getElementById('serverStatsCpuBar');
@@ -2118,6 +2597,49 @@
             try {
                 localStorage.setItem(GROWTH_PREF_KEY, on ? '1' : '0');
             } catch (e) { /* ignore */ }
+        }
+
+        function getSavedSubstatDotsPref() {
+            try {
+                return localStorage.getItem(SUBSTAT_DOTS_PREF_KEY) !== '0';
+            } catch (e) {
+                return true;
+            }
+        }
+        function setSubstatDotsPref(on) {
+            try {
+                localStorage.setItem(SUBSTAT_DOTS_PREF_KEY, on ? '1' : '0');
+            } catch (e) { /* ignore */ }
+        }
+
+        // ビルドカード（HTML表示）のカードテーマ: glass / cinema / scorecard
+        function getSavedCardTheme() {
+            try {
+                const v = localStorage.getItem(CARD_THEME_PREF_KEY);
+                return VALID_CARD_THEMES.includes(v) ? v : 'glass';
+            } catch (e) {
+                return 'glass';
+            }
+        }
+        function setCardTheme(theme) {
+            try {
+                if (VALID_CARD_THEMES.includes(theme)) localStorage.setItem(CARD_THEME_PREF_KEY, theme);
+            } catch (e) { /* ignore */ }
+        }
+
+        // メイン表示ボックスにページテーマクラスを適用/解除する
+        // （HTML表示= glass ビューのときのみ。画像・旧HTML表示では解除）
+        function applyPageThemeUi() {
+            const box = document.getElementById('mainDisplayBox');
+            if (!box) return;
+            let theme = 'glass';
+            try {
+                theme = (viewMode === 'glass') ? getSavedCardTheme() : 'glass';
+            } catch (e) {
+                theme = 'glass';
+            }
+            box.classList.toggle('page-theme-cinema', theme === 'cinema');
+            box.classList.toggle('page-theme-scorecard', theme === 'scorecard');
         }
 
         function getSavedBasePrec() {
@@ -2254,6 +2776,16 @@
             if (settingsStatusViewLabel) {
                 settingsStatusViewLabel.textContent = (typeof viewMode !== 'undefined' && viewMode === 'html') ? 'ON' : 'OFF';
             }
+            if (settingsCardThemeBtns && settingsCardThemeBtns.length) {
+                const curCardTheme = getSavedCardTheme();
+                settingsCardThemeBtns.forEach(btn => {
+                    const on = btn.dataset.cardTheme === curCardTheme;
+                    btn.classList.toggle('border-cyan-400', on);
+                    btn.classList.toggle('bg-zinc-700', on);
+                    btn.classList.toggle('text-white', on);
+                    btn.setAttribute('aria-checked', on ? 'true' : 'false');
+                });
+            }
             if (settingsGrowthToggle) {
                 const growthOn = getSavedGrowthPref();
                 settingsGrowthToggle.classList.toggle('bg-cyan-500', growthOn);
@@ -2266,6 +2798,17 @@
                 }
                 const settingsGrowthBtn = document.getElementById('settingsGrowthBtn');
                 if (settingsGrowthBtn) settingsGrowthBtn.setAttribute('aria-checked', growthOn ? 'true' : 'false');
+            }
+            if (settingsSubstatDotsToggle) {
+                const dotsOn = getSavedSubstatDotsPref();
+                settingsSubstatDotsToggle.classList.toggle('bg-cyan-500', dotsOn);
+                settingsSubstatDotsToggle.classList.toggle('bg-zinc-600', !dotsOn);
+                if (settingsSubstatDotsKnob) {
+                    settingsSubstatDotsKnob.classList.toggle('translate-x-4', dotsOn);
+                    settingsSubstatDotsKnob.classList.toggle('bg-white', dotsOn);
+                    settingsSubstatDotsKnob.classList.toggle('bg-gray-300', !dotsOn);
+                }
+                if (settingsSubstatDotsBtn) settingsSubstatDotsBtn.setAttribute('aria-checked', dotsOn ? 'true' : 'false');
             }
         }
 
@@ -2284,6 +2827,22 @@
                     const next = (viewMode === 'html') ? (getSavedViewMode() === 'html' ? 'glass' : getSavedViewMode()) : 'html';
                     setViewMode(next);
                     applySettingsPanelUI();
+                });
+            }
+
+            if (settingsCardThemeBtns && settingsCardThemeBtns.length) {
+                settingsCardThemeBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const theme = btn.dataset.cardTheme;
+                        if (!VALID_CARD_THEMES.includes(theme) || theme === getSavedCardTheme()) return;
+                        setCardTheme(theme);
+                        applySettingsPanelUI();
+                        applyPageThemeUi();
+                        // 表示中のビルドカードを新テーマで再描画（画像生成タブは影響なし）
+                        if (typeof viewMode !== 'undefined' && viewMode === 'glass' && currentSelectedCharId) {
+                            loadGlassCard(currentSelectedCharId);
+                        }
+                    });
                 });
             }
 
@@ -2338,6 +2897,22 @@
                     setGrowthPref(next);
                     applySettingsPanelUI();
                     // 育成モード切替後は表示中のカードを更新する
+                    if (typeof reloadCurrentCard === 'function') reloadCurrentCard();
+                    else if (typeof loadCurrentCardByViewMode === 'function') loadCurrentCardByViewMode();
+                    else if (currentSelectedCharId) {
+                        if (viewMode === 'glass') loadGlassCard(currentSelectedCharId);
+                        else if (viewMode === 'html') loadHtmlCard(currentSelectedCharId);
+                        else loadCardImage(currentSelectedCharId, true);
+                    }
+                });
+            }
+
+            if (settingsSubstatDotsBtn) {
+                settingsSubstatDotsBtn.addEventListener('click', () => {
+                    const next = !getSavedSubstatDotsPref();
+                    setSubstatDotsPref(next);
+                    applySettingsPanelUI();
+                    // 伸び値ドット切替後は表示中のカードを更新する
                     if (typeof reloadCurrentCard === 'function') reloadCurrentCard();
                     else if (typeof loadCurrentCardByViewMode === 'function') loadCurrentCardByViewMode();
                     else if (currentSelectedCharId) {
@@ -3456,6 +4031,7 @@
             params.set('img_format', getSavedFormatPref());
             if (getSavedGrowthPref()) params.set('growth', 'true');
             params.set('base_prec', getSavedBasePrec());
+            params.set('substat_dots', getSavedSubstatDotsPref() ? '1' : '0');
             const query = params.toString() ? `?${params.toString()}` : '';
             return `/generate_card_image/${uid}/${charId}/${currentMethod}${query}`;
         }
@@ -3614,6 +4190,8 @@
                 btn.classList.toggle('active', btn.dataset.view === viewMode);
             });
         }
+        // 初期表示でもページテーマを反映（viewMode 初期化直後なので安全）
+        applyPageThemeUi();
 
         async function refreshCurrentCard(charId, forceFetch = false, autoGenOnMiss = false, immediateGen = false) {
             if (!charId) return;
@@ -3693,6 +4271,7 @@
                 placeholderText.classList.add('hidden');
                 loadHtmlCard(charId);
             }
+            applyPageThemeUi();
         }
 
         /** 表示モードを切り替える。編成モード中は「画像生成」(image) のみ有効 */
@@ -3804,6 +4383,16 @@
             const v = Number(n);
             return Number.isFinite(v) ? (Math.round(v * 100) / 100).toFixed(2) : '';
         }
+        // 実数値の表示用フォーマット。標準(prec='0')は小数第1位で四捨五入、
+        // 詳細(第2位) は小数第2位まで、prec='4' は小数第4位まで表示。
+        function formatDecPrec(n, prec) {
+            const v = Number(n);
+            if (!Number.isFinite(v)) return '';
+            const dp = String(prec || '0') === '4' ? 4 : (String(prec || '0') === '2' ? 2 : 1);
+            const f = Math.pow(10, dp);
+            const r = Math.round((v + Number.EPSILON) * f) / f;
+            return r.toLocaleString('en-US', { maximumFractionDigits: dp, useGrouping: true });
+        }
         function growthPanelHtml(growth) {
             if (!growth) return '';
             const g = growth;
@@ -3844,11 +4433,11 @@
                         const short = { hp: 'HP', atk: '攻撃', def: '防御' }[s.key] || s.label || '';
                         const label = esc(short);
                         if (s.pct_avg != null) {
-                            const paren = (s.flat_equiv != null) ? ` (${roundTo2(s.flat_equiv)})` : '';
+                            const paren = (s.flat_equiv != null) ? ` (${formatDecPrec(s.flat_equiv, getSavedBasePrec())})` : '';
                             rows.push(`<div class="gp-stat-row"><span class="gp-stat-label">${label}%</span><span class="gp-stat-value">${roundTo2(s.pct_avg)}%${paren}</span></div>`);
                         }
                         if (s.flat_avg != null) {
-                            rows.push(`<div class="gp-stat-row"><span class="gp-stat-label">${label}実数</span><span class="gp-stat-value">${roundTo2(s.flat_avg)}</span></div>`);
+                            rows.push(`<div class="gp-stat-row"><span class="gp-stat-label">${label}実数</span><span class="gp-stat-value">${formatDecPrec(s.flat_avg, getSavedBasePrec())}</span></div>`);
                         }
                     }
                 });
@@ -3861,6 +4450,268 @@
             if (!blocks.length) return '';
             return `<div class="growth-panel-title">育成メモ</div>${''}
                 <div class="growth-panel-body">${blocks.join('<div style="height:1px;background:rgba(255,255,255,0.08);margin:2px 0 6px;"></div>')}</div>`;
+        }
+
+        // ==========================================================
+        //  カードテーマ共通ヘルパー（cinema / scorecard 提案デザイン移植）
+        // ==========================================================
+        const ELEMENT_JA_NAMES = { Pyro: '炎', Hydro: '水', Anemo: '風', Electro: '雷', Dendro: '草', Cryo: '氷', Geo: '岩', None: '無' };
+
+        function themeDotsHtml(rolls, prefix) {
+            if (!getSavedSubstatDotsPref()) return '';
+            const arr = rolls || [];
+            if (!arr.length) return '';
+            return '<span class="' + prefix + '-dots">' + arr.map(t =>
+                '<i class="' + prefix + '-dot ' + prefix + '-dot-' + Math.min(4, Math.max(1, Number(t) || 1)) + '"></i>'
+            ).join('') + '</span>';
+        }
+
+        function themeConstellationUnlocked(data) {
+            return Number.isFinite(data.constellation) ? data.constellation : 0;
+        }
+
+        // ==========================================================
+        //  カードテーマ: CINEMA（ui1_cinema.html）
+        // ==========================================================
+        function renderCinemaThemeHtml(data, ctx) {
+            const elemJa = ELEMENT_JA_NAMES[data.element] || '無';
+            const elemIcon = assetUrl('static/assets/props/' + String(data.element || 'none').toLowerCase() + '.png');
+            const rarity = Number(data.rarity) === 4 ? 4 : 5;
+            const stars = Array.from({ length: rarity }).map(() =>
+                '<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.3l7.1-.7z"/></svg>').join('');
+            const constUnlocked = themeConstellationUnlocked(data);
+            const constLabel = constUnlocked >= 6 ? '完凸' : 'C' + constUnlocked;
+
+            const dispName = String(data.displayName || '');
+            const nameHtml = dispName.endsWith('(swap)')
+                ? esc(dispName.slice(0, -'(swap)'.length)) + '<span class="cine-swap">(swap)</span>'
+                : esc(dispName);
+
+            const talents = (data.skills || []).map(s =>
+                '<div class="cine-bubble">' +
+                    (s.icon ? '<img src="' + assetUrl(s.icon) + '" alt="">' : '') +
+                    '<span class="cine-lvb num' + (s.boosted ? ' boosted' : '') + '">' + (s.level != null ? esc(s.level) : '1') + '</span>' +
+                '</div>').join('');
+
+            const constsIcons = data.constellationIcons || [];
+            const consts = Array.from({ length: 6 }).map((_, i) => {
+                const on = i < constUnlocked;
+                const icon = constsIcons[i] || '';
+                return '<div class="cine-const' + (on ? '' : ' off') + '">' + (icon ? '<img src="' + assetUrl(icon) + '" alt="">' : '') + '</div>';
+            }).join('');
+            const weaponSub = (data.weaponStats || []).map(w => esc(w.name) + ' ' + esc(w.value)).join(' ・ ');
+
+            const stats = (data.mainStats || []).map(s => {
+                const hl = (s.label === '会心率' || s.label === '会心ダメージ') ? ' hl' : '';
+                return '<div class="cine-stat' + hl + '"><span class="cine-k">' +
+                    (s.icon ? '<img src="' + assetUrl(s.icon) + '" alt="">' : '') + esc(s.label) +
+                    '</span><span class="cine-v num">' + esc(s.val) + '</span></div>';
+            }).join('');
+
+            const setChips = (data.setBonuses || []).map(s =>
+                '<span class="cine-set"><span class="cine-set-cnt num">×' + esc(s.count) + '</span><span class="cine-set-name">' + esc(s.name) + '</span></span>').join('');
+
+            const arts = (data.artifacts || []).map(a => {
+                if (!a) return '<div class="cine-art"><div class="cine-art-empty">未装備</div></div>';
+                const subs = (a.substats || []).map(sub =>
+                    '<div class="cine-sub"><span class="cine-nm">' + esc(sub.name) + '</span>' + themeDotsHtml(sub.rolls, 'cine') + '<span class="cine-vl num">' + esc(sub.value) + '</span></div>').join('');
+                return '<div class="cine-art">' +
+                    '<div class="cine-art-top">' +
+                        '<div class="cine-aicon">' + (a.icon ? '<img src="' + assetUrl(a.icon) + '" alt="">' : '') + '</div>' +
+                        '<div class="cine-amain"><div class="cine-aslot">' + esc(a.slot || '') + '</div><div class="cine-amname">' + (a.main ? esc(a.main.name) + ' ' + esc(a.main.value) : '') + '</div></div>' +
+                        '<div class="cine-atier"><img src="/static/assets/tiers/' + esc(a.tier || 'B') + '.png" alt="' + esc(a.tier || 'B') + '"></div>' +
+                    '</div>' +
+                    '<div class="cine-subs">' + subs + '</div>' +
+                    '<div class="cine-afoot"><span class="cine-fs">SCORE</span><span class="cine-fv num">' + (Number(a.score) || 0).toFixed(1) + '</span></div>' +
+                '</div>';
+            }).join('');
+            return `
+            <div class="cine-card">
+              <div class="cine-bg" style="background-image:url('${ctx.splash}')"></div>
+              <div class="cine-tint"></div>
+              <div class="cine-scrim"></div>
+              <div class="cine-head">
+                <div class="cine-elem-line">
+                  <span class="cine-elem-chip"><img src="${elemIcon}" alt="">${esc(elemJa)}</span>
+                  <span class="cine-stars">${stars}</span>
+                </div>
+                <h1 class="cine-name"><span class="cine-latin">${esc(String(data.element || '').toUpperCase())}</span>${nameHtml}</h1>
+                <div class="cine-meta">
+                  <span class="cine-lv num">Lv.${data.level != null ? esc(data.level) : '?'}</span>
+                  ${data.friendship != null ? '<span class="cine-sep"></span><span class="cine-friend"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-10-9.3C.4 8.6 2.3 5 5.7 5c2 0 3.4 1.1 4.3 2.4h4c.9-1.3 2.3-2.4 4.3-2.4 3.4 0 5.3 3.6 3.7 6.7C19.5 16.3 12 21 12 21z"/></svg>' + esc(data.friendship) + '</span>' : ''}
+                  <span class="cine-sep"></span>
+                  <span>${esc(constLabel)}</span>
+                </div>
+              </div>
+              <div class="cine-rail">
+                <div class="cine-rail-group">
+                  <div class="cine-rail-label">Talents</div>
+                  <div class="cine-bubbles">${talents}</div>
+                </div>
+                ${constsIcons.length ? '<div class="cine-rail-group"><div class="cine-rail-label">Constellation</div><div class="cine-const-row">' + consts + '</div></div>' : ''}
+              </div>
+              <div class="cine-right">
+                <div class="cine-panel cine-weapon">
+                  <div class="cine-wimg">${data.weaponIcon ? '<img src="' + assetUrl(data.weaponIcon) + '" alt="">' : ''}</div>
+                  <div class="cine-wbody">
+                    <div class="cine-wname">${esc(data.weaponName || '')}</div>
+                    ${weaponSub ? '<div class="cine-wsub num">' + weaponSub + '</div>' : ''}
+                  </div>
+                  <div class="cine-wr num">Lv.${data.weaponLevel != null ? esc(data.weaponLevel) : '?'}<b>R${data.weaponAffix != null ? esc(data.weaponAffix) : '1'}</b></div>
+                </div>
+                <div class="cine-panel cine-score">
+                  <div class="cine-tier"><img src="/static/assets/tiers/${esc(data.tierSum || 'B')}.png" alt="${esc(data.tierSum || 'B')}"></div>
+                  <div>
+                    <div class="cine-sl">Total Score</div>
+                    <div class="cine-sv num">${(Number(data.scoreSum) || 0).toFixed(1)}</div>
+                    <div class="cine-sm">${esc(data.calcMethodLabel || data.calcMethod || '')}</div>
+                  </div>
+                </div>
+                ${setChips ? '<div class="cine-setchip">' + setChips + '</div>' : ''}
+              </div>
+              <div class="cine-stats">${stats}</div>
+              <div class="cine-arts">${arts}</div>
+            </div>`;
+        }
+        // ==========================================================
+        //  カードテーマ: SCORECARD（ui2v2_scorecard.html）
+        // ==========================================================
+        function themeSplashBgPosCss(data) {
+            // admin 設定のスプラッシュオフセット（-100〜100%, 0=中央）を
+            // background-position の % に変換する。未設定なら ''（CSS既定の center 18%）。
+            const off = data && data.splashOffset;
+            if (!off) return '';
+            const x = Number(off.x);
+            const y = Number(off.y);
+            if (!Number.isFinite(x) && !Number.isFinite(y)) return '';
+            const clamp = v => Math.max(-100, Math.min(100, Number.isFinite(v) ? v : 0));
+            const px = 50 + 50 * (clamp(x) / 100);
+            const py = 50 + 50 * (clamp(y) / 100);
+            return `background-position:${Math.round(px * 10) / 10}% ${Math.round(py * 10) / 10}%;`;
+        }
+
+        function renderScorecardThemeHtml(data, ctx) {
+            const elemJa = ELEMENT_JA_NAMES[data.element] || '無';
+            const elemIcon = assetUrl('static/assets/props/' + String(data.element || 'none').toLowerCase() + '.png');
+            const constUnlocked = themeConstellationUnlocked(data);
+            const constLabel = constUnlocked >= 6 ? '完凸' : 'C' + constUnlocked;
+            const score = Number(data.scoreSum) || 0;
+            const critValue = Number(data.critValue);
+            const critValueStr = Number.isFinite(critValue) ? critValue.toFixed(1) : '—';
+            const CIRC = 408; // 2πr（r=65）
+            const frac = Math.max(0, Math.min(1, score / 250));
+            const dashOffset = Math.round(CIRC * (1 - frac));
+            const critRateStat = (data.mainStats || []).find(s => s.label === '会心率');
+            const critDmgStat = (data.mainStats || []).find(s => s.label === '会心ダメージ');
+            const cvPct = Number.isFinite(critValue) ? Math.max(0, Math.min(100, (critValue / 300) * 100)) : 0;
+
+            const chips = [
+                '<span class="scc-chip"><img src="' + elemIcon + '" alt="">' + esc(elemJa) + '元素</span>',
+                '<span class="scc-chip">Lv.<b class="num">' + (data.level != null ? esc(data.level) : '?') + '</b></span>',
+                (data.friendship != null ? '<span class="scc-chip">好感度 <b class="num">' + esc(data.friendship) + '</b></span>' : ''),
+                '<span class="scc-chip">' + (constUnlocked >= 6 ? '完凸' : '命星座') + ' <b class="num">C' + constUnlocked + '</b></span>',
+                (data.weaponType ? '<span class="scc-chip">' + esc(data.weaponType) + '</span>' : ''),
+            ].filter(Boolean).join('');
+
+            const statRows = (data.mainStats || []).map(s => {
+                const hl = (s.label === '会心率' || s.label === '会心ダメージ') ? ' scc-hl' : '';
+                return '<div class="scc-srow' + hl + '"><span class="scc-k">' +
+                    (s.icon ? '<img src="' + assetUrl(s.icon) + '" alt="">' : '') + esc(s.label) +
+                    '</span><span class="scc-v num">' + esc(s.val) + '</span></div>';
+            }).join('');
+
+            const weaponSub = (data.weaponStats || []).map(w => esc(w.name) + ' ' + esc(w.value)).join(' ・ ');
+
+            const setRows = (data.setBonuses && data.setBonuses.length)
+                ? data.setBonuses.map(s => '<div class="scc-setrow"><span class="scc-setcnt num">×' + esc(s.count) + '</span><span class="scc-setname">' + esc(s.name) + '</span>' + (s.buff ? '<span class="scc-setbuff">' + esc(s.buff) + '</span>' : '') + '</div>').join('')
+                : '<div class="scc-setrow scc-off"><span class="scc-setname">セット効果なし</span></div>';
+
+            const talents = (data.skills || []).map(s =>
+                '<div class="scc-bubble">' +
+                    (s.icon ? '<img src="' + assetUrl(s.icon) + '" alt="">' : '') +
+                    '<span class="scc-lvb num' + (s.boosted ? ' boosted' : '') + '">' + (s.level != null ? esc(s.level) : '1') + '</span>' +
+                '</div>').join('');
+
+            const constsIcons = data.constellationIcons || [];
+            const consts = Array.from({ length: 6 }).map((_, i) => {
+                const on = i < constUnlocked;
+                const icon = constsIcons[i] || '';
+                return '<div class="scc-const' + (on ? '' : ' off') + '">' + (icon ? '<img src="' + assetUrl(icon) + '" alt="">' : '') + '</div>';
+            }).join('');
+            // 聖遺物: スコアが最も高いものをベストとしてハイライト
+            const arts = data.artifacts || [];
+            let bestIdx = -1, bestScore = -1;
+            arts.forEach((a, i) => {
+                const sc = a ? (Number(a.score) || 0) : -1;
+                if (sc > bestScore) { bestScore = sc; bestIdx = i; }
+            });
+
+            const artsHtml = arts.map((a, i) => {
+                if (!a) return '<div class="scc-art"><div class="scc-art-empty">未装備</div></div>';
+                const subs = (a.substats || []).map(sub =>
+                    '<div class="scc-sub"><span class="scc-nm">' + esc(sub.name) + '</span>' + themeDotsHtml(sub.rolls, 'scc') + '<span class="scc-vl num">' + esc(sub.value) + '</span></div>').join('');
+                return '<div class="scc-art' + (i === bestIdx ? ' best' : '') + '">' +
+                    '<div class="scc-atop">' +
+                        '<div class="scc-aicon">' + (a.icon ? '<img src="' + assetUrl(a.icon) + '" alt="">' : '') + '</div>' +
+                        '<div><div class="scc-aslot">' + esc(a.slot || '') + '</div><div class="scc-amain">' + (a.main ? esc(a.main.name) + ' ' + esc(a.main.value) : '') + '</div></div>' +
+                        '<div class="scc-atier"><img src="/static/assets/tiers/' + esc(a.tier || 'B') + '.png" alt="' + esc(a.tier || 'B') + '"></div>' +
+                    '</div>' +
+                    '<div class="scc-asubs">' + subs + '</div>' +
+                    '<div class="scc-afoot"><span class="scc-l">SCORE</span><span class="scc-s num">' + (Number(a.score) || 0).toFixed(1) + '</span></div>' +
+                '</div>';
+            }).join('');
+            return `
+            <div class="scc-card">
+              <div class="scc-banner">
+                <div class="scc-bbg" style="background-image:url('${ctx.splash}');${themeSplashBgPosCss(data)}"></div>
+                <div class="scc-grid-lines"></div>
+                <div class="scc-scrim"></div>
+                <svg width="0" height="0"><defs><linearGradient id="sccGaugeGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="${ctx.elemColor}"/><stop offset="100%" stop-color="#ffcd78"/></linearGradient></defs></svg>
+                <div class="scc-bwrap">
+                  <div class="scc-cicon">${data.charIcon ? '<img src="' + assetUrl(data.charIcon) + '" alt="">' : ''}</div>
+                  <div class="scc-bid">
+                    <div class="scc-bname">${esc(data.displayName)}</div>
+                    <div class="scc-chips">${chips}</div>
+                  </div>
+                  <div class="scc-gauge">
+                    <svg viewBox="0 0 150 150"><circle class="scc-track" cx="75" cy="75" r="65"/><circle class="scc-arc" cx="75" cy="75" r="65" style="stroke-dashoffset:${dashOffset}"/></svg>
+                    <div class="scc-core">
+                      <div class="scc-tier"><img src="/static/assets/tiers/${esc(data.tierSum || 'B')}.png" alt="${esc(data.tierSum || 'B')}"></div>
+                      <div class="scc-sv num">${score.toFixed(1)}</div>
+                      <div class="scc-sl">Total Score</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="scc-cvbar">
+                <span class="scc-cvlbl">Crit Value</span>
+                <span class="scc-cvval num">${critValueStr}</span>
+                <div class="scc-cvtrack"><i style="width:${cvPct}%"></i></div>
+                <span class="scc-cvnote">会心率 <b class="num">${critRateStat ? esc(critRateStat.val) : '—'}</b> ／ 会心ダメ <b class="num">${critDmgStat ? esc(critDmgStat.val) : '—'}</b></span>
+              </div>
+              <div class="scc-mid">
+                <div class="scc-tile scc-tile-status">
+                  <div class="scc-tlabel">Status</div>
+                  <div class="scc-sgrid">${statRows}</div>
+                </div>
+                <div class="scc-tile">
+                  <div class="scc-tlabel">Weapon / Set</div>
+                  <div class="scc-wrow">
+                    <div class="scc-wimg">${data.weaponIcon ? '<img src="' + assetUrl(data.weaponIcon) + '" alt="">' : ''}</div>
+                    <div><div class="scc-wname">${esc(data.weaponName || '')}</div>${weaponSub ? '<div class="scc-wsub num">' + weaponSub + '</div>' : ''}</div>
+                    <div class="scc-wr"><div class="scc-wlv num">Lv.${data.weaponLevel != null ? esc(data.weaponLevel) : '?'}</div><div class="scc-wrf num">R${data.weaponAffix != null ? esc(data.weaponAffix) : '1'}</div></div>
+                  </div>
+                  ${setRows}
+                </div>
+                <div class="scc-tile scc-tile-tc">
+                  <div class="scc-tlabel">Talents</div>
+                  <div class="scc-bubbles">${talents}</div>
+                  ${constsIcons.length ? '<div class="scc-tlabel scc-clabel"><span>Constellation</span><span class="scc-cnum num">' + constLabel + '</span></div><div class="scc-consts">' + consts + '</div>' : ''}
+                </div>
+              </div>
+              <div class="scc-arts">${artsHtml}</div>
+            </div>`;
         }
 
         function renderGlassCard(data) {
@@ -3933,9 +4784,16 @@
                 if (!a) {
                     return `<div class="art-card"><div style="margin:auto;opacity:0.3">未装備</div></div>`;
                 }
-                const subs = (a.substats || []).map(sub =>
-                    `<div class="substat-item"><span>${esc(sub.name)}</span><span class="substat-val">${esc(sub.value)}</span></div>`
-                ).join('');
+                const subs = (a.substats || []).map(sub => {
+                    let dots = '';
+                    if (getSavedSubstatDotsPref() && (sub.rolls || []).length) {
+                        const rolls = sub.rolls || [];
+                        dots = rolls.map((t, ti) =>
+                            `<span class="substat-dot substat-dot-${t + 1}"></span>`
+                        ).join('');
+                    }
+                    return `<div class="substat-item"><div class="substat-name-col"><span class="substat-name">${esc(sub.name)}</span>${dots ? `<span class="substat-dots">${dots}</span>` : ''}</div><span class="substat-val">${esc(sub.value)}</span></div>`;
+                }).join('');
                 return `
                 <div class="art-card">
                     <div class="art-header">
@@ -3957,8 +4815,11 @@
             // 育成（growth）レイアウト: ON かつ growth データがあれば右側にパネルを追加し、
             // build-card を全幅基準に縮小してスペースを作る
             let growthData = null, growthBody = '', growthK = 1, growthLeftW = 1200, growthLeftH = 800, growthPanelW = 0;
+            const cardH = getSavedSubstatDotsPref() ? 880 : 800;
             const growthMode = getSavedGrowthPref();
-            if (growthMode && data) {
+            const cardTheme = getSavedCardTheme();
+            // 育成（growth）パネルは glass テーマ限定の機能（cinema / scorecard は専用レイアウト）
+            if (growthMode && data && cardTheme === 'glass') {
                 growthData = data.growth || data.progress || null;
                 if (growthData) {
                     growthBody = growthPanelHtml(growthData);
@@ -3966,7 +4827,7 @@
                         // 総合スコア列（right-section = 270px / 1200）と同じ横幅にする
                         growthK = 0.775;
                         growthLeftW = Math.round(1200 * growthK);
-                        growthLeftH = Math.round(800 * growthK);
+                        growthLeftH = Math.round(cardH * growthK);
                         growthPanelW = 270;
                     } else {
                         growthData = null;
@@ -3974,12 +4835,24 @@
                 }
             }
 
-            glassEl.innerHTML = `
-            <div class="glass-card-root${getSavedBasePrec() === '2' ? ' glass-prec-detail' : ''}" style="--element-color:${elemColor};--element-color-dim:${elemDim}">
-              <div class="glass-scale-wrap" id="glassScaleWrap"${growthData && growthBody ? ` data-growth="1"` : ''}>
+            const themeCtx = { elemColor, elemDim, splash, splashAttr };
+            if (cardTheme === 'cinema' || cardTheme === 'scorecard') {
+                const themeHtml = (cardTheme === 'cinema')
+                    ? renderCinemaThemeHtml(data, themeCtx)
+                    : renderScorecardThemeHtml(data, themeCtx);
+                glassEl.innerHTML = `
+                <div class="glass-card-root theme-${cardTheme}" style="--element-color:${elemColor};--element-color-dim:${elemDim}">
+                  <div class="glass-scale-wrap" id="glassScaleWrap">
+                    ${themeHtml}
+                  </div>
+                </div>`;
+            } else {
+                glassEl.innerHTML = `
+                <div class="glass-card-root${getSavedBasePrec() === '2' ? ' glass-prec-detail' : ''}" style="--element-color:${elemColor};--element-color-dim:${elemDim}">
+                  <div class="glass-scale-wrap" id="glassScaleWrap"${growthData && growthBody ? ` data-growth="1"` : ''}>
               ${growthData && growthBody ? `<div class="glass-growth-layout">
               <div class="glass-growth-left" style="width:${growthLeftW}px;height:${growthLeftH}px;--gc-growth-k:${growthK}">` : ''}
-              <div class="build-card"${growthData && growthBody ? ` style="transform:scale(${growthK});"` : ''}>
+              <div class="build-card${getSavedSubstatDotsPref() ? ' has-legend' : ''}"${growthData && growthBody ? ` style="transform:scale(${growthK});"` : ''}>
                 <div class="glass-card-base-bg" style="${baseBgStyle}"></div>
                 <div class="glass-card-bg" style="background-image:url('${splash || ''}')"></div>
                 <div class="top-section">
@@ -4020,13 +4893,15 @@
                     </div>
                   </div>
                 </div>
+                ${getSavedSubstatDotsPref() ? `<div class="substat-dot-legend"><span class="substat-dot-legend-label">伸び値</span><span class="substat-dot-legend-bars"><span class="substat-dot substat-dot-1"></span><span class="substat-dot substat-dot-2"></span><span class="substat-dot substat-dot-3"></span><span class="substat-dot substat-dot-4"></span></span></div>` : ''}
                 <div class="artifacts-grid">${artsHtml}</div>
               </div>
               ${growthData && growthBody ? `</div>
               <div class="growth-panel" style="width:${growthPanelW}px;height:${growthLeftH}px;--element-color:${elemColor}">${growthBody}</div>
               </div>` : ''}
               </div>
-            </div>`;
+                </div>`;
+            }
             requestAnimationFrame(() => scaleGlassCard());
         }
 
@@ -4041,7 +4916,10 @@
             const available = Math.max(280, parent.clientWidth - padX);
             const baseW = 1200;
             const left = wrap.querySelector('.glass-growth-left');
-            const baseH = left ? Math.round(800 * (parseFloat(left.style.height) / 800 || 1)) : 800;
+            // テーマルート（.build-card / .cine-card / .scc-card）に対応
+            const bc = wrap.querySelector('.build-card') || wrap.querySelector('.cine-card') || wrap.querySelector('.scc-card');
+            const bcH = bc ? bc.offsetHeight : 800;
+            const baseH = left ? Math.round(bcH * (parseFloat(left.style.height) / bcH || 1)) : bcH;
             const scale = Math.min(1, available / baseW);
             // 左上基準で縮小し、レイアウト上の占有サイズも縮小後に合わせる
             wrap.style.transformOrigin = 'top left';
@@ -4124,13 +5002,24 @@
 
             const artifactsHtml = data.artifacts.map(a => {
                 if (!a) return `<div class="bg-zinc-900/40 rounded-lg p-3 border border-zinc-800 text-xs text-zinc-600 flex items-center justify-center">未装備</div>`;
-                const subsHtml = a.substats.map(s => `
+                const subsHtml = a.substats.map(s => {
+                    let dots = '';
+                    if (getSavedSubstatDotsPref() && (s.rolls || []).length) {
+                        const rolls = s.rolls || [];
+                        dots = rolls.map((t, ti) =>
+                            `<span class="substat-dot substat-dot-${t + 1}"></span>`
+                        ).join('');
+                    }
+                    return `
                     <div class="flex items-center gap-1.5 text-xs text-zinc-400">
                         <span class="icon-chip inline-flex items-center justify-center w-5 h-5 rounded-md shrink-0"><img src="/${esc(s.icon)}" class="w-4 h-4 object-contain"></span>
-                        <span>${esc(s.name)}</span>
+                        <span class="flex flex-col items-start min-w-0 leading-tight">
+                            <span class="truncate">${esc(s.name)}</span>
+                            ${dots ? `<span class="inline-flex gap-0.5 mt-0.5">${dots}</span>` : ''}
+                        </span>
                         <span class="ml-auto text-zinc-200">${esc(s.value)}</span>
-                    </div>
-                `).join('');
+                    </div>`;
+                }).join('');
                 return `
                 <div class="bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
                     <div class="flex items-center gap-2 mb-1.5">
@@ -4854,6 +5743,7 @@
                 saveViewMode(viewMode);
                 applyViewModeUI();
                 applySettingsPanelUI();
+                applyPageThemeUi();
                 latestGlassRequestToken++;
                 latestHtmlRequestToken++;
             }

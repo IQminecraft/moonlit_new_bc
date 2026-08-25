@@ -1,5 +1,6 @@
 {
   "name": "バーバラ",
+  "en_name": "Barbara",
   "desc": "モンド城のみんなはバーバラが大好き。ちなみに「アイドル」という言葉は彼女が雑誌で見たものらしい。",
   "weapon": "WEAPON_CATALYST",
   "rarity": "QUALITY_PURPLE",

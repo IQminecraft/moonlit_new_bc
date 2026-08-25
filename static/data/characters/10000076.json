@@ -1,5 +1,6 @@
 {
   "name": "ファルザン",
+  "en_name": "Faruzan",
   "desc": "「百年前」から訪れた学者。自ら好んで先輩と名乗り、各種古代文字や古典ギミックに精通している。",
   "weapon": "WEAPON_BOW",
   "rarity": "QUALITY_PURPLE",

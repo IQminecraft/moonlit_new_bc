@@ -1,5 +1,6 @@
 {
   "name": "セノ",
+  "en_name": "Cyno",
   "desc": "教令院の学者たちを監督する「大マハマトラ」。クシャレワー学院が作った『大マッハマシン』よりも効率よく仕事をこなす。",
   "weapon": "WEAPON_POLE",
   "rarity": "QUALITY_ORANGE",

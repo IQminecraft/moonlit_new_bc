@@ -1,5 +1,6 @@
 {
   "name": "エミリエ",
+  "en_name": "Emilie",
   "desc": "秘密を瓶の中に隠す、フォンテーヌの調香師。",
   "weapon": "WEAPON_POLE",
   "rarity": "QUALITY_ORANGE",

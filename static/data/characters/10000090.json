@@ -1,5 +1,6 @@
 {
   "name": "シュヴルーズ",
+  "en_name": "Chevreuse",
   "desc": "心の中にある「正義」を常に遵守する特巡隊隊長。その手にある銃は罪人だけに向けられる。",
   "weapon": "WEAPON_POLE",
   "rarity": "QUALITY_PURPLE",

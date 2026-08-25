@@ -306,6 +306,21 @@ class DataManager:
         r.raise_for_status()
         return list(r.json().keys())
 
+    def _nanoka_char_en_names(self, version: str) -> Dict[str, str]:
+        """キャラ一覧 JSON から {char_id: 英語名} を取得（1リクエスト）。失敗時は空 dict。"""
+        try:
+            r = requests.get(f"https://static.nanoka.cc/gi/{version}/character.json", timeout=20)
+            r.raise_for_status()
+            raw = r.json() or {}
+            return {
+                str(k): str(v.get("en"))
+                for k, v in raw.items()
+                if isinstance(v, dict) and v.get("en")
+            }
+        except Exception as e:
+            print(f"[nanoka] en name list {version}: {e}")
+            return {}
+
     def _save_nanoka_lists(self, version: str, list_dir: str, scope: str = "all") -> List[str]:
         saved = []
         mapping = [
@@ -381,12 +396,17 @@ class DataManager:
 
             ok_chars, ok_weapons = [], []
             if scope in ("characters", "all"):
+                en_names = self._nanoka_char_en_names(beta)
                 for char_id in added_chars:
                     url = f"https://static.nanoka.cc/gi/{beta}/ja/character/{char_id}.json"
                     try:
                         response = requests.get(url, timeout=15)
                         response.raise_for_status()
-                        converted = characters.from_nanoka(response.json())
+                        raw = response.json()
+                        en_name = en_names.get(str(char_id))
+                        if en_name:
+                            raw["en_name"] = en_name
+                        converted = characters.from_nanoka(raw)
                         _safe_json_dump(os.path.join(char_dir, f"{char_id}.json"), converted)
                         ok_chars.append(char_id)
                     except Exception as e:
@@ -521,12 +541,17 @@ class DataManager:
 
             ok_chars = 0
             if scope in ("characters", "all"):
+                en_names = self._nanoka_char_en_names(live)
                 for m in self._nanoka_keys(live, "character"):
                     url = f"https://static.nanoka.cc/gi/{live}/ja/character/{m}.json"
                     try:
                         r = requests.get(url, timeout=15)
                         r.raise_for_status()
-                        converted = characters.from_nanoka(r.json())
+                        raw = r.json()
+                        en_name = en_names.get(str(m))
+                        if en_name:
+                            raw["en_name"] = en_name
+                        converted = characters.from_nanoka(raw)
                         _safe_json_dump(os.path.join(char_dir, f"{m}.json"), converted)
                         ok_chars += 1
                     except Exception as e:

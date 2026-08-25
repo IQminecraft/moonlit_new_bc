@@ -1,5 +1,6 @@
 {
   "name": "ナヒーダ",
+  "en_name": "Nahida",
   "desc": "スラサタンナ聖処に幽棲する籠の中の鳥。夢の中でしか世界を眺めることができない。",
   "weapon": "WEAPON_CATALYST",
   "rarity": "QUALITY_ORANGE",

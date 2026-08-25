@@ -105,6 +105,7 @@
             <button type="button" class="admin-tab" data-tab="splash">スプラッシュオフセット</button>
             <button type="button" class="admin-tab" data-tab="leyline">Leyline</button>
             <button type="button" class="admin-tab" data-tab="setbuffs">聖遺物2setバフ</button>
+            <button type="button" class="admin-tab" data-tab="innateem">固有元素熟知</button>
         </div>
 
         <div id="tab-data" class="admin-tab-panel">
@@ -355,6 +356,44 @@
             <div id="splashOffsetStatus" class="text-xs text-zinc-500 mt-2"></div>
             <div id="splashOffsetSaveResult" class="text-xs mt-2 hidden"></div>
         </section>
+
+        <!-- SCORECARD スプラッシュオフセット設定 -->
+        <section class="card p-5 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 class="text-lg font-semibold">SCORECARD スプラッシュオフセット</h2>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="scorecardOffsetReloadBtn" class="btn btn-ghost text-xs">再読み込み</button>
+                    <button type="button" id="scorecardOffsetSaveBtn" class="btn btn-primary text-xs">保存</button>
+                </div>
+            </div>
+            <p class="text-xs text-zinc-500 mb-3">
+                HTMLカードの SCORECARD テーマで、バナー立ち絵背景（background-position: cover）の表示中心を
+                幅/高さに対する割合（-100〜100%）でずらします。0% = 中央。
+                未設定のキャラは既定位置（横: 中央 / 縦: 18%）のままです。チームカード画像には影響しません。
+            </p>
+
+            <div class="mb-4">
+                <div class="text-sm font-semibold mb-1">プレビュー（SCORECARD バナー 1400×216 を 50% 縮小で表示）</div>
+                <div class="flex flex-wrap gap-4 items-start">
+                    <div id="scPreviewBox" class="relative overflow-hidden rounded-lg border border-zinc-700 bg-black/40 select-none"
+                        style="width:700px;height:108px;cursor:grab;touch-action:none;background-size:cover;background-repeat:no-repeat;background-position:center;">
+                        <div id="scPreviewEmpty" class="absolute inset-0 flex items-center justify-center text-xs text-zinc-600">プレビューするキャラを下のリストで選択してください</div>
+                    </div>
+                    <div class="flex flex-col gap-1.5 text-xs text-zinc-400">
+                        <div id="scPreviewName" class="text-sm font-semibold text-zinc-200">未選択</div>
+                        <div id="scPreviewLabel" class="mono">X: 0.0%  Y: 0.0%</div>
+                        <button type="button" id="scPreviewResetBtn" class="btn btn-ghost text-xs w-fit">0%にリセット</button>
+                        <div class="text-zinc-500 max-w-[240px]">プレビュー内をドラッグするとオフセットが変わります。スライダー/数値入力とも同期します。</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-2"><input type="text" id="scorecardOffsetSearch" placeholder="キャラ名で絞り込み"
+                class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none"></div>
+            <div id="scorecardOffsetList" class="space-y-1.5 max-h-96 overflow-y-auto pr-1"></div>
+            <div id="scorecardOffsetStatus" class="text-xs text-zinc-500 mt-2"></div>
+            <div id="scorecardOffsetSaveResult" class="text-xs mt-2 hidden"></div>
+        </section>
         </div><!-- /tab-splash -->
 
         <div id="tab-leyline" class="admin-tab-panel hidden">
@@ -437,6 +476,34 @@
             <div id="setBuffsResult" class="text-xs mt-2 hidden"></div>
         </section>
         </div><!-- /tab-setbuffs -->
+
+        <div id="tab-innateem" class="admin-tab-panel hidden">
+        <!-- 固有元素熟知設定 -->
+        <section class="card p-5 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 class="text-lg font-semibold">固有元素熟知</h2>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="innateEmReloadBtn" class="btn btn-ghost text-xs">再読み込み</button>
+                    <button type="button" id="innateEmSaveBtn" class="btn btn-primary text-xs">保存</button>
+                </div>
+            </div>
+            <p class="text-xs text-zinc-500 mb-3">
+                レベルや突破段階に依存せず、特定のキャラに常に付与される元素熟知を設定します。
+                実キャラ・差し替えの両方でステータス計算の元素熟知（最終値）に合算されます。0 = 未設定。
+            </p>
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+                <input id="innateEmSearch" type="text" placeholder="キャラ名で絞り込み"
+                    class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm w-64 focus:outline-none">
+                <label class="flex items-center gap-1.5 text-xs text-zinc-400">
+                    <input type="checkbox" id="innateEmOnlySet" class="accent-cyan-500">
+                    設定済みのみ表示
+                </label>
+            </div>
+            <div id="innateEmStatus" class="text-xs text-zinc-500 mb-2"></div>
+            <div id="innateEmList" class="space-y-1.5 max-h-[70vh] overflow-y-auto pr-1"></div>
+            <div id="innateEmSaveResult" class="text-xs mt-2 hidden"></div>
+        </section>
+        </div><!-- /tab-innateem -->
     </div>
 
     <script>
@@ -445,6 +512,8 @@
         const TEAM_SPLASH_BASE = '/static/data/setting/team_splash_offsets.json';
         let splashOffsets = {};
         let splashCatalog = [];
+        let scorecardOffsets = {};
+        let innateEmMap = {};
 
         // ==========================================================
         //  管理タブ切り替え
@@ -462,7 +531,7 @@
         });
         let savedAdminTab = 'data';
         try { savedAdminTab = localStorage.getItem(ADMIN_TAB_KEY) || 'data'; } catch (e) {}
-        activateAdminTab(['data', 'region', 'splash', 'leyline', 'setbuffs'].includes(savedAdminTab) ? savedAdminTab : 'data');
+        activateAdminTab(['data', 'region', 'splash', 'leyline', 'setbuffs', 'innateem'].includes(savedAdminTab) ? savedAdminTab : 'data');
 
         // ==========================================================
         //  スプラッシュオフセット プレビュー（実際のカードと同じサイズ）
@@ -498,9 +567,11 @@
             return { name: c.name, splash: url.startsWith('/') ? url : '/' + url };
         }
 
-        function syncOffsetInputs(cid) {
-            const pos = splashOffsets[cid] || { x: 0, y: 0 };
-            document.querySelectorAll(`input[data-char-id="${cid}"]`).forEach(el => {
+        function syncOffsetInputs(cid, store, idAttr) {
+            store = store || splashOffsets;
+            idAttr = idAttr || 'data-char-id';
+            const pos = store[cid] || { x: 0, y: 0 };
+            document.querySelectorAll(`input[${idAttr}="${cid}"]`).forEach(el => {
                 el.value = pos[el.getAttribute('data-offset-field')] ?? 0;
             });
         }
@@ -599,58 +670,74 @@
             });
         })();
 
-        function offsetRowHTML(key, label, iconPath, cur) {
+        function offsetRowHTML(key, label, iconPath, cur, opts) {
+            opts = opts || {};
+            const idAttr = opts.idAttr || 'data-char-id';
+            const rowClass = opts.rowClass || 'splash-offset-row';
+            const rangeClass = opts.rangeClass || 'splash-range';
+            const numClass = opts.numClass || 'splash-num';
+            const btnClass = opts.btnClass || 'splash-preview-btn';
+            const activeChar = (opts.activeChar !== undefined) ? opts.activeChar : previewCharId;
             const iconHtml = iconPath
                 ? `<img src="${iconPath.startsWith('/') ? '' : '/'}${iconPath}" class="w-9 h-9 rounded-md object-cover bg-zinc-800" loading="lazy">`
                 : `<div class="w-9 h-9 rounded-md bg-zinc-800 flex items-center justify-center text-xs text-zinc-500">?</div>`;
             return `
-                <div class="splash-offset-row flex flex-wrap items-center gap-3 px-2 py-1.5 bg-zinc-900/60 rounded-lg border border-zinc-800${previewCharId === key ? ' active' : ''}"
+                <div class="${rowClass} flex flex-wrap items-center gap-3 px-2 py-1.5 bg-zinc-900/60 rounded-lg border border-zinc-800${activeChar === key ? ' active' : ''}"
                     data-preview-char="${key}">
                     ${iconHtml}
                     <span class="w-24 text-sm font-medium truncate" title="${label}">${label}</span>
                     <div class="flex items-center gap-2 text-xs text-zinc-400">
                         <span class="w-14">X %</span>
                         <input type="range" min="-100" max="100" step="0.5" value="${cur.x}"
-                            data-offset-field="x" data-char-id="${key}" class="splash-range w-40">
+                            data-offset-field="x" ${idAttr}="${key}" class="${rangeClass} w-40">
                         <input type="number" min="-100" max="100" step="0.5" value="${cur.x}"
-                            data-offset-field="x" data-char-id="${key}" class="splash-num w-14 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-center">
+                            data-offset-field="x" ${idAttr}="${key}" class="${numClass} w-14 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-center">
                     </div>
                     <div class="flex items-center gap-2 text-xs text-zinc-400">
                         <span class="w-14">Y %</span>
                         <input type="range" min="-100" max="100" step="0.5" value="${cur.y}"
-                            data-offset-field="y" data-char-id="${key}" class="splash-range w-40">
+                            data-offset-field="y" ${idAttr}="${key}" class="${rangeClass} w-40">
                         <input type="number" min="-100" max="100" step="0.5" value="${cur.y}"
-                            data-offset-field="y" data-char-id="${key}" class="splash-num w-14 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-center">
+                            data-offset-field="y" ${idAttr}="${key}" class="${numClass} w-14 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-center">
                     </div>
-                    <button type="button" class="btn btn-ghost text-xs splash-preview-btn" data-preview-char="${key}">プレビュー</button>
+                    <button type="button" class="btn btn-ghost text-xs ${btnClass}" data-preview-char="${key}">プレビュー</button>
                 </div>`;
         }
 
-        function bindOffsetList(listEl) {
+        function bindOffsetList(listEl, opts) {
             if (!listEl) return;
-            listEl.querySelectorAll('.splash-range, .splash-num').forEach(el => {
+            opts = opts || {};
+            const store = opts.store || splashOffsets;
+            const setupPreview = opts.setupPreview || setupSplashPreview;
+            const idAttr = opts.idAttr || 'data-char-id';
+            const rowClass = opts.rowClass || 'splash-offset-row';
+            const rangeClass = opts.rangeClass || 'splash-range';
+            const numClass = opts.numClass || 'splash-num';
+            const btnClass = opts.btnClass || 'splash-preview-btn';
+            const onChanged = opts.onChanged || ((cid) => { if (previewCharId === cid) applyPreviewPosition(); });
+            listEl.querySelectorAll(`.${rangeClass}, .${numClass}`).forEach(el => {
                 el.addEventListener('input', () => {
-                    const cid = el.getAttribute('data-char-id');
+                    const cid = el.getAttribute(idAttr);
                     const field = el.getAttribute('data-offset-field');
                     const v = parseFloat(el.value) || 0;
-                    const prev = splashOffsets[cid] || { x: 0, y: 0 };
-                    splashOffsets[cid] = { ...prev, [field]: Math.max(-100, Math.min(100, v)) };
-                    const siblingSel = el.classList.contains('splash-range') ? 'input.splash-num' : 'input.splash-range';
-                    const sibling = listEl.querySelector(`${siblingSel}[data-char-id="${cid}"][data-offset-field="${field}"]`);
-                    if (sibling) sibling.value = splashOffsets[cid][field];
-                    if (previewCharId === cid) applyPreviewPosition();
+                    const prev = store[cid] || { x: 0, y: 0 };
+                    store[cid] = { ...prev, [field]: Math.max(-100, Math.min(100, v)) };
+                    const siblingSel = el.classList.contains(rangeClass) ? `input.${numClass}` : `input.${rangeClass}`;
+                    const sibling = listEl.querySelector(`${siblingSel}[${idAttr}="${cid}"][data-offset-field="${field}"]`);
+                    if (sibling) sibling.value = store[cid][field];
+                    onChanged(cid);
                 });
             });
-            listEl.querySelectorAll('.splash-preview-btn').forEach(btn => {
+            listEl.querySelectorAll(`.${btnClass}`).forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    setupSplashPreview(btn.getAttribute('data-preview-char'));
+                    setupPreview(btn.getAttribute('data-preview-char'));
                 });
             });
-            listEl.querySelectorAll('.splash-offset-row').forEach(row => {
+            listEl.querySelectorAll(`.${rowClass}`).forEach(row => {
                 row.addEventListener('click', (e) => {
-                    if (e.target.closest('input') || e.target.closest('.splash-preview-btn')) return;
-                    setupSplashPreview(row.getAttribute('data-preview-char'));
+                    if (e.target.closest('input') || e.target.closest(`.${btnClass}`)) return;
+                    setupPreview(row.getAttribute('data-preview-char'));
                 });
             });
         }
@@ -766,6 +853,308 @@
         document.getElementById('splashOffsetSaveBtn')?.addEventListener('click', saveSplashOffsets);
         document.getElementById('splashOffsetSearch')?.addEventListener('input', renderSplashOffsets);
         loadSplashOffsets();
+
+        // ==========================================================
+        //  SCORECARD スプラッシュオフセット（background-position: cover）
+        // ==========================================================
+        const SC_PREVIEW_W = 700;  // scc-banner 1400×216 の 50%
+        const SC_PREVIEW_H = 108;
+        let scPreviewCharId = null;
+        let scPreviewRange = { x: 0, y: 0 };
+        let scDragging = false;
+        let scDrag = { startX: 0, startY: 0, pctX: 0, pctY: 0 };
+
+        function scPosToBg(pos) {
+            // オフセット（-100〜100, 0=中央）→ background-position %
+            return {
+                px: 50 + 50 * (((pos && pos.x) || 0) / 100),
+                py: 50 + 50 * (((pos && pos.y) || 0) / 100),
+            };
+        }
+
+        function applyScPreview() {
+            if (!scPreviewCharId) return;
+            const box = document.getElementById('scPreviewBox');
+            if (!box) return;
+            const pos = scorecardOffsets[scPreviewCharId] || { x: 0, y: 0 };
+            const { px, py } = scPosToBg(pos);
+            box.style.backgroundPosition = `${Math.round(px * 10) / 10}% ${Math.round(py * 10) / 10}%`;
+            const lbl = document.getElementById('scPreviewLabel');
+            if (lbl) lbl.textContent = `X: ${(pos.x || 0).toFixed(1)}%  Y: ${(pos.y || 0).toFixed(1)}%`;
+            syncOffsetInputs(scPreviewCharId, scorecardOffsets, 'data-sc-char-id');
+            document.querySelectorAll('.sc-offset-row').forEach(row => {
+                row.classList.toggle('active', row.getAttribute('data-preview-char') === scPreviewCharId);
+            });
+        }
+
+        function setupScPreview(key) {
+            scPreviewCharId = key;
+            const t = previewTargetFor(key);
+            const box = document.getElementById('scPreviewBox');
+            const empty = document.getElementById('scPreviewEmpty');
+            const nameEl = document.getElementById('scPreviewName');
+            if (!box) return;
+            if (nameEl) nameEl.textContent = t ? t.name : key;
+            const url = (t && t.splash) || '';
+            if (!url) {
+                box.style.backgroundImage = '';
+                if (empty) empty.style.display = 'flex';
+                return;
+            }
+            if (empty) empty.style.display = 'none';
+            const probe = new Image();
+            const tryUrl = (u, retried) => {
+                probe.onload = () => {
+                    // cover 前提の余白範囲を計算（プレビューボックス内でのドラッグ移動量換算用）
+                    const scale = Math.max(SC_PREVIEW_W / probe.naturalWidth, SC_PREVIEW_H / probe.naturalHeight);
+                    const nw = probe.naturalWidth * scale;
+                    const nh = probe.naturalHeight * scale;
+                    scPreviewRange = {
+                        x: Math.max(0, (nw - SC_PREVIEW_W) / 2),
+                        y: Math.max(0, (nh - SC_PREVIEW_H) / 2),
+                    };
+                    box.style.backgroundImage = `url('${u}')`;
+                    applyScPreview();
+                };
+                probe.onerror = () => {
+                    if (!retried) {
+                        tryUrl(u.replace('/static/assets/', '/static/beta/assets/'), true);
+                    } else {
+                        box.style.backgroundImage = '';
+                        if (empty) empty.style.display = 'flex';
+                    }
+                };
+                probe.src = u;
+            };
+            tryUrl(url, false);
+            applyScPreview();
+        }
+        (function bindScPreviewEvents() {
+            const box = document.getElementById('scPreviewBox');
+            if (!box) return;
+            box.addEventListener('pointerdown', (e) => {
+                if (!scPreviewCharId) return;
+                const pos = scorecardOffsets[scPreviewCharId] || { x: 0, y: 0 };
+                scDragging = true;
+                scDrag.startX = e.clientX;
+                scDrag.startY = e.clientY;
+                scDrag.pctX = pos.x || 0;
+                scDrag.pctY = pos.y || 0;
+                try { box.setPointerCapture(e.pointerId); } catch (err) {}
+            });
+            box.addEventListener('pointermove', (e) => {
+                if (!scDragging || !scPreviewCharId) return;
+                const dx = e.clientX - scDrag.startX;
+                const dy = e.clientY - scDrag.startY;
+                // 画像を掴んで動かす操作感: 右ドラッグ＝画像が右へ＝左側が見える＝position% は減少
+                const px = scDrag.pctX - (scPreviewRange.x ? (dx / scPreviewRange.x) * 100 : 0);
+                const py = scDrag.pctY - (scPreviewRange.y ? (dy / scPreviewRange.y) * 100 : 0);
+                scorecardOffsets[scPreviewCharId] = { x: clampPct(px), y: clampPct(py) };
+                applyScPreview();
+            });
+            const endDrag = () => { scDragging = false; };
+            box.addEventListener('pointerup', endDrag);
+            box.addEventListener('pointercancel', endDrag);
+            document.getElementById('scPreviewResetBtn')?.addEventListener('click', () => {
+                if (!scPreviewCharId) return;
+                scorecardOffsets[scPreviewCharId] = { x: 0, y: 0 };
+                applyScPreview();
+            });
+        })();
+
+        function renderScorecardOffsets() {
+            const listEl = document.getElementById('scorecardOffsetList');
+            if (!listEl) return;
+            const query = (document.getElementById('scorecardOffsetSearch')?.value || '').toLowerCase().trim();
+            const filtered = query
+                ? splashCatalog.filter(c => (c.name || '').toLowerCase().includes(query))
+                : splashCatalog;
+            const scOpts = {
+                idAttr: 'data-sc-char-id', rowClass: 'sc-offset-row',
+                rangeClass: 'sc-range', numClass: 'sc-num', btnClass: 'sc-preview-btn',
+                activeChar: scPreviewCharId,
+            };
+            listEl.innerHTML = filtered.length
+                ? filtered.map(c => offsetRowHTML(c.raw_id, c.name, c.icon, scorecardOffsets[c.raw_id] || { x: 0, y: 0 }, scOpts)).join('')
+                : '<div class="text-zinc-600 text-xs">該当キャラがいません</div>';
+            bindOffsetList(listEl, {
+                ...scOpts,
+                store: scorecardOffsets,
+                setupPreview: setupScPreview,
+                onChanged: (cid) => { if (scPreviewCharId === cid) applyScPreview(); },
+            });
+        }
+        async function loadScorecardOffsets() {
+            try {
+                const res = await fetch('/admin/api/scorecard_splash_offsets');
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const data = await res.json();
+                if (!data.ok) throw new Error(data.error || 'failed');
+                if (Array.isArray(data.catalog) && data.catalog.length) splashCatalog = data.catalog;
+                const rows = data.offsets || {};
+                scorecardOffsets = {};
+                Object.keys(rows).forEach(k => {
+                    scorecardOffsets[k] = { x: rows[k].x, y: rows[k].y };
+                });
+                const st = document.getElementById('scorecardOffsetStatus');
+                if (st) st.textContent = `${splashCatalog.length}キャラ / 設定${Object.keys(scorecardOffsets).length}件`;
+                renderScorecardOffsets();
+            } catch (e) {
+                const st = document.getElementById('scorecardOffsetStatus');
+                if (st) st.textContent = `読み込み失敗: ${e}`;
+            }
+        }
+
+        function setScSaveResult(ok, text) {
+            const el = document.getElementById('scorecardOffsetSaveResult');
+            if (!el) return;
+            el.classList.remove('hidden');
+            if (ok === null) {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-zinc-700/60 bg-zinc-900/40 text-zinc-300';
+            } else if (ok) {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-emerald-800/60 bg-emerald-950/30 text-emerald-400';
+            } else {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-red-800/60 bg-red-950/30 text-red-400';
+            }
+            el.textContent = text;
+        }
+
+        async function saveScorecardOffsets() {
+            setScSaveResult(null, '保存中...');
+            try {
+                const res = await fetch('/admin/api/scorecard_splash_offsets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(scorecardOffsets),
+                });
+                const data = await res.json();
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const ts = new Date().toLocaleTimeString('ja-JP');
+                if (res.ok && data.ok) {
+                    const updated = data.updated ?? Object.keys(scorecardOffsets).length;
+                    setScSaveResult(true, `${ts} 保存成功: ${updated}件を保存しました`);
+                } else {
+                    setScSaveResult(false, `${ts} 保存失敗: ${data.error || `status ${res.status}`}`);
+                }
+                resultEl.textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                setScSaveResult(false, `保存エラー: ${e}`);
+                resultEl.textContent = String(e);
+            }
+        }
+
+        document.getElementById('scorecardOffsetReloadBtn')?.addEventListener('click', loadScorecardOffsets);
+        document.getElementById('scorecardOffsetSaveBtn')?.addEventListener('click', saveScorecardOffsets);
+        document.getElementById('scorecardOffsetSearch')?.addEventListener('input', renderScorecardOffsets);
+        loadScorecardOffsets();
+
+        // ==========================================================
+        //  固有元素熟知
+        // ==========================================================
+        function renderInnateEmList() {
+            const listEl = document.getElementById('innateEmList');
+            if (!listEl) return;
+            const query = (document.getElementById('innateEmSearch')?.value || '').toLowerCase().trim();
+            const onlySet = document.getElementById('innateEmOnlySet')?.checked || false;
+            const filtered = splashCatalog.filter(c => {
+                if (query && !(c.name || '').toLowerCase().includes(query)) return false;
+                if (onlySet && !innateEmMap[c.raw_id]) return false;
+                return true;
+            });
+            const rows = filtered.map(c => {
+                const val = innateEmMap[c.raw_id] ?? 0;
+                const iconHtml = c.icon
+                    ? `<img src="${c.icon.startsWith('/') ? '' : '/'}${c.icon}" class="w-9 h-9 rounded-md object-cover bg-zinc-800" loading="lazy">`
+                    : `<div class="w-9 h-9 rounded-md bg-zinc-800 flex items-center justify-center text-xs text-zinc-500">?</div>`;
+                return `
+                    <div class="flex flex-wrap items-center gap-3 px-2 py-1.5 bg-zinc-900/60 rounded-lg border ${val ? 'border-cyan-800' : 'border-zinc-800'}">
+                        ${iconHtml}
+                        <span class="w-24 text-sm font-medium truncate" title="${c.name}">${c.name}</span>
+                        <div class="flex items-center gap-2 text-xs text-zinc-400">
+                            <span class="w-20">固有熟知</span>
+                            <input type="number" min="0" max="2000" step="1" value="${val}"
+                                data-innate-char="${c.raw_id}" class="innate-em-num w-20 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-center">
+                        </div>
+                    </div>`;
+            });
+            listEl.innerHTML = rows.length
+                ? rows.join('')
+                : '<div class="text-zinc-600 text-xs">該当キャラがいません</div>';
+            listEl.querySelectorAll('.innate-em-num').forEach(el => {
+                el.addEventListener('input', () => {
+                    const cid = el.getAttribute('data-innate-char');
+                    const v = parseFloat(el.value);
+                    if (Number.isFinite(v) && v > 0) innateEmMap[cid] = Math.min(2000, v);
+                    else delete innateEmMap[cid];
+                });
+            });
+        }
+        async function loadInnateEm() {
+            try {
+                const res = await fetch('/admin/api/innate_em');
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const data = await res.json();
+                if (!data.ok) throw new Error(data.error || 'failed');
+                if (Array.isArray(data.catalog) && data.catalog.length) splashCatalog = data.catalog;
+                innateEmMap = {};
+                const chars = data.characters || {};
+                Object.keys(chars).forEach(k => {
+                    const v = parseFloat(chars[k]);
+                    if (Number.isFinite(v) && v > 0) innateEmMap[k] = v;
+                });
+                const st = document.getElementById('innateEmStatus');
+                if (st) st.textContent = `${splashCatalog.length}キャラ / 設定${Object.keys(innateEmMap).length}件`;
+                renderInnateEmList();
+            } catch (e) {
+                const st = document.getElementById('innateEmStatus');
+                if (st) st.textContent = `読み込み失敗: ${e}`;
+            }
+        }
+
+        function setInnateEmSaveResult(ok, text) {
+            const el = document.getElementById('innateEmSaveResult');
+            if (!el) return;
+            el.classList.remove('hidden');
+            if (ok === null) {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-zinc-700/60 bg-zinc-900/40 text-zinc-300';
+            } else if (ok) {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-emerald-800/60 bg-emerald-950/30 text-emerald-400';
+            } else {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-red-800/60 bg-red-950/30 text-red-400';
+            }
+            el.textContent = text;
+        }
+
+        async function saveInnateEm() {
+            setInnateEmSaveResult(null, '保存中...');
+            try {
+                const res = await fetch('/admin/api/innate_em', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ characters: innateEmMap }),
+                });
+                const data = await res.json();
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const ts = new Date().toLocaleTimeString('ja-JP');
+                if (res.ok && data.ok) {
+                    const updated = data.updated ?? Object.keys(innateEmMap).length;
+                    setInnateEmSaveResult(true, `${ts} 保存成功: ${updated}件を保存しました`);
+                    renderInnateEmList();
+                } else {
+                    setInnateEmSaveResult(false, `${ts} 保存失敗: ${data.error || `status ${res.status}`}`);
+                }
+                resultEl.textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                setInnateEmSaveResult(false, `保存エラー: ${e}`);
+                resultEl.textContent = String(e);
+            }
+        }
+
+        document.getElementById('innateEmReloadBtn')?.addEventListener('click', loadInnateEm);
+        document.getElementById('innateEmSaveBtn')?.addEventListener('click', saveInnateEm);
+        document.getElementById('innateEmSearch')?.addEventListener('input', renderInnateEmList);
+        document.getElementById('innateEmOnlySet')?.addEventListener('change', renderInnateEmList);
+        loadInnateEm();
 
         function chips(ids) {
             if (!ids || !ids.length) return '<span class="text-zinc-600 text-xs">なし</span>';

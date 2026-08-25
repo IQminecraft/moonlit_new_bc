@@ -1,5 +1,6 @@
 {
   "name": "イネファ",
+  "en_name": "Ineffa",
   "desc": "各国のパーツを使って組み立てられた万能型ロボット。胸部の秘源コアは、かなり古いもののようだ…",
   "weapon": "WEAPON_POLE",
   "rarity": "QUALITY_ORANGE",

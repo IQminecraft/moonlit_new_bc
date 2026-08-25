@@ -1,5 +1,6 @@
 {
   "name": "ドール（女）",
+  "en_name": "Manekina",
   "desc": "「オクタヴィア」を称する魔女があなたとパイモンに託した人形。「星々の幻境」に封じられた秘密を探ることに長けている…",
   "weapon": "WEAPON_SWORD_ONE_HAND",
   "rarity": "QUALITY_ORANGE_SP",

@@ -24,7 +24,7 @@ _CARD_SIGN_VALIDITY_SEC = max(60, float(os.environ.get("CARD_SIGN_VALIDITY_HOURS
 _CARD_SIGN_MAX_AGE_SEC = 12 * 3600.0  # 発行済み署名の受付上限（12h を超える exp は拒否）
 _CARD_SIGN_RATE_LIMIT_PER_MIN = max(0, int(os.environ.get("CARD_SIGN_RATE_LIMIT_PER_MIN", "60")))
 _CARD_GEN_RATE_LIMIT_PER_MIN = max(0, int(os.environ.get("CARD_GEN_RATE_LIMIT_PER_MIN", "0")))
-_CARD_SIGN_PARAM_ORDER = ["uid", "avatar_id", "calc_method", "fake_char", "fake_weapon", "beta", "bg_color", "img_format", "bg_mode", "bg_region", "growth", "base_prec"]
+_CARD_SIGN_PARAM_ORDER = ["uid", "avatar_id", "calc_method", "fake_char", "fake_weapon", "beta", "bg_color", "img_format", "bg_mode", "bg_region", "growth", "base_prec", "substat_dots"]
 _TEAM_SIGN_PARAM_ORDER = ["uid", "char_ids", "configs", "boss", "beta", "img_format"]
 _rate_buckets = {}  # key -> deque(monotonic秒) スライディングウィンドウ
 

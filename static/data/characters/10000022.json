@@ -1,5 +1,6 @@
 {
   "name": "ウェンティ",
+  "en_name": "Venti",
   "desc": "モンドの街にいる、数多くの自由な吟遊詩人の一人。",
   "weapon": "WEAPON_BOW",
   "rarity": "QUALITY_ORANGE",

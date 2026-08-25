@@ -1,5 +1,6 @@
 {
   "name": "クレー",
+  "en_name": "Klee",
   "desc": "西風騎士団反省室の常連で、モンドの爆破スペシャリスト。人呼んで「逃げ回る太陽」。",
   "weapon": "WEAPON_CATALYST",
   "rarity": "QUALITY_ORANGE",

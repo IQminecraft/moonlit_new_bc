@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>案1 CINEMA — フルブリード・シネマティック</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Sora:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --elem:#4aa4ff;
+    --elem-dim:rgba(74,164,255,.35);
+    --gold:#ffd27d;
+    --ink:#05070d;
+    --glass:rgba(8,12,22,.55);
+    --glass-brd:rgba(255,255,255,.16);
+    --txt:#f4f7fc;
+    --txt-dim:rgba(244,247,252,.66);
+    --txt-faint:rgba(244,247,252,.42);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#030408}
+  body{
+    font-family:"Noto Sans JP",sans-serif;
+    display:flex;align-items:center;justify-content:center;
+    min-height:100vh;padding:32px;color:var(--txt);
+  }
+  .num{font-family:"Sora","Noto Sans JP",sans-serif}
+
+  /* ===== カード本体 1200x780 ===== */
+  .card{
+    position:relative;width:1200px;height:780px;border-radius:28px;
+    overflow:hidden;isolation:isolate;
+    box-shadow:0 60px 120px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.08);
+    background:var(--ink);
+  }
+  .bg{
+    position:absolute;inset:0;z-index:0;
+    background:url('/static/assets/splash/UI_Gacha_AvatarImg_Columbina.webp') center 22%/cover no-repeat;
+    transform:scale(1.04);
+  }
+  /* 可読性スク림：左・下・右を暗く落とす */
+  .scrim{position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:
+      radial-gradient(120% 90% at 78% 18%, transparent 30%, rgba(3,5,10,.42) 78%),
+      linear-gradient(90deg, rgba(3,5,10,.88) 0%, rgba(3,5,10,.55) 30%, rgba(3,5,10,.12) 55%, rgba(3,5,10,.30) 100%),
+      linear-gradient(0deg, rgba(3,5,10,.94) 0%, rgba(3,5,10,.55) 26%, rgba(3,5,10,0) 52%);
+  }
+  .tint{position:absolute;inset:0;z-index:1;pointer-events:none;mix-blend-mode:soft-light;
+    background:radial-gradient(90% 70% at 20% 100%, var(--elem-dim), transparent 60%);}
+
+  /* ===== 左上：キャラ名 ===== */
+  .head{position:absolute;top:40px;left:44px;z-index:5;max-width:560px}
+  .elem-line{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .elem-chip{display:flex;align-items:center;gap:7px;padding:5px 13px;border-radius:999px;
+    background:rgba(8,14,26,.55);border:1px solid var(--glass-brd);backdrop-filter:blur(8px);
+    font-size:13px;font-weight:700;letter-spacing:.06em}
+  .elem-chip img{width:18px;height:18px}
+  .stars{display:flex;gap:2px}
+  .stars svg{width:15px;height:15px;fill:var(--gold)}
+  h1.name{
+    font-size:64px;font-weight:900;line-height:1.02;letter-spacing:.01em;
+    text-shadow:0 4px 30px rgba(0,0,0,.75);
+  }
+  h1.name .latin{display:block;font-family:"Sora";font-size:15px;font-weight:600;letter-spacing:.42em;
+    color:var(--elem);text-transform:uppercase;margin-bottom:10px}
+  .meta{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:15px;font-weight:600;color:var(--txt-dim)}
+  .meta .lv{font-size:22px;font-weight:800;color:var(--txt)}
+  .meta .sep{width:1px;height:16px;background:rgba(255,255,255,.28)}
+  .friend{display:flex;align-items:center;gap:5px}
+  .friend svg{width:14px;height:14px;fill:#ff7dab}
+
+  /* ===== 左レール：天賦/聖遺物(命ノ星座) ===== */
+  .rail{position:absolute;left:44px;top:330px;z-index:5;display:flex;flex-direction:column;gap:22px}
+  .rail-group{display:flex;flex-direction:column;gap:9px}
+  .rail-label{font-size:11px;font-weight:700;letter-spacing:.28em;color:var(--txt-faint);text-transform:uppercase;margin-bottom:2px}
+  .bubbles{display:flex;gap:9px}
+  .bubble{position:relative;width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    background:rgba(8,12,22,.62);border:1px solid var(--glass-brd);backdrop-filter:blur(10px)}
+  .bubble img{width:30px;height:30px;object-fit:contain}
+  .bubble .lvb{position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);
+    font-size:10px;font-weight:800;padding:1px 6px;border-radius:7px;background:#0a0f1c;border:1px solid rgba(255,255,255,.5)}
+  .const-row{display:flex;gap:8px}
+  .const{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 30% 25%, var(--elem-dim), rgba(5,8,16,.85) 70%);
+    border:1.5px solid var(--elem);box-shadow:0 0 12px var(--elem-dim)}
+  .const img{width:21px;height:21px;object-fit:contain}
+
+  /* ===== 右カラム：武器＋スコア ===== */
+  .right{position:absolute;top:40px;right:40px;z-index:5;width:300px;display:flex;flex-direction:column;gap:14px}
+  .panel{background:var(--glass);border:1px solid var(--glass-brd);border-radius:20px;backdrop-filter:blur(18px);
+    box-shadow:0 18px 40px rgba(0,0,0,.45)}
+  .weapon{display:flex;gap:14px;padding:16px;align-items:center}
+  .weapon .wimg{width:64px;height:64px;border-radius:14px;overflow:hidden;flex-shrink:0;
+    background:radial-gradient(circle at 30% 25%, rgba(255,255,255,.14), transparent 65%),#0a0f1c;
+    border:1px solid rgba(255,255,255,.2)}
+  .weapon .wimg img{width:100%;height:100%;object-fit:cover}
+  .weapon .wname{font-size:17px;font-weight:800;line-height:1.2}
+  .weapon .wsub{font-size:12px;color:var(--txt-dim);margin-top:3px;font-weight:600}
+  .weapon .wr{margin-left:auto;text-align:right;font-size:12px;color:var(--txt-faint);font-weight:700}
+  .weapon .wr b{display:block;font-size:15px;color:var(--gold)}
+
+  .score{padding:18px 20px;display:flex;align-items:center;gap:16px}
+  .score .tier{width:64px;height:64px;flex-shrink:0}
+  .score .tier img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 4px 14px rgba(255,210,125,.4))}
+  .score .sv{font-size:42px;font-weight:800;line-height:1;letter-spacing:-.01em}
+  .score .sl{font-size:11px;letter-spacing:.2em;color:var(--txt-faint);font-weight:700;text-transform:uppercase;margin-bottom:5px}
+  .score .sm{font-size:11px;color:var(--txt-dim);margin-top:6px;font-weight:600}
+
+  /* ===== ステータス：横並びバー ===== */
+  .stats{position:absolute;left:44px;right:40px;bottom:216px;z-index:5;
+    display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+  .stat{background:rgba(8,12,22,.5);border:1px solid rgba(255,255,255,.12);border-radius:14px;
+    padding:11px 13px;backdrop-filter:blur(12px);display:flex;flex-direction:column;gap:5px}
+  .stat .k{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt-dim);font-weight:600}
+  .stat .k img{width:15px;height:15px;object-fit:contain}
+  .stat .v{font-size:19px;font-weight:800;letter-spacing:-.01em}
+  .stat.hl .v{color:var(--elem)}
+
+  /* ===== 聖遺物フィルムストリップ ===== */
+  .arts{position:absolute;left:40px;right:40px;bottom:34px;z-index:5;display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .art{position:relative;background:rgba(8,12,22,.62);border:1px solid rgba(255,255,255,.14);border-radius:18px;
+    padding:13px 14px 12px;backdrop-filter:blur(16px);overflow:hidden;transition:transform .25s,border-color .25s}
+  .art:hover{transform:translateY(-5px);border-color:var(--elem)}
+  .art .glow{position:absolute;top:-30px;right:-30px;width:90px;height:90px;border-radius:50%;
+    background:radial-gradient(circle,var(--elem-dim),transparent 70%);opacity:.5}
+  .art .top{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .art .aicon{width:42px;height:42px;border-radius:10px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,.2)}
+  .art .aicon img{width:100%;height:100%;object-fit:cover}
+  .art .slot{font-size:11px;color:var(--txt-faint);font-weight:700;letter-spacing:.05em}
+  .art .main{font-size:13px;font-weight:800;line-height:1.25}
+  .art .tier{margin-left:auto;text-align:center;flex-shrink:0}
+  .art .tier img{width:26px;height:26px;object-fit:contain}
+  .art .tier .asc{font-size:10px;color:var(--txt-faint);font-weight:700}
+  .subs{display:flex;flex-direction:column;gap:5px}
+  .sub{display:flex;align-items:center;gap:6px;font-size:11.5px}
+  .sub .nm{color:var(--txt-dim);font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sub .vl{font-weight:700;color:var(--txt)}
+  .dots{display:inline-flex;gap:2px;margin-top:1px}
+  .dot{width:11px;height:3.5px;border-radius:2px}
+  .d1{background:#22c55e}.d2{background:#3b82f6}.d3{background:#a855f7}.d4{background:#f97316}
+  .art .foot{display:flex;align-items:center;justify-content:space-between;margin-top:9px;padding-top:8px;
+    border-top:1px solid rgba(255,255,255,.12)}
+  .art .fs{font-size:10px;color:var(--txt-faint);font-weight:700;letter-spacing:.08em}
+  .art .fv{font-size:16px;font-weight:800;color:var(--gold)}
+
+  /* セット効果チップ */
+  .setchip{position:absolute;right:40px;top:250px;z-index:5;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+  .setchip .s{display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;
+    background:rgba(8,12,22,.55);border:1px solid var(--glass-brd);backdrop-filter:blur(10px);
+    font-size:12px;font-weight:700}
+  .setchip .s .cnt{color:var(--elem);font-weight:800}
+  .setchip .s.off{opacity:.75}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="bg"></div>
+  <div class="tint"></div>
+  <div class="scrim"></div>
+
+  <!-- 左上：キャラ -->
+  <div class="head">
+    <div class="elem-line">
+      <span class="elem-chip"><img src="/static/assets/props/hydro.png" alt="">水</span>
+      <span class="stars">
+        <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.3l7.1-.7z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.3l7.1-.7z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.3l7.1-.7z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.3l7.1-.7z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.3l7.1-.7z"/></svg>
+      </span>
+    </div>
+    <h1 class="name"><span class="latin">Columbina</span>コロンビーナ</h1>
+    <div class="meta">
+      <span class="lv num">Lv.90</span>
+      <span class="sep"></span>
+      <span class="friend"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-10-9.3C.4 8.6 2.3 5 5.7 5c2 0 3.4 1.1 4.3 2.4h4c.9-1.3 2.3-2.4 4.3-2.4 3.4 0 5.3 3.6 3.7 6.7C19.5 16.3 12 21 12 21z"/></svg>10</span>
+      <span class="sep"></span>
+      <span>完凸</span>
+    </div>
+  </div>
+
+  <!-- 左レール：天賦＆星座 -->
+  <div class="rail">
+    <div class="rail-group">
+      <div class="rail-label">Talents</div>
+      <div class="bubbles">
+        <div class="bubble"><img src="/static/assets/skills/Skill_A_Catalyst_MD.webp"><span class="lvb num">10</span></div>
+        <div class="bubble"><img src="/static/assets/skills/Skill_S_Columbina_01.webp"><span class="lvb num">10</span></div>
+        <div class="bubble"><img src="/static/assets/skills/Skill_E_Columbina_01.webp"><span class="lvb num">10</span></div>
+      </div>
+    </div>
+    <div class="rail-group">
+      <div class="rail-label">Constellation</div>
+      <div class="const-row">
+        <div class="const"><img src="/static/assets/skills/UI_Talent_S_Columbina_01.webp"></div>
+        <div class="const"><img src="/static/assets/skills/UI_Talent_S_Columbina_02.webp"></div>
+        <div class="const"><img src="/static/assets/skills/UI_Talent_U_Columbina_01.webp"></div>
+        <div class="const"><img src="/static/assets/skills/UI_Talent_S_Columbina_03.webp"></div>
+        <div class="const"><img src="/static/assets/skills/UI_Talent_U_Columbina_02.webp"></div>
+        <div class="const"><img src="/static/assets/skills/UI_Talent_S_Columbina_04.webp"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右：武器＋スコア -->
+  <div class="right">
+    <div class="panel weapon">
+      <div class="wimg"><img src="/static/assets/weapons/UI_EquipIcon_Catalyst_Brisingamen.webp"></div>
+      <div>
+        <div class="wname">帳の夜曲</div>
+        <div class="wsub num">基礎攻撃力 542 ・ 会心ダメ 88.2%</div>
+      </div>
+      <div class="wr num">Lv.90<b>R1</b></div>
+    </div>
+    <div class="panel score">
+      <div class="tier"><img src="/static/assets/tiers/SS.png" alt="SS"></div>
+      <div>
+        <div class="sl">Total Score</div>
+        <div class="sv num">209.5</div>
+        <div class="sm">会心スコア換算</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- セット効果 -->
+  <div class="setchip">
+    <span class="s">暁の星と月の歌 <span class="cnt num">×4</span></span>
+    <span class="s off">月を紡ぐ夜の歌 <span class="cnt num">×1</span></span>
+  </div>
+
+  <!-- ステータスバー -->
+  <div class="stats">
+    <div class="stat"><span class="k"><img src="/static/assets/props/hp.png">HP</span><span class="v num">44,186</span></div>
+    <div class="stat"><span class="k"><img src="/static/assets/props/atk.png">攻撃力</span><span class="v num">1,010</span></div>
+    <div class="stat"><span class="k"><img src="/static/assets/props/def.png">防御力</span><span class="v num">577</span></div>
+    <div class="stat hl"><span class="k"><img src="/static/assets/props/rate.webp">会心率</span><span class="v num">72.0%</span></div>
+    <div class="stat hl"><span class="k"><img src="/static/assets/props/dmg.webp">会心ダメ</span><span class="v num">221.4%</span></div>
+    <div class="stat"><span class="k"><img src="/static/assets/props/er.png">元素チャージ</span><span class="v num">123.3%</span></div>
+    <div class="stat"><span class="k"><img src="/static/assets/props/em.png">元素熟練</span><span class="v num">122</span></div>
+  </div>
+
+  <!-- 聖遺物 -->
+  <div class="arts">
+    <!-- 花 -->
+    <div class="art"><div class="glow"></div>
+      <div class="top"><div class="aicon"><img src="/static/assets/artifacts/UI_RelicIcon_15042_4.webp"></div>
+        <div><div class="slot">生の花</div><div class="main">HP +20</div></div>
+        <div class="tier"><img src="/static/assets/tiers/S.png"><div class="asc num">42.1</div></div></div>
+      <div class="subs">
+        <div class="sub"><span class="nm">会心率</span><span class="vl num">11.7%</span></div>
+        <div class="sub"><span class="nm">会心ダメージ</span><span class="vl num">17.1%</span></div>
+        <div class="sub"><span class="nm">元素熟練</span><span class="vl num">19</span></div>
+        <div class="sub"><span class="nm">HP</span><span class="vl num">5.8%</span></div>
+      </div>
+      <div class="foot"><span class="fs">SCORE</span><span class="fv num">42.1</span></div>
+    </div>
+    <!-- 羽 -->
+    <div class="art"><div class="glow"></div>
+      <div class="top"><div class="aicon"><img src="/static/assets/artifacts/UI_RelicIcon_15043_2.webp"></div>
+        <div><div class="slot">死の羽</div><div class="main">攻撃力 +20</div></div>
+        <div class="tier"><img src="/static/assets/tiers/SS.png"><div class="asc num">48.7</div></div></div>
+      <div class="subs">
+        <div class="sub"><span class="nm">会心率</span><span class="vl num">9.7%</span></div>
+        <div class="sub"><span class="nm">会心ダメージ</span><span class="vl num">22.5%</span></div>
+        <div class="sub"><span class="nm">元素チャージ効率</span><span class="vl num">11.7%</span></div>
+        <div class="sub"><span class="nm">HP</span><span class="vl num">239</span></div>
+      </div>
+      <div class="foot"><span class="fs">SCORE</span><span class="fv num">48.7</span></div>
+    </div>
+    <!-- 砂 -->
+    <div class="art"><div class="glow"></div>
+      <div class="top"><div class="aicon"><img src="/static/assets/artifacts/UI_RelicIcon_15043_5.webp"></div>
+        <div><div class="slot">時の砂</div><div class="main">HP 46.6%</div></div>
+        <div class="tier"><img src="/static/assets/tiers/A.png"><div class="asc num">35.2</div></div></div>
+      <div class="subs">
+        <div class="sub"><span class="nm">会心率</span><span class="vl num">13.2%</span></div>
+        <div class="sub"><span class="nm">会心ダメージ</span><span class="vl num">7.0%</span></div>
+        <div class="sub"><span class="nm">攻撃力</span><span class="vl num">16</span></div>
+        <div class="sub"><span class="nm">防御力</span><span class="vl num">44</span></div>
+      </div>
+      <div class="foot"><span class="fs">SCORE</span><span class="fv num">35.2</span></div>
+    </div>
+    <!-- 杯 -->
+    <div class="art"><div class="glow"></div>
+      <div class="top"><div class="aicon"><img src="/static/assets/artifacts/UI_RelicIcon_15043_1.webp"></div>
+        <div><div class="slot">空の杯</div><div class="main">HP 46.6%</div></div>
+        <div class="tier"><img src="/static/assets/tiers/S.png"><div class="asc num">44.9</div></div></div>
+      <div class="subs">
+        <div class="sub"><span class="nm">会心率</span><span class="vl num">7.0%</span></div>
+        <div class="sub"><span class="nm">攻撃力</span><span class="vl num">35</span></div>
+        <div class="sub"><span class="nm">HP</span><span class="vl num">269</span></div>
+        <div class="sub"><span class="nm">会心ダメージ</span><span class="vl num">17.1%</span></div>
+      </div>
+      <div class="foot"><span class="fs">SCORE</span><span class="fv num">44.9</span></div>
+    </div>
+    <!-- 冠 -->
+    <div class="art"><div class="glow"></div>
+      <div class="top"><div class="aicon"><img src="/static/assets/artifacts/UI_RelicIcon_15043_3.webp"></div>
+        <div><div class="slot">理の冠</div><div class="main">HP 46.6%</div></div>
+        <div class="tier"><img src="/static/assets/tiers/A.png"><div class="asc num">38.6</div></div></div>
+      <div class="subs">
+        <div class="sub"><span class="nm">会心ダメージ</span><span class="vl num">19.4%</span></div>
+        <div class="sub"><span class="nm">元素チャージ効率</span><span class="vl num">11.7%</span></div>
+        <div class="sub"><span class="nm">会心率</span><span class="vl num">6.2%</span></div>
+        <div class="sub"><span class="nm">元素熟練</span><span class="vl num">23</span></div>
+      </div>
+      <div class="foot"><span class="fs">SCORE</span><span class="fv num">38.6</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

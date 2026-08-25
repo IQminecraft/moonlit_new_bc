@@ -19,6 +19,8 @@ from app.core.notify import report_error_to_discord
 from app.card.cache import _ADMIN_CATALOG_CACHE
 from app.card.bg import _list_region_image_names
 from app.card.region import _load_region_map, _TRAVELER_BASE_IDS, clear_region_map_cache
+from app.card.scorecard_splash import SCORECARD_SPLASH_OFFSETS_PATH, load_scorecard_splash_offsets
+from app.card.stat_calc import INNATE_EM_PATH, load_innate_em_map
 
 admin_router = APIRouter()
 
@@ -373,6 +375,153 @@ async def admin_team_splash_offsets_save(request: Request):
         return JSONResponse(await run_in_threadpool(_run))
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+# ==========================================================
+#  SCORECARD スプラッシュオフセット管理 API
+#  （build_card.html の SCORECARD テーマバナー用・ベーススプラッシュのみ）
+# ==========================================================
+@admin_router.get("/admin/api/scorecard_splash_offsets")
+async def admin_scorecard_splash_offsets_get(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    try:
+        def _run():
+            offsets = load_scorecard_splash_offsets() or {}
+            cleaned = {}
+            for key, val in offsets.items():
+                if not isinstance(val, dict):
+                    continue
+                try:
+                    cleaned[str(key)] = {"x": float(val.get("x", 0)), "y": float(val.get("y", 0))}
+                except (TypeError, ValueError):
+                    continue
+            catalog = _build_admin_character_catalog()
+            enriched = []
+            for entry in catalog:
+                eid = str(entry.get("id"))
+                cur = cleaned.get(eid) or {}
+                enriched.append({
+                    **entry,
+                    "raw_id": eid,
+                    "x": cur.get("x", 0),
+                    "y": cur.get("y", 0),
+                })
+            return {"ok": True, "offsets": cleaned, "catalog": enriched}
+        return JSONResponse(await run_in_threadpool(_run))
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@admin_router.post("/admin/api/scorecard_splash_offsets")
+async def admin_scorecard_splash_offsets_save(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "invalid JSON"}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"ok": False, "error": "body must be {charId: {x, y}}"}, status_code=400)
+
+    valid_ids = set()
+    for c in _build_admin_character_catalog():
+        if c.get("id") is not None:
+            valid_ids.add(str(c.get("id")))
+
+    cleaned = {}
+    for raw_id, pos in body.items():
+        raw_id = str(raw_id)
+        if raw_id not in valid_ids:
+            continue
+        if not isinstance(pos, dict):
+            continue
+        try:
+            x = max(-100.0, min(100.0, float(pos.get("x", 0))))
+            y = max(-100.0, min(100.0, float(pos.get("y", 0))))
+        except (TypeError, ValueError):
+            continue
+        cleaned[raw_id] = {"x": round(x, 1), "y": round(y, 1)}
+
+    def _run():
+        os.makedirs(os.path.dirname(SCORECARD_SPLASH_OFFSETS_PATH), exist_ok=True)
+        with open(SCORECARD_SPLASH_OFFSETS_PATH, "w", encoding="utf-8") as f:
+            json.dump({"offsets": cleaned}, f, indent=2, ensure_ascii=False)
+        return {"ok": True, "updated": len(cleaned)}
+
+    try:
+        return JSONResponse(await run_in_threadpool(_run))
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ==========================================================
+#  固有元素熟知管理 API
+# ==========================================================
+@admin_router.get("/admin/api/innate_em")
+async def admin_innate_em_get(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    try:
+        def _run():
+            chars = load_innate_em_map() or {}
+            catalog = _build_admin_character_catalog()
+            enriched = []
+            for entry in catalog:
+                eid = str(entry.get("id"))
+                enriched.append({
+                    **entry,
+                    "raw_id": eid,
+                    "em": chars.get(eid, 0),
+                })
+            return {"ok": True, "characters": chars, "catalog": enriched}
+        return JSONResponse(await run_in_threadpool(_run))
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@admin_router.post("/admin/api/innate_em")
+async def admin_innate_em_save(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "invalid JSON"}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"ok": False, "error": "body must be {characters: {charId: number}}"}, status_code=400)
+
+    chars = body.get("characters")
+    if not isinstance(chars, dict):
+        return JSONResponse({"ok": False, "error": "body.characters must be {charId: number}"}, status_code=400)
+
+    valid_ids = set()
+    for c in _build_admin_character_catalog():
+        if c.get("id") is not None:
+            valid_ids.add(str(c.get("id")))
+
+    cleaned = {}
+    for raw_id, val in chars.items():
+        raw_id = str(raw_id)
+        if raw_id not in valid_ids:
+            continue
+        try:
+            em = float(val)
+        except (TypeError, ValueError):
+            continue
+        if em > 0:
+            cleaned[raw_id] = round(em, 1)
+
+    def _run():
+        os.makedirs(os.path.dirname(INNATE_EM_PATH), exist_ok=True)
+        with open(INNATE_EM_PATH, "w", encoding="utf-8") as f:
+            json.dump({"characters": cleaned}, f, indent=2, ensure_ascii=False)
+        return {"ok": True, "updated": len(cleaned)}
+
+    try:
+        return JSONResponse(await run_in_threadpool(_run))
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
 
 # ==========================================================
 #  Leyline（レイライン）データ取得 API

@@ -1,5 +1,6 @@
 {
   "name": "白朮",
+  "en_name": "Baizhu",
   "desc": "薬舗「不卜廬」の店主。「長生」という名の白蛇を体に乗せている。薬に精通しており、いつも深く考えを巡らせているが、他人が彼の思考を読み取ることは難しい。",
   "weapon": "WEAPON_CATALYST",
   "rarity": "QUALITY_ORANGE",

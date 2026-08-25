@@ -1,5 +1,6 @@
 {
   "name": "ノエル",
+  "en_name": "Noelle",
   "desc": "「西風騎士団」の頼もしいメイド。いつか本当の騎士になることを夢見ている。",
   "weapon": "WEAPON_CLAYMORE",
   "rarity": "QUALITY_PURPLE",
