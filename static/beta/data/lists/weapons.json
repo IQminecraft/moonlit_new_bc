@@ -228,14 +228,14 @@
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
   "11437": {
-    "enName": "Weapon: Sword",
-    "jaName": "武器片手剣",
+    "enName": "New Bough",
+    "jaName": "新たなる枝",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
   "11438": {
-    "enName": "Weapon: Sword",
-    "jaName": "武器片手剣",
+    "enName": "Silver Light",
+    "jaName": "銀の釭JP0D",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
@@ -348,8 +348,8 @@
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
   "11522": {
-    "enName": "Weapon: Sword",
-    "jaName": "武器片手剣",
+    "enName": "Beyond the Chrysalis",
+    "jaName": "蝶の羽化",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
@@ -1086,8 +1086,8 @@
     "weaponType": "WEAPON_CATALYST"
   },
   "14437": {
-    "enName": "Weapon: Catalyst",
-    "jaName": "武器法器",
+    "enName": "Winter's Heavy Heart",
+    "jaName": "雪に沈む心",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CATALYST"
   },
@@ -1206,8 +1206,8 @@
     "weaponType": "WEAPON_CATALYST"
   },
   "14524": {
-    "enName": "Weapon: Catalyst",
-    "jaName": "武器法器",
+    "enName": "Hymn of the Maelstrom",
+    "jaName": "旋流の讃美歌",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_CATALYST"
   },
@@ -1434,8 +1434,8 @@
     "weaponType": "WEAPON_BOW"
   },
   "15437": {
-    "enName": "Weapon: Bow",
-    "jaName": "武器弓",
+    "enName": "Breezeborne Refrain",
+    "jaName": "風に遊ぶ弦",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_BOW"
   },
@@ -1704,13 +1704,13 @@
     "weaponType": "WEAPON_CLAYMORE"
   },
   "390002": {
-    "enName": "",
+    "enName": "Exaiphanes Blade",
     "jaName": "星鋒の剣",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
   "390003": {
-    "enName": "",
+    "enName": "Exaiphanes Blade",
     "jaName": "星鋒の剣",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"

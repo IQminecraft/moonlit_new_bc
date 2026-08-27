@@ -813,5 +813,67 @@
     "ok": true,
     "message": "login ok from 127.0.0.1",
     "extra": null
+  },
+  {
+    "at": "2026-08-26T20:25:35+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-27T01:22:10+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-27T19:23:55+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from testclient",
+    "extra": null
+  },
+  {
+    "at": "2026-08-27T19:25:56+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-08-28T01:22:19+09:00",
+    "action": "fetch_beta_nanoka_json",
+    "ok": true,
+    "message": "beta=7.0.52 scope=all",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "beta_json",
+      "live_version": "7.0",
+      "beta_version": "7.0.52",
+      "scope": "all",
+      "added_characters": [
+        "10000140",
+        "10000143"
+      ],
+      "added_weapons": [
+        "11437",
+        "11438",
+        "11522",
+        "14437",
+        "14524",
+        "15437",
+        "390002",
+        "390003"
+      ],
+      "added_artifacts": [],
+      "lists": [
+        "characters.json",
+        "weapons.json",
+        "artifacts.json"
+      ]
+    }
   }
 ]

@@ -3,6 +3,9 @@ import json
 from enka import GenshinClient
 import os
 
+from app.paths import STATIC_DIR
+from app.core.jsonio import write_json_atomic
+
 try:
     import board_generator
     HAS_BOARD_GENERATOR = True
@@ -19,14 +22,14 @@ async def update_uid_data(uid: int):
             data = await client.fetch_showcase(uid, raw=True)
         except Exception as e:
             #print(f"Error fetching data from Enka for UID {uid}: {e}")
-            save_dir = os.path.join("static", "cache")
+            save_dir = os.path.join(STATIC_DIR, "cache")
             json_filename = os.path.join(save_dir, f"showcase_{str(uid)}.json")
             if os.path.exists(json_filename):
                 #print(f"Fallback: Using existing cache for UID {uid}")
                 return True, "API error. Using cached data."
             return False, str(e)
 
-        save_dir = os.path.join("static", "cache")
+        save_dir = os.path.join(STATIC_DIR, "cache")
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
         
@@ -34,8 +37,7 @@ async def update_uid_data(uid: int):
         
         cleaned_data = clean_showcase_data(data)
         
-        with open(json_filename, "w", encoding="utf-8") as f:
-            json.dump(cleaned_data, f, ensure_ascii=False, indent=2)
+        write_json_atomic(json_filename, cleaned_data)
             #print(f"Saved cleaned data to {json_filename}")
         
         if HAS_BOARD_GENERATOR:

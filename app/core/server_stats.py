@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 import time as _time
 import threading as _threading
 from typing import Optional, Dict, Any
@@ -273,7 +272,7 @@ def _server_stats_snapshot() -> Dict[str, Any]:
             "region_bgs": len(_REGION_BGS),
             "region_bgs_max": _CACHE_MAX_REGION_BGS,
             "ttl_sec": round(_CARD_CACHE_TTL_SEC, 1),
-            "last_reset_ago_sec": round(time.time() - _CARD_CACHE_LAST_RESET, 1),
+            "last_reset_ago_sec": round(_time.time() - _CARD_CACHE_LAST_RESET, 1),
         },
         "card_gen": _card_gen_stats(),
         "errors": errors,

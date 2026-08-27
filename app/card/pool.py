@@ -1,6 +1,7 @@
 import os
 import time
 import asyncio
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Any
 from fastapi import HTTPException
@@ -28,7 +29,7 @@ _CARD_GEN_EXECUTOR = ThreadPoolExecutor(
 )
 _CARD_GEN_PENDING = 0  # 実行中 + キュー待ちの合計
 _CARD_GEN_RUNNING = 0
-_CARD_GEN_LOCK = __import__("threading").Lock()
+_CARD_GEN_LOCK = threading.Lock()
 
 
 def _card_gen_stats() -> Dict[str, Any]:

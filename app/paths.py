@@ -29,3 +29,6 @@ DESIGN_W, DESIGN_H = 1741, 1159
 CARD_W, CARD_H = 2400, 1620
 SX = CARD_W / DESIGN_W
 SY = CARD_H / DESIGN_H
+
+# サイト（アプリ）自体のバージョン。ヘッダーのタイトル横に表示する。
+SITE_VERSION = "2.0"

@@ -1,6 +1,6 @@
 import os
 import threading
-from PIL import Image, ImageDraw, ImageChops
+from PIL import Image, ImageDraw, ImageChops, ImageFilter
 from app.paths import SX as _BASE_SX, SY as _BASE_SY
 from app.card.cache import get_cached_font, get_cached_image, get_resized_image
 from app.card.special import resolve_datas_path
@@ -50,11 +50,69 @@ class figma_draw_scale:
         return False
 
 
-def draw_figma_text_right(draw, text, x, y, font, font_size=24, fill_color=(255, 255, 255), stroke_width=0, stroke_fill=None, shadow=False, **kwargs):
+# ==============================================================
+#  ライトモード描画テーマ（スレッドローカル）。
+#  figma_draw_theme(light=True) 内では、draw_figma_* 系関数の
+#  「色未指定時の既定色」がライト系（暗い文字 / 白系パネル）に切り替わる。
+#  明示的に色が渡された描画は影響しない。
+# ==============================================================
+_theme_state = threading.local()
+
+_DEFAULT = object()
+
+_LIGHT_COLORS = {
+    "text": (17, 24, 39, 255),
+    "shadow": (255, 255, 255, 180),
+    "box_fill": (255, 255, 255, 160),
+    "box_outline": (15, 23, 42, 38),
+    "glass_fill_top": (255, 255, 255, 170),
+    "glass_fill_bottom": (241, 245, 249, 190),
+    "glass_border_top": (15, 23, 42, 45),
+    "glass_border_bottom": (15, 23, 42, 30),
+    "line": (15, 23, 42, 40),
+    "icon_container": (15, 23, 42, 70),
+}
+
+
+class figma_draw_theme:
+    """現在のスレッド限定で描画既定色を切り替えるコンテキストマネージャ。
+
+    使用例::
+        with figma_draw_theme(light=True):
+            ... draw_figma_* ...
+    """
+    def __init__(self, light=True):
+        self._light = bool(light)
+        self._prev = None
+
+    def __enter__(self):
+        self._prev = getattr(_theme_state, "light", False)
+        _theme_state.light = self._light
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        _theme_state.light = self._prev
+        return False
+
+
+def _is_light_theme() -> bool:
+    return bool(getattr(_theme_state, "light", False))
+
+
+def _theme_color(key, dark_value):
+    """ライトモード中はライト既定色、それ以外は従来既定色を返す。"""
+    if _is_light_theme():
+        return _LIGHT_COLORS.get(key, dark_value)
+    return dark_value
+
+
+def draw_figma_text_right(draw, text, x, y, font, font_size=24, fill_color=_DEFAULT, stroke_width=0, stroke_fill=None, shadow=False, **kwargs):
+    if fill_color is _DEFAULT:
+        fill_color = _theme_color("text", (255, 255, 255))
     text_str = str(text)
     # 設計座標 → キャンバス座標
     if shadow:
-        draw.text((x * _sx() + 2 * _sx(), y * _sy() + 2 * _sy()), text_str, fill=(0, 0, 0, 160), font=font, anchor="ra")
+        draw.text((x * _sx() + 2 * _sx(), y * _sy() + 2 * _sy()), text_str, fill=_theme_color("shadow", (0, 0, 0, 160)), font=font, anchor="ra")
     if stroke_width > 0:
         sf = stroke_fill if stroke_fill is not None else fill_color
         draw.text((x * _sx(), y * _sy()), text_str, fill=fill_color, font=font, anchor="ra",
@@ -63,9 +121,13 @@ def draw_figma_text_right(draw, text, x, y, font, font_size=24, fill_color=(255,
         draw.text((x * _sx(), y * _sy()), text_str, fill=fill_color, font=font, anchor="ra")
 
 
-def draw_figma_box(img, x, y, width, height, radius=15, fill_color=(60, 64, 72, 125),
-                   outline_color=(140, 145, 155, 90), outline_width=1, shadow=True,
+def draw_figma_box(img, x, y, width, height, radius=15, fill_color=None,
+                   outline_color=None, outline_width=1, shadow=True,
                    shadow_offset=(6, 6), shadow_blur=8, shadow_alpha=70):
+    if fill_color is None:
+        fill_color = _theme_color("box_fill", (60, 64, 72, 125))
+    if outline_color is None:
+        outline_color = _theme_color("box_outline", (140, 145, 155, 90))
     x1, y1 = x * _sx(), y * _sy()
     x2, y2 = x1 + width * _sx(), y1 + height * _sy()
     radius = radius * _sy()
@@ -100,7 +162,113 @@ def draw_figma_box(img, x, y, width, height, radius=15, fill_color=(60, 64, 72, 
     img.alpha_composite(overlay, dest=(layer_x1, layer_y1))
 
 
-def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=(255, 255, 255), align="left", box_width=None, stroke_width=0, stroke_fill=None, shadow=False):
+def _composite_clipped(img, layer, dx, dy):
+    """レイヤーをキャンバス範囲にクリップして合成する（はみ出し分の ValueError 防止）。"""
+    iw, ih = img.size
+    if dx < 0 or dy < 0:
+        cx0, cy0 = max(0, -dx), max(0, -dy)
+        if cx0 >= layer.width or cy0 >= layer.height:
+            return
+        layer = layer.crop((cx0, cy0, layer.width, layer.height))
+        dx, dy = max(0, dx), max(0, dy)
+    over_x = (dx + layer.width) - iw
+    over_y = (dy + layer.height) - ih
+    if over_x > 0 or over_y > 0:
+        cw = layer.width - max(0, over_x)
+        ch = layer.height - max(0, over_y)
+        if cw <= 0 or ch <= 0:
+            return
+        layer = layer.crop((0, 0, cw, ch))
+    img.alpha_composite(layer, dest=(dx, dy))
+
+
+def _vertical_gradient_rgba(w, h, top, bottom):
+    """上端 top -> 下端 bottom の RGBA 縦グラデーション画像を作る。"""
+    w, h = max(1, int(w)), max(1, int(h))
+    strip = Image.new("RGBA", (1, h), (0, 0, 0, 0))
+    px = strip.load()
+    denom = max(1, h - 1)
+    for yy in range(h):
+        t = yy / denom
+        px[0, yy] = tuple(int(top[i] + (bottom[i] - top[i]) * t) for i in range(4))
+    return strip.resize((w, h), Image.Resampling.BILINEAR)
+
+
+def draw_figma_glass_box(img, x, y, width, height, radius=25,
+                         fill_top=None, fill_bottom=None,
+                         border_top=None, border_bottom=None,
+                         highlight_alpha=0, shadow=True, shadow_alpha=28,
+                         border_width=1.5):
+    """モダンなフラットガラスのパネルを描く（draw_figma_box の強化版）。
+
+    - ほぼ均一の半透明塗り（ごく弱い縦グラデで奥行き感だけ残す）
+    - 細く均一な白系枠線
+    - 上端ハイライト（ガラスの反射）は既定で無効
+    - 控えめで締まった影（弱アルファ + 小ぼかし）
+
+    座標・サイズは設計座標（draw_figma_box と同じ）。
+    """
+    if fill_top is None:
+        fill_top = _theme_color("glass_fill_top", (22, 30, 52, 72))
+    if fill_bottom is None:
+        fill_bottom = _theme_color("glass_fill_bottom", (16, 22, 40, 80))
+    if border_top is None:
+        border_top = _theme_color("glass_border_top", (255, 255, 255, 40))
+    if border_bottom is None:
+        border_bottom = _theme_color("glass_border_bottom", (255, 255, 255, 30))
+    x1, y1 = x * _sx(), y * _sy()
+    w = int(round(width * _sx()))
+    h = int(round(height * _sy()))
+    r = max(1, round(radius * _sy()))
+    X0, Y0 = int(round(x1)), int(round(y1))
+    if w <= 2 or h <= 2:
+        return
+    r = min(r, w // 2, h // 2)
+
+    # ---- 1) 控えめで締まった影 ----
+    if shadow:
+        blur_r = max(2, round(3 * _sy()))
+        pad = blur_r * 2
+        off_y = int(round(3 * _sy()))
+        sw, sh = w + pad * 2, h + pad * 2
+        lay = Image.new("RGBA", (sw, sh), (0, 0, 0, 0))
+        ld = ImageDraw.Draw(lay)
+        ld.rounded_rectangle([pad, pad + off_y, pad + w, pad + off_y + h],
+                             radius=r, fill=(0, 0, 0, shadow_alpha))
+        lay = lay.filter(ImageFilter.GaussianBlur(radius=blur_r))
+        _composite_clipped(img, lay, X0 - pad, Y0 - pad)
+
+    # ---- 2) 縦グラデ塗り + 角丸マスク ----
+    grad = _vertical_gradient_rgba(w, h, fill_top, fill_bottom)
+    mask = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([0, 0, w - 1, h - 1], radius=r, fill=255)
+    grad.putalpha(ImageChops.multiply(grad.getchannel("A"), mask))
+    _composite_clipped(img, grad, X0, Y0)
+
+    # ---- 3) グラデ枠線（外角丸 - 内角丸 のマスクに白グラデを流す） ----
+    bw = max(1, round(border_width * _sy()))
+    if min(w, h) > bw * 2 + 2:
+        omask = Image.new("L", (w, h), 0)
+        od = ImageDraw.Draw(omask)
+        od.rounded_rectangle([0, 0, w - 1, h - 1], radius=r, fill=255)
+        od.rounded_rectangle([bw, bw, w - 1 - bw, h - 1 - bw],
+                             radius=max(1, r - bw), fill=0)
+        blayer = _vertical_gradient_rgba(w, h, border_top, border_bottom)
+        blayer.putalpha(ImageChops.multiply(blayer.getchannel("A"), omask))
+        _composite_clipped(img, blayer, X0, Y0)
+
+    # ---- 4) 上端ハイライト（反射） ----
+    if highlight_alpha > 0:
+        hh = max(2, int(h * 0.10))
+        hl = _vertical_gradient_rgba(w, hh, (255, 255, 255, highlight_alpha), (255, 255, 255, 0))
+        hmask = mask.crop((0, 0, w, hh))
+        hl.putalpha(ImageChops.multiply(hl.getchannel("A"), hmask))
+        _composite_clipped(img, hl, X0, Y0)
+
+
+def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=_DEFAULT, align="left", box_width=None, stroke_width=0, stroke_fill=None, shadow=False):
+    if fill_color is _DEFAULT:
+        fill_color = _theme_color("text", (255, 255, 255))
     text_str = str(text)
     actual_font = font
 
@@ -114,11 +282,10 @@ def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=(255, 255
 
     x_s = x * _sx()
     bw_s = box_width * _sx() if box_width else None
-    if align == "left":
-        actual_x = x_s
-    elif align == "right" and bw_s:
+    if align == "right":
+        # box_width 未指定時は x を右端として扱う（右揃え）
         text_width = draw.textlength(text_str, font=actual_font)
-        actual_x = x_s + bw_s - text_width
+        actual_x = x_s + (bw_s or 0) - text_width
     elif align == "center" and bw_s:
         text_width = draw.textlength(text_str, font=actual_font)
         actual_x = x_s + (bw_s - text_width) / 2
@@ -126,7 +293,7 @@ def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=(255, 255
         actual_x = x_s
 
     if shadow:
-        draw.text((actual_x + 2 * _sx(), y * _sy() + 2 * _sy()), text_str, font=actual_font, fill=(0, 0, 0, 160))
+        draw.text((actual_x + 2 * _sx(), y * _sy() + 2 * _sy()), text_str, font=actual_font, fill=_theme_color("shadow", (0, 0, 0, 160)))
     if stroke_width > 0:
         sf = stroke_fill if stroke_fill is not None else fill_color
         draw.text((actual_x, y * _sy()), text_str, font=actual_font, fill=fill_color,
@@ -135,10 +302,14 @@ def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=(255, 255
         draw.text((actual_x, y * _sy()), text_str, font=actual_font, fill=fill_color)
 
 
-def draw_figma_text_with_shadow(draw, text, x, y, font, font_size=None, fill_color=(255, 255, 255),
-                                shadow_color=(0, 0, 0, 160), shadow_offset=(2, 2),
+def draw_figma_text_with_shadow(draw, text, x, y, font, font_size=None, fill_color=_DEFAULT,
+                                shadow_color=None, shadow_offset=(2, 2),
                                 align="left", box_width=None):
     """影のみ（アウトラインなし）。先に影を描き、その上に本文を重ねる。"""
+    if fill_color is _DEFAULT:
+        fill_color = _theme_color("text", (255, 255, 255))
+    if shadow_color is None:
+        shadow_color = _theme_color("shadow", (0, 0, 0, 160))
     text_str = str(text)
     actual_font = font
 
@@ -152,11 +323,10 @@ def draw_figma_text_with_shadow(draw, text, x, y, font, font_size=None, fill_col
 
     x_s = x * _sx()
     bw_s = box_width * _sx() if box_width else None
-    if align == "left":
-        target_x = x_s
-    elif align == "right" and bw_s:
+    if align == "right":
+        # box_width 未指定時は x を右端として扱う（右揃え）
         text_width = draw.textlength(text_str, font=actual_font)
-        target_x = x_s + bw_s - text_width
+        target_x = x_s + (bw_s or 0) - text_width
     elif align == "center" and bw_s:
         text_width = draw.textlength(text_str, font=actual_font)
         target_x = x_s + (bw_s - text_width) / 2
@@ -178,7 +348,9 @@ def draw_figma_text_with_shadow(draw, text, x, y, font, font_size=None, fill_col
         fill=fill_color,
     )
 
-def draw_figma_line(img, x1, y1, x2, y2, fill_color=(255, 255, 255, 50), width=1):
+def draw_figma_line(img, x1, y1, x2, y2, fill_color=None, width=1):
+    if fill_color is None:
+        fill_color = _theme_color("line", (255, 255, 255, 50))
     x1, y1, x2, y2 = x1 * _sx(), y1 * _sy(), x2 * _sx(), y2 * _sy()
     width = max(1, round(width * _sy()))
     canvas_w, canvas_h = img.size
@@ -195,7 +367,9 @@ def draw_figma_line(img, x1, y1, x2, y2, fill_color=(255, 255, 255, 50), width=1
     img.alpha_composite(overlay, dest=(layer_x1, layer_y1))
 
 
-def draw_figma_circle(img, x, y, size, fill_color=(60, 64, 72, 125), outline_color=None, outline_width=0):
+def draw_figma_circle(img, x, y, size, fill_color=None, outline_color=None, outline_width=0):
+    if fill_color is None:
+        fill_color = _theme_color("icon_container", (60, 64, 72, 125))
     x, y = x * _sx(), y * _sy()
     size = size * _sy()
     outline_width = max(1, round(outline_width * _sy())) if outline_width else 0
@@ -218,9 +392,11 @@ def draw_figma_circle(img, x, y, size, fill_color=(60, 64, 72, 125), outline_col
     img.alpha_composite(overlay, dest=(layer_x1, layer_y1))
 
 
-def draw_figma_dot(img, x, y, size, ratio=2.2, fill_color=(60, 64, 72, 125), outline_color=None, outline_width=0, corners=None):
+def draw_figma_dot(img, x, y, size, ratio=2.2, fill_color=None, outline_color=None, outline_width=0, corners=None):
     """横長の丸角ドット。size は高さ、ratio は幅の倍率（丸1.5個分=横長）。y は上端。
     corners: (左上, 右上, 右下, 左下) の丸める有無。None なら全角丸。"""
+    if fill_color is None:
+        fill_color = _theme_color("icon_container", (60, 64, 72, 125))
     x, y = x * _sx(), y * _sy()
     size = size * _sy()
     dot_w = max(1, round(size * ratio))

@@ -1,6 +1,7 @@
 import os
 import time
-from collections import deque
+import secrets
+from collections import deque, OrderedDict
 from typing import Dict, Any
 from fastapi import Request
 import hashlib as _hashlib
@@ -20,13 +21,17 @@ import hmac as _hmac
 #    CARD_GEN_RATE_LIMIT_PER_MIN  画像生成のIP毎レート上限 (default: 0=無効)
 # ==========================================================
 _CARD_URL_SECRET = (os.environ.get("CARD_URL_SECRET") or "").strip()
+if not _CARD_URL_SECRET:
+    _CARD_URL_SECRET = secrets.token_hex(32)
+    print("[CardSign] CARD_URL_SECRET 未設定のため起動毎にランダム生成します（複数プロセス運用時は .env に固定値を設定してください）", flush=True)
 _CARD_SIGN_VALIDITY_SEC = max(60, float(os.environ.get("CARD_SIGN_VALIDITY_HOURS", "12")) * 3600.0)
-_CARD_SIGN_MAX_AGE_SEC = 12 * 3600.0  # 発行済み署名の受付上限（12h を超える exp は拒否）
+_CARD_SIGN_MAX_AGE_SEC = _CARD_SIGN_VALIDITY_SEC  # 発行済み署名の受付上限（有効時間と同じ）
 _CARD_SIGN_RATE_LIMIT_PER_MIN = max(0, int(os.environ.get("CARD_SIGN_RATE_LIMIT_PER_MIN", "60")))
 _CARD_GEN_RATE_LIMIT_PER_MIN = max(0, int(os.environ.get("CARD_GEN_RATE_LIMIT_PER_MIN", "0")))
-_CARD_SIGN_PARAM_ORDER = ["uid", "avatar_id", "calc_method", "fake_char", "fake_weapon", "beta", "bg_color", "img_format", "bg_mode", "bg_region", "growth", "base_prec", "substat_dots"]
+_CARD_SIGN_PARAM_ORDER = ["uid", "avatar_id", "calc_method", "fake_char", "fake_weapon", "beta", "bg_color", "img_format", "bg_mode", "bg_region", "growth", "base_prec", "substat_dots", "resonance", "theme", "light"]
 _TEAM_SIGN_PARAM_ORDER = ["uid", "char_ids", "configs", "boss", "beta", "img_format"]
-_rate_buckets = {}  # key -> deque(monotonic秒) スライディングウィンドウ
+_rate_buckets = OrderedDict()  # key -> deque(monotonic秒) スライディングウィンドウ
+_RATE_BUCKET_MAX_KEYS = max(1000, int(os.environ.get("RATE_LIMIT_MAX_KEYS", "20000")))
 
 
 def _rate_limited(key: str, limit_per_min: int) -> bool:
@@ -34,15 +39,26 @@ def _rate_limited(key: str, limit_per_min: int) -> bool:
     if limit_per_min <= 0:
         return False
     now = time.monotonic()
-    dq = _rate_buckets.setdefault(key, deque())
+    dq = _rate_buckets.get(key)
+    if dq is None:
+        dq = deque()
+        _rate_buckets[key] = dq
+    else:
+        _rate_buckets.move_to_end(key)
     while dq and now - dq[0] > 60.0:
         dq.popleft()
     if len(dq) >= limit_per_min:
         return True
     dq.append(now)
-    if len(_rate_buckets) > 10000:
-        for k in [k for k, v in _rate_buckets.items() if not v]:
-            _rate_buckets.pop(k, None)
+    if len(_rate_buckets) > _RATE_BUCKET_MAX_KEYS:
+        for k in list(_rate_buckets.keys()):
+            v = _rate_buckets[k]
+            while v and now - v[0] > 60.0:
+                v.popleft()
+            if not v:
+                _rate_buckets.pop(k, None)
+        while len(_rate_buckets) > _RATE_BUCKET_MAX_KEYS:
+            _rate_buckets.popitem(last=False)
     return False
 
 

@@ -47,6 +47,9 @@ async def _static_cache_middleware(request, call_next):
             response.headers["Cache-Control"] = "no-cache"
         else:
             response.headers["Cache-Control"] = "public, max-age=3600"
+    elif path == "/" or path == "/contact" or path.startswith("/fetch_uid"):
+        # HTMLページは常に最新を返す（古いキャッシュで初期設定画面等が出なくなるのを防ぐ）
+        response.headers["Cache-Control"] = "no-store"
     return response
 
 
@@ -57,9 +60,9 @@ app.include_router(api_router)
 if __name__ == "__main__":
     uvicorn.run(
         "server:app",
-        host=os.environ.get("HOST", "0.0.0.0"),
+        host=os.environ.get("HOST", "127.0.0.1"),
         port=int(os.environ.get("PORT", "8000")),
-        reload=os.environ.get("UVICORN_RELOAD", "1").lower() in ("1", "true", "yes"),
+        reload=os.environ.get("UVICORN_RELOAD", "0").lower() in ("1", "true", "yes"),
         proxy_headers=True,
         forwarded_allow_ips=os.environ.get("UVICORN_FORWARDED_ALLOW_IPS", "127.0.0.1"),
     )

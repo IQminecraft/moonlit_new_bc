@@ -21,6 +21,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 
+from app.core.jsonio import write_json_atomic
+
 # convert / gachabase_changelog は app パッケージ配下（app/convert, app/gachabase_changelog）
 characters = weapons = characters_list = weapons_list = artifacts_list = None  # type: ignore
 gachabase_changelog = None  # type: ignore
@@ -79,8 +81,7 @@ def _ensure_dir(path: str) -> None:
 
 def _safe_json_dump(path: str, data: Any) -> None:
     _ensure_dir(os.path.dirname(path))
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    write_json_atomic(path, data)
 
 
 def _safe_json_load(path: str, default: Any = None) -> Any:

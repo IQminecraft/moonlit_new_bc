@@ -6,7 +6,7 @@ import math
 from collections import Counter
 from fastapi import HTTPException
 from PIL import Image, ImageDraw
-from app.paths import BASE_DIR, CARD_W, CARD_H, SX, SY, FONT_PATH, FONT_LIGHT_PATH
+from app.paths import BASE_DIR, STATIC_DIR, CARD_W, CARD_H, SX, SY, FONT_PATH, FONT_LIGHT_PATH
 from app.card.cache import get_cached_font, get_resized_image
 from app.card.stats import (
     text_map_data, get_stat_japanese, get_char_level,
@@ -22,14 +22,16 @@ from app.card.special import (
 )
 from app.card.region import find_regions_for_character
 from app.card.set_buffs import set_buff_label
+from app.card.resonance import resonance_badges, parse_resonance_param
 from app.card.stat_calc import compute_manual_totals
+from app.card.calc_method import resolve_calc_method
 from app.card.growth import build_growth_panel, build_growth_from_fake
 from app.card.bg import hex_to_rgb, create_card_background, region_image_path
 from app.card.draw import (
     draw_figma_box, paste_mask_image, draw_figma_text_with_shadow,
     draw_figma_circle, paste_figma_image, draw_figma_text, draw_figma_line,
     draw_figma_text_right, figma_draw_scale, _sx, _sy,
-    draw_figma_dot,
+    draw_figma_dot, draw_figma_glass_box, figma_draw_theme,
 )
 
 # 育成モードの右パネル寸法（キャンバスピクセル）: 全体を等方縮小して右に追加する
@@ -85,7 +87,85 @@ def _draw_panel_text_with_shadow(draw, xy, text, font, fill, shadow=(0, 0, 0, 20
     draw.text((x, y), text, font=font, fill=fill, anchor=anchor)
 
 
-def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, base_prec="0"):
+# 元素共鳴バッジの元素色（RGB）。team_image._ELEMENT_COLORS と同一値。
+_RESONANCE_ELEM_COLORS = {
+    "Pyro": (0x90, 0x3B, 0x2A),
+    "Hydro": (0x34, 0x45, 0x95),
+    "Cryo": (0x57, 0x7F, 0xC7),
+    "Dendro": (0x46, 0x6B, 0x63),
+}
+
+
+def _draw_resonance_badges(img, draw, resonance, beta):
+    """単体カードの聖遺物行とカード下端の隙間に元素共鳴チップを描画する。
+
+    編成カードの _draw_badges と同じ角丸チップ様式（暗色背景＋元素色輪郭＋元素アイコン）。
+    聖遺物行とは重ならないよう、隙間内に右揃え横並びで配置する（カード種類で統一）。
+    """
+    badges = resonance_badges(resonance)
+    if not badges:
+        return
+    font_badge = get_cached_font(FONT_PATH, max(1, round(14 * SY)))
+    chip_h = 18
+    pad_x = 8
+    gap_x = 6
+    icon_size = 12
+    radius = 6
+    # 下端の隙間: 聖遺物行の下端 y=1137 〜 カード下端 y=1159（22px）
+    right_x = 1718
+    cy = 1139
+    dims = []
+    for b in badges:
+        text = str(b.get("text") or "")
+        if not text:
+            continue
+        elem = b.get("elem")
+        icon = f"static/assets/props/{str(elem).lower()}.png" if elem else ""
+        tw = draw.textlength(text, font=font_badge) / SX
+        icon_w = (icon_size + 4) if icon else 0
+        w = pad_x * 2 + icon_w + tw
+        dims.append((text, elem, icon, w))
+    if not dims:
+        return
+    total_w = sum(w for *_, w in dims) + gap_x * (len(dims) - 1)
+    cx = right_x - total_w
+    for text, elem, icon, w in dims:
+        er = _RESONANCE_ELEM_COLORS.get(elem, (0x4A, 0x55, 0x68))
+        outline = (min(255, er[0] + 80), min(255, er[1] + 80), min(255, er[2] + 80), 240)
+        draw_figma_box(img, x=cx, y=cy, width=w, height=chip_h, radius=radius,
+                       fill_color=(12, 14, 20, 180), outline_color=outline,
+                       outline_width=1, shadow=False)
+        tx = cx + pad_x
+        if icon:
+            paste_figma_image(img, icon, box_x=tx, box_y=cy + (chip_h - icon_size) / 2,
+                              box_width=icon_size, box_height=icon_size, radius=4, beta=beta)
+            tx += icon_size + 4
+        draw_figma_text(draw, text=text, x=tx, y=cy + 2, font=font_badge, align="left",
+                        font_size=14, fill_color=(255, 255, 255, 255))
+        cx += w + gap_x
+
+
+def _draw_uid_badge(img, draw, uid, beta):
+    """聖遺物行とカード下端の隙間・左下へ UID テキストを描画する（共鳴チップと同じ高さ）。"""
+    text = f"UID {uid}" if uid else ""
+    if not text:
+        return
+    font_badge = get_cached_font(FONT_PATH, max(1, round(14 * SY)))
+    # 下端の隙間: 聖遺物行の下端 y=1137 〜 カード下端 y=1159。左端は聖遺物行の左端 x=33 に揃える
+    left_x = 33
+    cy = 1139
+    draw_figma_text(draw, text=text, x=left_x, y=cy + 2, font=font_badge, align="left",
+                    font_size=14, fill_color=(255, 255, 255, 220),
+                    stroke_width=2, stroke_fill=(0, 0, 0, 160))
+
+
+def _lighten_background(img, alpha=110):
+    """ライトモード用: 背景全体を白で薄くする（立ち絵は後から貼るため影響しない）。"""
+    overlay = Image.new("RGBA", img.size, (255, 255, 255, alpha))
+    return Image.alpha_composite(img, overlay)
+
+
+def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, base_prec="0", light="false"):
     """カード右側に育成パネルを描画する。HTML 版 growth-panel と同レイアウト。
 
     - パネル幅 = 540（HTML の 270px を 2400px キャンバスに 2倍で再現）
@@ -94,14 +174,23 @@ def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, bas
       （「1回あたりの平均」サブヘッド + HP/攻撃/防御 の %・実数を緑で表示）
     - 武器（精錬効果）セクションは HTML と同様に非表示
     """
+    is_light = str(light or "") == "true"
     x0 = panel_x0
     w = panel_x1 - x0
     h = int(panel_h)
     y0, y1 = 0, h
 
     # パネル背景（HTML の linear-gradient + border 相当）
-    top_rgb = (20, 24, 34)
-    bot_rgb = (14, 16, 24)
+    if is_light:
+        top_rgb = (255, 255, 255)
+        bot_rgb = (241, 245, 249)
+        panel_alpha = 0.96
+        border_c = (15, 23, 42, 40)
+    else:
+        top_rgb = (20, 24, 34)
+        bot_rgb = (14, 16, 24)
+        panel_alpha = 0.92
+        border_c = (255, 255, 255, 46)
     gradient = Image.new("RGBA", (1, h), (0, 0, 0, 0))
     gd = ImageDraw.Draw(gradient)
     for yy in range(h):
@@ -114,13 +203,13 @@ def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, bas
     mask = Image.new("L", (w, h), 0)
     md = ImageDraw.Draw(mask)
     md.rounded_rectangle([0, 0, w - 1, h - 1], radius=radius, fill=255)
-    gradient.putalpha(mask.point(lambda p: int(p * 0.92)))
+    gradient.putalpha(mask.point(lambda p: int(p * panel_alpha)))
 
     layer = Image.new("RGBA", (w + 2, h + 2), (0, 0, 0, 0))
     ld = ImageDraw.Draw(layer)
     ld.rounded_rectangle(
         [0, 0, w, h], radius=radius,
-        outline=(255, 255, 255, 46), width=2,
+        outline=border_c, width=2,
     )
     layer.alpha_composite(gradient, (1, 1))
     img.alpha_composite(layer, dest=(x0 - 1, y0 - 1))
@@ -132,13 +221,26 @@ def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, bas
     max_w = w - pad * 2
     cur_y = y0 + pad
 
-    gold = (255, 205, 120, 255)
-    head_c = (125, 210, 255, 255)
-    white = (240, 244, 250, 255)
-    label_c = (205, 211, 222, 255)          # rgba(255,255,255,0.8) 相当
-    desc_c = (168, 176, 190, 255)           # rgba(255,255,255,0.65) 相当
-    subhead_c = (150, 158, 174, 255)        # rgba(255,255,255,0.55) 相当
-    green = (110, 230, 160, 255)
+    if is_light:
+        gold = (180, 83, 9, 255)
+        head_c = (3, 105, 161, 255)
+        white = (17, 24, 39, 255)
+        label_c = (15, 23, 42, 170)
+        desc_c = (15, 23, 42, 140)
+        subhead_c = (15, 23, 42, 110)
+        green = (4, 120, 87, 255)
+        sep_c = (15, 23, 42, 40)
+        shadow_c = (255, 255, 255, 220)
+    else:
+        gold = (255, 205, 120, 255)
+        head_c = (125, 210, 255, 255)
+        white = (240, 244, 250, 255)
+        label_c = (205, 211, 222, 255)          # rgba(255,255,255,0.8) 相当
+        desc_c = (168, 176, 190, 255)           # rgba(255,255,255,0.65) 相当
+        subhead_c = (150, 158, 174, 255)        # rgba(255,255,255,0.55) 相当
+        green = (110, 230, 160, 255)
+        sep_c = (255, 255, 255, 255)
+        shadow_c = (0, 0, 0, 200)
 
     title_font = get_cached_font(FONT_PATH, 48)
     head_font = get_cached_font(FONT_PATH, 32)
@@ -150,19 +252,19 @@ def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, bas
 
     def _section_head(label):
         nonlocal cur_y
-        _draw_panel_text_with_shadow(draw, (inner_x, cur_y), label, head_font, head_c)
+        _draw_panel_text_with_shadow(draw, (inner_x, cur_y), label, head_font, head_c, shadow=shadow_c)
         cur_y += int(head_font.size * 1.35) + 8
-        draw.line((inner_x, cur_y, right_x, cur_y), fill=(255, 255, 255, 255), width=2)
+        draw.line((inner_x, cur_y, right_x, cur_y), fill=sep_c, width=2)
         cur_y += 14
 
     def _stat_row(label, value):
         nonlocal cur_y
-        _draw_panel_text_with_shadow(draw, (inner_x, cur_y), label, stat_label_font, label_c, offset=1)
-        _draw_panel_text_with_shadow(draw, (right_x, cur_y), value, stat_value_font, green, offset=1, anchor="ra")
+        _draw_panel_text_with_shadow(draw, (inner_x, cur_y), label, stat_label_font, label_c, shadow=shadow_c, offset=1)
+        _draw_panel_text_with_shadow(draw, (right_x, cur_y), value, stat_value_font, green, shadow=shadow_c, offset=1, anchor="ra")
         cur_y += int(stat_value_font.size * 1.4) + 10
 
     # タイトル
-    _draw_panel_text_with_shadow(draw, (inner_x, cur_y), "育成メモ", title_font, gold)
+    _draw_panel_text_with_shadow(draw, (inner_x, cur_y), "育成メモ", title_font, gold, shadow=shadow_c)
     cur_y += int(title_font.size * 1.4) + 10
 
     if not panel:
@@ -173,7 +275,7 @@ def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, bas
     if panel.get("sets"):
         _section_head("聖遺物セット効果")
         for st in panel["sets"]:
-            _draw_panel_text_with_shadow(draw, (inner_x, cur_y), f"{st['name']} ×{st['count']}", set_name_font, white, offset=1)
+            _draw_panel_text_with_shadow(draw, (inner_x, cur_y), f"{st['name']} ×{st['count']}", set_name_font, white, shadow=shadow_c, offset=1)
             cur_y += int(set_name_font.size * 1.35) + 6
             if st.get("set2"):
                 # ステータス反映済み（apply_2set_buffs）の2セット効果は白文字で強調
@@ -205,7 +307,7 @@ def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, bas
             rows.append((f"{label}実数", format_decimal_value(s['flat_avg'], base_prec)))
     if rows:
         _section_head("サブステ伸び平均")
-        _draw_panel_text_with_shadow(draw, (inner_x, cur_y), "1回あたりの平均", subhead_font, subhead_c, offset=1)
+        _draw_panel_text_with_shadow(draw, (inner_x, cur_y), "1回あたりの平均", subhead_font, subhead_c, shadow=shadow_c, offset=1)
         cur_y += int(subhead_font.size * 1.4) + 8
         for label, value in rows:
             _stat_row(label, value)
@@ -214,7 +316,7 @@ def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, bas
 def _attach_growth_panel(img, panel, bg_base_rgb, splash_path, element_type,
                          use_prebuilt, region, panel_w=_GROWTH_PANEL_W,
                          gap=_GROWTH_PANEL_GAP, margin=_GROWTH_PANEL_MARGIN,
-                         base_prec="0"):
+                         base_prec="0", light="false"):
     """カード全体を等方縮小し、右側に育成パネルを追加する（幅は変えない）。
 
     元 img は CARD_W x CARD_H。縮小率 k = (CARD_W - panel_w - gap - margin) / CARD_W で
@@ -235,17 +337,19 @@ def _attach_growth_panel(img, panel, bg_base_rgb, splash_path, element_type,
         use_prebuilt=use_prebuilt,
         region=region,
     )
+    if str(light or "") == "true":
+        bg_full = _lighten_background(bg_full)
     bg_full.paste(skinned, (0, 0), skinned)
 
     panel_x0 = content_w + gap
     panel_x1 = card_w - margin
-    _draw_growth_panel(bg_full, panel, panel_x0, panel_x1, content_h, bg_base_rgb, base_prec)
+    _draw_growth_panel(bg_full, panel, panel_x0, panel_x1, content_h, bg_base_rgb, base_prec, light)
     # 縮小カード+パネルの下端（content_h）で切り抜き、下部の余白を除去する
     bg_full = bg_full.crop((0, 0, card_w, content_h))
     return bg_full
 
 
-def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1"):
+def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", resonance: str = None, light: str = "false", show_uid: str = "false"):
     _total_start = time.perf_counter()
 
     def _plog(msg: str) -> None:
@@ -256,10 +360,14 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     if beta != "true":
         beta = "false"
     growth = "true" if str(growth or "") == "true" else "false"
+    light = "true" if str(light or "") == "true" else "false"
+    show_uid = "true" if str(show_uid or "") == "true" else "false"
     base_prec = str(base_prec or "0")
     if base_prec not in ("0", "2", "4"):
         base_prec = "0"
     substat_dots = "1" if str(substat_dots or "") in ("1", "true") else "0"
+    # 計算方式が未指定/不正ならキャラ毎デフォルト（admin 設定）→ "crit" に解決する。
+    calc_method = resolve_calc_method(calc_method, avatar_id)
     _plog(
         f"START uid={uid} avatar={avatar_id} method={calc_method} "
         f"format={img_format} beta={beta} fake_char={fake_char} bg_mode={bg_mode} bg_region={bg_region} growth={growth}"
@@ -272,7 +380,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
     t_start = time.perf_counter()
     target_avatar_info = None
-    json_path = os.path.join("static", "cache", f"showcase_{uid}.json")
+    json_path = os.path.join(STATIC_DIR, "cache", f"showcase_{uid}.json")
     json_path = resolve_datas_path(json_path, beta)
 
     if os.path.exists(json_path):
@@ -306,12 +414,12 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
     t_start = time.perf_counter()
     if fake_char:
-        json_path2 = os.path.join("static", "data", "characters", f"{fake_char}.json")
+        json_path2 = os.path.join(STATIC_DIR, "data", "characters", f"{fake_char}.json")
         if not os.path.exists(json_path2):
             if beta == "true":
-                json_path2 = os.path.join("static", "beta", "data", "characters", f"{fake_char}.json")
+                json_path2 = os.path.join(STATIC_DIR, "beta", "data", "characters", f"{fake_char}.json")
     else:
-        json_path2 = os.path.join("static", "data", "characters", f"{avatar_id}.json")
+        json_path2 = os.path.join(STATIC_DIR, "data", "characters", f"{avatar_id}.json")
     json_path2 = resolve_datas_path(json_path2, beta)
 
     if os.path.exists(json_path2):
@@ -323,7 +431,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
                 chardatas = json.load(f)
     else:
         base_avatar_id = str(avatar_id).split("-")[0]
-        backup_path = os.path.join("static", "data", "characters", f"{base_avatar_id}.json")
+        backup_path = os.path.join(STATIC_DIR, "data", "characters", f"{base_avatar_id}.json")
         backup_path = resolve_datas_path(backup_path, beta)
         if os.path.exists(backup_path):
             try:
@@ -530,6 +638,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             element_type=element_type,
             beta=beta,
             weapon_base_included_in_base_atk=weapon_base_included,
+            resonance=resonance,
         )
 
         dmg_buff_val = "0%"
@@ -557,6 +666,8 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         # 実キャラも差し替えと同一の手動計算でステータスを導出する。
         # fightPropMap['4'](基礎攻撃力) には武器基礎攻撃力が既に含まれるため、
         # weapon_base_included_in_base_atk=True で二重加算を防ぐ。
+        # 共鳴なしの実キャラは fightPropMap の最終値を EM/ER に採用（丸め境界対策）。
+        _has_resonance = bool(parse_resonance_param(resonance))
         totals = compute_manual_totals(
             base_hp=prop_map.get('1', 1),
             base_atk=prop_map.get('4', 1),
@@ -570,6 +681,9 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             element_type=element_type,
             beta=beta,
             weapon_base_included_in_base_atk=True,
+            resonance=resonance,
+            authoritative_em=None if _has_resonance else prop_map.get('28'),
+            authoritative_er=None if _has_resonance else prop_map.get('23'),
         )
 
         dmg_buff_val = "0%"
@@ -817,6 +931,10 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         use_prebuilt=(bg_color is None and selected_region is None),
         region=selected_region,
     )
+    is_light = light == "true"
+    if is_light:
+        # ライトモード: 背景を白で薄くする（立ち絵は後から貼るため鮮明さを保てる）
+        img = _lighten_background(img)
     t_end = time.perf_counter()
     print(f"[Perf] 背景生成: {(t_end - t_start)*1000:.1f}ms", flush=True)
     _plog(f"背景生成: done img.size={getattr(img, 'size', None)}")
@@ -829,209 +947,222 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     print(f"[Perf] フォント読み込み: {(t_end - t_start)*1000:.1f}ms", flush=True)
 
     t_start = time.perf_counter()
-    draw_figma_box(img, x=33, y=30, width=694, height=671)
-    draw_figma_box(img, x=753, y=30, width=549, height=671)
-    draw_figma_box(img, x=1332, y=30, width=386, height=164, radius=25)
-    draw_figma_box(img, x=1332, y=231, width=386, height=121, radius=25)
-    draw_figma_box(img, x=1332, y=389, width=386, height=312, radius=25)
+    with figma_draw_theme(light=is_light):
+        draw_figma_box(img, x=33, y=30, width=694, height=671)
+        draw_figma_glass_box(img, x=753, y=30, width=549, height=671)
+        draw_figma_glass_box(img, x=1332, y=30, width=386, height=164, radius=25)
+        draw_figma_glass_box(img, x=1332, y=231, width=386, height=121, radius=25)
+        draw_figma_glass_box(img, x=1332, y=389, width=386, height=312, radius=25)
 
-    paste_mask_image(img, splash, box_x=33, box_y=30, box_width=694, box_height=671, radius=15, zoom=1.1, beta=beta)
+        paste_mask_image(img, splash, box_x=33, box_y=30, box_width=694, box_height=671, radius=15, zoom=1.1, beta=beta)
 
-    _ol_x1, _ol_y1 = int(31 * SX), int(28 * SY)
-    _ol_x2, _ol_y2 = int(729 * SX) + 1, int(703 * SY) + 1
-    _outline_layer = Image.new("RGBA", (_ol_x2 - _ol_x1, _ol_y2 - _ol_y1), (0, 0, 0, 0))
-    _od = ImageDraw.Draw(_outline_layer)
-    _od.rounded_rectangle([33 * SX - _ol_x1, 30 * SY - _ol_y1, 727 * SX - _ol_x1, 701 * SY - _ol_y1], radius=round(15 * SY), outline=(0, 0, 0, 220), width=max(1, round(1 * SY)))
-    img.alpha_composite(_outline_layer, dest=(_ol_x1, _ol_y1))
+        _ol_x1, _ol_y1 = int(31 * SX), int(28 * SY)
+        _ol_x2, _ol_y2 = int(729 * SX) + 1, int(703 * SY) + 1
+        _outline_layer = Image.new("RGBA", (_ol_x2 - _ol_x1, _ol_y2 - _ol_y1), (0, 0, 0, 0))
+        _od = ImageDraw.Draw(_outline_layer)
+        _od.rounded_rectangle([33 * SX - _ol_x1, 30 * SY - _ol_y1, 727 * SX - _ol_x1, 701 * SY - _ol_y1], radius=round(15 * SY), outline=(0, 0, 0, 220), width=max(1, round(1 * SY)))
+        img.alpha_composite(_outline_layer, dest=(_ol_x1, _ol_y1))
 
-    if substat_dots == "1":
-        # 伸び値凡例: スプラッシュ枠（y=701）と聖遺物（y=738）の間の空間に4色の連結バーを並べる
-        legend_y = 719
-        legend_dot_size = 10
-        legend_seg_w = round(legend_dot_size * 2.2)
-        legend_total = len(ROLL_DOT_COLORS) * legend_seg_w
-        legend_x0 = 380 - legend_total / 2
-        draw_figma_text(draw, text="伸び値", x=legend_x0 - 70, y=legend_y - 4, font=font_stats, align="left", font_size=22, fill_color=(255, 255, 255, 220))
-        for li, color in enumerate(ROLL_DOT_COLORS):
-            corners = (True, False, False, True) if li == 0 else ((False, True, True, False) if li == len(ROLL_DOT_COLORS) - 1 else (False, False, False, False))
-            draw_figma_dot(img, x=legend_x0 + li * legend_seg_w, y=legend_y, size=legend_dot_size, fill_color=color, corners=corners)
+        if substat_dots == "1":
+            # 伸び値凡例: スプラッシュ枠（y=701）と聖遺物（y=738）の間の空間に4色の連結バーを並べる
+            legend_y = 719
+            legend_dot_size = 10
+            legend_seg_w = round(legend_dot_size * 2.2)
+            legend_total = len(ROLL_DOT_COLORS) * legend_seg_w
+            legend_x0 = 380 - legend_total / 2
+            draw_figma_text(draw, text="伸び値", x=legend_x0 - 70, y=legend_y - 4, font=font_stats, align="left", font_size=22, fill_color=(15, 23, 42, 170) if is_light else (255, 255, 255, 220))
+            for li, color in enumerate(ROLL_DOT_COLORS):
+                corners = (True, False, False, True) if li == 0 else ((False, True, True, False) if li == len(ROLL_DOT_COLORS) - 1 else (False, False, False, False))
+                draw_figma_dot(img, x=legend_x0 + li * legend_seg_w, y=legend_y, size=legend_dot_size, fill_color=color, corners=corners)
 
-    draw_figma_text(draw, text=char_name, x=56, y=57, font=font_stats, font_size=50, fill_color=(0, 0, 0, 190))
-    draw_figma_text(draw, text=char_name, x=53, y=53, font=font_stats, font_size=50)
-    draw_figma_text(draw, text=f"Lv.{char_level}", x=56, y=121, font=font_stats, font_size=30, fill_color=(0, 0, 0, 190))
-    draw_figma_text(draw, text=f"Lv.{char_level}", x=53, y=117, font=font_stats, font_size=30)
-    if friendship_lv is not None:
-        draw_figma_text(draw, text=f"♥ {friendship_lv}", x=56, y=166, font=font_stats, font_size=30, fill_color=(0, 0, 0, 190))
-        draw_figma_text(draw, text=f"♥ {friendship_lv}", x=53, y=162, font=font_stats, font_size=30)
+        draw_figma_text(draw, text=char_name, x=56, y=57, font=font_stats, font_size=50, fill_color=(0, 0, 0, 190))
+        draw_figma_text(draw, text=char_name, x=53, y=53, font=font_stats, font_size=50, fill_color=(255, 255, 255))
+        draw_figma_text(draw, text=f"Lv.{char_level}", x=56, y=121, font=font_stats, font_size=30, fill_color=(0, 0, 0, 190))
+        draw_figma_text(draw, text=f"Lv.{char_level}", x=53, y=117, font=font_stats, font_size=30, fill_color=(255, 255, 255))
+        if friendship_lv is not None:
+            draw_figma_text(draw, text=f"♥ {friendship_lv}", x=56, y=166, font=font_stats, font_size=30, fill_color=(0, 0, 0, 190))
+            draw_figma_text(draw, text=f"♥ {friendship_lv}", x=53, y=162, font=font_stats, font_size=30, fill_color=(255, 255, 255))
 
-    y_skill_base = 389
-    for i in range(3):
-        draw_figma_circle(img, x=49, y=y_skill_base + 79 * i, size=68, fill_color=(0, 0, 0, 150), outline_color=base_color, outline_width=4)
-        paste_figma_image(img, f"static/assets/skills/{skill_icon[i]}.webp", box_x=49 + 5, box_y=y_skill_base + 79 * i + 4, box_width=60, box_height=60, radius=15, beta=beta)
-        lv_color = (125, 210, 255) if (i < len(skill_boosted) and skill_boosted[i]) else (255, 255, 255)
-        draw_figma_text(draw, text=f"Lv.{skill_level[i]}", x=48, y=y_skill_base + 79 * i + 45, font=font_stats, align="center", font_size=20, box_width=68, fill_color=lv_color, stroke_width=2, stroke_fill=(0, 0, 0, 200))
+        # 元素共鳴バッジ（手動選択・最大2つ）を聖遺物行とカード下端の隙間に描画
+        _draw_resonance_badges(img, draw, resonance, beta)
 
-    for i in range(6 if Constellation_icon else 0):
-        circle_x = 637
-        circle_y = y_C_base + i * 76
-        icon_name = Constellation_icon[i]
+        # UID 表示（表示方法トグル。共鳴チップと同じ高さの左下）
+        if show_uid == "true":
+            _draw_uid_badge(img, draw, uid, beta)
 
-        if i >= constellation_releas_num:
-            draw_figma_circle(img, x=circle_x, y=circle_y, size=circle_size, fill_color=(0, 0, 0, 180), outline_color=(80, 85, 95, 255), outline_width=2)
-            icon_path = resolve_datas_path(f"static/assets/skills/{icon_name}.webp", beta)
-            if os.path.exists(icon_path):
-                icon_img = get_resized_image(icon_path, (max(1, round(60 * SX)), max(1, round(60 * SY))))
-                if icon_img is not None:
-                    alpha = icon_img.getchannel('A').point(lambda p: int(p * (45 / 255.0)))
-                    icon_img.putalpha(alpha)
-                    img.paste(icon_img, (int(round((circle_x + 5) * SX)), int(round((circle_y + 5) * SY))), icon_img)
+        y_skill_base = 389
+        for i in range(3):
+            draw_figma_circle(img, x=49, y=y_skill_base + 79 * i, size=68, fill_color=(0, 0, 0, 150), outline_color=base_color, outline_width=4)
+            paste_figma_image(img, f"static/assets/skills/{skill_icon[i]}.webp", box_x=49 + 5, box_y=y_skill_base + 79 * i + 4, box_width=60, box_height=60, radius=15, beta=beta)
+            lv_color = (125, 210, 255) if (i < len(skill_boosted) and skill_boosted[i]) else (255, 255, 255)
+            draw_figma_text(draw, text=f"Lv.{skill_level[i]}", x=48, y=y_skill_base + 79 * i + 45, font=font_stats, align="center", font_size=20, box_width=68, fill_color=lv_color, stroke_width=2, stroke_fill=(0, 0, 0, 200))
 
-            lock_w, lock_h = 24 * SX, 26 * SY
-            lx = circle_x * SX + (circle_size * SY - lock_w) / 2
-            ly = circle_y * SY + (circle_size * SY - lock_h) / 2 + 2 * SY
-            _lk_x1, _lk_y1 = int(lx) - 3, int(ly) - 3
-            _dx, _dy = -_lk_x1, -_lk_y1
-            lock_overlay = Image.new("RGBA", (int(lock_w) + 7, int(lock_h) + 7), (0, 0, 0, 0))
-            draw_lock = ImageDraw.Draw(lock_overlay)
-            _lw3 = max(1, round(3 * SY))
-            draw_lock.arc([lx + 4 * SX + _dx, ly + _dy, lx + lock_w - 4 * SX + _dx, ly + 16 * SY + _dy], start=180, end=0, fill=(255, 255, 255, 220), width=_lw3)
-            draw_lock.line([lx + 4 * SX + _dx, ly + 8 * SY + _dy, lx + 4 * SX + _dx, ly + 12 * SY + _dy], fill=(255, 255, 255, 220), width=_lw3)
-            draw_lock.line([lx + lock_w - 4 * SX + _dx, ly + 8 * SY + _dy, lx + lock_w - 4 * SX + _dx, ly + 12 * SY + _dy], fill=(255, 255, 255, 220), width=_lw3)
-            draw_lock.rounded_rectangle([lx + _dx, ly + 11 * SY + _dy, lx + lock_w + _dx, ly + lock_h + _dy], radius=max(1, round(4 * SY)), fill=(20, 25, 35, 255), outline=(255, 255, 255, 220), width=max(1, round(2 * SY)))
-            draw_lock.ellipse([lx + 10 * SX + _dx, ly + 16 * SY + _dy, lx + 14 * SX + _dx, ly + 20 * SY + _dy], fill=(255, 255, 255, 220))
-            img.alpha_composite(lock_overlay, dest=(_lk_x1, _lk_y1))
+        for i in range(6 if Constellation_icon else 0):
+            circle_x = 637
+            circle_y = y_C_base + i * 76
+            icon_name = Constellation_icon[i]
+
+            if i >= constellation_releas_num:
+                draw_figma_circle(img, x=circle_x, y=circle_y, size=circle_size, fill_color=(0, 0, 0, 180), outline_color=(80, 85, 95, 255), outline_width=2)
+                icon_path = resolve_datas_path(f"static/assets/skills/{icon_name}.webp", beta)
+                if os.path.exists(icon_path):
+                    icon_img = get_resized_image(icon_path, (max(1, round(60 * SX)), max(1, round(60 * SY))))
+                    if icon_img is not None:
+                        alpha = icon_img.getchannel('A').point(lambda p: int(p * (45 / 255.0)))
+                        icon_img.putalpha(alpha)
+                        img.paste(icon_img, (int(round((circle_x + 5) * SX)), int(round((circle_y + 5) * SY))), icon_img)
+
+                lock_w, lock_h = 24 * SX, 26 * SY
+                lx = circle_x * SX + (circle_size * SY - lock_w) / 2
+                ly = circle_y * SY + (circle_size * SY - lock_h) / 2 + 2 * SY
+                _lk_x1, _lk_y1 = int(lx) - 3, int(ly) - 3
+                _dx, _dy = -_lk_x1, -_lk_y1
+                lock_overlay = Image.new("RGBA", (int(lock_w) + 7, int(lock_h) + 7), (0, 0, 0, 0))
+                draw_lock = ImageDraw.Draw(lock_overlay)
+                _lw3 = max(1, round(3 * SY))
+                draw_lock.arc([lx + 4 * SX + _dx, ly + _dy, lx + lock_w - 4 * SX + _dx, ly + 16 * SY + _dy], start=180, end=0, fill=(255, 255, 255, 220), width=_lw3)
+                draw_lock.line([lx + 4 * SX + _dx, ly + 8 * SY + _dy, lx + 4 * SX + _dx, ly + 12 * SY + _dy], fill=(255, 255, 255, 220), width=_lw3)
+                draw_lock.line([lx + lock_w - 4 * SX + _dx, ly + 8 * SY + _dy, lx + lock_w - 4 * SX + _dx, ly + 12 * SY + _dy], fill=(255, 255, 255, 220), width=_lw3)
+                draw_lock.rounded_rectangle([lx + _dx, ly + 11 * SY + _dy, lx + lock_w + _dx, ly + lock_h + _dy], radius=max(1, round(4 * SY)), fill=(20, 25, 35, 255), outline=(255, 255, 255, 220), width=max(1, round(2 * SY)))
+                draw_lock.ellipse([lx + 10 * SX + _dx, ly + 16 * SY + _dy, lx + 14 * SX + _dx, ly + 20 * SY + _dy], fill=(255, 255, 255, 220))
+                img.alpha_composite(lock_overlay, dest=(_lk_x1, _lk_y1))
+            else:
+                draw_figma_circle(img, x=circle_x, y=circle_y, size=circle_size, fill_color=(0, 0, 0, 150), outline_color=base_color, outline_width=4)
+                paste_figma_image(img, f"static/assets/skills/{icon_name}.webp", box_x=circle_x + 5, box_y=circle_y + 5, box_width=60, box_height=60, radius=15, beta=beta)
+
+        if weapon_icon:
+            paste_figma_image(img, f"static/assets/weapons/{weapon_icon}.webp", box_x=1350, box_y=60, box_width=100, box_height=100, radius=15, beta=beta)
+        draw_figma_box(img, x=1340, y=47, width=60, height=30, radius=2)
+        if weapon_affix:
+            draw_figma_text(draw, text=f"R{weapon_affix}", x=1357, y=48, font=font_stats, align="left", font_size=20)
         else:
-            draw_figma_circle(img, x=circle_x, y=circle_y, size=circle_size, fill_color=(0, 0, 0, 150), outline_color=base_color, outline_width=4)
-            paste_figma_image(img, f"static/assets/skills/{icon_name}.webp", box_x=circle_x + 5, box_y=circle_y + 5, box_width=60, box_height=60, radius=15, beta=beta)
+            draw_figma_text(draw, text="-", x=1357, y=48, font=font_stats, align="left", font_size=20)
+        draw_figma_text(draw, text=weapon_name, x=1462, y=60, font=font_stats, align="left", font_size=23)
+        if weapon_level:
+            draw_figma_text(draw, text=f"Lv.{weapon_level}", x=1462, y=90, font=font_stats, align="left", font_size=20)
+        else:
+            draw_figma_text(draw, text="Lv.-", x=1462, y=90, font=font_stats, align="left", font_size=20)
 
-    if weapon_icon:
-        paste_figma_image(img, f"static/assets/weapons/{weapon_icon}.webp", box_x=1350, box_y=60, box_width=100, box_height=100, radius=15, beta=beta)
-    draw_figma_box(img, x=1340, y=47, width=60, height=30, radius=2)
-    if weapon_affix:
-        draw_figma_text(draw, text=f"R{weapon_affix}", x=1357, y=48, font=font_stats, align="left", font_size=20)
-    else:
-        draw_figma_text(draw, text="-", x=1357, y=48, font=font_stats, align="left", font_size=20)
-    draw_figma_text(draw, text=weapon_name, x=1462, y=60, font=font_stats, align="left", font_size=23)
-    if weapon_level:
-        draw_figma_text(draw, text=f"Lv.{weapon_level}", x=1462, y=90, font=font_stats, align="left", font_size=20)
-    else:
-        draw_figma_text(draw, text="Lv.-", x=1462, y=90, font=font_stats, align="left", font_size=20)
+        if weapon_stat1:
+            stat_name1, stat_val1_str = weapon_stat1
+            draw_figma_text(draw, text=stat_name1, x=1462, y=125, font=font_stats_light, align="left", font_size=18)
+            draw_figma_text(draw, text=stat_val1_str, x=1635, y=125, font=font_stats_light, align="left", font_size=21)
+        if weapon_stat2:
+            stat_name2, stat_val2_str = weapon_stat2
+            draw_figma_text(draw, text=stat_name2, x=1462, y=155, font=font_stats_light, align="left", font_size=18)
+            draw_figma_text(draw, text=stat_val2_str, x=1635, y=155, font=font_stats_light, align="left", font_size=21)
+        t_end = time.perf_counter()
+        print(f"[Perf] 描画：ボックス・テキスト（上半分）: {(t_end - t_start)*1000:.1f}ms", flush=True)
 
-    if weapon_stat1:
-        stat_name1, stat_val1_str = weapon_stat1
-        draw_figma_text(draw, text=stat_name1, x=1462, y=125, font=font_stats_light, align="left", font_size=18)
-        draw_figma_text(draw, text=stat_val1_str, x=1635, y=125, font=font_stats_light, align="left", font_size=21)
-    if weapon_stat2:
-        stat_name2, stat_val2_str = weapon_stat2
-        draw_figma_text(draw, text=stat_name2, x=1462, y=155, font=font_stats_light, align="left", font_size=18)
-        draw_figma_text(draw, text=stat_val2_str, x=1635, y=155, font=font_stats_light, align="left", font_size=21)
-    t_end = time.perf_counter()
-    print(f"[Perf] 描画：ボックス・テキスト（上半分）: {(t_end - t_start)*1000:.1f}ms", flush=True)
+        t_start = time.perf_counter()
+        base_y = 73
+        max_y = 700
+        row_gap = (max_y - base_y) // len(stats_mock)
+        icon_size = 36
+        icon_offset_y = 2
 
-    t_start = time.perf_counter()
-    base_y = 73
-    max_y = 700
-    row_gap = (max_y - base_y) // len(stats_mock)
-    icon_size = 36
-    icon_offset_y = 2
+        for i, (n, data) in enumerate(stats_mock.items()):
+            current_y = base_y + (i * row_gap)
+            icon_path = resolve_datas_path(data["icon"], beta)
+            icon_x = 840 - 60
+            if icon_path and os.path.exists(icon_path):
+                try:
+                    icon_img = get_resized_image(icon_path, (max(1, round(icon_size * SX)), max(1, round(icon_size * SY))))
+                    if icon_img is not None:
+                        if is_light:
+                            # 白系アイコンが白パネルに沈まないよう暗めの台座を敷く
+                            draw_figma_circle(img, x=icon_x - 4, y=current_y + icon_offset_y - 4, size=icon_size + 8, fill_color=(15, 23, 42, 90))
+                        img.paste(icon_img, (int(round(icon_x * SX)), int(round((current_y + icon_offset_y) * SY))), icon_img)
+                except Exception as e:
+                    print(f"[Error] Failed to paste status icon: {icon_path}. Reason: {e}")
+            draw_figma_text(draw, text=n, x=840, y=current_y, font=font_stats, align="left")
+            draw_figma_text(draw, text=data["val"], x=870, y=current_y, font=font_stats, align="right", box_width=450 - 60)
 
-    for i, (n, data) in enumerate(stats_mock.items()):
-        current_y = base_y + (i * row_gap)
-        icon_path = resolve_datas_path(data["icon"], beta)
-        icon_x = 840 - 60
-        if icon_path and os.path.exists(icon_path):
-            try:
-                icon_img = get_resized_image(icon_path, (max(1, round(icon_size * SX)), max(1, round(icon_size * SY))))
-                if icon_img is not None:
-                    img.paste(icon_img, (int(round(icon_x * SX)), int(round((current_y + icon_offset_y) * SY))), icon_img)
-            except Exception as e:
-                print(f"[Error] Failed to paste status icon: {icon_path}. Reason: {e}")
-        draw_figma_text(draw, text=n, x=840, y=current_y, font=font_stats, align="left")
-        draw_figma_text(draw, text=data["val"], x=870, y=current_y, font=font_stats, align="right", box_width=450 - 60)
+            if n in ["HP", "攻撃力", "防御力"] and data.get("base") and data.get("add"):
+                sub_y = current_y + 32
+                green_text = data["add"]
+                gray_text = str(data["base"])
+                calc_font = get_cached_font(FONT_PATH, max(1, round(20 * SY))) if os.path.exists(FONT_PATH) else font_stats
+                green_w = draw.textlength(green_text, font=calc_font) / SX
+                gray_w = draw.textlength(gray_text, font=calc_font) / SX
+                target_right_edge = 1260
+                green_x = target_right_edge - green_w
+                gray_x = green_x - 8 - gray_w
+                draw_figma_text(draw, text=green_text, x=green_x, y=sub_y, font=font_stats, font_size=20, fill_color=(4, 120, 87) if is_light else (0, 230, 115), align="left")
+                draw_figma_text(draw, text=gray_text, x=gray_x, y=sub_y, font=font_stats, font_size=20, fill_color=(100, 116, 139) if is_light else (160, 165, 175), align="left")
+        t_end = time.perf_counter()
+        print(f"[Perf] 描画：ステータス: {(t_end - t_start)*1000:.1f}ms", flush=True)
 
-        if n in ["HP", "攻撃力", "防御力"] and data.get("base") and data.get("add"):
-            sub_y = current_y + 32
-            green_text = data["add"]
-            gray_text = str(data["base"])
-            calc_font = get_cached_font(FONT_PATH, max(1, round(20 * SY))) if os.path.exists(FONT_PATH) else font_stats
-            green_w = draw.textlength(green_text, font=calc_font) / SX
-            gray_w = draw.textlength(gray_text, font=calc_font) / SX
-            target_right_edge = 1260
-            green_x = target_right_edge - green_w
-            gray_x = green_x - 8 - gray_w
-            draw_figma_text(draw, text=green_text, x=green_x, y=sub_y, font=font_stats, font_size=20, fill_color=(0, 230, 115), align="left")
-            draw_figma_text(draw, text=gray_text, x=gray_x, y=sub_y, font=font_stats, font_size=20, fill_color=(160, 165, 175), align="left")
-    t_end = time.perf_counter()
-    print(f"[Perf] 描画：ステータス: {(t_end - t_start)*1000:.1f}ms", flush=True)
+        t_start = time.perf_counter()
+        for x in artifact_x_list:
+            draw_figma_glass_box(img, x=x, y=738, width=314, height=399, radius=25)
 
-    t_start = time.perf_counter()
-    for x in artifact_x_list:
-        draw_figma_box(img, x=x, y=738, width=314, height=399, radius=25)
+        for i in range(5):
+            box_x = artifact_x_list[i]
+            artifact_data = artifacts_mock[i]
+            artifact_img_num = artifact_image_num[i]
 
-    for i in range(5):
-        box_x = artifact_x_list[i]
-        artifact_data = artifacts_mock[i]
-        artifact_img_num = artifact_image_num[i]
+            draw_figma_box(img, x=box_x + 14, y=754, width=90, height=90, radius=10)
+            draw_figma_box(img, x=box_x + 230, y=795, width=70, height=40, radius=10)
+            paste_figma_image(img, f"static/assets/artifacts/UI_RelicIcon_{artifact_data['set']}_{artifact_img_num}.webp", box_x=box_x + 14, box_y=754, box_width=90, box_height=90, radius=15, beta=beta)
+            draw_figma_text(draw, text=artifact_data["Main"][0], x=box_x + 114, y=758, font=font_stats, align="left")
+            draw_figma_text(draw, text=artifact_data["Main"][1], x=box_x + 114, y=792, font=font_stats, align="left", font_size=30)
+            draw_figma_text(draw, text=f"+{artifact_data['upgrade']}", x=box_x + 237, y=793, font=font_stats, align="left")
 
-        draw_figma_box(img, x=box_x + 14, y=754, width=90, height=90, radius=10)
-        draw_figma_box(img, x=box_x + 230, y=795, width=70, height=40, radius=10)
-        paste_figma_image(img, f"static/assets/artifacts/UI_RelicIcon_{artifact_data['set']}_{artifact_img_num}.webp", box_x=box_x + 14, box_y=754, box_width=90, box_height=90, radius=15, beta=beta)
-        draw_figma_text(draw, text=artifact_data["Main"][0], x=box_x + 114, y=758, font=font_stats, align="left")
-        draw_figma_text(draw, text=artifact_data["Main"][1], x=box_x + 114, y=792, font=font_stats, align="left", font_size=30)
-        draw_figma_text(draw, text=f"+{artifact_data['upgrade']}", x=box_x + 237, y=793, font=font_stats, align="left")
+            y_base = 855
+            sub_val_font_size = 23 if base_prec == "2" else 25
+            for j in range(4):
+                draw_figma_text(draw, text=artifact_data["stats"][j][1], x=box_x + 47, y=y_base + 50 * j, font=font_stats, font_size=25, align="left")
+                draw_figma_text(draw, text=artifact_data["stats"][j][2], x=box_x + 218, y=y_base + 50 * j, font=font_stats, font_size=sub_val_font_size, align="left")
+                if is_light:
+                    draw_figma_circle(img, x=box_x + 10, y=y_base + 50 * j - 2, size=34, fill_color=(15, 23, 42, 90))
+                paste_figma_image(img, artifact_data["stats"][j][0], box_x=box_x + 12, box_y=y_base + 50 * j, box_width=30, box_height=30, radius=5, beta=beta)
+                roll_tiers = artifact_data["stats"][j][3] if len(artifact_data["stats"][j]) > 3 else []
+                if substat_dots == "1":
+                    _tiers = [dt for dt in roll_tiers if 0 <= dt < 4]
+                    if _tiers:
+                        _seg_w = 24
+                        for dk, dt in enumerate(_tiers):
+                            if len(_tiers) == 1:
+                                corners = (True, True, True, True)
+                            elif dk == 0:
+                                corners = (True, False, False, True)
+                            elif dk == len(_tiers) - 1:
+                                corners = (False, True, True, False)
+                            else:
+                                corners = (False, False, False, False)
+                            draw_figma_dot(img, x=box_x + 47 + dk * _seg_w, y=y_base + 50 * j + 36, size=11, fill_color=ROLL_DOT_COLORS[dt], corners=corners)
 
-        y_base = 855
-        sub_val_font_size = 23 if base_prec == "2" else 25
-        for j in range(4):
-            draw_figma_text(draw, text=artifact_data["stats"][j][1], x=box_x + 47, y=y_base + 50 * j, font=font_stats, font_size=25, align="left")
-            draw_figma_text(draw, text=artifact_data["stats"][j][2], x=box_x + 218, y=y_base + 50 * j, font=font_stats, font_size=sub_val_font_size, align="left")
-            paste_figma_image(img, artifact_data["stats"][j][0], box_x=box_x + 12, box_y=y_base + 50 * j, box_width=30, box_height=30, radius=5, beta=beta)
-            roll_tiers = artifact_data["stats"][j][3] if len(artifact_data["stats"][j]) > 3 else []
-            if substat_dots == "1":
-                _tiers = [dt for dt in roll_tiers if 0 <= dt < 4]
-                if _tiers:
-                    _seg_w = 24
-                    for dk, dt in enumerate(_tiers):
-                        if len(_tiers) == 1:
-                            corners = (True, True, True, True)
-                        elif dk == 0:
-                            corners = (True, False, False, True)
-                        elif dk == len(_tiers) - 1:
-                            corners = (False, True, True, False)
-                        else:
-                            corners = (False, False, False, False)
-                        draw_figma_dot(img, x=box_x + 47 + dk * _seg_w, y=y_base + 50 * j + 36, size=11, fill_color=ROLL_DOT_COLORS[dt], corners=corners)
+            draw_figma_line(img, x1=box_x + 27, y1=1065, x2=box_x + 287, y2=1065, width=1)
+            _num_font_path = getattr(font_stats, "path", None)
+            _num_font = get_cached_font(_num_font_path, max(1, round(40 * SY))) if _num_font_path and os.path.exists(_num_font_path) else font_stats
+            _score_left_x = box_x + 287 - draw.textlength(str(artifact_data["score"]), font=_num_font) / SX
+            draw_figma_text(draw, text="スコア", x=box_x + 27, y=1090, font=font_stats_light, font_size=20, align="right", box_width=(_score_left_x - 6) - (box_x + 27))
+            draw_figma_text(draw, text=artifact_data["score"], x=box_x + 207, y=1070, font=font_stats, font_size=40, align="right", box_width=80)
+            paste_figma_image(img, f"static/assets/tiers/{artifact_data['tier']}.png", box_x=box_x + 27, box_y=1070, box_width=60, box_height=60, radius=15, beta=beta)
+        t_end = time.perf_counter()
+        print(f"[Perf] 描画：聖遺物5枠: {(t_end - t_start)*1000:.1f}ms", flush=True)
 
-        draw_figma_line(img, x1=box_x + 27, y1=1065, x2=box_x + 287, y2=1065, fill_color=(255, 255, 255, 50), width=1)
-        _num_font_path = getattr(font_stats, "path", None)
-        _num_font = get_cached_font(_num_font_path, max(1, round(40 * SY))) if _num_font_path and os.path.exists(_num_font_path) else font_stats
-        _score_left_x = box_x + 287 - draw.textlength(str(artifact_data["score"]), font=_num_font) / SX
-        draw_figma_text(draw, text="スコア", x=box_x + 27, y=1090, font=font_stats_light, font_size=20, align="right", box_width=(_score_left_x - 6) - (box_x + 27))
-        draw_figma_text(draw, text=artifact_data["score"], x=box_x + 207, y=1070, font=font_stats, font_size=40, align="right", box_width=80)
-        paste_figma_image(img, f"static/assets/tiers/{artifact_data['tier']}.png", box_x=box_x + 27, box_y=1070, box_width=60, box_height=60, radius=15, beta=beta)
-    t_end = time.perf_counter()
-    print(f"[Perf] 描画：聖遺物5枠: {(t_end - t_start)*1000:.1f}ms", flush=True)
+        t_start = time.perf_counter()
+        _name_font_path = getattr(font_stats, "path", None)
+        _name_font = get_cached_font(_name_font_path, max(1, round(20 * SY))) if _name_font_path and os.path.exists(_name_font_path) else font_stats
+        for s in sets_display:
+            # アイコン・名前を左寄りに配置し、個数バッジは名前の直後に付ける（数字はバッジ中央揃え）
+            paste_figma_image(img, s["icon"], box_x=1345, box_y=s["img_y"], box_width=60, box_height=60, radius=15, beta=beta)
+            draw_figma_text(draw, text=s["name"], x=1420, y=s["text_y"], font=font_stats, align="left", font_size=20)
+            _count_box_x = 1420 + draw.textlength(str(s["name"]), font=_name_font) / SX + 10
+            draw_figma_box(img, x=_count_box_x, y=s["box_y"], width=35, height=28, radius=8, fill_color=(15, 23, 42, 28) if is_light else (255, 255, 255, 40))
+            draw_figma_text(draw, text=s["count"], x=_count_box_x, y=s["text_y"], font=font_stats, align="center", font_size=18, box_width=35)
 
-    t_start = time.perf_counter()
-    _name_font_path = getattr(font_stats, "path", None)
-    _name_font = get_cached_font(_name_font_path, max(1, round(20 * SY))) if _name_font_path and os.path.exists(_name_font_path) else font_stats
-    for s in sets_display:
-        # アイコン・名前を左寄りに配置し、個数バッジは名前の直後に付ける（数字はバッジ中央揃え）
-        paste_figma_image(img, s["icon"], box_x=1345, box_y=s["img_y"], box_width=60, box_height=60, radius=15, beta=beta)
-        draw_figma_text(draw, text=s["name"], x=1420, y=s["text_y"], font=font_stats, align="left", font_size=20)
-        _count_box_x = 1420 + draw.textlength(str(s["name"]), font=_name_font) / SX + 10
-        draw_figma_box(img, x=_count_box_x, y=s["box_y"], width=35, height=28, radius=8, fill_color=(255, 255, 255, 40))
-        draw_figma_text(draw, text=s["count"], x=_count_box_x, y=s["text_y"], font=font_stats, align="center", font_size=18, box_width=35)
-
-    draw_figma_text(draw, text="総合スコア", x=1443, y=449, font=font_stats, align="left", font_size=30)
-    draw_figma_text(draw, text=round(score_sum, 1), x=1332, y=480, font=font_stats, align="center", font_size=90, box_width=386)
-    draw_figma_line(img, x1=1380, y1=623, x2=1670, y2=623, fill_color=(255, 255, 255, 50), width=1)
-    paste_figma_image(img, f"static/assets/tiers/{tier_sum_score}.png", box_x=1620, box_y=400, box_width=80, box_height=80, radius=15, beta=beta)
-    draw_figma_text(draw, text="計算方法", x=1350, y=642, font=font_stats, align="left", font_size=30)
-    draw_figma_text_right(draw, text=display_score_way, x=1680, y=645, font=font_stats, align="right", font_size=35)
-    t_end = time.perf_counter()
-    print(f"[Perf] 描画：セット効果・総合スコア: {(t_end - t_start)*1000:.1f}ms", flush=True)
-    _plog(f"描画完了 size={img.size} mode={img.mode}")
+        draw_figma_text(draw, text="総合スコア", x=1443, y=449, font=font_stats, align="left", font_size=30)
+        draw_figma_text(draw, text=round(score_sum, 1), x=1332, y=480, font=font_stats, align="center", font_size=90, box_width=386)
+        draw_figma_line(img, x1=1380, y1=623, x2=1670, y2=623, width=1)
+        paste_figma_image(img, f"static/assets/tiers/{tier_sum_score}.png", box_x=1620, box_y=400, box_width=80, box_height=80, radius=15, beta=beta)
+        draw_figma_text(draw, text="計算方法", x=1350, y=642, font=font_stats, align="left", font_size=30)
+        draw_figma_text_right(draw, text=display_score_way, x=1680, y=645, font=font_stats, align="right", font_size=35)
+        t_end = time.perf_counter()
+        print(f"[Perf] 描画：セット効果・総合スコア: {(t_end - t_start)*1000:.1f}ms", flush=True)
+        _plog(f"描画完了 size={img.size} mode={img.mode}")
 
     # 育成モード: カード全体を等方縮小し右側にパネルを追加（幅は変えない）
     if growth == "true" and growth_panel:
@@ -1041,6 +1172,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             use_prebuilt=(bg_color is None and selected_region is None),
             region=selected_region,
             base_prec=base_prec,
+            light=light,
         )
         t_end = time.perf_counter()
         print(f"[Perf] 育成パネル追加: {(t_end - t_start)*1000:.1f}ms", flush=True)

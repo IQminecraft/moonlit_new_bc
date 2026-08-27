@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お問い合わせ | 原神ビルドカード</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('genshin_build_card_theme_pref');
+                document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <style>
+        :root {
+            --bg: #070b14;
+            --surface: rgba(15, 22, 36, 0.72);
+            --surface-solid: #121a28;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.14);
+            --text: #eef2f8;
+            --text-secondary: #9aa8bc;
+            --text-muted: #6b7a90;
+            --accent: #5eead4;
+            --accent-dim: rgba(94, 234, 212, 0.14);
+            --accent-hover: #2dd4bf;
+            --danger: #f87171;
+            --danger-bg: rgba(248, 113, 113, 0.1);
+            --danger-border: rgba(248, 113, 113, 0.45);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        [data-theme='light'] {
+            --bg: #eef1f6;
+            --surface: rgba(255, 255, 255, 0.78);
+            --surface-solid: #ffffff;
+            --border: rgba(15, 23, 42, 0.08);
+            --border-strong: rgba(15, 23, 42, 0.13);
+            --text: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent: #0d9488;
+            --accent-dim: rgba(13, 148, 136, 0.12);
+            --accent-hover: #0f766e;
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.08);
+            --danger-border: rgba(239, 68, 68, 0.4);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body {
+            font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page { min-height: 100%; display: grid; grid-template-rows: auto 1fr; }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            border-bottom: 1px solid var(--border);
+            background: color-mix(in srgb, var(--bg) 55%, transparent);
+            backdrop-filter: blur(18px);
+        }
+        .top-left, .top-right { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+        .top-right { font-weight: 600; color: var(--text-secondary); }
+        .top-link {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+        .top-link:hover { color: var(--accent); }
+        .top-sep { opacity: 0.35; }
+        .top-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+        .top-logo { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; }
+        .top-title { font-size: 15px; font-weight: 700; color: var(--text); }
+        .top-brand:hover .top-title { color: var(--accent); }
+        .top-ver { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.02em; white-space: nowrap; margin-left: 2px; }
+
+        .main {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 48px 20px 64px;
+        }
+        .card {
+            width: min(680px, 100%);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            backdrop-filter: blur(18px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+        }
+        h1 { font-size: 24px; margin-bottom: 8px; }
+        .lead { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
+        .field { margin-bottom: 18px; }
+        label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+        .optional { color: var(--text-muted); font-weight: 500; }
+        input, select, textarea {
+            width: 100%;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            background: color-mix(in srgb, var(--surface-solid) 70%, transparent);
+            color: var(--text);
+            padding: 10px 12px;
+            font-size: 14px;
+            outline: none;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+        textarea { min-height: 180px; resize: vertical; }
+        .hint { color: var(--text-muted); font-size: 12px; margin-top: 5px; }
+        .counter { text-align: right; color: var(--text-muted); font-size: 12px; margin-top: 4px; }
+        .actions { display: flex; align-items: center; gap: 14px; margin-top: 24px; }
+        button[type="submit"] {
+            border: none;
+            border-radius: var(--radius-sm);
+            background: var(--accent);
+            color: #04211d;
+            font-size: 14px;
+            font-weight: 800;
+            padding: 11px 22px;
+            cursor: pointer;
+            transition: background 0.15s, opacity 0.15s;
+        }
+        button[type="submit"]:hover { background: var(--accent-hover); }
+        button[type="submit"]:disabled { opacity: 0.55; cursor: not-allowed; }
+        .status { margin-top: 18px; font-size: 14px; border-radius: var(--radius-sm); padding: 10px 12px; }
+        .status.ok { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); }
+        .status.error { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
+        .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="top-bar">
+            <div class="top-left">
+                <a href="/" class="top-brand">
+                    <img src="/static/favicon.png" alt="" class="top-logo">
+                    <span class="top-title">原神ビルドカード</span>
+                    <span class="top-ver" id="topVersionLabel"></span>
+                </a>
+            </div>
+            <div class="top-right">
+                <button type="button" class="top-link" id="themeModeBtn" title="ライト / ダークを切り替えます">ライト / ダーク</button>
+                <span class="top-sep">|</span>
+                <a href="/" class="top-link" title="トップへ戻ります">トップへ戻る</a>
+            </div>
+        </header>
+
+        <main class="main">
+            <div class="card">
+                <h1>お問い合わせ</h1>
+                <p class="lead">不具合報告・機能要望・その他のお問い合わせを送信できます。</p>
+
+                <form id="contactForm" novalidate>
+                    <div class="field">
+                        <label for="contactCategory">種別</label>
+                        <select id="contactCategory" name="category">
+                            <option value="不具合報告">不具合報告</option>
+                            <option value="機能要望">機能要望</option>
+                            <option value="その他" selected>その他</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="contactName">お名前 <span class="optional">（任意）</span></label>
+                        <input id="contactName" name="name" type="text" maxlength="50" placeholder="匿名でも送信できます">
+                    </div>
+
+                    <div class="field">
+                        <label for="contactMessage">内容 <span style="color: var(--danger);">*</span></label>
+                        <textarea id="contactMessage" name="message" maxlength="2000" required placeholder="できるだけ具体的に記入してください"></textarea>
+                        <div class="counter"><span id="messageCount">0</span> / 2000</div>
+                    </div>
+
+                    <div class="hp" aria-hidden="true">
+                        <label for="contactWebsite">Website</label>
+                        <input id="contactWebsite" name="website" type="text" tabindex="-1" autocomplete="off">
+                    </div>
+
+                    <div class="actions">
+                        <button type="submit" id="contactSubmitBtn">送信する</button>
+                    </div>
+                </form>
+
+                <div id="contactStatus" class="status" hidden></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const THEME_PREF_KEY = 'genshin_build_card_theme_pref';
+
+        function getSavedThemePref() {
+            try {
+                return localStorage.getItem(THEME_PREF_KEY) === 'light' ? 'light' : 'dark';
+            } catch (e) {
+                return 'dark';
+            }
+        }
+
+        function setThemePref(theme) {
+            const next = theme === 'light' ? 'light' : 'dark';
+            try {
+                localStorage.setItem(THEME_PREF_KEY, next);
+            } catch (e) {}
+            document.documentElement.setAttribute('data-theme', next);
+        }
+
+        const themeModeBtn = document.getElementById('themeModeBtn');
+        if (themeModeBtn) {
+            themeModeBtn.addEventListener('click', () => {
+                setThemePref(getSavedThemePref() === 'light' ? 'dark' : 'light');
+            });
+        }
+
+        // ヘッダーのタイトル横: サイトバージョン + live データバージョン
+        (async () => {
+            try {
+                const res = await fetch('/api/data_versions');
+                if (!res.ok) return;
+                const d = await res.json();
+                const tv = document.getElementById('topVersionLabel');
+                if (!tv) return;
+                const parts = [];
+                if (d.site) parts.push(`v${d.site}`);
+                if (d.live) parts.push(`Ver${d.live}`);
+                tv.textContent = parts.join(' : ');
+            } catch (e) {}
+        })();
+
+        const form = document.getElementById('contactForm');
+        const submitBtn = document.getElementById('contactSubmitBtn');
+        const statusEl = document.getElementById('contactStatus');
+        const messageEl = document.getElementById('contactMessage');
+        const messageCount = document.getElementById('messageCount');
+
+        function setStatus(message, ok) {
+            statusEl.hidden = false;
+            statusEl.textContent = message;
+            statusEl.className = 'status ' + (ok ? 'ok' : 'error');
+        }
+
+        if (messageEl && messageCount) {
+            messageEl.addEventListener('input', () => {
+                messageCount.textContent = String(messageEl.value.length);
+            });
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = messageEl.value.trim();
+            if (!message) {
+                setStatus('問い合わせ内容を入力してください。', false);
+                messageEl.focus();
+                return;
+            }
+            submitBtn.disabled = true;
+            submitBtn.textContent = '送信中...';
+            statusEl.hidden = true;
+            try {
+                const res = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        category: document.getElementById('contactCategory').value,
+                        name: document.getElementById('contactName').value,
+                        message: message,
+                        website: document.getElementById('contactWebsite').value,
+                    }),
+                });
+                if (res.ok) {
+                    form.reset();
+                    messageCount.textContent = '0';
+                    setStatus('送信しました。', true);
+                } else {
+                    const data = await res.json().catch(() => ({}));
+                    setStatus(data.detail || '送信に失敗しました。しばらく待ってから再試行してください。', false);
+                }
+            } catch (err) {
+                setStatus('送信に失敗しました。しばらく待ってから再試行してください。', false);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '送信する';
+            }
+        });
+    </script>
+</body>
+</html>

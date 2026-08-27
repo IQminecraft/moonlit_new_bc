@@ -2,7 +2,7 @@ import os
 import json
 from collections import Counter
 from fastapi import HTTPException
-from app.paths import BASE_DIR
+from app.paths import BASE_DIR, STATIC_DIR
 from app.card.stats import (
     text_map_data, get_stat_japanese, get_char_level,
     score_calc,
@@ -17,7 +17,9 @@ from app.card.special import (
 )
 from app.card.region import build_region_info, find_regions_for_character
 from app.card.set_buffs import set_buff_label
+from app.card.resonance import resonance_badges, parse_resonance_param
 from app.card.stat_calc import compute_manual_totals
+from app.card.calc_method import resolve_calc_method, get_default_calc_method
 from app.card.scorecard_splash import get_scorecard_splash_offset
 from app.card.growth import build_growth_panel, build_growth_from_fake
 
@@ -71,7 +73,7 @@ def _build_char_list_from_showcase(showcase_data: dict, beta: str) -> list:
     return char_list
 
 
-def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", growth: str = "false", base_prec: str = "0"):
+def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", growth: str = "false", base_prec: str = "0", resonance: str = None):
     if beta != "true":
         beta = "false"
     growth = "true" if str(growth or "") == "true" else "false"
@@ -79,7 +81,10 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
     if base_prec not in ("0", "2", "4"):
         base_prec = "0"
 
-    json_path = os.path.join("static", "cache", f"showcase_{uid}.json")
+    # 計算方式が未指定/不正ならキャラ毎デフォルト（admin 設定）→ "crit" に解決する。
+    calc_method = resolve_calc_method(calc_method, avatar_id)
+
+    json_path = os.path.join(STATIC_DIR, "cache", f"showcase_{uid}.json")
     json_path = resolve_datas_path(json_path, beta)
     if not os.path.exists(json_path):
         raise HTTPException(status_code=404, detail=f"UID: {uid} のキャッシュデータが見つかりませんでした。")
@@ -112,12 +117,12 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         raise HTTPException(status_code=404, detail=f"Avatar ID {avatar_id} not found in showcase.")
 
     if fake_char:
-        json_path2 = os.path.join("static", "data", "characters", f"{fake_char}.json")
+        json_path2 = os.path.join(STATIC_DIR, "data", "characters", f"{fake_char}.json")
         if not os.path.exists(json_path2):
             if beta == "true":
-                json_path2 = os.path.join("static", "beta", "data", "characters", f"{fake_char}.json")
+                json_path2 = os.path.join(STATIC_DIR, "beta", "data", "characters", f"{fake_char}.json")
     else:
-        json_path2 = os.path.join("static", "data", "characters", f"{avatar_id}.json")
+        json_path2 = os.path.join(STATIC_DIR, "data", "characters", f"{avatar_id}.json")
     json_path2 = resolve_datas_path(json_path2, beta)
 
     if os.path.exists(json_path2):
@@ -129,7 +134,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
                 chardatas = json.load(f)
     else:
         base_avatar_id = str(avatar_id).split("-")[0]
-        backup_path = os.path.join("static", "data", "characters", f"{base_avatar_id}.json")
+        backup_path = os.path.join(STATIC_DIR, "data", "characters", f"{base_avatar_id}.json")
         backup_path = resolve_datas_path(backup_path, beta)
         if os.path.exists(backup_path):
             try:
@@ -242,6 +247,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
             element_type=element_type,
             beta=beta,
             weapon_base_included_in_base_atk=weapon_base_included,
+            resonance=resonance,
         )
 
         dmg_buff_val = "0%"
@@ -266,6 +272,8 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         # 実キャラも差し替えと同一の手動計算でステータスを導出する。
         # fightPropMap['4'](基礎攻撃力) には武器基礎攻撃力が既に含まれるため、
         # weapon_base_included_in_base_atk=True で二重加算を防ぐ。
+        # 共鳴なしの実キャラは fightPropMap の最終値を EM/ER に採用（丸め境界対策）。
+        _has_resonance = bool(parse_resonance_param(resonance))
         totals = compute_manual_totals(
             base_hp=fight_prop.get('1', 1),
             base_atk=fight_prop.get('4', 1),
@@ -279,6 +287,9 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
             element_type=element_type,
             beta=beta,
             weapon_base_included_in_base_atk=True,
+            resonance=resonance,
+            authoritative_em=None if _has_resonance else fight_prop.get('28'),
+            authoritative_er=None if _has_resonance else fight_prop.get('23'),
         )
 
         dmg_buff_val = "0%"
@@ -592,10 +603,12 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         "mainStats": main_stats,
         "artifacts": artifacts_out,
         "setBonuses": set_bonuses,
+        "resonanceBadges": resonance_badges(resonance),
         "scoreSum": round(score_sum, 1),
         "tierSum": tier_sum_score,
         "calcMethod": calc_method,
         "calcMethodLabel": display_score_way,
+        "defaultCalcMethod": get_default_calc_method(_special_raw_id(fake_char or avatar_id)),
         "rarity": rarity_val,
         "weaponType": weapon_type_ja,
         "charIcon": char_icon_path,
@@ -603,5 +616,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         "growth": growth_panel,
         "regions": build_region_info(find_regions_for_character(_special_raw_id(fake_char or avatar_id), element_type)),
         # SCORECARD テーマ用スプラッシュオフセット（admin 管理・未設定は null）
-        "splashOffset": get_scorecard_splash_offset(chardatas.get("id") if isinstance(chardatas, dict) else None),
+        # キャラJSON には id フィールドが無いため、ベースID（例: 10000002）で引く。
+        # admin の保存キーもベースID（str(char_id).split("-")[0]）なので一致する。
+        "splashOffset": get_scorecard_splash_offset(_special_raw_id(fake_char or avatar_id)),
     }

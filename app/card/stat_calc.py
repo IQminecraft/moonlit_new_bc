@@ -16,6 +16,7 @@ from app.card.stats import (
     sum_affix_substat_values,
 )
 from app.card.set_buffs import apply_2set_buffs
+from app.card.resonance import apply_resonance_buffs
 
 
 # ----------------------------------------------------------------
@@ -96,7 +97,8 @@ def get_char_base_stats(chardatas, level):
 
 def compute_manual_totals(*, base_hp, base_atk, base_def, base_crit_rate, base_crit_dmg,
                           base_em, weapon_stats_list, raw_artifacts, chardatas,
-                          element_type, beta="false", weapon_base_included_in_base_atk=False):
+                          element_type, beta="false", weapon_base_included_in_base_atk=False,
+                          resonance=None, authoritative_em=None, authoritative_er=None):
     """手動計算で最終ステータスを導出する。
 
     base_atk の解釈:
@@ -161,6 +163,9 @@ def compute_manual_totals(*, base_hp, base_atk, base_def, base_crit_rate, base_c
     set_ids = [a.get("flat", {}).get("setId", "") for a in raw_artifacts or []]
     apply_2set_buffs(stat_totals, set_ids, beta)
 
+    # 元素共鳴（単体カードで手動選択・最大2つ）をステータスへ反映する。
+    apply_resonance_buffs(stat_totals, resonance)
+
     base_atk_eff = base_atk + weapon_base_atk
     total_hp = base_hp * (1 + stat_totals["hp_percent"]) + stat_totals["hp_flat"]
     total_atk = base_atk_eff * (1 + stat_totals["atk_percent"]) + stat_totals["atk_flat"]
@@ -169,6 +174,14 @@ def compute_manual_totals(*, base_hp, base_atk, base_def, base_crit_rate, base_c
     total_crit_rate = base_crit_rate + stat_totals["crit_rate"]
     total_crit_dmg = base_crit_dmg + stat_totals["crit_dmg"]
     total_er = 1.0 + stat_totals["energy_recharge"]
+
+    # 実キャラ（差し替えなし・共鳴なし）は enka の fightPropMap がゲーム本体の
+    # 最終値（float32 蓄算込みの値）なので、元素熟知/チャージ効率はそれをそのまま
+    # 使う。手動蓄算（float64）は境界値(.x5)でゲームと 1 つずれるため。
+    if authoritative_em is not None:
+        total_em = float(authoritative_em)
+    if authoritative_er is not None:
+        total_er = float(authoritative_er)
 
     buff_val = stat_totals["dmg_bonus_by_element"].get(element_type, 0.0)
 

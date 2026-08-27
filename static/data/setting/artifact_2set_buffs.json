@@ -1,11 +1,155 @@
 {
+  "10001": {
+    "type": "atk_p",
+    "value": 18
+  },
+  "10002": {
+    "type": "atk_p",
+    "value": 18
+  },
+  "10003": {
+    "type": "def_p",
+    "value": 30
+  },
+  "10005": {
+    "type": "crit_rate",
+    "value": 12
+  },
+  "10007": {
+    "type": "em",
+    "value": 80
+  },
+  "10009": {
+    "type": "er",
+    "value": 20
+  },
+  "10010": {
+    "type": "hp_flat",
+    "value": 1000
+  },
+  "10011": {
+    "type": "def_flat",
+    "value": 100
+  },
+  "10012": {
+    "type": "er",
+    "value": 20
+  },
+  "14001": {
+    "type": "cryo_dmg",
+    "value": 15
+  },
+  "15001": {
+    "type": "atk_p",
+    "value": 18
+  },
+  "15002": {
+    "type": "anemo_dmg",
+    "value": 15
+  },
+  "15003": {
+    "type": "em",
+    "value": 80
+  },
+  "15004": {
+    "type": "cryo_dmg",
+    "value": 15
+  },
+  "15005": {
+    "type": "electro_dmg",
+    "value": 15
+  },
+  "15006": {
+    "type": "pyro_dmg",
+    "value": 15
+  },
+  "15008": {
+    "type": "phys_dmg",
+    "value": 25
+  },
+  "15014": {
+    "type": "geo_dmg",
+    "value": 15
+  },
+  "15016": {
+    "type": "hydro_dmg",
+    "value": 15
+  },
   "15017": {
     "type": "hp_p",
+    "value": 20
+  },
+  "15018": {
+    "type": "phys_dmg",
+    "value": 25
+  },
+  "15019": {
+    "type": "atk_p",
+    "value": 18
+  },
+  "15020": {
+    "type": "er",
     "value": 20
   },
   "15021": {
     "type": "def_p",
     "value": 30
+  },
+  "15023": {
+    "type": "atk_p",
+    "value": 18
+  },
+  "15024": {
+    "type": "atk_p",
+    "value": 18
+  },
+  "15025": {
+    "type": "dendro_dmg",
+    "value": 15
+  },
+  "15026": {
+    "type": "em",
+    "value": 80
+  },
+  "15027": {
+    "type": "anemo_dmg",
+    "value": 15
+  },
+  "15028": {
+    "type": "em",
+    "value": 80
+  },
+  "15029": {
+    "type": "hydro_dmg",
+    "value": 15
+  },
+  "15030": {
+    "type": "hp_p",
+    "value": 20
+  },
+  "15034": {
+    "type": "atk_p",
+    "value": 18
+  },
+  "15035": {
+    "type": "atk_p",
+    "value": 18
+  },
+  "15036": {
+    "type": "atk_p",
+    "value": 18
+  },
+  "15040": {
+    "type": "cryo_dmg",
+    "value": 15
+  },
+  "15041": {
+    "type": "em",
+    "value": 80
+  },
+  "15042": {
+    "type": "er",
+    "value": 20
   },
   "15043": {
     "type": "em",
@@ -15,7 +159,19 @@
     "type": "atk_p",
     "value": 18
   },
+  "15045": {
+    "type": "er",
+    "value": 20
+  },
   "15046": {
+    "type": "atk_p",
+    "value": 18
+  },
+  "15047": {
+    "type": "atk_p",
+    "value": 18
+  },
+  "15048": {
     "type": "atk_p",
     "value": 18
   }

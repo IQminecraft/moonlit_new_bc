@@ -11,6 +11,7 @@ import json
 from collections import Counter
 
 from app.paths import BASE_DIR, STATIC_DIR
+from app.core.jsonio import write_json_atomic
 from app.card.stats import apply_stat_bonus, to_ratio_if_percent
 
 # 2set バフ保存ファイル（live/beta 共通の admin 設定）
@@ -127,8 +128,7 @@ def save_2set_buff_map(buff_map: dict) -> None:
         if value > 0:
             cleaned[sid] = {"type": type_key, "value": value}
     os.makedirs(os.path.dirname(SET_BUFFS_PATH), exist_ok=True)
-    with open(SET_BUFFS_PATH, "w", encoding="utf-8") as f:
-        json.dump(cleaned, f, indent=2, ensure_ascii=False)
+    write_json_atomic(SET_BUFFS_PATH, cleaned)
     return cleaned
 
 

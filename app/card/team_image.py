@@ -59,6 +59,85 @@ _ELEMENT_COLORS = {
     "None": (0x4A, 0x55, 0x68),
 }
 
+# ----------------------------------------------------------------
+# 追加効果バッジ（swap / 元素共鳴 / 聖遺物2セット の3種）
+# 名前の「(swap)」サフィックスではなく、各キャラカード端の角丸チップで表示する
+# ----------------------------------------------------------------
+# 元素共鳴: 同元素2人以上でその共鳴、4元素すべて異なる場合は交錯の護り
+_RESONANCE_NAMES = {
+    "Pyro": "熱誠の炎",
+    "Hydro": "治療の水",
+    "Anemo": "迅速の風",
+    "Electro": "強権の雷",
+    "Dendro": "蔓生の草",
+    "Cryo": "粉砕の氷",
+    "Geo": "不動の岩",
+}
+_RESONANCE_ALLDIFF = "交錯の護り"
+_SWAP_SUFFIX = "(swap)"
+
+# バッジ種別ごとのチップ配色（resonance の outline は元素色から生成）
+_BADGE_STYLES = {
+    "swap":      {"outline": (255, 193, 77, 235), "text": (255, 214, 110, 255)},
+    "resonance": {"outline": (120, 160, 255, 235), "text": (255, 255, 255, 255)},
+    "set2":      {"outline": (216, 178, 92, 230), "text": (255, 255, 255, 255)},
+}
+
+
+def _compute_team_badges(datas, configs=None):
+    """各カラムに付くバッジ（swap / 元素共鳴 / 聖遺物2セット）を判定して data["_badges"] に格納する。
+
+    - swap: 差し替えキャラ。名前の「(swap)」サフィックスは除去してバッジ化する
+    - 元素共鳴: 表示中キャラ（swap込み）の元素が同元素2人以上 → その共鳴を該当元素の列に表示。
+      4元素すべて異なる → 交錯の護りを全列に表示
+    - 2セット: 聖遺物セットの 2セット効果バフが選択済み（ステータス反映中）のとき
+      「{セット名}2セット」を表示
+    """
+    cols = datas[:4]
+    elements = [d.get("element", "None") for d in cols]
+
+    # 共鳴判定（同元素ペア優先。ペアが無くて4元素バラバラなら交錯の護り）
+    counts = {}
+    for e in elements:
+        if e in _RESONANCE_NAMES:
+            counts[e] = counts.get(e, 0) + 1
+    pair_elems = {e for e, c in counts.items() if c >= 2}
+    all_diff = (
+        not pair_elems
+        and len(cols) == 4
+        and all(e in _RESONANCE_NAMES for e in elements)
+        and len(set(elements)) == 4
+    )
+
+    for col, d in enumerate(cols):
+        badges = []
+        cfg = (configs[col] if configs and col < len(configs) and isinstance(configs[col], dict) else {}) or {}
+
+        # swap（名前のサフィックスは除去 → バッジへ）
+        name = str(d.get("displayName") or "")
+        if name.endswith(_SWAP_SUFFIX):
+            d["displayName"] = name[: -len(_SWAP_SUFFIX)]
+        if name.endswith(_SWAP_SUFFIX) or bool(cfg.get("fake_char")):
+            badges.append({"kind": "swap", "text": "swap"})
+
+        # 元素共鳴
+        elem = d.get("element", "None")
+        if all_diff:
+            badges.append({"kind": "resonance", "text": _RESONANCE_ALLDIFF, "elem": None})
+        elif elem in pair_elems:
+            badges.append({"kind": "resonance", "text": _RESONANCE_NAMES[elem], "elem": elem})
+
+        # 聖遺物2セット効果（admin 選択済み = ステータス反映中のセットのみ）
+        for sb in d.get("setBonuses") or []:
+            if sb.get("buff") and sb.get("name"):
+                badges.append({
+                    "kind": "set2",
+                    "text": f"{sb['name']}2セット",
+                    "icon": sb.get("icon") or "",
+                })
+
+        d["_badges"] = badges
+
 
 def _build_team_column_bg(w_px, h_px, elem_rgb):
     """列ごとの元素背景。水平方向は均一（左右対称＝中央）、縦は上(暗)→中央(明るい)→下(やや暗)。
@@ -252,6 +331,70 @@ def _draw_identity_row(img, data, col, beta):
     )
 
 
+def _draw_badges(img, data, col, beta):
+    """追加効果バッジ（swap / 元素共鳴 / 聖遺物2セット）をカード端（立ち絵枠の左上隅）に
+    角丸チップで描画する。幅を超えたら自動で折り返す。"""
+    badges = data.get("_badges") or []
+    if not badges:
+        return
+
+    x = _col_x(col)
+    y = _MARGIN + _HEADER_H + 15  # 立ち絵枠（_draw_identity_row）と同じ位置
+    max_w = _col_w(col)
+    draw = ImageDraw.Draw(img)
+    font = _font(14)
+
+    chip_h = 26
+    pad_x = 9
+    gap = 6
+    icon_size = 16
+    radius = 9
+    cx = x + 8
+    cy = y + 8
+    row_bottom_max = y + _IDENTITY_H - chip_h - 6  # 立ち絵枠からはみ出さない
+
+    for b in badges:
+        text = str(b.get("text") or "")
+        if not text:
+            continue
+        kind = b.get("kind", "swap")
+        elem = b.get("elem")
+        icon = b.get("icon") or ""
+        if kind == "resonance" and elem:
+            icon = f"static/assets/props/{str(elem).lower()}.png"
+
+        # チップ幅をテキスト実測で求める（design 座標系）
+        tw = draw.textlength(text, font=font) / SX_TEAM
+        icon_w = (icon_size + 5) if icon else 0
+        w = pad_x * 2 + icon_w + tw
+
+        # 折り返し
+        if cx + w > x + max_w - 8:
+            cx = x + 8
+            cy += chip_h + 6
+        if cy > row_bottom_max:
+            break  # 枠に収まりきらない分は描画しない
+
+        style = _BADGE_STYLES.get(kind, _BADGE_STYLES["swap"])
+        if kind == "resonance" and elem:
+            er = _ELEMENT_COLORS.get(elem, _ELEMENT_COLORS["None"])
+            outline = (min(255, er[0] + 80), min(255, er[1] + 80), min(255, er[2] + 80), 240)
+        else:
+            outline = style["outline"]
+
+        draw_figma_box(img, x=cx, y=cy, width=w, height=chip_h, radius=radius,
+                       fill_color=(12, 14, 20, 180), outline_color=outline,
+                       outline_width=2, shadow=False)
+        tx = cx + pad_x
+        if icon:
+            paste_figma_image(img, icon, box_x=tx, box_y=cy + (chip_h - icon_size) / 2,
+                              box_width=icon_size, box_height=icon_size, radius=4, beta=beta)
+            tx += icon_size + 5
+        _t(draw, text=text, x=tx, y=cy + 6, font=font, align="left", font_size=14,
+           fill_color=style["text"])
+        cx += w + gap
+
+
 def _draw_stats_row(img, data, col, beta):
     """BASE STATS行: 基本ステータスを2列で表示（アイコン付き）。"""
     x = _col_x(col)
@@ -342,7 +485,7 @@ def _draw_weapon_row(img, data, col, beta):
                        fill_color=(0, 0, 0, 80))
         icon = sb.get("icon") or ""
         if not icon and sb.get("id"):
-            icon = os.path.join("static", "assets", "artifacts", f"UI_RelicIcon_{sb['id']}_4.webp")
+            icon = os.path.join(STATIC_DIR, "assets", "artifacts", f"UI_RelicIcon_{sb['id']}_4.webp")
         if icon:
             paste_figma_image(img, icon, box_x=ax + 3, box_y=ay + 3,
                               box_width=icon_size - 6, box_height=icon_size - 6,
@@ -380,7 +523,7 @@ def _draw_artifact_row(img, art, col, y, beta):
                     align="center", box_width=80, font_size=12, fill_color=(255, 255, 255))
     _t(draw, text=f"{art.get('score', 0):.1f}", x=score_x, y=y + 30,
                     font=_font(24), align="center", box_width=80, font_size=24)
-    tier_path = os.path.join("static", "assets", "tiers", f"{art.get('tier', 'B')}.png")
+    tier_path = os.path.join(STATIC_DIR, "assets", "tiers", f"{art.get('tier', 'B')}.png")
     if os.path.exists(tier_path):
         paste_figma_image(img, tier_path, box_x=score_x + 26, box_y=y + 62,
                           box_width=32, box_height=32, radius=5, beta=beta)
@@ -440,7 +583,7 @@ def _draw_total_row(img, data, col, beta):
                     align="center", box_width=_COL_W, font_size=18,
                     fill_color=(255, 255, 255))
     # ランク画像（右端。スコア値は箱全体の中央に揃える）
-    tier_path = os.path.join("static", "assets", "tiers", f"{data.get('tierSum', 'B')}.png")
+    tier_path = os.path.join(STATIC_DIR, "assets", "tiers", f"{data.get('tierSum', 'B')}.png")
     _t(draw, text=f"{round(data.get('scoreSum', 0), 1):.1f}", x=x, y=y + 32,
                     font=_font(42), align="center", box_width=_COL_W, font_size=42)
     if os.path.exists(tier_path):
@@ -548,6 +691,10 @@ def _generate_team_image_sync(uid: str, char_ids: list, configs=None, boss=None,
         datas.append(d)
     print(f"[TeamCard] data fetched in {(time.perf_counter()-t0)*1000:.0f}ms", flush=True)
 
+    # 追加効果バッジ（swap / 元素共鳴 / 聖遺物2セット）を判定。
+    # 名前の「(swap)」サフィックスもここで除去される（ヘッダー描画より前に実行する）
+    _compute_team_badges(datas, configs)
+
     # 幽境セクションを描画するか（ボス設定がある場合のみ）
     _has_boss = bool(boss and isinstance(boss, dict) and boss.get("version"))
 
@@ -632,6 +779,7 @@ def _generate_team_image_sync(uid: str, char_ids: list, configs=None, boss=None,
         for col, data in enumerate(datas[:4]):
             t_col = time.perf_counter()
             _draw_identity_row(img, data, col, beta)
+            _draw_badges(img, data, col, beta)
             _draw_stats_row(img, data, col, beta)
             _draw_weapon_row(img, data, col, beta)
 

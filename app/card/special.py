@@ -1,6 +1,8 @@
 import os
 import json
 
+from app.paths import STATIC_DIR
+
 # ==========================================================
 #  特別枠キャラクター（旅人 / ドール）
 #  これらの avatarId は元素ごとに「id-元素id」のキャラJSONを持つ
@@ -53,9 +55,9 @@ def _get_special_element_suffix_map(raw_id, beta="false"):
     if cached is not None:
         return cached
 
-    dirs = [os.path.join("static", "data", "characters")]
+    dirs = [os.path.join(STATIC_DIR, "data", "characters")]
     if beta == "true":
-        dirs.append(os.path.join("static", "beta", "data", "characters"))
+        dirs.append(os.path.join(STATIC_DIR, "beta", "data", "characters"))
 
     element_to_suffix = {}
     seen_suffixes = set()

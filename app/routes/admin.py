@@ -16,11 +16,16 @@ from starlette.concurrency import run_in_threadpool
 
 from app.paths import BASE_DIR, STATIC_DIR, templates
 from app.core.notify import report_error_to_discord
+from app.core.jsonio import write_json_atomic
 from app.card.cache import _ADMIN_CATALOG_CACHE
 from app.card.bg import _list_region_image_names
 from app.card.region import _load_region_map, _TRAVELER_BASE_IDS, clear_region_map_cache
 from app.card.scorecard_splash import SCORECARD_SPLASH_OFFSETS_PATH, load_scorecard_splash_offsets
 from app.card.stat_calc import INNATE_EM_PATH, load_innate_em_map
+from app.card.calc_method import (
+    VALID_CALC_METHODS, load_default_calc_method_map, save_default_calc_method_map,
+)
+from app.card.ui_flags import load_ui_flags, save_ui_flags
 
 admin_router = APIRouter()
 
@@ -32,6 +37,19 @@ _ADMIN_SECRET = (os.environ.get("ADMIN_SECRET") or _secrets.token_hex(32)).strip
 _ADMIN_ALLOWED_IPS = {s.strip() for s in os.environ.get("ADMIN_ALLOWED_IPS", "").split(",") if s.strip()}
 _ADMIN_MAX_LOGIN_FAILS = int(os.environ.get("ADMIN_MAX_LOGIN_FAILS", "5"))
 _ADMIN_LOCK_MINUTES = int(os.environ.get("ADMIN_LOCK_MINUTES", "10"))
+_CSP_ENABLED = os.environ.get("CSP_ENABLED", "1").lower() not in ("0", "false", "no")
+_CSP_POLICY = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; "
+    "font-src 'self' data: https://fonts.gstatic.com; "
+    "img-src 'self' data: blob:; "
+    "connect-src 'self'; "
+    "object-src 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self'; "
+    "frame-ancestors 'none'"
+)
 # IP -> {count: 失敗回数, locked_until: ロック解除時刻(epoch秒)}（成功または期限切れで消える）
 _ADMIN_LOGIN_FAILS: Dict[str, Dict[str, Any]] = {}
 
@@ -103,8 +121,12 @@ def _admin_login_lock_remaining(ip: str) -> Optional[float]:
     return None
 
 async def _admin_security_middleware(request: Request, call_next):
+    path = request.url.path
+    if path.startswith("/static/admin"):
+        if not _is_admin(request):
+            return JSONResponse({"detail": "Not Found"}, status_code=404)
     # IP 許可リスト（設定時のみ適用）
-    if request.url.path.startswith("/admin") and _ADMIN_ALLOWED_IPS:
+    if path.startswith("/admin") and _ADMIN_ALLOWED_IPS:
         if _admin_client_ip(request) not in _ADMIN_ALLOWED_IPS:
             return JSONResponse({"detail": "Forbidden"}, status_code=403)
     try:
@@ -129,6 +151,12 @@ async def _admin_security_middleware(request: Request, call_next):
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "no-referrer")
+    response.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+    if _CSP_ENABLED:
+        response.headers.setdefault("Content-Security-Policy", _CSP_POLICY)
+    proto = request.headers.get("x-forwarded-proto", "") or request.url.scheme
+    if proto == "https":
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
     return response
 
 @admin_router.get("/admin/__ping")
@@ -367,8 +395,7 @@ async def admin_team_splash_offsets_save(request: Request):
 
     def _run():
         os.makedirs(os.path.dirname(_TEAM_SPLASH_OFFSETS_PATH), exist_ok=True)
-        with open(_TEAM_SPLASH_OFFSETS_PATH, "w", encoding="utf-8") as f:
-            json.dump({"offsets": cleaned}, f, indent=2, ensure_ascii=False)
+        write_json_atomic(_TEAM_SPLASH_OFFSETS_PATH, {"offsets": cleaned})
         return {"ok": True, "updated": len(cleaned)}
 
     try:
@@ -444,8 +471,7 @@ async def admin_scorecard_splash_offsets_save(request: Request):
 
     def _run():
         os.makedirs(os.path.dirname(SCORECARD_SPLASH_OFFSETS_PATH), exist_ok=True)
-        with open(SCORECARD_SPLASH_OFFSETS_PATH, "w", encoding="utf-8") as f:
-            json.dump({"offsets": cleaned}, f, indent=2, ensure_ascii=False)
+        write_json_atomic(SCORECARD_SPLASH_OFFSETS_PATH, {"offsets": cleaned})
         return {"ok": True, "updated": len(cleaned)}
 
     try:
@@ -513,12 +539,112 @@ async def admin_innate_em_save(request: Request):
 
     def _run():
         os.makedirs(os.path.dirname(INNATE_EM_PATH), exist_ok=True)
-        with open(INNATE_EM_PATH, "w", encoding="utf-8") as f:
-            json.dump({"characters": cleaned}, f, indent=2, ensure_ascii=False)
+        write_json_atomic(INNATE_EM_PATH, {"characters": cleaned})
         return {"ok": True, "updated": len(cleaned)}
 
     try:
         return JSONResponse(await run_in_threadpool(_run))
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ==========================================================
+#  キャラ毎デフォルト計算方式（calc_method）管理 API
+# ==========================================================
+@admin_router.get("/admin/api/default_calc_method")
+async def admin_default_calc_method_get(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    try:
+        def _run():
+            chars = load_default_calc_method_map() or {}
+            catalog = _build_admin_character_catalog()
+            enriched = []
+            for entry in catalog:
+                eid = str(entry.get("id"))
+                enriched.append({
+                    **entry,
+                    "raw_id": eid,
+                    "method": chars.get(eid, ""),
+                })
+            return {
+                "ok": True,
+                "characters": chars,
+                "methods": list(VALID_CALC_METHODS),
+                "catalog": enriched,
+            }
+        return JSONResponse(await run_in_threadpool(_run))
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@admin_router.post("/admin/api/default_calc_method")
+async def admin_default_calc_method_save(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "invalid JSON"}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"ok": False, "error": "body must be {characters: {charId: method}}"}, status_code=400)
+
+    chars = body.get("characters")
+    if not isinstance(chars, dict):
+        return JSONResponse({"ok": False, "error": "body.characters must be {charId: method}"}, status_code=400)
+
+    valid_ids = set()
+    for c in _build_admin_character_catalog():
+        if c.get("id") is not None:
+            valid_ids.add(str(c.get("id")))
+
+    cleaned_input = {}
+    for raw_id, method in chars.items():
+        raw_id = str(raw_id)
+        if raw_id not in valid_ids:
+            continue
+        cleaned_input[raw_id] = method
+
+    def _run():
+        cleaned = save_default_calc_method_map(cleaned_input)
+        return {"ok": True, "updated": len(cleaned)}
+
+    try:
+        return JSONResponse(await run_in_threadpool(_run))
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ==========================================================
+#  UI 表示フラグ管理 API
+#  （build_card.html の編成スロット管理/幽境モードボタンの表示切替）
+# ==========================================================
+@admin_router.get("/admin/api/ui_flags")
+async def admin_ui_flags_get(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    try:
+        return JSONResponse({"ok": True, "flags": await run_in_threadpool(load_ui_flags)})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@admin_router.post("/admin/api/ui_flags")
+async def admin_ui_flags_save(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "invalid JSON"}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"ok": False, "error": "body must be {flags: {...}}"}, status_code=400)
+    flags = body.get("flags", body)
+    if not isinstance(flags, dict):
+        return JSONResponse({"ok": False, "error": "flags must be an object"}, status_code=400)
+    try:
+        cleaned = await run_in_threadpool(save_ui_flags, flags)
+        return JSONResponse({"ok": True, "flags": cleaned})
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
@@ -616,8 +742,7 @@ def _load_leyline_versions_config():
 
 def _save_leyline_versions_config(versions):
     os.makedirs(os.path.dirname(_LEYLINE_VERSIONS_CONFIG_PATH), exist_ok=True)
-    with open(_LEYLINE_VERSIONS_CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump({"versions": versions}, f, ensure_ascii=False, indent=2)
+    write_json_atomic(_LEYLINE_VERSIONS_CONFIG_PATH, {"versions": versions})
 
 
 @admin_router.get("/admin/api/leyline_versions")
@@ -756,8 +881,7 @@ async def admin_leyline(request: Request, version: str = ""):
             converted = from_nanoka(data, details)
             try:
                 os.makedirs(os.path.dirname(cache_path), exist_ok=True)
-                with open(cache_path, "w", encoding="utf-8") as f:
-                    json.dump(converted, f, ensure_ascii=False, indent=2)
+                write_json_atomic(cache_path, converted)
             except Exception:
                 pass
             return {
@@ -956,8 +1080,7 @@ async def admin_region_map_save(request: Request):
     def _run():
         path = os.path.join(STATIC_DIR, "assets", "characters", "characters.json")
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(cleaned, f, indent=2, ensure_ascii=False)
+        write_json_atomic(path, cleaned)
         clear_region_map_cache()
         result = {"ok": True, "regions": {k: len(v) for k, v in cleaned.items()}}
         if skipped_traveler:

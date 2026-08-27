@@ -105,7 +105,9 @@
             <button type="button" class="admin-tab" data-tab="splash">スプラッシュオフセット</button>
             <button type="button" class="admin-tab" data-tab="leyline">Leyline</button>
             <button type="button" class="admin-tab" data-tab="setbuffs">聖遺物2setバフ</button>
-            <button type="button" class="admin-tab" data-tab="innateem">固有元素熟知</button>
+    <button type="button" class="admin-tab" data-tab="innateem">固有元素熟知</button>
+    <button type="button" class="admin-tab" data-tab="calcmethod">デフォルト計算方式</button>
+    <button type="button" class="admin-tab" data-tab="uidisplay">表示設定</button>
         </div>
 
         <div id="tab-data" class="admin-tab-panel">
@@ -504,6 +506,69 @@
             <div id="innateEmSaveResult" class="text-xs mt-2 hidden"></div>
         </section>
         </div><!-- /tab-innateem -->
+
+        <div id="tab-calcmethod" class="admin-tab-panel hidden">
+        <!-- キャラ毎デフォルト計算方式 -->
+        <section class="card p-5 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 class="text-lg font-semibold">キャラ毎デフォルト計算方式</h2>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="calcMethodReloadBtn" class="btn btn-ghost text-xs">再読み込み</button>
+                    <button type="button" id="calcMethodSaveBtn" class="btn btn-primary text-xs">保存</button>
+                </div>
+            </div>
+            <p class="text-xs text-zinc-500 mb-3">
+                カード生成時に計算方式（スコア算出基準）が未選択の場合に使う、キャラ毎のデフォルト方式を設定します。
+                「未設定」の場合は会心（crit）が使われます。ユーザーが自分で方式を選んだ場合はそちらが優先されます。
+            </p>
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+                <input id="calcMethodSearch" type="text" placeholder="キャラ名で絞り込み"
+                    class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm w-64 focus:outline-none">
+                <label class="flex items-center gap-1.5 text-xs text-zinc-400">
+                    <input type="checkbox" id="calcMethodOnlySet" class="accent-cyan-500">
+                    設定済みのみ表示
+                </label>
+            </div>
+            <div id="calcMethodStatus" class="text-xs text-zinc-500 mb-2"></div>
+            <div id="calcMethodList" class="space-y-1.5 max-h-[70vh] overflow-y-auto pr-1"></div>
+            <div id="calcMethodSaveResult" class="text-xs mt-2 hidden"></div>
+        </section>
+        </div><!-- /tab-calcmethod -->
+
+        <div id="tab-uidisplay" class="admin-tab-panel hidden">
+        <!-- UI 表示フラグ -->
+        <section class="card p-5 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 class="text-lg font-semibold">ボタン表示設定</h2>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="uiFlagsReloadBtn" class="btn btn-ghost text-xs">再読み込み</button>
+                    <button type="button" id="uiFlagsSaveBtn" class="btn btn-primary text-xs">保存</button>
+                </div>
+            </div>
+            <p class="text-xs text-zinc-500 mb-4">
+                ビルドカード画面のボタン表示を切り替えます。保存後、次に開いた（リロードした）ページから反映されます。
+            </p>
+            <label class="flex items-center justify-between gap-4 bg-zinc-900 rounded-lg p-4 border border-zinc-800 cursor-pointer">
+                <div>
+                    <div class="text-sm font-medium text-zinc-200">編成カード設定ボタン ＋ 幽境モードボタン</div>
+                    <div class="text-xs text-zinc-500 mt-1">
+                        「選択中」バー右側の2ボタン（連動）。非表示にすると再生成/再取得ボタンが右端に配置されます。
+                    </div>
+                </div>
+                <input type="checkbox" id="uiFlagTeamAbyss" class="accent-cyan-500 w-5 h-5 shrink-0">
+            </label>
+            <label class="flex items-center justify-between gap-4 bg-zinc-900 rounded-lg p-4 border border-zinc-800 cursor-pointer mt-3">
+                <div>
+                    <div class="text-sm font-medium text-zinc-200">設定内の「ステータス表示」トグル</div>
+                    <div class="text-xs text-zinc-500 mt-1">
+                        ビルドカード画面の設定モーダルにあるステータス表示切替。非表示時はステータス表示へ切り替えられません（既定: 非表示）。
+                    </div>
+                </div>
+                <input type="checkbox" id="uiFlagStatusView" class="accent-cyan-500 w-5 h-5 shrink-0">
+            </label>
+            <div id="uiFlagsSaveResult" class="text-xs mt-2 hidden"></div>
+        </section>
+        </div><!-- /tab-uidisplay -->
     </div>
 
     <script>
@@ -514,6 +579,10 @@
         let splashCatalog = [];
         let scorecardOffsets = {};
         let innateEmMap = {};
+        let calcMethodMap = {};
+        const CALC_METHOD_LABELS = {
+            crit: '会心のみ', atk: '攻撃力%', hp: 'HP%', def: '防御%', em: '元素熟知', charge: 'チャージ効率',
+        };
 
         // ==========================================================
         //  管理タブ切り替え
@@ -531,7 +600,7 @@
         });
         let savedAdminTab = 'data';
         try { savedAdminTab = localStorage.getItem(ADMIN_TAB_KEY) || 'data'; } catch (e) {}
-        activateAdminTab(['data', 'region', 'splash', 'leyline', 'setbuffs', 'innateem'].includes(savedAdminTab) ? savedAdminTab : 'data');
+        activateAdminTab(['data', 'region', 'splash', 'leyline', 'setbuffs', 'innateem', 'calcmethod', 'uidisplay'].includes(savedAdminTab) ? savedAdminTab : 'data');
 
         // ==========================================================
         //  スプラッシュオフセット プレビュー（実際のカードと同じサイズ）
@@ -1155,6 +1224,179 @@
         document.getElementById('innateEmSearch')?.addEventListener('input', renderInnateEmList);
         document.getElementById('innateEmOnlySet')?.addEventListener('change', renderInnateEmList);
         loadInnateEm();
+
+        // ==========================================================
+        //  キャラ毎デフォルト計算方式（calc_method）
+        // ==========================================================
+        function renderCalcMethodList() {
+            const listEl = document.getElementById('calcMethodList');
+            if (!listEl) return;
+            const query = (document.getElementById('calcMethodSearch')?.value || '').toLowerCase().trim();
+            const onlySet = document.getElementById('calcMethodOnlySet')?.checked || false;
+            const filtered = splashCatalog.filter(c => {
+                if (query && !(c.name || '').toLowerCase().includes(query)) return false;
+                if (onlySet && !calcMethodMap[c.raw_id]) return false;
+                return true;
+            });
+            const options = ['<option value="">未設定（会心）</option>']
+                .concat(Object.keys(CALC_METHOD_LABELS).map(k => `<option value="${k}">${CALC_METHOD_LABELS[k]}</option>`))
+                .join('');
+            const rows = filtered.map(c => {
+                const val = calcMethodMap[c.raw_id] || '';
+                const iconHtml = c.icon
+                    ? `<img src="${c.icon.startsWith('/') ? '' : '/'}${c.icon}" class="w-9 h-9 rounded-md object-cover bg-zinc-800" loading="lazy">`
+                    : `<div class="w-9 h-9 rounded-md bg-zinc-800 flex items-center justify-center text-xs text-zinc-500">?</div>`;
+                return `
+                    <div class="flex flex-wrap items-center gap-3 px-2 py-1.5 bg-zinc-900/60 rounded-lg border ${val ? 'border-cyan-800' : 'border-zinc-800'}">
+                        ${iconHtml}
+                        <span class="w-24 text-sm font-medium truncate" title="${c.name}">${c.name}</span>
+                        <div class="flex items-center gap-2 text-xs text-zinc-400">
+                            <span class="w-24">デフォルト方式</span>
+                            <select data-calcmethod-char="${c.raw_id}" class="calcmethod-sel bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5">
+                                ${options.replace(`value="${val}"`, `value="${val}" selected`)}
+                            </select>
+                        </div>
+                    </div>`;
+            });
+            listEl.innerHTML = rows.length
+                ? rows.join('')
+                : '<div class="text-zinc-600 text-xs">該当キャラがいません</div>';
+            listEl.querySelectorAll('.calcmethod-sel').forEach(el => {
+                el.addEventListener('change', () => {
+                    const cid = el.getAttribute('data-calcmethod-char');
+                    const v = el.value;
+                    if (v) calcMethodMap[cid] = v;
+                    else delete calcMethodMap[cid];
+                });
+            });
+        }
+        async function loadCalcMethod() {
+            try {
+                const res = await fetch('/admin/api/default_calc_method');
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const data = await res.json();
+                if (!data.ok) throw new Error(data.error || 'failed');
+                if (Array.isArray(data.catalog) && data.catalog.length) splashCatalog = data.catalog;
+                calcMethodMap = {};
+                const chars = data.characters || {};
+                Object.keys(chars).forEach(k => {
+                    const v = chars[k];
+                    if (v && CALC_METHOD_LABELS[v]) calcMethodMap[k] = v;
+                });
+                const st = document.getElementById('calcMethodStatus');
+                if (st) st.textContent = `${splashCatalog.length}キャラ / 設定${Object.keys(calcMethodMap).length}件`;
+                renderCalcMethodList();
+            } catch (e) {
+                const st = document.getElementById('calcMethodStatus');
+                if (st) st.textContent = `読み込み失敗: ${e}`;
+            }
+        }
+        function setCalcMethodSaveResult(ok, text) {
+            const el = document.getElementById('calcMethodSaveResult');
+            if (!el) return;
+            el.classList.remove('hidden');
+            if (ok === null) {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-zinc-700/60 bg-zinc-900/40 text-zinc-300';
+            } else if (ok) {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-emerald-800/60 bg-emerald-950/30 text-emerald-400';
+            } else {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-red-800/60 bg-red-950/30 text-red-400';
+            }
+            el.textContent = text;
+        }
+        async function saveCalcMethod() {
+            setCalcMethodSaveResult(null, '保存中...');
+            try {
+                const res = await fetch('/admin/api/default_calc_method', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ characters: calcMethodMap }),
+                });
+                const data = await res.json();
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const ts = new Date().toLocaleTimeString('ja-JP');
+                if (res.ok && data.ok) {
+                    const updated = data.updated ?? Object.keys(calcMethodMap).length;
+                    setCalcMethodSaveResult(true, `${ts} 保存成功: ${updated}件を保存しました`);
+                    renderCalcMethodList();
+                } else {
+                    setCalcMethodSaveResult(false, `${ts} 保存失敗: ${data.error || `status ${res.status}`}`);
+                }
+                resultEl.textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                setCalcMethodSaveResult(false, `保存エラー: ${e}`);
+                resultEl.textContent = String(e);
+            }
+        }
+        document.getElementById('calcMethodReloadBtn')?.addEventListener('click', loadCalcMethod);
+        document.getElementById('calcMethodSaveBtn')?.addEventListener('click', saveCalcMethod);
+        document.getElementById('calcMethodSearch')?.addEventListener('input', renderCalcMethodList);
+        document.getElementById('calcMethodOnlySet')?.addEventListener('change', renderCalcMethodList);
+        loadCalcMethod();
+
+        // ==========================================================
+        //  UI 表示フラグ（編成/幽境ボタンの表示切替）
+        // ==========================================================
+        async function loadUiFlags() {
+            try {
+                const res = await fetch('/admin/api/ui_flags');
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const data = await res.json();
+                if (!data.ok) throw new Error(data.error || 'failed');
+                const flags = data.flags || {};
+                const cb = document.getElementById('uiFlagTeamAbyss');
+                if (cb) cb.checked = !!flags.show_team_abyss_buttons;
+                const cbStatus = document.getElementById('uiFlagStatusView');
+                if (cbStatus) cbStatus.checked = !!flags.show_status_view_setting;
+                setUiFlagsSaveResult(null,
+                    `現在: 編成/幽境ボタン=${flags.show_team_abyss_buttons ? '表示' : '非表示'} / ステータス表示トグル=${flags.show_status_view_setting ? '表示' : '非表示'}`);
+            } catch (e) {
+                setUiFlagsSaveResult(false, `読み込み失敗: ${e}`);
+            }
+        }
+        function setUiFlagsSaveResult(ok, text) {
+            const el = document.getElementById('uiFlagsSaveResult');
+            if (!el) return;
+            el.classList.remove('hidden');
+            if (ok === null) {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-zinc-700/60 bg-zinc-900/40 text-zinc-300';
+            } else if (ok) {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-emerald-800/60 bg-emerald-950/30 text-emerald-400';
+            } else {
+                el.className = 'text-xs mt-2 rounded-lg px-2 py-1.5 border border-red-800/60 bg-red-950/30 text-red-400';
+            }
+            el.textContent = text;
+        }
+        async function saveUiFlags() {
+            setUiFlagsSaveResult(null, '保存中...');
+            try {
+                const cb = document.getElementById('uiFlagTeamAbyss');
+                const cbStatus = document.getElementById('uiFlagStatusView');
+                const res = await fetch('/admin/api/ui_flags', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ flags: {
+                        show_team_abyss_buttons: !!(cb && cb.checked),
+                        show_status_view_setting: !!(cbStatus && cbStatus.checked),
+                    } }),
+                });
+                if (res.status === 401) { location.href = '/admin/login'; return; }
+                const data = await res.json();
+                const ts = new Date().toLocaleTimeString('ja-JP');
+                if (res.ok && data.ok) {
+                    const f = data.flags || {};
+                    setUiFlagsSaveResult(true,
+                        `${ts} 保存成功: 編成/幽境ボタン=${f.show_team_abyss_buttons ? '表示' : '非表示'} / ステータス表示トグル=${f.show_status_view_setting ? '表示' : '非表示'}`);
+                } else {
+                    setUiFlagsSaveResult(false, `${ts} 保存失敗: ${data.error || `status ${res.status}`}`);
+                }
+            } catch (e) {
+                setUiFlagsSaveResult(false, `保存エラー: ${e}`);
+            }
+        }
+        document.getElementById('uiFlagsReloadBtn')?.addEventListener('click', loadUiFlags);
+        document.getElementById('uiFlagsSaveBtn')?.addEventListener('click', saveUiFlags);
+        loadUiFlags();
 
         function chips(ids) {
             if (!ids || !ids.length) return '<span class="text-zinc-600 text-xs">なし</span>';

@@ -40,7 +40,9 @@ def load_scorecard_splash_offsets() -> dict:
 
 def get_scorecard_splash_offset(char_id):
     """キャラ別オフセット {"x", "y"} を返す。未設定/不正値なら None。"""
-    raw = (load_scorecard_splash_offsets().get(str(char_id)) or {})
+    if char_id is None:
+        return None
+    raw = load_scorecard_splash_offsets().get(str(char_id))
     if not isinstance(raw, dict):
         return None
     try:

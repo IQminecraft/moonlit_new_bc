@@ -11,8 +11,14 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.concurrency import run_in_threadpool
 
 from app import get_info_state
-from app.paths import STATIC_DIR, templates
+from app.paths import STATIC_DIR, templates, SITE_VERSION
 from app.core.notify import report_error_to_discord
+from app.core.jsonio import write_bytes_atomic
+from app.routes.params import (
+    clean_uid, clean_avatar_id, clean_calc_method_strict, clean_bool_str,
+    clean_base_prec, clean_substat_dots, clean_resonance, clean_bg_color,
+    clean_token, clean_fake_char, clean_fake_weapon, clean_char_ids,
+)
 from app.card.sign import (
     _CARD_URL_SECRET, _CARD_SIGN_VALIDITY_SEC, _CARD_SIGN_RATE_LIMIT_PER_MIN, _CARD_GEN_RATE_LIMIT_PER_MIN,
     _rate_limited, _client_ip, _card_signature, _verify_card_sign,
@@ -23,10 +29,22 @@ from app.card.pool import _run_in_card_gen_pool, _card_gen_stats
 from app.card.data import _load_json_auto, _build_char_list_from_showcase, _get_card_data_sync
 from app.card.image import _generate_card_image_sync
 from app.card.team_image import _generate_team_image_sync
+from app.card.theme_cards import _generate_theme_card_image_sync
+from app.card.ui_flags import load_ui_flags
+from app.card.calc_method import load_default_calc_method_map
 
 api_router = APIRouter()
 
 _BG_IMAGE_EXTS = {".webp", ".png", ".jpg", ".jpeg"}
+
+# 画像生成で指定可能なカードテーマ（glass = 従来デザイン / theme 未指定）
+_CARD_THEMES = {"cinema", "scorecard"}
+
+
+def _clean_card_theme(theme):
+    """theme パラメータを正規化。cinema / scorecard 以外は None（= glass 従来描画）。"""
+    t = str(theme or "").strip().lower()
+    return t if t in _CARD_THEMES else None
 
 # ---- Enka API クールタイム管理（UID ごと） ----
 _ENKA_COOLDOWN_SEC = max(0, float(os.environ.get("ENKA_COOLDOWN_SEC", "60")))
@@ -49,9 +67,13 @@ def _enka_cooldown_remaining(uid):
 # ---- 生成カード画像のサーバー側ディスクキャッシュ（cache=server 時） ----
 _CARDS_CACHE_DIR = os.path.join(STATIC_DIR, "cache", "cards")
 
+# 生成デザインを変更したときはこの値を更新する（旧デザインのディスクキャッシュを無効化）
+_CARD_CACHE_VERSION = "v5-theme-text-fit"
+
 
 def _card_disk_path(params):
     h = _hashlib.sha256()
+    h.update(f"ver={_CARD_CACHE_VERSION}|".encode("utf-8"))
     for k in sorted(params.keys()):
         h.update(f"{k}={params.get(k) or ''}|".encode("utf-8"))
     return os.path.join(_CARDS_CACHE_DIR, h.hexdigest() + ".png")
@@ -70,9 +92,7 @@ def _serve_card_disk(params):
 
 def _save_card_disk(params, data):
     try:
-        os.makedirs(_CARDS_CACHE_DIR, exist_ok=True)
-        with open(_card_disk_path(params), "wb") as f:
-            f.write(data)
+        write_bytes_atomic(_card_disk_path(params), data)
     except Exception as e:
         print(f"[cache] card disk save failed: {e}")
 
@@ -186,7 +206,8 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False, v
     if ver != "beta":
         ver = "live"
 
-    if not uid.isdigit():
+    uid = str(uid or "").strip()
+    if not uid.isdigit() or len(uid) > 20:
         # 取得失敗時はリダイレクトせず、artifacter ページ上にエラーを表示する
         return templates.TemplateResponse("artifacter.html", {
             "request": request,
@@ -198,14 +219,26 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False, v
 
     beta = "true" if ver == "beta" else "false"
     uid_int = int(uid)
-    json_path = os.path.join("static", "cache", f"showcase_{uid}.json")
+    json_path = os.path.join(STATIC_DIR, "cache", f"showcase_{uid}.json")
+    cache_exists = os.path.exists(json_path)
 
-    if from_artifacter or not os.path.exists(json_path):
-        success, message = await get_info_state.update_uid_data(uid_int)
-        if success:
-            _enka_mark_fetched(uid_int)
-        if not success:
-            print(f"[Warning] API Fetch failed or warning: {message}")
+    if from_artifacter or not cache_exists:
+        remaining = _enka_cooldown_remaining(uid)
+        if remaining > 0:
+            if not cache_exists:
+                return templates.TemplateResponse("artifacter.html", {
+                    "request": request,
+                    "lang": "ja",
+                    "error": f"Enka APIのクールタイム中です（あと{int(remaining)}秒）。しばらく待ってから再試行してください。",
+                    "uid": uid,
+                    "ver": ver,
+                }, status_code=429)
+        else:
+            success, message = await get_info_state.update_uid_data(uid_int)
+            if success:
+                _enka_mark_fetched(uid_int)
+            if not success:
+                print(f"[Warning] API Fetch failed or warning: {message}")
 
     if not os.path.exists(json_path):
         # 取得失敗時はリダイレクトせず、artifacter ページ上にエラーを表示する
@@ -235,14 +268,82 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False, v
         "request": request,
         "uid": uid,
         "char_list": char_list,
-        "ver": ver
+        "ver": ver,
+        "player_name": str((showcase_data.get("playerInfo") or {}).get("nickname") or "").strip(),
+        "show_team_abyss_buttons": bool(load_ui_flags().get("show_team_abyss_buttons", True)),
+        "show_status_view_setting": bool(load_ui_flags().get("show_status_view_setting", False)),
     })
+
+
+_CONTACT_CATEGORIES = {"不具合報告", "機能要望", "その他"}
+_CONTACT_RATE_LIMIT_PER_MIN = 5
+
+
+def _contact_webhook_url():
+    return (os.environ.get("TOIAWASE_webhook") or os.environ.get("TOIAWASE_WEBHOOK") or "").strip()
+
+
+def _send_contact_webhook_sync(webhook_url: str, payload: dict):
+    import requests
+    r = requests.post(webhook_url, json=payload, timeout=10)
+    if r.status_code >= 400:
+        raise RuntimeError(f"webhook status {r.status_code}")
+
+
+@api_router.get("/contact", response_class=HTMLResponse)
+async def contact_page(request: Request):
+    return templates.TemplateResponse("contact.html", {"request": request})
+
+
+@api_router.post("/api/contact")
+async def contact_submit(request: Request):
+    if _rate_limited(f"contact:{_client_ip(request)}", _CONTACT_RATE_LIMIT_PER_MIN):
+        raise HTTPException(status_code=429, detail="送信が頻繁すぎます。しばらく待ってから再試行してください。")
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="リクエストが不正です。")
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="リクエストが不正です。")
+    if str(body.get("website") or "").strip():
+        return {"ok": True}
+    category = str(body.get("category") or "その他").strip()
+    if category not in _CONTACT_CATEGORIES:
+        category = "その他"
+    name = str(body.get("name") or "").strip()[:50]
+    message = str(body.get("message") or "").strip()
+    if not message:
+        raise HTTPException(status_code=400, detail="問い合わせ内容を入力してください。")
+    if len(message) > 2000:
+        raise HTTPException(status_code=400, detail="問い合わせ内容は2000文字以内で入力してください。")
+    webhook_url = _contact_webhook_url()
+    if not webhook_url:
+        raise HTTPException(status_code=503, detail="問い合わせ先が設定されていません。")
+    referer = str(request.headers.get("referer") or "")[:200]
+    payload = {
+        "username": "問い合わせフォーム",
+        "embeds": [{
+            "title": f"問い合わせ: {category}",
+            "description": message[:3000],
+            "color": 0x5EEAD4,
+            "fields": [
+                {"name": "名前", "value": name or "匿名", "inline": True},
+                {"name": "ページ", "value": referer or "-", "inline": False},
+            ],
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }],
+    }
+    try:
+        await run_in_threadpool(_send_contact_webhook_sync, webhook_url, payload)
+    except Exception as e:
+        report_error_to_discord("contact webhook failed", str(e), path="/api/contact", level="warn")
+        raise HTTPException(status_code=502, detail="送信に失敗しました。しばらく待ってから再試行してください。")
+    return {"ok": True}
 
 
 @api_router.post("/refresh_uid/{uid}")
 async def refresh_uid(uid: str, ver: str = "live"):
-    if not uid.isdigit():
-        raise HTTPException(status_code=400, detail="UIDが不正です。数字のみ入力してください。")
+    uid = clean_uid(uid)
     if ver != "beta":
         ver = "live"
     beta = "true" if ver == "beta" else "false"
@@ -254,7 +355,7 @@ async def refresh_uid(uid: str, ver: str = "live"):
     if remaining > 0:
         print(f"[Info] Enka cooldown active for UID {uid}: {remaining:.0f}s left")
         char_list = []
-        json_path = os.path.join("static", "cache", f"showcase_{uid}.json")
+        json_path = os.path.join(STATIC_DIR, "cache", f"showcase_{uid}.json")
         if os.path.exists(json_path):
             try:
                 char_list = _build_char_list_from_showcase(_load_json_auto(json_path), beta)
@@ -278,7 +379,7 @@ async def refresh_uid(uid: str, ver: str = "live"):
 
     # 再取得後のキャラ一覧（クライアント側でサムネイル行を同期するため）
     char_list = []
-    json_path = os.path.join("static", "cache", f"showcase_{uid}.json")
+    json_path = os.path.join(STATIC_DIR, "cache", f"showcase_{uid}.json")
     if os.path.exists(json_path):
         try:
             char_list = _build_char_list_from_showcase(_load_json_auto(json_path), beta)
@@ -292,9 +393,10 @@ async def refresh_uid(uid: str, ver: str = "live"):
 @api_router.get("/api/char_list/{uid}")
 async def get_char_list(uid: str, beta: str = "false"):
     """現在キャッシュされているショーケースのキャラ一覧を返す（再取得後のUI同期用）。"""
+    uid = clean_uid(uid)
     if beta != "true":
         beta = "false"
-    json_path = os.path.join("static", "cache", f"showcase_{uid}.json")
+    json_path = os.path.join(STATIC_DIR, "cache", f"showcase_{uid}.json")
     if not os.path.exists(json_path):
         raise HTTPException(status_code=404, detail=f"UID: {uid} のキャッシュデータが見つかりませんでした。")
     showcase_data = _load_json_auto(json_path)
@@ -303,10 +405,28 @@ async def get_char_list(uid: str, beta: str = "false"):
 
 
 
+@api_router.get("/api/calc_method_defaults")
+async def calc_method_defaults():
+    """キャラ毎のデフォルト計算方式マップ {ベースキャラID: method} を返す（公開）。"""
+    try:
+        m = await run_in_threadpool(load_default_calc_method_map)
+        return {"ok": True, "defaults": m}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
 @api_router.get("/api/card_data/{uid}/{avatar_id}")
-async def get_card_data(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", growth: str = "false", base_prec: str = "0"):
+async def get_card_data(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", growth: str = "false", base_prec: str = "0", resonance: str = None):
+    uid = clean_uid(uid)
+    avatar_id = clean_avatar_id(avatar_id)
+    fake_char = clean_fake_char(fake_char)
+    fake_weapon = clean_fake_weapon(fake_weapon)
+    beta = clean_bool_str(beta)
+    growth = clean_bool_str(growth)
+    base_prec = clean_base_prec(base_prec)
+    resonance = clean_resonance(resonance)
     return await run_in_threadpool(
-        _get_card_data_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta, growth, base_prec
+        _get_card_data_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta, growth, base_prec, resonance
     )
 
 
@@ -315,7 +435,7 @@ async def get_card_data(uid: str, avatar_id: str, calc_method: str = "crit", fak
 
 
 @api_router.get("/api/card_sign")
-async def card_sign(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", request: Request = None):
+async def card_sign(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", resonance: str = None, theme: str = None, light: str = "false", show_uid: str = "false", request: Request = None):
     """署名付きカード画像URLの発行（安価・IP毎レート制限付き）。
     このエンドポイントは画像生成も外部通信もしないため、
     ここへの集中攻撃はレート制限で吸収する。
@@ -324,6 +444,22 @@ async def card_sign(uid: str, avatar_id: str, calc_method: str = "crit", fake_ch
     if img_format != "png":
         # WEBP 廃止: 署名発行もしない
         raise HTTPException(status_code=400, detail="WEBP形式は廃止されました。PNG（img_format=png）のみ利用できます")
+    uid = clean_uid(uid)
+    avatar_id = clean_avatar_id(avatar_id)
+    calc_method = clean_calc_method_strict(calc_method)
+    fake_char = clean_fake_char(fake_char)
+    fake_weapon = clean_fake_weapon(fake_weapon)
+    beta = clean_bool_str(beta)
+    growth = clean_bool_str(growth)
+    base_prec = clean_base_prec(base_prec)
+    substat_dots = clean_substat_dots(substat_dots)
+    resonance = clean_resonance(resonance)
+    bg_color = clean_bg_color(bg_color)
+    bg_mode = clean_token(bg_mode, "背景モード")
+    bg_region = clean_token(bg_region, "背景地域")
+    theme = _clean_card_theme(theme)
+    light = clean_bool_str(light)
+    show_uid = clean_bool_str(show_uid)
     if _rate_limited(f"sign:{_client_ip(request)}", _CARD_SIGN_RATE_LIMIT_PER_MIN):
         raise HTTPException(status_code=429, detail="署名の取得が頻繁すぎます。しばらく待って再試行してください。")
     params = {
@@ -340,6 +476,10 @@ async def card_sign(uid: str, avatar_id: str, calc_method: str = "crit", fake_ch
         "growth": growth,
         "base_prec": base_prec,
         "substat_dots": substat_dots,
+        "resonance": resonance,
+        "theme": theme,
+        "light": light,
+        "show_uid": show_uid,
     }
     if _CARD_URL_SECRET:
         exp = int(time.time()) + int(_CARD_SIGN_VALIDITY_SEC)
@@ -388,15 +528,47 @@ async def public_leyline_versions():
     return {"ok": True, "versions": found}
 
 
+@api_router.get("/api/data_versions")
+async def api_data_versions():
+    """live / beta データの最新バージョンとサイトバージョンを返す（バージョン選択UI・ヘッダー表示用）。"""
+    state_path = os.path.join(STATIC_DIR, "admin", "version_state.json")
+    live = None
+    beta = None
+    try:
+        with open(state_path, "r", encoding="utf-8") as f:
+            state = json.load(f)
+        live = state.get("live_version")
+        beta = state.get("beta_version")
+    except Exception:
+        pass
+    return {"ok": True, "live": live, "beta": beta, "site": SITE_VERSION}
+
+
+@api_router.get("/api/update_info")
+async def api_update_info():
+    """ホーム画面の「was Updated!!」表示用のアップデート情報（バージョン＋機能一覧）を返す。"""
+    path = os.path.join(STATIC_DIR, "admin", "update_info.json")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        version = data.get("version")
+        features = data.get("features") or []
+        if not isinstance(features, list):
+            features = []
+        return {"ok": True, "version": version, "features": features}
+    except Exception:
+        return {"ok": False, "version": None, "features": []}
+
+
 @api_router.get("/api/team_card_sign")
 async def team_card_sign(uid: str, char_ids: str, configs: str = "", boss: str = "", beta: str = "false", img_format: str = "png", request: Request = None):
     """編成カード画像用の署名付きURLを発行。"""
     img_format = str(img_format or "png").lower()
     if img_format != "png":
         raise HTTPException(status_code=400, detail="WEBP形式は廃止されました。PNGのみ利用できます")
-    ids = [s.strip() for s in str(char_ids or "").split(",") if s.strip()]
-    if len(ids) != 4:
-        raise HTTPException(status_code=400, detail="キャラは4体選択してください。")
+    uid = clean_uid(uid)
+    ids = clean_char_ids(char_ids)
+    beta = clean_bool_str(beta)
     configs_clean = _clean_team_configs(configs, len(ids))
     boss_clean = _clean_team_boss(boss)
     if _rate_limited(f"sign:{_client_ip(request)}", _CARD_SIGN_RATE_LIMIT_PER_MIN):
@@ -428,9 +600,9 @@ async def generate_team_image(uid: str, char_ids: str, configs: str = "", boss: 
     img_format = str(img_format or "png").lower()
     if img_format != "png":
         raise HTTPException(status_code=400, detail="WEBP形式は廃止されました。PNGのみ利用できます")
-    ids = [s.strip() for s in str(char_ids or "").split(",") if s.strip()]
-    if len(ids) != 4:
-        raise HTTPException(status_code=400, detail="キャラは4体選択してください。")
+    uid = clean_uid(uid)
+    ids = clean_char_ids(char_ids)
+    beta = clean_bool_str(beta)
     configs_clean = _clean_team_configs(configs, len(ids))
     configs_list = json.loads(configs_clean) if configs_clean else []
     boss_clean = _clean_team_boss(boss)
@@ -490,16 +662,35 @@ async def generate_team_image(uid: str, char_ids: str, configs: str = "", boss: 
 
 
 @api_router.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")
-async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", cache: str = "", card_exp: str = None, card_sig: str = None, request: Request = None):
+async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", resonance: str = None, theme: str = None, light: str = "false", show_uid: str = "false", cache: str = "", card_exp: str = None, card_sig: str = None, request: Request = None):
     """カード画像生成。専用スレッドプールで同時実行数を制限し、超過分は列待ち。
     待ち行列が満杯のときは 503 を返す（デフォルトの threadpool は占有しない）。
     署名検証（安価）→ IPレート制限 → プール投入の順で、
     無署名・不正な直接アクセスは生成前に拒否する（DDoS対策）。
+
+    theme=cinema|scorecard の場合は HTML テーマと同じデザインの画像を生成する。
+    light=true の場合はライトモード（明るい背景・暗い文字）で生成する。
     """
     img_format = str(img_format or "png").lower()
     if img_format != "png":
         # WEBP 廃止: 生成処理にも待ち行列にも入れず、即エラーを返す
         raise HTTPException(status_code=400, detail="WEBP形式は廃止されました。PNG（img_format=png）のみ利用できます")
+    theme = _clean_card_theme(theme)
+    uid = clean_uid(uid)
+    avatar_id = clean_avatar_id(avatar_id)
+    calc_method = clean_calc_method_strict(calc_method)
+    fake_char = clean_fake_char(fake_char)
+    fake_weapon = clean_fake_weapon(fake_weapon)
+    beta = clean_bool_str(beta)
+    growth = clean_bool_str(growth)
+    base_prec = clean_base_prec(base_prec)
+    substat_dots = clean_substat_dots(substat_dots)
+    resonance = clean_resonance(resonance)
+    bg_color = clean_bg_color(bg_color)
+    bg_mode = clean_token(bg_mode, "背景モード")
+    bg_region = clean_token(bg_region, "背景地域")
+    light = clean_bool_str(light)
+    show_uid = clean_bool_str(show_uid)
     if _CARD_URL_SECRET:
         # 署名検証: 不正・期限切れ・パラメータ不一致は生成前に安価に拒否
         params = {
@@ -516,6 +707,10 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
             "growth": growth,
             "base_prec": base_prec,
             "substat_dots": substat_dots,
+            "resonance": resonance,
+            "theme": theme,
+            "light": light,
+            "show_uid": show_uid,
         }
         if not _verify_card_sign(card_exp, card_sig, params):
             raise HTTPException(status_code=403, detail="カード画像URLの署名が無効です。ページを再読み込みしてください。")
@@ -529,10 +724,86 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
             "fake_char": fake_char, "fake_weapon": fake_weapon, "beta": beta,
             "bg_color": bg_color, "img_format": img_format, "bg_mode": bg_mode,
             "bg_region": bg_region, "growth": growth, "base_prec": base_prec, "substat_dots": substat_dots,
+            "resonance": resonance,
         }
+        # theme 未指定(glass)は従来キャッシュキーと同一にする（既存キャッシュを無効化しない）
+        if theme:
+            cache_params["theme"] = theme
+        # light=false はダークモードと同一出力のため、"true" のみキャッシュキーに含める
+        if light == "true":
+            cache_params["light"] = light
+        # show_uid=false は UID 非表示（従来出力と同一）のため、"true" のみキャッシュキーに含める
+        if show_uid == "true":
+            cache_params["show_uid"] = show_uid
         hit = _serve_card_disk(cache_params)
         if hit is not None:
             return Response(content=hit, media_type="image/png")
+
+    if theme:
+        # cinema / scorecard: HTML テーマと同一データ・デザインの画像生成
+        try:
+            img_bytes = await _run_in_card_gen_pool(
+                _generate_theme_card_image_sync,
+                uid,
+                avatar_id,
+                calc_method,
+                theme,
+                fake_char,
+                fake_weapon,
+                beta,
+                base_prec,
+                substat_dots,
+                resonance,
+                growth,
+                light,
+                show_uid,
+            )
+        except HTTPException as he:
+            if he.status_code >= 500:
+                report_error_to_discord(
+                    "generate_card_image(theme) HTTPException",
+                    str(he.detail),
+                    path=f"/generate_card_image/{uid}/{avatar_id}/{calc_method}",
+                    extra={
+                        "uid": uid,
+                        "avatar_id": avatar_id,
+                        "calc_method": calc_method,
+                        "theme": theme,
+                        "status": he.status_code,
+                        "beta": beta,
+                    },
+                    level="error",
+                )
+            elif he.status_code == 503:
+                report_error_to_discord(
+                    "generate_card_image(theme) queue full",
+                    str(he.detail),
+                    path=f"/generate_card_image/{uid}/{avatar_id}/{calc_method}",
+                    extra={"uid": uid, "avatar_id": avatar_id, "theme": theme, **_card_gen_stats()},
+                    level="warn",
+                )
+            raise
+        except Exception as e:
+            import traceback
+            report_error_to_discord(
+                "generate_card_image(theme) failed",
+                f"{type(e).__name__}: {e}",
+                path=f"/generate_card_image/{uid}/{avatar_id}/{calc_method}",
+                extra={
+                    "uid": uid,
+                    "avatar_id": avatar_id,
+                    "calc_method": calc_method,
+                    "theme": theme,
+                    "beta": beta,
+                },
+                traceback_text=traceback.format_exc(),
+                level="error",
+            )
+            raise HTTPException(status_code=500, detail=f"カード生成に失敗しました: {e}") from e
+
+        if cache == "server":
+            _save_card_disk(cache_params, img_bytes)
+        return Response(content=img_bytes, media_type="image/png")
 
     try:
         img_bytes = await _run_in_card_gen_pool(
@@ -550,6 +821,9 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
             growth,
             base_prec,
             substat_dots,
+            resonance,
+            light,
+            show_uid,
         )
     except HTTPException as he:
         if he.status_code >= 500:

@@ -6,6 +6,17 @@
     <title>Genshin ビルドカード生成</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <script>
+        // 初回アクセス時（初期設定未完了）は強制的に "/" へリダイレクトする
+        // （"/" で初期設定ウィザードが表示される。設定済みなら何もしない）
+        (function () {
+            try {
+                if (localStorage.getItem('genshin_build_card_setup_done') !== '1') {
+                    location.replace('/');
+                }
+            } catch (e) { /* localStorage が使えない環境ではリダイレクトしない */ }
+        })();
+    </script>
+    <script>
         // ライト/ダークのちらつき防止：CSS適用前にテーマ属性をセットしておく
         (function () {
             try {
@@ -79,6 +90,76 @@
         }
 
         body { background-color: var(--bg); color: var(--text); font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, system-ui, sans-serif; }
+
+        /* ==========================================================
+           トップバー（artifacter.html と共通デザイン）
+           アイコン / サイト名 / ライト・ダーク / beta・live
+        ========================================================== */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            border-bottom: 1px solid var(--border);
+            background: color-mix(in srgb, var(--bg) 55%, transparent);
+            backdrop-filter: blur(18px);
+        }
+        .top-bar .top-left, .top-bar .top-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+        }
+        .top-bar .top-left { color: var(--text-muted); }
+        .top-bar .top-right {
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.02em;
+        }
+        .top-bar .top-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+        .top-bar .top-logo {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+        .top-bar .top-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.02em;
+            transition: color 0.15s;
+        }
+        .top-bar .top-brand:hover .top-title { color: var(--accent); }
+        .top-bar .top-ver {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            margin-left: 2px;
+        }
+        .top-bar .top-link {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: color 0.15s;
+        }
+        .top-bar .top-link:hover { color: var(--accent); }
+        .top-bar .top-sep { opacity: 0.35; }
+        @media (max-width: 640px) {
+            .top-bar { padding: 14px 18px; }
+        }
 
         /* 旧オレンジ系(yellow-400等)を置き換えるブランドカラー・ヘルパー */
         .text-primary { color: var(--primary-color); }
@@ -157,9 +238,9 @@
         /* 薄い色のアイコン(w-4 h-4 object-contain)が白モードの明るい背景で
            見えなくならないよう、後ろに薄い黒の角丸を敷く */
         .icon-chip { background-color: transparent; }
-        html[data-theme="light"] .icon-chip { background-color: rgba(0, 0, 0, 0.59); }
+        html[data-theme="light"] .icon-chip { background-color: rgba(15, 23, 42, 0.28); }
         .icon-chip-lg { background-color: transparent; }
-        html[data-theme="light"] .icon-chip-lg { background-color: rgba(0, 0, 0, 0.59); }
+        html[data-theme="light"] .icon-chip-lg { background-color: rgba(15, 23, 42, 0.28); }
         /* サムネイル下部のキャラ名ラベル(bg-black/70の上の文字)は
            ライト/ダーク問わず常に白文字のまま(背景が常に暗いため) */
         .char-name-label { color: #ffffff; }
@@ -319,6 +400,263 @@
             border-top-color: rgba(15, 23, 42, 0.1);
         }
 
+        html[data-theme="light"] .glass-card-root { color: #18181b; }
+        html[data-theme="light"] .glass-card-root .build-card {
+            background: rgba(255, 255, 255, 0.34);
+            border-color: rgba(15, 23, 42, 0.14);
+            box-shadow: 0 40px 90px rgba(15, 23, 42, 0.22);
+        }
+        html[data-theme="light"] .glass-card-root .glass-card-base-bg {
+            filter: brightness(1.35) saturate(0.9);
+            opacity: 0.75;
+        }
+        html[data-theme="light"] .glass-card-root .glass-card-bg {
+            filter: blur(80px) brightness(1.15) saturate(1.05);
+            opacity: 0.28;
+        }
+        html[data-theme="light"] .glass-card-root .splash-container {
+            background: rgba(255, 255, 255, 0.30);
+            border-color: rgba(15, 23, 42, 0.12);
+        }
+        html[data-theme="light"] .glass-card-root .char-name {
+            color: #ffffff;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.75);
+        }
+        html[data-theme="light"] .glass-card-root .char-meta {
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+        }
+        html[data-theme="light"] .glass-card-root .friendship-pill {
+            background: rgba(0, 0, 0, 0.45);
+            color: #ffffff;
+        }
+        html[data-theme="light"] .glass-card-root .stats-container,
+        html[data-theme="light"] .glass-card-root .weapon-box,
+        html[data-theme="light"] .glass-card-root .set-info-box,
+        html[data-theme="light"] .glass-card-root .score-box,
+        html[data-theme="light"] .glass-card-root .art-card {
+            background: rgba(255, 255, 255, 0.62);
+            border-color: rgba(15, 23, 42, 0.12);
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12);
+        }
+        html[data-theme="light"] .glass-card-root .stat-row { background: rgba(15, 23, 42, 0.05); }
+        html[data-theme="light"] .glass-card-root .stat-name { color: rgba(15, 23, 42, 0.62); }
+        html[data-theme="light"] .glass-card-root .stat-total,
+        html[data-theme="light"] .glass-card-root .weapon-title,
+        html[data-theme="light"] .glass-card-root .score-value,
+        html[data-theme="light"] .glass-card-root .art-main-val,
+        html[data-theme="light"] .glass-card-root .art-main-label,
+        html[data-theme="light"] .glass-card-root .substat-item,
+        html[data-theme="light"] .glass-card-root .score-method-title,
+        html[data-theme="light"] .glass-card-root .score-method-label,
+        html[data-theme="light"] .glass-card-root .art-score { color: #111827; }
+        html[data-theme="light"] .glass-card-root .stat-base { color: rgba(15, 23, 42, 0.45); }
+        html[data-theme="light"] .glass-card-root .stat-plus { color: #0369a1; }
+        html[data-theme="light"] .glass-card-root .weapon-lvl-refine { color: #111827; }
+        html[data-theme="light"] .glass-card-root .weapon-substats { color: rgba(15, 23, 42, 0.72); }
+        html[data-theme="light"] .glass-card-root .weapon-img-container,
+        html[data-theme="light"] .glass-card-root .art-icon {
+            background: rgba(15, 23, 42, 0.06);
+            border-color: rgba(15, 23, 42, 0.12);
+        }
+        html[data-theme="light"] .glass-card-root .set-name { color: #047857; }
+        html[data-theme="light"] .glass-card-root .set-buff { color: #b45309; }
+        html[data-theme="light"] .glass-card-root .set-count,
+        html[data-theme="light"] .glass-card-root .art-level,
+        html[data-theme="light"] .glass-card-root .score-label,
+        html[data-theme="light"] .glass-card-root .score-Label,
+        html[data-theme="light"] .glass-card-root .substat-dot-legend-label { color: rgba(15, 23, 42, 0.62); }
+        html[data-theme="light"] .glass-card-root .set-none { color: rgba(15, 23, 42, 0.45); }
+        html[data-theme="light"] .glass-card-root .resonance-corner .set-row {
+            background: rgba(255, 255, 255, 0.72);
+            border-color: rgba(15, 23, 42, 0.12);
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12);
+        }
+        html[data-theme="light"] .glass-card-root .uid-corner {
+            color: rgba(15, 23, 42, 0.72);
+        }
+        html[data-theme="light"] .glass-card-root .score-box::after { background: rgba(15, 23, 42, 0.16); }
+        html[data-theme="light"] .glass-card-root .art-footer { border-top-color: rgba(15, 23, 42, 0.16); }
+        html[data-theme="light"] .glass-card-root .growth-panel {
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.82) 0%, rgba(241, 245, 249, 0.78) 100%);
+            border-color: rgba(15, 23, 42, 0.12);
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12);
+        }
+        html[data-theme="light"] .glass-card-root .growth-panel-title { color: #b45309; text-shadow: none; }
+        html[data-theme="light"] .glass-card-root .growth-panel-head {
+            color: #0e7490;
+            border-bottom-color: rgba(15, 23, 42, 0.14);
+            text-shadow: none;
+        }
+        html[data-theme="light"] .glass-card-root .gp-name,
+        html[data-theme="light"] .glass-card-root .gp-set-name { color: #111827; text-shadow: none; }
+        html[data-theme="light"] .glass-card-root .gp-desc,
+        html[data-theme="light"] .glass-card-root .gp-set-desc,
+        html[data-theme="light"] .glass-card-root .gp-stat-label,
+        html[data-theme="light"] .glass-card-root .gp-subhead { color: rgba(15, 23, 42, 0.65); text-shadow: none; }
+        html[data-theme="light"] .glass-card-root .gp-stat-value { color: #047857; text-shadow: none; }
+        html[data-theme="light"] .glass-card-root .gp-ring { color: #b45309; text-shadow: none; }
+        html[data-theme="light"] .growth-panel-html {
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.86) 0%, rgba(241, 245, 249, 0.82) 100%);
+            border-color: rgba(15, 23, 42, 0.12);
+        }
+        html[data-theme="light"] .growth-panel-html .growth-panel-title { color: #b45309; text-shadow: none; }
+        html[data-theme="light"] .growth-panel-html .growth-panel-head {
+            color: #0e7490;
+            border-bottom-color: rgba(15, 23, 42, 0.14);
+            text-shadow: none;
+        }
+        html[data-theme="light"] .growth-panel-html .gp-name,
+        html[data-theme="light"] .growth-panel-html .gp-set-name { color: #111827; text-shadow: none; }
+        html[data-theme="light"] .growth-panel-html .gp-desc,
+        html[data-theme="light"] .growth-panel-html .gp-set-desc,
+        html[data-theme="light"] .growth-panel-html .gp-stat-label,
+        html[data-theme="light"] .growth-panel-html .gp-subhead { color: rgba(15, 23, 42, 0.65); text-shadow: none; }
+        html[data-theme="light"] .growth-panel-html .gp-stat-value { color: #047857; text-shadow: none; }
+        html[data-theme="light"] .growth-panel-html .gp-ring { color: #b45309; text-shadow: none; }
+
+        html[data-theme="light"] .theme-cinema .cine-card {
+            --txt: #111827;
+            --txt-dim: rgba(17, 24, 39, 0.64);
+            --txt-faint: rgba(17, 24, 39, 0.42);
+            --glass: rgba(255, 255, 255, 0.66);
+            --glass-brd: rgba(15, 23, 42, 0.14);
+            background: #dfe5ef;
+            color: var(--txt);
+            box-shadow: 0 50px 100px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(15, 23, 42, 0.08);
+        }
+        html[data-theme="light"] .theme-cinema .cine-bg { filter: brightness(1.08) saturate(1.02); }
+        html[data-theme="light"] .theme-cinema .cine-scrim {
+            background:
+                radial-gradient(120% 90% at 78% 18%, transparent 30%, rgba(255, 255, 255, 0.28) 78%),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.42) 32%, rgba(255, 255, 255, 0.08) 58%, rgba(255, 255, 255, 0.28) 100%),
+                linear-gradient(0deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.45) 28%, rgba(255, 255, 255, 0) 55%);
+        }
+        html[data-theme="light"] .theme-cinema .cine-name {
+            color: #0f172a;
+            text-shadow: 0 3px 24px rgba(255, 255, 255, 0.65);
+        }
+        html[data-theme="light"] .theme-cinema .cine-meta .cine-sep { background: rgba(15, 23, 42, 0.25); }
+        html[data-theme="light"] .theme-cinema .cine-elem-chip,
+        html[data-theme="light"] .theme-cinema .cine-bubble,
+        html[data-theme="light"] .theme-cinema .cine-set,
+        html[data-theme="light"] .theme-cinema .cine-stat,
+        html[data-theme="light"] .theme-cinema .cine-art,
+        html[data-theme="light"] .theme-cinema .cine-panel {
+            background: var(--glass);
+            border-color: var(--glass-brd);
+            box-shadow: 0 16px 34px rgba(15, 23, 42, 0.14);
+        }
+        html[data-theme="light"] .theme-cinema .cine-wimg,
+        html[data-theme="light"] .theme-cinema .cine-aicon {
+            background: #ffffff;
+            border-color: rgba(15, 23, 42, 0.16);
+        }
+        html[data-theme="light"] .theme-cinema .cine-afoot { border-top-color: rgba(15, 23, 42, 0.14); }
+        html[data-theme="light"] .theme-cinema .cine-lvb {
+            background: #ffffff;
+            border-color: rgba(15, 23, 42, 0.35);
+            color: #111827;
+        }
+        html[data-theme="light"] .theme-cinema .cine-lvb.boosted {
+            color: #047857;
+            border-color: rgba(4, 120, 87, 0.5);
+        }
+        html[data-theme="light"] .theme-cinema .cine-const.off { border-color: rgba(15, 23, 42, 0.25); }
+        html[data-theme="light"] .theme-cinema .cine-wr b,
+        html[data-theme="light"] .theme-cinema .cine-fv { color: #b45309; }
+
+        html[data-theme="light"] .theme-scorecard .scc-card {
+            --txt: #111827;
+            --txt-dim: #4b5563;
+            --txt-faint: rgba(17, 24, 39, 0.4);
+            background: linear-gradient(160deg, #f8fafc 0%, #eef2f7 60%, #e8edf5 100%);
+            color: var(--txt);
+            box-shadow: 0 50px 100px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(15, 23, 42, 0.08);
+        }
+        html[data-theme="light"] .theme-scorecard .scc-bbg { filter: brightness(1.12) saturate(1.05); }
+        html[data-theme="light"] .theme-scorecard .scc-scrim {
+            background:
+                linear-gradient(90deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.5) 45%, rgba(255, 255, 255, 0.12) 75%, rgba(255, 255, 255, 0.45) 100%),
+                linear-gradient(0deg, #f8fafc 0%, rgba(248, 250, 252, 0) 30%);
+        }
+        html[data-theme="light"] .theme-scorecard .scc-grid-lines {
+            background-image:
+                linear-gradient(rgba(15, 23, 42, 0.12) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(15, 23, 42, 0.12) 1px, transparent 1px);
+        }
+        html[data-theme="light"] .theme-scorecard .scc-bname {
+            color: #0f172a;
+            text-shadow: 0 3px 18px rgba(255, 255, 255, 0.7);
+        }
+        html[data-theme="light"] .theme-scorecard .scc-chip {
+            background: rgba(255, 255, 255, 0.72);
+            border-color: rgba(15, 23, 42, 0.12);
+            color: rgba(17, 24, 39, 0.8);
+        }
+        html[data-theme="light"] .theme-scorecard .scc-chip b { color: #111827; }
+        html[data-theme="light"] .theme-scorecard .scc-track { stroke: rgba(15, 23, 42, 0.12); }
+        html[data-theme="light"] .theme-scorecard .scc-cvbar {
+            background: rgba(15, 23, 42, 0.03);
+            border-top-color: rgba(15, 23, 42, 0.08);
+            border-bottom-color: rgba(15, 23, 42, 0.08);
+        }
+        html[data-theme="light"] .theme-scorecard .scc-cvtrack { background: rgba(15, 23, 42, 0.08); }
+        html[data-theme="light"] .theme-scorecard .scc-tile,
+        html[data-theme="light"] .theme-scorecard .scc-art {
+            background: rgba(255, 255, 255, 0.72);
+            border-color: rgba(15, 23, 42, 0.1);
+        }
+        html[data-theme="light"] .theme-scorecard .scc-srow,
+        html[data-theme="light"] .theme-scorecard .scc-setrow,
+        html[data-theme="light"] .theme-scorecard .scc-afoot { border-color: rgba(15, 23, 42, 0.08); }
+        html[data-theme="light"] .theme-scorecard .scc-wimg,
+        html[data-theme="light"] .theme-scorecard .scc-aicon,
+        html[data-theme="light"] .theme-scorecard .scc-cicon,
+        html[data-theme="light"] .theme-scorecard .scc-bubble {
+            background: #ffffff;
+            border-color: rgba(15, 23, 42, 0.14);
+        }
+        html[data-theme="light"] .theme-scorecard .scc-lvb {
+            background: #ffffff;
+            border-color: rgba(15, 23, 42, 0.35);
+            color: #111827;
+        }
+        html[data-theme="light"] .theme-scorecard .scc-lvb.boosted {
+            color: #047857;
+            border-color: rgba(4, 120, 87, 0.5);
+        }
+        html[data-theme="light"] .theme-scorecard .scc-const.off { border-color: rgba(15, 23, 42, 0.25); }
+        html[data-theme="light"] .theme-scorecard .scc-cvval,
+        html[data-theme="light"] .theme-scorecard .scc-s,
+        html[data-theme="light"] .theme-scorecard .scc-wrf,
+        html[data-theme="light"] .theme-scorecard .scc-cnum,
+        html[data-theme="light"] .theme-scorecard .scc-hl .scc-v { color: #b45309; }
+        html[data-theme="light"] .theme-scorecard .scc-art.best {
+            border-color: rgba(180, 83, 9, 0.55);
+            box-shadow: 0 0 0 1px rgba(180, 83, 9, 0.22), 0 14px 30px rgba(15, 23, 42, 0.14);
+        }
+
+        html[data-theme="light"] .glass-card-root .stat-icon {
+            background: rgba(15, 23, 42, 0.22);
+            border-radius: 6px;
+        }
+        html[data-theme="light"] .glass-card-root .talent-bubble,
+        html[data-theme="light"] .glass-card-root .const-bubble {
+            background: rgba(15, 23, 42, 0.30);
+            border-color: rgba(15, 23, 42, 0.18);
+        }
+        html[data-theme="light"] .theme-cinema .cine-bubble { background: rgba(15, 23, 42, 0.30); }
+        html[data-theme="light"] .theme-cinema .cine-k img {
+            background: rgba(15, 23, 42, 0.22);
+            border-radius: 4px;
+        }
+        html[data-theme="light"] .theme-scorecard .scc-bubble { background: rgba(15, 23, 42, 0.30); }
+        html[data-theme="light"] .theme-scorecard .scc-k img {
+            background: rgba(15, 23, 42, 0.22);
+            border-radius: 4px;
+        }
+
         .tier-S { color: #a855f7; }
         .tier-A { color: #38bdf8; }
         .tier-B { color: #9ca3af; }
@@ -359,14 +697,10 @@
             overflow: hidden;
             display: grid;
             grid-template-columns: 1fr;
-            grid-template-rows: 460px 215px;
+            grid-template-rows: 460px 1fr;
             box-shadow: 0 50px 100px rgba(0, 0, 0, 0.9);
             padding: 20px;
             gap: 25px;
-        }
-        .glass-card-root .build-card.has-legend {
-            height: 880px;
-            grid-template-rows: 460px 30px 215px;
         }
         /* 下層：選択された背景（元素グラデーション / 地域画像 / カスタム色） */
         .glass-card-root .glass-card-base-bg {
@@ -393,7 +727,7 @@
             opacity: 0.35;
             pointer-events: none;
         }
-        .glass-card-root .build-card > *:not(.glass-card-bg):not(.glass-card-base-bg) {
+        .glass-card-root .build-card > *:not(.glass-card-bg):not(.glass-card-base-bg):not(.substat-dot-legend):not(.resonance-corner):not(.uid-corner) {
             position: relative;
             z-index: 1;
         }
@@ -678,6 +1012,39 @@
             font-weight: 600;
             text-align: center;
         }
+        /* 元素共鳴チップ: 聖遺物行とカード下端の隙間（重ならない・カード種類で位置を統一） */
+        .glass-card-root .resonance-corner {
+            position: absolute;
+            right: 26px;
+            bottom: 1px;
+            z-index: 6;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 6px;
+        }
+        .glass-card-root .resonance-corner .set-row {
+            background: rgba(8, 12, 22, 0.62);
+            border: 1px solid var(--gc-glass-border);
+            border-radius: 999px;
+            padding: 2px 10px;
+            gap: 6px;
+            justify-content: flex-end;
+            backdrop-filter: blur(8px);
+            font-size: 0.7rem;
+            line-height: 1.2;
+        }
+        /* UID表示: 聖遺物行とカード下端の隙間・左下（共鳴チップと同じ高さ） */
+        .glass-card-root .uid-corner {
+            position: absolute;
+            left: 26px;
+            bottom: 2px;
+            z-index: 6;
+            font-size: 0.7rem;
+            line-height: 1.2;
+            color: rgba(255, 255, 255, 0.82);
+            letter-spacing: 0.02em;
+        }
         .glass-card-root .score-box {
             flex: 1 1 auto;
             background: rgba(10, 10, 15, 0.4);
@@ -781,7 +1148,7 @@
             background: radial-gradient(90% 70% at 20% 100%, var(--elem-dim), transparent 60%);
         }
         /* 左上：キャラ名 */
-        .theme-cinema .cine-head { position: absolute; top: 40px; left: 44px; z-index: 5; max-width: 560px; }
+        .theme-cinema .cine-head { position: absolute; top: 40px; left: 44px; z-index: 5; max-width: 700px; }
         .theme-cinema .cine-elem-line { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
         .theme-cinema .cine-elem-chip {
             display: flex; align-items: center; gap: 7px; padding: 5px 13px; border-radius: 999px;
@@ -793,11 +1160,8 @@
         .theme-cinema .cine-stars svg { width: 15px; height: 15px; fill: var(--gold); }
         .theme-cinema .cine-name {
             font-size: 64px; font-weight: 900; line-height: 1.02; letter-spacing: 0.01em; margin: 0;
+            white-space: nowrap;
             text-shadow: 0 4px 30px rgba(0, 0, 0, 0.75);
-        }
-        .theme-cinema .cine-name .cine-latin {
-            display: block; font-family: "Sora", sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.42em;
-            color: var(--elem); text-transform: uppercase; margin-bottom: 10px;
         }
         /* (swap) 表示: 総合スコア数値（.cine-sv）と同じサイズ感 */
         .theme-cinema .cine-swap {
@@ -810,9 +1174,9 @@
         .theme-cinema .cine-friend { display: flex; align-items: center; gap: 5px; }
         .theme-cinema .cine-friend svg { width: 14px; height: 14px; fill: #ff7dab; }
         /* 左レール：天賦/命ノ星座 */
-        .theme-cinema .cine-rail { position: absolute; left: 44px; top: 282px; z-index: 5; display: flex; flex-direction: column; gap: 22px; }
+        .theme-cinema .cine-rail { position: absolute; left: 44px; top: 230px; z-index: 5; display: flex; flex-direction: column; gap: 22px; }
         .theme-cinema .cine-rail-group { display: flex; flex-direction: column; gap: 9px; }
-        .theme-cinema .cine-rail-label { font-size: 11px; font-weight: 700; letter-spacing: 0.28em; color: var(--txt-faint); text-transform: uppercase; margin-bottom: 2px; }
+        .theme-cinema .cine-rail-label { font-size: 11px; font-weight: 700; letter-spacing: 0.28em; line-height: 1; color: var(--txt-faint); text-transform: uppercase; margin-bottom: 2px; }
         .theme-cinema .cine-bubbles { display: flex; gap: 9px; }
         .theme-cinema .cine-bubble {
             position: relative; width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
@@ -864,6 +1228,13 @@
             font-size: 12px; font-weight: 700;
         }
         .theme-cinema .cine-set-cnt { color: var(--elem); font-weight: 800; }
+        /* 共鳴チップ: 聖遺物行とカード下端の隙間（重ならない・カード種類で位置を統一） */
+        .theme-cinema .cine-reso { position: absolute; right: 40px; bottom: 3px; z-index: 6; display: flex; flex-direction: row; align-items: center; gap: 6px; }
+        /* UID表示: 聖遺物行とカード下端の隙間・左下（共鳴チップと同じ高さ） */
+        .theme-cinema .cine-uid {
+            position: absolute; left: 40px; bottom: 9px; z-index: 6;
+            font-size: 12px; font-weight: 700; color: var(--txt-dim); letter-spacing: 0.02em;
+        }
         /* ステータス：横並びバー */
         .theme-cinema .cine-stats {
             position: absolute; left: 44px; right: 40px; bottom: 246px; z-index: 5;
@@ -871,11 +1242,12 @@
         }
         .theme-cinema .cine-stat {
             background: rgba(8, 12, 22, 0.5); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px;
-            padding: 11px 13px; backdrop-filter: blur(12px); display: flex; flex-direction: column; gap: 5px;
+            padding: 9px 13px; backdrop-filter: blur(12px); display: flex; flex-direction: column; gap: 4px;
+            height: 62px; box-sizing: border-box;
         }
-        .theme-cinema .cine-k { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--txt-dim); font-weight: 600; }
+        .theme-cinema .cine-k { display: flex; align-items: center; gap: 6px; font-size: 11px; line-height: 1; color: var(--txt-dim); font-weight: 600; }
         .theme-cinema .cine-k img { width: 15px; height: 15px; object-fit: contain; }
-        .theme-cinema .cine-v { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
+        .theme-cinema .cine-v { font-size: 19px; font-weight: 800; line-height: 1.15; letter-spacing: -0.01em; }
         .theme-cinema .cine-stat.hl .cine-v { color: var(--elem); }
         /* 聖遺物フィルムストリップ */
         .theme-cinema .cine-arts {
@@ -1061,6 +1433,14 @@
         .theme-scorecard .scc-clabel .scc-cnum { margin-left: auto; font-size: 11px; font-weight: 800; letter-spacing: 0.06em; color: var(--gold); }
         /* 聖遺物グリッド */
         .theme-scorecard .scc-arts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; padding: 14px 44px 26px; }
+        /* 共鳴チップ: 聖遺物行とカード下端の隙間（重ならない・カード種類で位置を統一） */
+        .theme-scorecard .scc-reso { position: absolute; right: 44px; bottom: 2px; z-index: 6; display: flex; flex-direction: row; align-items: center; gap: 6px; }
+        .theme-scorecard .scc-reso .scc-chip { padding: 3px 11px; }
+        /* UID表示: 聖遺物行とカード下端の隙間・左下（共鳴チップと同じ高さ） */
+        .theme-scorecard .scc-uid {
+            position: absolute; left: 44px; bottom: 6px; z-index: 6;
+            font-size: 12px; font-weight: 600; color: rgba(237, 241, 249, 0.6); letter-spacing: 0.02em;
+        }
         .theme-scorecard .scc-art {
             background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 18px;
             padding: 12px 13px 11px; position: relative; overflow: hidden; transition: transform 0.25s, border-color 0.25s;
@@ -1101,8 +1481,14 @@
             overflow: hidden;
             flex-shrink: 0;
         }
-        .glass-card-root .glass-growth-left .build-card {
+        .glass-card-root .glass-growth-left .build-card,
+        .glass-card-root .glass-growth-left .cine-card,
+        .glass-card-root .glass-growth-left .scc-card {
             transform-origin: top left;
+        }
+        .glass-card-root .glass-growth-left .cine-card,
+        .glass-card-root .glass-growth-left .scc-card {
+            transform: scale(var(--gc-growth-k, 1));
         }
         .glass-card-root .growth-panel {
             display: flex;
@@ -1344,7 +1730,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            height: 130%;
+            height: 100%;
             min-height: 0;
             box-sizing: border-box;
         }
@@ -1417,12 +1803,20 @@
         .substat-dot-2 { background: #3b82f6; }
         .substat-dot-3 { background: #a855f7; }
         .substat-dot-4 { background: #f97316; }
+        /* 伸び値凡例: トップセクション(460px)と聖遺物行の間の25pxギャップに
+           絶対配置する（グリッドフローから外し、凡例の有無でレイアウトがずれるのを防ぐ） */
         .glass-card-root .substat-dot-legend {
+            position: absolute;
+            top: 480px; /* padding 20px + トップセクション 460px */
+            left: 0;
+            right: 0;
+            height: 25px; /* build-card の gap と同じ */
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
-            padding: 8px 0 4px;
+            padding: 0;
+            z-index: 2;
         }
         .glass-card-root .substat-dot-legend-label {
             font-size: 1rem;
@@ -1445,7 +1839,7 @@
             font-size: 1.1rem;
             font-weight: 600;
             color: #fff;
-            padding-bottom: 2%;
+            padding-bottom: 0;
         }
         .glass-card-root .substat-name-col {
             display: flex;
@@ -1454,6 +1848,18 @@
             gap: 5px;
             min-width: 0;
         }
+        /* 伸び値ドット表示時: サブステ行が縦に膨れてスコアがはみ出さないようコンパクト化 */
+        .glass-card-root .art-substats.has-dots { gap: 3px; }
+        .glass-card-root .art-substats.has-dots .substat-item {
+            font-size: 1rem;
+            line-height: 1.2;
+        }
+        .glass-card-root .art-substats.has-dots .substat-name-col { gap: 3px; }
+        .glass-card-root .art-substats.has-dots .substat-dot {
+            width: 22px;
+            height: 6px;
+        }
+        .glass-card-root .substat-dots { flex-wrap: wrap; }
         .glass-card-root.glass-prec-detail .substat-val {
             font-size: 1.05rem;
         }
@@ -1554,6 +1960,180 @@
             transform: rotate(-90deg);
         }
 
+        /* ==========================================================
+           設定モーダル
+        ========================================================== */
+        .settings-section { display: flex; flex-direction: column; gap: 8px; }
+        .settings-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            color: var(--text-muted);
+            padding: 0 2px;
+        }
+        .settings-section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: color-mix(in srgb, var(--surface-solid) 55%, transparent);
+        }
+        .settings-row-title { font-size: 13.5px; font-weight: 700; color: var(--text); }
+        .settings-row-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.5; }
+        .settings-seg {
+            display: inline-flex;
+            padding: 3px;
+            gap: 2px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: color-mix(in srgb, var(--bg) 60%, transparent);
+            flex-shrink: 0;
+        }
+        .settings-seg-btn {
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text-muted);
+            transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+            white-space: nowrap;
+        }
+        .settings-seg-btn:hover { color: var(--text); }
+        .settings-seg-btn.selected {
+            background: var(--accent);
+            color: var(--text-on-primary);
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 40%, transparent);
+        }
+        .settings-seg-ver {
+            margin-left: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            opacity: 0.72;
+        }
+        .settings-toggle-row {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            text-align: left;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: color-mix(in srgb, var(--surface-solid) 55%, transparent);
+            transition: border-color 0.15s;
+        }
+        .settings-toggle-row:hover { border-color: var(--border-strong); }
+        .settings-toggle {
+            position: relative;
+            width: 38px;
+            height: 22px;
+            flex-shrink: 0;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--text-muted) 35%, transparent);
+            transition: background 0.18s;
+        }
+        .settings-toggle.on { background: var(--accent); }
+        .settings-toggle-knob {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ffffff;
+            transition: transform 0.18s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+        }
+        .settings-toggle.on .settings-toggle-knob { transform: translateX(16px); }
+        .settings-theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .settings-theme-opt {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 10px 6px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: color-mix(in srgb, var(--surface-solid) 55%, transparent);
+            cursor: pointer;
+            transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+        }
+        .settings-theme-opt:hover { border-color: var(--border-strong); }
+        .settings-theme-opt:active { transform: scale(0.97); }
+        .settings-theme-opt.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+        .settings-theme-opt .nm { font-size: 12px; font-weight: 700; color: var(--text); letter-spacing: 0.02em; }
+        .settings-theme-opt.selected .nm { color: var(--accent); }
+        .settings-theme-opt .check {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: var(--text-on-primary);
+            font-size: 10px;
+            font-weight: 900;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .settings-theme-opt.selected .check { display: flex; }
+        .settings-theme-opt .pv {
+            width: 100%;
+            aspect-ratio: 3 / 2;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: #05070d;
+            flex-shrink: 0;
+        }
+        .settings-theme-opt .pv img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            display: block;
+        }
+        .settings-theme-opt .ds {
+            font-size: 10px;
+            line-height: 1.35;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 0 2px;
+        }
+        .settings-static-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border: 1px dashed var(--border-strong);
+            border-radius: 12px;
+            opacity: 0.8;
+        }
+
         /* メインカード表示: スマホではパディングを詰めてカード領域を広げる */
         @media (max-width: 640px) {
             .mobile-px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
@@ -1625,18 +2205,44 @@
 
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body>
 
-    <div class="max-w-[1400px] mx-auto">
+    <!-- トップバー -->
+    <header class="top-bar">
+        <div class="top-left">
+            <a href="/" class="top-brand">
+                <img src="/static/favicon.png" alt="" class="top-logo">
+                <span class="top-title">原神ビルドカード</span>
+                <span class="top-ver" id="topVersionLabel"></span>
+            </a>
+        </div>
+        <div class="top-right">
+            <button type="button" class="top-link" id="tutorialBtn" title="チュートリアルを表示します">チュートリアル</button>
+            <span class="top-sep">|</span>
+            <button type="button" class="top-link" id="themeModeBtn" title="ライト / ダークを切り替えます">ライト / ダーク</button>
+            <span class="top-sep">|</span>
+            <a href="/contact" class="top-link" title="お問い合わせフォームを開きます">問い合わせ</a>
+            <span class="top-sep">|</span>
+            <span id="verBadge" title="使用するゲームデータ">{% if ver == 'beta' %}Beta{% else %}Live{% endif %}</span>
+        </div>
+    </header>
+
+    <div class="p-4 md:py-8 md:px-4">
+    <div class="max-w-[1500px] mx-auto">
         <!-- ヘッダー -->
         <div class="flex justify-between items-center mb-5 gap-2 sm:gap-4">
             <div class="flex items-center gap-2 sm:gap-4 min-w-0">
-                <h1 class="text-base sm:text-xl font-bold text-primary">UID <span id="currentUid">{{ uid }}</span></h1>
-                <span class="text-sm text-zinc-400 bg-zinc-800/60 px-3 py-1 rounded-lg border border-zinc-700">{{ ver }}</span>
+                <h1 class="text-base sm:text-xl font-bold text-primary min-w-0 truncate">
+                    {%- if player_name -%}
+                        <span id="currentName">{{ player_name }}</span>&nbsp;<span class="text-sm sm:text-base font-semibold whitespace-nowrap" style="opacity:.75">(uid : <span id="currentUid">{{ uid }}</span>)</span>
+                    {%- else -%}
+                        UID <span id="currentUid">{{ uid }}</span>
+                    {%- endif -%}
+                </h1>
             </div>
             <div class="flex items-center gap-2">
                 <button id="teamCardBtn" type="button" title="編成カード"
-                    class="p-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all border border-zinc-700 text-gray-300 hover:text-white flex items-center justify-center">
+                    class="hidden p-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all border border-zinc-700 text-gray-300 hover:text-white flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/>
                     </svg>
@@ -1692,10 +2298,10 @@
 
         <!-- メインタブ（ステータス表示は設定モーダルから ON にできる） -->
         <div class="flex gap-2 p-1.5 bg-zinc-900/60 rounded-xl border border-zinc-800 mb-5" id="viewModeToggle">
-            <button type="button" data-view="glass" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap">
+            <button type="button" data-view="glass" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap" title="HTMLでビルドカードを表示します">
                 ビルドカード
             </button>
-            <button type="button" data-view="image" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap">
+            <button type="button" data-view="image" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap" title="共有用のカード画像を生成します">
                 画像生成
             </button>
         </div>
@@ -1710,13 +2316,14 @@
             </div>
         </div>
 
-        <!-- 本体：左サイドバー + メインコンテンツ -->
-        <div class="flex flex-col lg:flex-row gap-5">
+        <!-- 本体：左サイドバー + メインコンテンツ（xl以上で差し替えを右カラムへ） -->
+        <div class="flex flex-col lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_16rem] gap-5">
 
-            <!-- ===== 左サイドバー（計算方法・武器・背景・差し替え・再取得） ===== -->
-            <aside class="w-full lg:w-64 shrink-0 space-y-4">
+            <!-- ===== 左サイドバー（キャラクター / 表示方法 / ステータス編集） ===== -->
+            <aside class="w-full lg:w-64 shrink-0 space-y-4 lg:col-start-1 lg:row-start-1">
+                <!-- キャラクター -->
                 <div class="bg-zinc-900/80 rounded-xl border border-zinc-800 overflow-hidden">
-                    <button type="button" id="sidebarCharsBtn" aria-expanded="true" aria-controls="sidebarCharsBody" data-sidebar-accordion-btn
+                    <button type="button" id="sidebarCharsBtn" aria-expanded="true" aria-controls="sidebarCharsBody" data-sidebar-accordion-btn title="キャラクターと武器の設定"
                         class="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer">
                         <span>キャラクター</span>
                         <svg class="accordion-chevron shrink-0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1726,8 +2333,31 @@
                     <div id="sidebarCharsBody" class="accordion-body">
                         <div class="accordion-inner space-y-4 px-4 pb-4 pt-1">
                             <div>
+                                <label class="block text-sm text-zinc-400 mb-1.5">武器</label>
+                                <button id="editWeaponBtn" type="button" title="差し替える武器を選択します"
+                                    class="w-full flex items-center gap-2 bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-white pl-2 pr-3 py-2 rounded-lg transition-all text-sm">
+                                    <img id="editWeaponIcon" src="" class="w-7 h-7 rounded object-cover hidden">
+                                    <span id="editWeaponLabel" class="truncate">—</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 表示方法 -->
+                <div class="bg-zinc-900/80 rounded-xl border border-zinc-800 overflow-hidden">
+                    <button type="button" id="sidebarDisplayBtn" aria-expanded="true" aria-controls="sidebarDisplayBody" data-sidebar-accordion-btn title="計算方法や背景などの表示設定"
+                        class="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer">
+                        <span>表示方法</span>
+                        <svg class="accordion-chevron shrink-0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </button>
+                    <div id="sidebarDisplayBody" class="accordion-body">
+                        <div class="accordion-inner space-y-4 px-4 pb-4 pt-1">
+                            <div>
                                 <label for="scoreCalcSelect" class="block text-sm text-zinc-400 mb-1.5">計算方法</label>
-                                <select id="scoreCalcSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer">
+                                <select id="scoreCalcSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer" title="スコア計算の中心にするステータス">
                                     <option value="crit">会心</option>
                                     <option value="atk">攻撃力%</option>
                                     <option value="hp">HP%</option>
@@ -1738,17 +2368,8 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm text-zinc-400 mb-1.5">武器</label>
-                                <button id="editWeaponBtn" type="button"
-                                    class="w-full flex items-center gap-2 bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-white pl-2 pr-3 py-2 rounded-lg transition-all text-sm">
-                                    <img id="editWeaponIcon" src="" class="w-7 h-7 rounded object-cover hidden">
-                                    <span id="editWeaponLabel" class="truncate">—</span>
-                                </button>
-                            </div>
-
-                            <div>
                                 <label for="basePrecSelect" class="block text-sm text-zinc-400 mb-1.5">表示の精度</label>
-                                <select id="basePrecSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer">
+                                <select id="basePrecSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer" title="ステータス表示の小数精度">
                                     <option value="0">標準</option>
                                     <option value="2">詳細(第2位)</option>
                                 </select>
@@ -1756,7 +2377,7 @@
 
                             <div>
                                 <label class="block text-sm text-zinc-400 mb-1.5">育成情報</label>
-                                <button type="button" id="settingsGrowthBtn" role="switch" aria-checked="false"
+                                <button type="button" id="settingsGrowthBtn" role="switch" aria-checked="false" title="育成情報パネルを表示します"
                                     class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
                                     <span>育成情報を表示</span>
                                     <span id="settingsGrowthToggle" class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-zinc-600 transition-colors">
@@ -1767,7 +2388,7 @@
 
                             <div>
                                 <label class="block text-sm text-zinc-400 mb-1.5">サブステ伸び値</label>
-                                <button type="button" id="settingsSubstatDotsBtn" role="switch" aria-checked="true"
+                                <button type="button" id="settingsSubstatDotsBtn" role="switch" aria-checked="true" title="サブステの伸び値をドットで表示します"
                                     class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
                                     <span>伸び値ドットを表示</span>
                                     <span id="settingsSubstatDotsToggle" class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-cyan-500 transition-colors">
@@ -1776,15 +2397,26 @@
                                 </button>
                             </div>
 
+                            <div>
+                                <label class="block text-sm text-zinc-400 mb-1.5">UID</label>
+                                <button type="button" id="settingsShowUidBtn" role="switch" aria-checked="false" title="カード左下にUIDを表示します（共鳴チップと同じ高さ）"
+                                    class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
+                                    <span>UIDを表示</span>
+                                    <span id="settingsShowUidToggle" class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-zinc-600 transition-colors">
+                                        <span id="settingsShowUidKnob" class="inline-block h-3.5 w-3.5 transform rounded-full bg-gray-300 transition-transform"></span>
+                                    </span>
+                                </button>
+                            </div>
+
                             <div id="bgColorControls" title="ビルドカード生成の背景">
                                 <label class="block text-sm text-zinc-400 mb-1.5">背景</label>
                                 <div class="flex items-center gap-2">
-                                    <select id="bgColorModeSelect" class="flex-1 bg-zinc-800 border border-zinc-700 text-white px-2.5 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer">
+                                    <select id="bgColorModeSelect" class="flex-1 bg-zinc-800 border border-zinc-700 text-white px-2.5 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer" title="カード背景のモード">
                                         <option value="element">元素背景</option>
                                         <option value="region">地域背景</option>
                                         <option value="custom">カスタム色</option>
                                     </select>
-                                    <input type="color" id="bgColorPicker" value="#4a5568" class="h-9 w-10 cursor-pointer rounded border border-zinc-700 bg-zinc-800 p-0.5 disabled:opacity-40" disabled title="任意の背景色">
+                                    <input type="color" id="bgColorPicker" value="#4a5568" class="h-9 w-10 cursor-pointer rounded border border-zinc-700 bg-zinc-800 p-0.5 disabled:opacity-40" disabled title="カスタム背景色">
                                 </div>
                                 <div id="bgRegionControls" class="mt-2 hidden">
                                     <select id="bgRegionSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-2.5 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer hidden" title="背景に使う地域"></select>
@@ -1792,22 +2424,36 @@
                                     <div id="bgRegionNote" class="text-xs text-zinc-500 mt-1.5 hidden"></div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
 
-                            <div class="flex flex-col gap-2 pt-1">
-                                <button id="regenerateImageBtn" class="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-emerald-600/10 transition-all">
-                                    再生成
-                                </button>
-                                <button id="regenerateApiBtn" class="px-3 py-2.5 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-cyan-600/10 transition-all">
-                                    再取得
-                                </button>
+                <!-- ステータス編集（差し替えキャラ選択中のみ表示。初期は非表示で renderComboRow が切替） -->
+                <div id="sidebarStatusSection" class="bg-zinc-900/80 rounded-xl border border-zinc-800 overflow-hidden hidden">
+                    <button type="button" id="sidebarStatusBtn" aria-expanded="true" aria-controls="sidebarStatusBody" data-sidebar-accordion-btn title="元素共鳴バフの選択"
+                        class="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer">
+                        <span>ステータス編集</span>
+                        <svg class="accordion-chevron shrink-0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </button>
+                    <div id="sidebarStatusBody" class="accordion-body">
+                        <div class="accordion-inner space-y-4 px-4 pb-4 pt-1">
+                            <div>
+                                <label class="block text-sm text-zinc-400 mb-1.5">元素共鳴 <span class="text-[11px] text-zinc-600">(最大2つ)</span></label>
+                                <div id="resonanceChips" class="space-y-1.5"></div>
+                                <p class="text-xs text-zinc-600 mt-1.5">選択した共鳴バフを単体カードのステータスへ反映します。</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- キャラ差し替え -->
+            </aside>
+
+            <!-- ===== キャラ差し替え（xl以上で右カラムに配置） ===== -->
+            <div class="w-full lg:w-64 shrink-0 lg:col-start-1 lg:row-start-2 xl:col-start-3 xl:row-start-1">
                 <div class="bg-zinc-900/60 rounded-xl border border-zinc-800 overflow-hidden">
-                    <button type="button" id="sidebarSwapBtn" aria-expanded="true" aria-controls="sidebarSwapBody" data-sidebar-accordion-btn
+                    <button type="button" id="sidebarSwapBtn" aria-expanded="true" aria-controls="sidebarSwapBody" data-sidebar-accordion-btn title="別のキャラクターに差し替えます"
                         class="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer">
                         <span>キャラ差し替え</span>
                         <svg class="accordion-chevron shrink-0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1820,23 +2466,31 @@
                         </div>
                     </div>
                 </div>
-            </aside>
+            </div>
 
             <!-- ===== メインコンテンツエリア ===== -->
-            <div class="flex-1 min-w-0 space-y-3">
+            <div class="flex-1 min-w-0 space-y-3 lg:col-start-2 lg:row-start-1 lg:row-span-2 xl:row-span-1">
                 <!-- 選択中ラベル + キャラサムネイル横並び -->
                 <div class="bg-zinc-900/60 rounded-xl border border-zinc-800 p-4">
                     <div class="flex items-center gap-3 mb-3">
                         <span class="text-sm text-zinc-400 shrink-0">選択中</span>
                         <span id="selectedCharLabel" class="text-base font-semibold text-white truncate">—</span>
+                        <div id="cardActionBtns" class="ml-auto hidden sm:flex items-center gap-2">
+                            <button id="regenerateImageBtn" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-emerald-600/10 transition-all" title="現在の設定でカードを再生成します">
+                                再生成
+                            </button>
+                            <button id="regenerateApiBtn" class="px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-cyan-600/10 transition-all" title="Enka APIから最新データを再取得します">
+                                再取得
+                            </button>
+                        </div>
                         <button id="abyssToggleBtn" type="button" title="幽境モード"
-                            class="ml-auto p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700 text-gray-300 hover:text-white flex items-center justify-center transition-all">
+                            class="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700 text-gray-300 hover:text-white flex items-center justify-center transition-all {% if not show_team_abyss_buttons %}hidden{% endif %}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 2 L20 9 L17 20 L7 20 L4 9 Z"/><path d="M9 14 L12 11 L15 14 L12 17 Z"/>
                             </svg>
                         </button>
                         <button id="teamEditSlotBtn" type="button" title="編成スロット管理"
-                            class="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700 text-gray-300 hover:text-white flex items-center justify-center transition-all">
+                            class="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700 text-gray-300 hover:text-white flex items-center justify-center transition-all {% if not show_team_abyss_buttons %}hidden{% endif %}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
                             </svg>
@@ -1870,7 +2524,7 @@
                         <div id="glassCardContainer" class="hidden w-full"></div>
                         <div id="placeholderText" class="text-zinc-500 text-sm">キャラクターを選択してください</div>
                         <div id="imageAwaitBox" class="hidden flex-col items-center justify-center gap-3 text-center px-4">
-                            <div id="imageAwaitText" class="text-zinc-500 text-sm">左の「生成」ボタンからビルドカード画像を作成できます</div>
+                            <div id="imageAwaitText" class="text-zinc-500 text-sm">右上の「生成」ボタンからビルドカード画像を作成できます</div>
                         </div>
                     </div>
                 </div>
@@ -1880,6 +2534,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- 未確定データ(BETA)の閲覧同意モーダル -->
@@ -1997,9 +2652,9 @@
             <p class="text-xs text-zinc-400 mb-5">表示するデータのバージョンを選んでください。<br>後から設定メニューから変更できます。</p>
             <div class="flex flex-col gap-2">
                 <button type="button" onclick="chooseVer('live')"
-                    class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg transition-all">Live（正式版）</button>
+                    class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg transition-all">Live（正式版）<span id="verChooseLiveVer" class="ml-1 text-[11px] font-semibold opacity-80"></span></button>
                 <button type="button" onclick="chooseVer('beta')"
-                    class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold rounded-lg transition-all">Beta（先行）</button>
+                    class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold rounded-lg transition-all">Beta（先行データ）<span id="verChooseBetaVer" class="ml-1 text-[11px] font-semibold opacity-80"></span></button>
             </div>
         </div>
     </div>
@@ -2025,107 +2680,164 @@
     <!-- 設定モーダル -->
     <div id="settingsModal" class="hidden fixed inset-0 bg-black/65 backdrop-blur-sm z-50 items-center justify-center p-4"
         onclick="if(event.target===this) closeSettingsPanel()">
-        <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-sm max-h-[85vh] flex flex-col overflow-hidden" role="dialog" aria-modal="true" aria-label="設定">
-            <div class="flex items-center justify-between p-4 border-b border-zinc-800 shrink-0">
-                <h2 class="text-base font-bold text-gray-100">設定</h2>
+        <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden" role="dialog" aria-modal="true" aria-label="設定">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-800 shrink-0">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background: var(--accent-dim); color: var(--accent);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </span>
+                    <div>
+                        <h2 class="text-base font-bold leading-tight" style="color: var(--text);">設定</h2>
+                        <p class="text-[11px] leading-tight mt-0.5" style="color: var(--text-muted);">表示・生成の設定はいつでも変更できます</p>
+                    </div>
+                </div>
                 <button type="button" onclick="closeSettingsPanel()" class="text-zinc-400 hover:text-white text-2xl leading-none">&times;</button>
             </div>
-            <div class="p-4 space-y-3.5 overflow-y-auto">
-                <div>
-                    <div class="text-xs font-semibold text-gray-400 mb-2 px-1">バージョン</div>
-                    <button type="button" id="settingsVerBtn"
-                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-mono bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                        <span id="settingsVerLabel">🚀 Live</span>
-                        <span class="text-[10px] text-gray-500">タップで切替</span>
-                    </button>
-                </div>
-
-                <div>
-                    <div class="text-xs font-semibold text-gray-400 mb-2 px-1">表示テーマ</div>
-                    <button type="button" id="settingsThemeBtn"
-                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                        <span id="settingsThemeLabel">🌙 ダーク</span>
-                        <span class="text-[10px] text-gray-500">タップで切替</span>
-                    </button>
-                </div>
-
-                <div>
-                    <div class="text-xs font-semibold text-gray-400 mb-2 px-1">生成画像形式</div>
-                    <button type="button" id="settingsFormatBtn" disabled
-                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 text-gray-500 opacity-60 cursor-not-allowed transition-all">
-                        <span id="settingsFormatLabel">PNG（無圧縮）</span>
-                        <span class="text-[10px] text-gray-500">WEBP は廃止</span>
-                    </button>
-                </div>
-
-                <div>
-                    <div class="text-xs font-semibold text-gray-400 mb-2 px-1">表示モード</div>
-                    <button type="button" id="settingsStatusViewBtn"
-                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                        <span>📋 ステータス表示</span>
-                        <span id="settingsStatusViewLabel" class="text-[10px] text-gray-500">タップで切替</span>
-                    </button>
-                </div>
-
-                <div>
-                    <div class="text-xs font-semibold text-gray-400 mb-2 px-1">カードテーマ</div>
-                    <div id="settingsCardThemeGroup" class="grid grid-cols-3 gap-2" role="radiogroup" aria-label="カードテーマ">
-                        <button type="button" data-card-theme="glass" class="settings-card-theme-btn flex flex-col items-center gap-0.5 px-2 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                            <span class="text-base leading-none">🪟</span>
-                            <span class="text-[11px] font-semibold">ガラス</span>
-                        </button>
-                        <button type="button" data-card-theme="cinema" class="settings-card-theme-btn flex flex-col items-center gap-0.5 px-2 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                            <span class="text-base leading-none">🎬</span>
-                            <span class="text-[11px] font-semibold">シネマ</span>
-                        </button>
-                        <button type="button" data-card-theme="scorecard" class="settings-card-theme-btn flex flex-col items-center gap-0.5 px-2 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                            <span class="text-base leading-none">📊</span>
-                            <span class="text-[11px] font-semibold">スコア</span>
-                        </button>
+            <div class="p-5 space-y-5 overflow-y-auto">
+                <!-- データ -->
+                <section class="settings-section">
+                    <h3 class="settings-section-title">データ</h3>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-title">バージョン</div>
+                            <div class="settings-row-desc">正式配信中のデータと先行データを切り替え</div>
+                        </div>
+                        <div class="settings-seg" role="radiogroup" aria-label="バージョン">
+                            <button type="button" class="settings-seg-btn" data-settings-ver="live" title="正式配信中のデータを使用します">Live<span class="settings-seg-ver" data-seg-ver="live"></span></button>
+                            <button type="button" class="settings-seg-btn" data-settings-ver="beta" title="先行データを使用します">Beta<span class="settings-seg-ver" data-seg-ver="beta"></span></button>
+                        </div>
                     </div>
-                    <div class="text-[10px] text-gray-500 mt-1.5 px-1">ビルドカード（HTML表示）と表示欄のデザインです。画像生成には適用されません。</div>
-                </div>
+                </section>
 
-                <div>
-                    <div class="text-xs font-semibold text-gray-400 mb-2 px-1">サーバー負荷表示</div>
-                    <button type="button" id="settingsServerStatsBtn"
-                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                        <span id="settingsServerStatsLabel">📊 非表示</span>
-                        <span class="text-[10px] text-gray-500">タップで切替</span>
+                <!-- 表示 -->
+                <section class="settings-section">
+                    <h3 class="settings-section-title">表示</h3>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-title">テーマ</div>
+                            <div class="settings-row-desc">サイト全体の見た目</div>
+                        </div>
+                        <div class="settings-seg" role="radiogroup" aria-label="テーマ">
+                            <button type="button" class="settings-seg-btn" data-settings-theme="dark" title="ダークテーマにします">ダーク</button>
+                            <button type="button" class="settings-seg-btn" data-settings-theme="light" title="ライトテーマにします">ライト</button>
+                        </div>
+                    </div>
+                    {% if show_status_view_setting %}
+                    <button type="button" id="settingsStatusViewBtn" class="settings-toggle-row" role="switch" aria-checked="false" title="テキスト形式のステータス表示に切り替えます">
+                        <div>
+                            <div class="settings-row-title">ステータス表示</div>
+                            <div class="settings-row-desc">画像生成なしのテキスト形式で現在のキャラを表示</div>
+                        </div>
+                        <span id="settingsStatusViewToggle" class="settings-toggle"><span class="settings-toggle-knob"></span></span>
                     </button>
-                </div>
-
-                <div>
-                    <div class="text-xs font-semibold text-gray-400 mb-2 px-1">生成画像の保存先</div>
-                    <button type="button" id="settingsSaveModeBtn"
-                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                        <span id="settingsSaveModeLabel">💾 クライアント</span>
-                        <span class="text-[10px] text-gray-500">タップで切替</span>
+                    {% endif %}
+                    <button type="button" id="settingsServerStatsBtn" class="settings-toggle-row" role="switch" aria-checked="false" title="サーバーのCPU / メモリ使用量を表示します">
+                        <div>
+                            <div class="settings-row-title">サーバー負荷表示</div>
+                            <div class="settings-row-desc">CPU / メモリ使用量を画面右端に表示</div>
+                        </div>
+                        <span id="settingsServerStatsToggle" class="settings-toggle"><span class="settings-toggle-knob"></span></span>
                     </button>
-                </div>
+                </section>
 
-                <p class="text-xs text-zinc-600 leading-relaxed px-1 pt-1">※ ステータス表示を ON にすると、現在のキャラを画像生成なしのテキスト形式で表示します。</p>
+                <!-- カードテーマ -->
+                <section class="settings-section">
+                    <h3 class="settings-section-title">カードテーマ</h3>
+                    <div>
+                        <div class="settings-row-title mb-2" style="padding: 0 2px;">HTMLテーマ</div>
+                        <div id="settingsCardThemeGroup" class="settings-theme-grid" role="radiogroup" aria-label="HTMLテーマ">
+                            <button type="button" data-card-theme="glass" class="settings-card-theme-btn settings-theme-opt">
+                                <span class="check">✓</span>
+                                <span class="pv"><img src="/static/assets/theme_previews/html_glass.png" alt="ガラス" loading="lazy"></span>
+                                <span class="nm">ガラス</span>
+                                <span class="ds">半透明ガラス調の定番カード</span>
+                            </button>
+                            <button type="button" data-card-theme="cinema" class="settings-card-theme-btn settings-theme-opt">
+                                <span class="check">✓</span>
+                                <span class="pv"><img src="/static/assets/theme_previews/html_cinema.png" alt="シネマ" loading="lazy"></span>
+                                <span class="nm">シネマ</span>
+                                <span class="ds">映画風のシネマティックレイアウト</span>
+                            </button>
+                            <button type="button" data-card-theme="scorecard" class="settings-card-theme-btn settings-theme-opt">
+                                <span class="check">✓</span>
+                                <span class="pv"><img src="/static/assets/theme_previews/html_scorecard.png" alt="スコア" loading="lazy"></span>
+                                <span class="nm">スコア</span>
+                                <span class="ds">スコア中心のカード型レイアウト</span>
+                            </button>
+                        </div>
+                        <div class="settings-row-desc mt-1.5" style="padding: 0 2px;">サイト内のビルドカード（HTML表示）のデザインです。</div>
+                    </div>
+                    <div>
+                        <div class="settings-row-title mb-2" style="padding: 0 2px;">画像テーマ</div>
+                        <div id="settingsImageThemeGroup" class="settings-theme-grid" role="radiogroup" aria-label="画像テーマ">
+                            <button type="button" data-image-theme="glass" class="settings-image-theme-btn settings-theme-opt">
+                                <span class="check">✓</span>
+                                <span class="pv"><img src="/static/assets/theme_previews/img_glass.png" alt="ガラス" loading="lazy"></span>
+                                <span class="nm">ガラス</span>
+                                <span class="ds">定番の画像生成デザイン</span>
+                            </button>
+                            <button type="button" data-image-theme="cinema" class="settings-image-theme-btn settings-theme-opt">
+                                <span class="check">✓</span>
+                                <span class="pv"><img src="/static/assets/theme_previews/img_cinema.png" alt="シネマ" loading="lazy"></span>
+                                <span class="nm">シネマ</span>
+                                <span class="ds">映画風レイアウトで画像生成</span>
+                            </button>
+                            <button type="button" data-image-theme="scorecard" class="settings-image-theme-btn settings-theme-opt">
+                                <span class="check">✓</span>
+                                <span class="pv"><img src="/static/assets/theme_previews/img_scorecard.png" alt="スコア" loading="lazy"></span>
+                                <span class="nm">スコア</span>
+                                <span class="ds">カード型レイアウトで画像生成</span>
+                            </button>
+                        </div>
+                        <div class="settings-row-desc mt-1.5" style="padding: 0 2px;">生成されるカード画像のデザインです。</div>
+                    </div>
+                </section>
+
+                <!-- 生成画像 -->
+                <section class="settings-section">
+                    <h3 class="settings-section-title">生成画像</h3>
+                    <div class="settings-static-row">
+                        <div>
+                            <div class="settings-row-title">画像形式</div>
+                            <div class="settings-row-desc">WEBP は廃止されました</div>
+                        </div>
+                        <span id="settingsFormatLabel" class="text-xs font-bold" style="color: var(--text-secondary);">PNG（無圧縮）</span>
+                    </div>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-title">保存先</div>
+                            <div class="settings-row-desc">生成した画像の保存場所</div>
+                        </div>
+                        <div class="settings-seg" role="radiogroup" aria-label="保存先">
+                            <button type="button" class="settings-seg-btn" data-settings-savemode="client" title="ブラウザ側に一時保存します">クライアント</button>
+                            <button type="button" class="settings-seg-btn" data-settings-savemode="server" title="サーバー側にキャッシュします">サーバー</button>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
 
     <!-- スマホ下部固定アクションバー（スマホのみ表示） -->
     <div id="mobileActionBar">
-        <button id="mobileActionRefreshBtn" type="button"
+        <button id="mobileActionRefreshBtn" type="button" title="カードを生成 / 再生成します"
             class="flex-1 flex items-center justify-center gap-1.5 py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-sm font-bold rounded-xl shadow-lg transition-all">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
             </svg>
             <span id="mobileActionRefreshLabel">生成</span>
         </button>
-        <button id="mobileActionFetchBtn" type="button"
+        <button id="mobileActionFetchBtn" type="button" title="Enka APIから再取得します"
             class="flex-1 flex items-center justify-center gap-1.5 py-3 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-sm font-bold rounded-xl transition-all">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 12a9 9 0 0 1 15.36-6.36L21 8"/><path d="M21 8V3"/><path d="M21 12a9 9 0 0 1-15.36 6.36L3 20"/><path d="M3 20v-5"/>
             </svg>
             <span>再取得</span>
         </button>
-        <button id="mobileActionSettingsBtn" type="button"
+        <button id="mobileActionSettingsBtn" type="button" title="設定を開きます"
             class="flex-1 flex items-center justify-center gap-1.5 py-3 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-gray-200 text-sm font-bold rounded-xl border border-zinc-700 transition-all">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="3"></circle>
@@ -2311,6 +3023,32 @@
             }
         }
 
+        // live / beta の最新バージョンを取得し、選択UIのラベルへ追記（例: Live（正式版）: 7.0）
+        (async () => {
+            try {
+                const res = await fetch('/api/data_versions');
+                if (!res.ok) return;
+                const d = await res.json();
+                const lv = document.getElementById('verChooseLiveVer');
+                const bv = document.getElementById('verChooseBetaVer');
+                if (lv && d.live) lv.textContent = `: ${d.live}`;
+                if (bv && d.beta) bv.textContent = `: ${d.beta}`;
+                document.querySelectorAll('.settings-seg-ver').forEach(el => {
+                    const v = el.dataset.segVer === 'beta' ? d.beta : d.live;
+                    if (v) el.textContent = v;
+                });
+                // ヘッダーのタイトル横: サイトバージョン + 現在の live/beta データバージョン
+                const tv = document.getElementById('topVersionLabel');
+                if (tv) {
+                    const dataVer = ver === 'beta' ? d.beta : d.live;
+                    const parts = [];
+                    if (d.site) parts.push(`v${d.site}`);
+                    if (dataVer) parts.push(`Ver${dataVer}`);
+                    tv.textContent = parts.join(' : ');
+                }
+            } catch (e) {}
+        })();
+
         // Enka API クールタイム（再取得ボタン制御）
         let enkaCooldownTimer = null;
         function startEnkaCooldown(seconds) {
@@ -2456,7 +3194,7 @@
         const fakeWeaponGridStatus = document.getElementById('fakeWeaponGridStatus');
 
         // ==========================================================
-        //  設定パネル（⚙️ボタン）
+        //  設定パネル（設定ボタン）
         //  ・データソース：Beta / Live をワンボタンでトグル。
         //    クエリ ?ver= を書き換えて /fetch_uid に再アクセスする。
         //    選んだ状態は localStorage に保存し、artifacter.html の検索フォーム
@@ -2471,8 +3209,13 @@
         const GROWTH_PREF_KEY = 'genshin_build_card_growth_mode';
         const BASE_PREC_PREF_KEY = 'genshin_build_card_base_prec';
         const SUBSTAT_DOTS_PREF_KEY = 'genshin_build_card_substat_dots';
+        const SHOW_UID_PREF_KEY = 'genshin_build_card_show_uid';
         const CARD_THEME_PREF_KEY = 'genshin_build_card_card_theme';
         const VALID_CARD_THEMES = ['glass', 'cinema', 'scorecard'];
+        const IMAGE_THEME_PREF_KEY = 'genshin_build_card_image_theme';
+        const VALID_IMAGE_THEMES = ['glass', 'cinema', 'scorecard'];
+        // 元素共鳴（単体カード用の手動選択・UID毎に保存）
+        const RESONANCE_PREF_KEY = 'genshin_build_card_resonance_' + uid;
 
         // 生成画像の保存先（client=ブラウザにキャッシュ / server=サーバーに保存）
         function getSavedSaveMode() {
@@ -2482,27 +3225,31 @@
             try { localStorage.setItem(SAVE_MODE_KEY, m === 'server' ? 'server' : 'client'); } catch (e) {}
         }
         function applySaveModeLabel() {
-            if (settingsSaveModeLabel) {
-                settingsSaveModeLabel.textContent = getSavedSaveMode() === 'server' ? '🖥️ サーバー' : '💾 クライアント';
-            }
+            if (!settingsSaveModeBtns || !settingsSaveModeBtns.length) return;
+            const mode = getSavedSaveMode();
+            settingsSaveModeBtns.forEach(btn => {
+                const on = btn.dataset.settingsSavemode === mode;
+                btn.classList.toggle('selected', on);
+                btn.setAttribute('aria-checked', on ? 'true' : 'false');
+            });
         }
 
-        const settingsVerBtn = document.getElementById('settingsVerBtn');
-        const settingsVerLabel = document.getElementById('settingsVerLabel');
-        const settingsThemeBtn = document.getElementById('settingsThemeBtn');
-        const settingsThemeLabel = document.getElementById('settingsThemeLabel');
-        const settingsFormatBtn = document.getElementById('settingsFormatBtn');
+        const settingsVerBtns = document.querySelectorAll('[data-settings-ver]');
+        const settingsThemeBtns = document.querySelectorAll('[data-settings-theme]');
         const settingsFormatLabel = document.getElementById('settingsFormatLabel');
         const settingsServerStatsBtn = document.getElementById('settingsServerStatsBtn');
-        const settingsServerStatsLabel = document.getElementById('settingsServerStatsLabel');
-        const settingsSaveModeBtn = document.getElementById('settingsSaveModeBtn');
-        const settingsSaveModeLabel = document.getElementById('settingsSaveModeLabel');
+        const settingsServerStatsToggle = document.getElementById('settingsServerStatsToggle');
+        const settingsSaveModeBtns = document.querySelectorAll('[data-settings-savemode]');
         const settingsStatusViewBtn = document.getElementById('settingsStatusViewBtn');
-        const settingsStatusViewLabel = document.getElementById('settingsStatusViewLabel');
+        const settingsStatusViewToggle = document.getElementById('settingsStatusViewToggle');
         const settingsCardThemeBtns = document.querySelectorAll('.settings-card-theme-btn');
+        const settingsImageThemeBtns = document.querySelectorAll('.settings-image-theme-btn');
         const settingsSubstatDotsBtn = document.getElementById('settingsSubstatDotsBtn');
         const settingsSubstatDotsToggle = document.getElementById('settingsSubstatDotsToggle');
         const settingsSubstatDotsKnob = document.getElementById('settingsSubstatDotsKnob');
+        const settingsShowUidBtn = document.getElementById('settingsShowUidBtn');
+        const settingsShowUidToggle = document.getElementById('settingsShowUidToggle');
+        const settingsShowUidKnob = document.getElementById('settingsShowUidKnob');
         const serverStatsPanel = document.getElementById('serverStatsPanel');
         const serverStatsCpuVal = document.getElementById('serverStatsCpuVal');
         const serverStatsCpuBar = document.getElementById('serverStatsCpuBar');
@@ -2559,6 +3306,16 @@
             document.documentElement.setAttribute('data-theme', next);
         }
 
+        const themeModeBtn = document.getElementById('themeModeBtn');
+        if (themeModeBtn) {
+            themeModeBtn.addEventListener('click', () => {
+                setThemePref(getSavedThemePref() === 'light' ? 'dark' : 'light');
+                if (typeof viewMode !== 'undefined' && viewMode === 'image' && currentSelectedCharId && !teamMode) {
+                    refreshCurrentCard(currentSelectedCharId, false, false, true);
+                }
+            });
+        }
+
         function getSavedFormatPref() {
             // WEBP 廃止: 保存値に関係なく常に PNG
             return 'png';
@@ -2612,6 +3369,121 @@
             } catch (e) { /* ignore */ }
         }
 
+        function getSavedShowUidPref() {
+            try {
+                return localStorage.getItem(SHOW_UID_PREF_KEY) === '1';
+            } catch (e) {
+                return false;
+            }
+        }
+        function setShowUidPref(on) {
+            try {
+                localStorage.setItem(SHOW_UID_PREF_KEY, on ? '1' : '0');
+            } catch (e) { /* ignore */ }
+        }
+
+        // ==========================================================
+        //  元素共鳴（単体カードの手動選択・最大2つ）
+        //  app/card/resonance.py の RESONANCE_TYPES と内容を同期すること。
+        //  ステータスに効く共鳴のみが対象（編成カードが一時的に無効なため、
+        //  編成からの自動判定ではなく手動で有効な共鳴を選ぶ）。
+        // ==========================================================
+        const RESONANCE_MAX = 2;
+        const RESONANCE_OPTIONS = [
+            { key: 'pyro',   elem: 'Pyro',   name: '熱誠の炎', label: '攻撃力+25%',  icon: 'static/assets/props/pyro.png' },
+            { key: 'hydro',  elem: 'Hydro',  name: '治療の水', label: 'HP上限+25%',  icon: 'static/assets/props/hydro.png' },
+            { key: 'cryo',   elem: 'Cryo',   name: '粉砕の氷', label: '会心率+15%',  icon: 'static/assets/props/cryo.png' },
+            { key: 'dendro', elem: 'Dendro', name: '蔓生の草', label: '元素熟知+50', icon: 'static/assets/props/dendro.png' },
+        ];
+
+        function getSelectedResonances() {
+            try {
+                const raw = (localStorage.getItem(RESONANCE_PREF_KEY) || '')
+                    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+                const keys = [];
+                for (const k of raw) {
+                    if (RESONANCE_OPTIONS.some(o => o.key === k) && !keys.includes(k)) keys.push(k);
+                    if (keys.length >= RESONANCE_MAX) break;
+                }
+                return keys;
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function setSelectedResonances(keys) {
+            try {
+                localStorage.setItem(RESONANCE_PREF_KEY, (keys || []).join(','));
+            } catch (e) { /* ignore */ }
+        }
+
+        /** 画像生成 / カードデータ用のクエリパラメータ（未選択は空文字） */
+        function getResonanceParam() {
+            // デフォルト（実データ）キャラには共鳴を反映しない。
+            // 差し替えキャラ選択中のみ有効にする。
+            if (!activeComboId) return '';
+            return getSelectedResonances().join(',');
+        }
+
+        /** ステータス編集パネルの表示切替（デフォルトキャラ選択中は非表示） */
+        function updateStatusEditorVisibility() {
+            const section = document.getElementById('sidebarStatusSection');
+            if (!section) return;
+            section.classList.toggle('hidden', !activeComboId);
+        }
+
+        function renderResonanceChips() {
+            const container = document.getElementById('resonanceChips');
+            if (!container) return;
+            const selected = getSelectedResonances();
+            container.innerHTML = RESONANCE_OPTIONS.map(opt => {
+                const on = selected.includes(opt.key);
+                return `<button type="button" data-resonance-key="${opt.key}" aria-pressed="${on ? 'true' : 'false'}"
+                    class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs border transition-all text-left ${on ? 'bg-cyan-900/40 border-cyan-500 text-white' : 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-zinc-500'}">
+                    <img src="/${opt.icon}" class="w-4 h-4 object-contain shrink-0" alt="">
+                    <span class="font-semibold whitespace-nowrap">${opt.name}</span>
+                    <span class="${on ? 'text-cyan-300' : 'text-zinc-500'}">${opt.label}</span>
+                    <span class="ml-auto ${on ? 'text-cyan-400 font-bold' : 'text-zinc-700'}">${on ? '✓' : ''}</span>
+                </button>`;
+            }).join('');
+        }
+
+        function bindResonanceChips() {
+            const container = document.getElementById('resonanceChips');
+            if (!container) return;
+            container.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-resonance-key]');
+                if (!btn) return;
+                const key = btn.getAttribute('data-resonance-key');
+                let sel = getSelectedResonances();
+                if (sel.includes(key)) {
+                    sel = sel.filter(k => k !== key);
+                } else {
+                    if (sel.length >= RESONANCE_MAX) {
+                        showToast(`元素共鳴は最大${RESONANCE_MAX}つまで選択できます`, 'error');
+                        return;
+                    }
+                    sel.push(key);
+                }
+                setSelectedResonances(sel);
+                renderResonanceChips();
+                onResonanceChanged();
+            });
+        }
+
+        function onResonanceChanged() {
+            // 編成モード中は単体カードを更新しない（編成カードは一時的に無効）
+            if (teamMode) return;
+            if (!currentSelectedCharId) return;
+            // resonance はURLパラメータ変わるためキャッシュ衝突は起きない
+            if (viewMode === 'glass') loadGlassCard(currentSelectedCharId);
+            else if (viewMode === 'html') loadHtmlCard(currentSelectedCharId);
+            else loadCardImage(currentSelectedCharId, true);
+        }
+
+        renderResonanceChips();
+        bindResonanceChips();
+
         // ビルドカード（HTML表示）のカードテーマ: glass / cinema / scorecard
         function getSavedCardTheme() {
             try {
@@ -2624,6 +3496,22 @@
         function setCardTheme(theme) {
             try {
                 if (VALID_CARD_THEMES.includes(theme)) localStorage.setItem(CARD_THEME_PREF_KEY, theme);
+            } catch (e) { /* ignore */ }
+        }
+
+        // 生成画像のカードテーマ: glass / cinema / scorecard
+        // （HTML表示のカードテーマとは独立。未設定時は cinema を既定とする）
+        function getSavedImageTheme() {
+            try {
+                const v = localStorage.getItem(IMAGE_THEME_PREF_KEY);
+                return VALID_IMAGE_THEMES.includes(v) ? v : 'cinema';
+            } catch (e) {
+                return 'cinema';
+            }
+        }
+        function setImageTheme(theme) {
+            try {
+                if (VALID_IMAGE_THEMES.includes(theme)) localStorage.setItem(IMAGE_THEME_PREF_KEY, theme);
             } catch (e) { /* ignore */ }
         }
 
@@ -2640,6 +3528,7 @@
             }
             box.classList.toggle('page-theme-cinema', theme === 'cinema');
             box.classList.toggle('page-theme-scorecard', theme === 'scorecard');
+            applyBgControlsVisibility();
         }
 
         function getSavedBasePrec() {
@@ -2758,34 +3647,51 @@
         }
 
         function applySettingsPanelUI() {
-            if (settingsVerLabel) {
-                settingsVerLabel.textContent = (ver === 'beta') ? '⚡ Beta' : '🚀 Live';
+            if (settingsVerBtns && settingsVerBtns.length) {
+                settingsVerBtns.forEach(btn => {
+                    const on = btn.dataset.settingsVer === ver;
+                    btn.classList.toggle('selected', on);
+                    btn.setAttribute('aria-checked', on ? 'true' : 'false');
+                });
             }
-            if (settingsThemeLabel) {
-                settingsThemeLabel.textContent = (getSavedThemePref() === 'light') ? '☀️ ライト' : '🌙 ダーク';
+            if (settingsThemeBtns && settingsThemeBtns.length) {
+                const curTheme = getSavedThemePref();
+                settingsThemeBtns.forEach(btn => {
+                    const on = btn.dataset.settingsTheme === curTheme;
+                    btn.classList.toggle('selected', on);
+                    btn.setAttribute('aria-checked', on ? 'true' : 'false');
+                });
             }
             if (settingsFormatLabel) {
                 settingsFormatLabel.textContent = 'PNG（無圧縮）';
             }
-            if (settingsServerStatsLabel) {
-                settingsServerStatsLabel.textContent = getSavedServerStatsPref() ? '📊 表示中' : '📊 非表示';
+            if (settingsServerStatsToggle) {
+                const statsOn = getSavedServerStatsPref();
+                settingsServerStatsToggle.classList.toggle('on', statsOn);
+                if (settingsServerStatsBtn) settingsServerStatsBtn.setAttribute('aria-checked', statsOn ? 'true' : 'false');
             }
-            if (settingsSaveModeLabel) {
-                settingsSaveModeLabel.textContent = `💾 ${getSavedSaveMode() === 'server' ? 'サーバー' : 'クライアント'}`;
-            }
-            if (settingsStatusViewLabel) {
-                settingsStatusViewLabel.textContent = (typeof viewMode !== 'undefined' && viewMode === 'html') ? 'ON' : 'OFF';
+            if (settingsStatusViewToggle) {
+                const statusOn = (typeof viewMode !== 'undefined' && viewMode === 'html');
+                settingsStatusViewToggle.classList.toggle('on', statusOn);
+                if (settingsStatusViewBtn) settingsStatusViewBtn.setAttribute('aria-checked', statusOn ? 'true' : 'false');
             }
             if (settingsCardThemeBtns && settingsCardThemeBtns.length) {
                 const curCardTheme = getSavedCardTheme();
                 settingsCardThemeBtns.forEach(btn => {
                     const on = btn.dataset.cardTheme === curCardTheme;
-                    btn.classList.toggle('border-cyan-400', on);
-                    btn.classList.toggle('bg-zinc-700', on);
-                    btn.classList.toggle('text-white', on);
+                    btn.classList.toggle('selected', on);
                     btn.setAttribute('aria-checked', on ? 'true' : 'false');
                 });
             }
+            if (settingsImageThemeBtns && settingsImageThemeBtns.length) {
+                const curImageTheme = getSavedImageTheme();
+                settingsImageThemeBtns.forEach(btn => {
+                    const on = btn.dataset.imageTheme === curImageTheme;
+                    btn.classList.toggle('selected', on);
+                    btn.setAttribute('aria-checked', on ? 'true' : 'false');
+                });
+            }
+            applySaveModeLabel();
             if (settingsGrowthToggle) {
                 const growthOn = getSavedGrowthPref();
                 settingsGrowthToggle.classList.toggle('bg-cyan-500', growthOn);
@@ -2809,6 +3715,17 @@
                     settingsSubstatDotsKnob.classList.toggle('bg-gray-300', !dotsOn);
                 }
                 if (settingsSubstatDotsBtn) settingsSubstatDotsBtn.setAttribute('aria-checked', dotsOn ? 'true' : 'false');
+            }
+            if (settingsShowUidToggle) {
+                const uidOn = getSavedShowUidPref();
+                settingsShowUidToggle.classList.toggle('bg-cyan-500', uidOn);
+                settingsShowUidToggle.classList.toggle('bg-zinc-600', !uidOn);
+                if (settingsShowUidKnob) {
+                    settingsShowUidKnob.classList.toggle('translate-x-4', uidOn);
+                    settingsShowUidKnob.classList.toggle('bg-white', uidOn);
+                    settingsShowUidKnob.classList.toggle('bg-gray-300', !uidOn);
+                }
+                if (settingsShowUidBtn) settingsShowUidBtn.setAttribute('aria-checked', uidOn ? 'true' : 'false');
             }
         }
 
@@ -2838,7 +3755,7 @@
                         setCardTheme(theme);
                         applySettingsPanelUI();
                         applyPageThemeUi();
-                        // 表示中のビルドカードを新テーマで再描画（画像生成タブは影響なし）
+                        // 表示中のビルドカードを新テーマで再描画
                         if (typeof viewMode !== 'undefined' && viewMode === 'glass' && currentSelectedCharId) {
                             loadGlassCard(currentSelectedCharId);
                         }
@@ -2846,33 +3763,55 @@
                 });
             }
 
-            if (settingsVerBtn) {
-                settingsVerBtn.addEventListener('click', async () => {
-                    const nextVer = (ver === 'beta') ? 'live' : 'beta';
-                    if (nextVer === 'beta') {
-                        const agreed = await openBetaConsentModal();
-                        if (!agreed) return;
-                    }
-                    closeSettingsPanel();
-                    try {
-                        localStorage.setItem(VER_PREF_KEY, nextVer);
-                    } catch (e) { /* ignore storage errors */ }
-                    const params = new URLSearchParams();
-                    params.set('uid', uid);
-                    params.set('ver', nextVer);
-                    window.location.href = `/fetch_uid?${params.toString()}`;
+            if (settingsImageThemeBtns && settingsImageThemeBtns.length) {
+                settingsImageThemeBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const theme = btn.dataset.imageTheme;
+                        if (!VALID_IMAGE_THEMES.includes(theme) || theme === getSavedImageTheme()) return;
+                        setImageTheme(theme);
+                        applySettingsPanelUI();
+                        applyBgControlsVisibility();
+                        // 画像生成タブ: テーマがURLパラメータになるため新テーマで再生成
+                        if (typeof viewMode !== 'undefined' && viewMode === 'image' && currentSelectedCharId && !teamMode) {
+                            loadCardImage(currentSelectedCharId, true);
+                        }
+                    });
                 });
             }
 
-            if (settingsThemeBtn) {
-                settingsThemeBtn.addEventListener('click', () => {
-                    const nextTheme = (getSavedThemePref() === 'light') ? 'dark' : 'light';
-                    setThemePref(nextTheme);
-                    applySettingsPanelUI();
+            if (settingsVerBtns && settingsVerBtns.length) {
+                settingsVerBtns.forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const nextVer = (btn.dataset.settingsVer === 'beta') ? 'beta' : 'live';
+                        if (nextVer === ver) return;
+                        if (nextVer === 'beta') {
+                            const agreed = await openBetaConsentModal();
+                            if (!agreed) return;
+                        }
+                        closeSettingsPanel();
+                        try {
+                            localStorage.setItem(VER_PREF_KEY, nextVer);
+                        } catch (e) { /* ignore storage errors */ }
+                        const params = new URLSearchParams();
+                        params.set('uid', uid);
+                        params.set('ver', nextVer);
+                        window.location.href = `/fetch_uid?${params.toString()}`;
+                    });
                 });
             }
 
-            // WEBP 廃止により形式切替ボタンは無効化（disabled）。切替処理は削除。
+            if (settingsThemeBtns && settingsThemeBtns.length) {
+                settingsThemeBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const picked = (btn.dataset.settingsTheme === 'light') ? 'light' : 'dark';
+                        if (picked === getSavedThemePref()) return;
+                        setThemePref(picked);
+                        applySettingsPanelUI();
+                    });
+                });
+            }
+
+            // WEBP 廃止により形式切替は廃止（静的な表示のみ）。
 
             if (settingsServerStatsBtn) {
                 settingsServerStatsBtn.addEventListener('click', () => {
@@ -2883,11 +3822,14 @@
                 });
             }
 
-            if (settingsSaveModeBtn) {
-                settingsSaveModeBtn.addEventListener('click', () => {
-                    setSaveMode(getSavedSaveMode() === 'server' ? 'client' : 'server');
-                    applySettingsPanelUI();
-                    applySaveModeLabel();
+            if (settingsSaveModeBtns && settingsSaveModeBtns.length) {
+                settingsSaveModeBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const mode = (btn.dataset.settingsSavemode === 'server') ? 'server' : 'client';
+                        if (mode === getSavedSaveMode()) return;
+                        setSaveMode(mode);
+                        applySettingsPanelUI();
+                    });
                 });
             }
 
@@ -2913,6 +3855,22 @@
                     setSubstatDotsPref(next);
                     applySettingsPanelUI();
                     // 伸び値ドット切替後は表示中のカードを更新する
+                    if (typeof reloadCurrentCard === 'function') reloadCurrentCard();
+                    else if (typeof loadCurrentCardByViewMode === 'function') loadCurrentCardByViewMode();
+                    else if (currentSelectedCharId) {
+                        if (viewMode === 'glass') loadGlassCard(currentSelectedCharId);
+                        else if (viewMode === 'html') loadHtmlCard(currentSelectedCharId);
+                        else loadCardImage(currentSelectedCharId, true);
+                    }
+                });
+            }
+
+            if (settingsShowUidBtn) {
+                settingsShowUidBtn.addEventListener('click', () => {
+                    const next = !getSavedShowUidPref();
+                    setShowUidPref(next);
+                    applySettingsPanelUI();
+                    // UID表示切替後は表示中のカードを更新する
                     if (typeof reloadCurrentCard === 'function') reloadCurrentCard();
                     else if (typeof loadCurrentCardByViewMode === 'function') loadCurrentCardByViewMode();
                     else if (currentSelectedCharId) {
@@ -3304,6 +4262,8 @@
             addTile.textContent = '+';
             addTile.onclick = openFakeCharModal;
             comboRow.appendChild(addTile);
+
+            updateStatusEditorVisibility();
         }
 
         function activateCombo(comboId) {
@@ -3584,6 +4544,9 @@
             maybeShowVersionChooser();
             initEnkaCooldown();
 
+            // キャラ毎のデフォルト計算方式（admin 設定）を先に読み込む
+            await loadCalcMethodDefaults();
+
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('from_artifacter')) {
                 const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?uid=${uid}`;
@@ -3612,8 +4575,19 @@
             if (targetThumb) targetThumb.click();
         });
 
+        // キャラ毎のデフォルト計算方式（admin 設定）。未選択時のフォールバックに使う。
+        let calcMethodDefaults = {};
+        async function loadCalcMethodDefaults() {
+            try {
+                const res = await fetch('/api/calc_method_defaults', { cache: 'no-store' });
+                const data = await res.json();
+                if (data && data.ok && data.defaults) calcMethodDefaults = data.defaults;
+            } catch (e) { /* 取得失敗時は従来通り crit にフォールバック */ }
+        }
+
         function getSavedCalcMethod(charId) {
-            return localStorage.getItem(`calc_method_${uid}_${charId}`) || "crit";
+            const base = String(charId).split('-')[0];
+            return localStorage.getItem(`calc_method_${uid}_${charId}`) || calcMethodDefaults[base] || "crit";
         }
         function saveCalcMethod(charId, method) {
             localStorage.setItem(`calc_method_${uid}_${charId}`, method);
@@ -3672,7 +4646,7 @@
             if (glassEl) glassEl.classList.add('hidden');
             placeholderText.classList.add('hidden');
             if (imageAwaitText) {
-                imageAwaitText.textContent = message || '左の「生成」ボタンからビルドカード画像を作成できます';
+                imageAwaitText.textContent = message || '右上の「生成」ボタンからビルドカード画像を作成できます';
             }
             if (imageAwaitBox) {
                 imageAwaitBox.classList.remove('hidden');
@@ -3838,6 +4812,23 @@
         const bgRegionSelect = document.getElementById('bgRegionSelect');
         const bgRegionAutoLabel = document.getElementById('bgRegionAutoLabel');
         const bgRegionNote = document.getElementById('bgRegionNote');
+        const bgColorControls = document.getElementById('bgColorControls');
+
+        function isGlassThemeActive() {
+            try {
+                const mode = (typeof getSavedViewMode === 'function') ? getSavedViewMode() : 'glass';
+                if (mode === 'image') return getSavedImageTheme() === 'glass';
+                if (mode === 'glass') return getSavedCardTheme() === 'glass';
+                return false;
+            } catch (e) {
+                return true;
+            }
+        }
+
+        function applyBgControlsVisibility() {
+            if (!bgColorControls) return;
+            bgColorControls.classList.toggle('hidden', !isGlassThemeActive());
+        }
 
         const BG_REGION_LABELS = {
             mondstadt: 'モンド', liyue: '璃月', inazuma: '稲妻', sumeru: 'スメール',
@@ -3910,6 +4901,7 @@
             return usable.some(r => r.name === saved) ? saved : usable[0].name;
         }
         function applyBgColorControlsUI() {
+            applyBgControlsVisibility();
             if (!bgColorModeSelect || !bgColorPicker) return;
             const mode = getBgColorMode();
             bgColorModeSelect.value = mode;
@@ -4017,21 +5009,29 @@
             if (selection.fakeChar) params.set('fake_char', selection.fakeChar);
             if (selection.fakeWeapon) params.set('fake_weapon', selection.fakeWeapon);
             if (ver === 'beta') params.set('beta', 'true');
-            const bgParam = getBgColorParam();
-            if (bgParam) {
-                params.set('bg_color', bgParam);
-            } else {
-                const bgMode = getBgColorMode();
-                params.set('bg_mode', bgMode);
-                if (bgMode === 'region') {
-                    const bgRegion = getSelectedBgRegion();
-                    if (bgRegion) params.set('bg_region', bgRegion);
+            if (document.documentElement.getAttribute('data-theme') === 'light') params.set('light', 'true');
+            const imageTheme = getSavedImageTheme();
+            if (imageTheme === 'glass') {
+                const bgParam = getBgColorParam();
+                if (bgParam) {
+                    params.set('bg_color', bgParam);
+                } else {
+                    const bgMode = getBgColorMode();
+                    params.set('bg_mode', bgMode);
+                    if (bgMode === 'region') {
+                        const bgRegion = getSelectedBgRegion();
+                        if (bgRegion) params.set('bg_region', bgRegion);
+                    }
                 }
             }
             params.set('img_format', getSavedFormatPref());
             if (getSavedGrowthPref()) params.set('growth', 'true');
             params.set('base_prec', getSavedBasePrec());
             params.set('substat_dots', getSavedSubstatDotsPref() ? '1' : '0');
+            if (getSavedShowUidPref()) params.set('show_uid', 'true');
+            const resonanceParam = getResonanceParam();
+            if (resonanceParam) params.set('resonance', resonanceParam);
+            if (imageTheme === 'cinema' || imageTheme === 'scorecard') params.set('theme', imageTheme);
             const query = params.toString() ? `?${params.toString()}` : '';
             return `/generate_card_image/${uid}/${charId}/${currentMethod}${query}`;
         }
@@ -4180,6 +5180,11 @@
         }
 
         let viewMode = getSavedViewMode();
+        // ステータス表示トグルが admin 設定で無効な場合、html モードは復元しない
+        const STATUS_VIEW_SETTING_ENABLED = {{ 'true' if show_status_view_setting else 'false' }};
+        if (!STATUS_VIEW_SETTING_ENABLED && viewMode === 'html') {
+            viewMode = 'glass';
+        }
         // 以前はリロード時に image タブを html へ強制リセットしていたが、
         // loadCardImage が「キャッシュなしなら生成ボタン待ち」で自動生成しないよう
         // になったため、表示タブは保存値のまま復元してよい。
@@ -4192,6 +5197,7 @@
         }
         // 初期表示でもページテーマを反映（viewMode 初期化直後なので安全）
         applyPageThemeUi();
+        applyBgControlsVisibility();
 
         async function refreshCurrentCard(charId, forceFetch = false, autoGenOnMiss = false, immediateGen = false) {
             if (!charId) return;
@@ -4249,11 +5255,11 @@
                         updateDisclaimerFooter(getActiveSelection());
                         updateImageGenButtonLabel(true);
                     } else if (immediateGen) {
-                        // 計算方法/背景変更時は即時画像生成（キャッシュが無ければその場で生成）
+                        // 計算方法/背景変更・キャラ切替時は即時画像生成（キャッシュが無ければその場で生成）
                         loadCardImage(charId, false, false);
                     } else {
                         // キャッシュが無ければ「自動生成するか否か」は呼び出し元の判断に委ねる
-                        // （差し替え切替 = 自動生成、キャラ切替 = 生成ボタン待ち）
+                        // （差し替え切替 = 自動生成、初回選択 = 生成ボタン待ち）
                         loadCardImage(charId, false, true, autoGenOnMiss);
                     }
                 }
@@ -4353,6 +5359,8 @@
             if (ver === 'beta') params.set('beta', 'true');
             if (getSavedGrowthPref()) params.set('growth', 'true');
             params.set('base_prec', getSavedBasePrec());
+            const resonanceParam = getResonanceParam();
+            if (resonanceParam) params.set('resonance', resonanceParam);
 
             const requestToken = ++latestGlassRequestToken;
             try {
@@ -4499,7 +5507,8 @@
                 const icon = constsIcons[i] || '';
                 return '<div class="cine-const' + (on ? '' : ' off') + '">' + (icon ? '<img src="' + assetUrl(icon) + '" alt="">' : '') + '</div>';
             }).join('');
-            const weaponSub = (data.weaponStats || []).map(w => esc(w.name) + ' ' + esc(w.value)).join(' ・ ');
+            const weaponSubParts = (data.weaponStats || []).map(w => esc(w.name) + ' ' + esc(w.value));
+            const weaponSub = weaponSubParts.length ? weaponSubParts[0] + (weaponSubParts.length > 1 ? '<br>' + weaponSubParts.slice(1).join(' ・ ') : '') : '';
 
             const stats = (data.mainStats || []).map(s => {
                 const hl = (s.label === '会心率' || s.label === '会心ダメージ') ? ' hl' : '';
@@ -4510,6 +5519,9 @@
 
             const setChips = (data.setBonuses || []).map(s =>
                 '<span class="cine-set"><span class="cine-set-cnt num">×' + esc(s.count) + '</span><span class="cine-set-name">' + esc(s.name) + '</span></span>').join('');
+            // 元素共鳴チップ（手動選択・ステータス反映中）
+            const resoChips = (data.resonanceBadges || []).map(b =>
+                '<span class="cine-set"><img src="' + assetUrl('static/assets/props/' + String(b.elem || '').toLowerCase() + '.png') + '" alt="" style="width:14px;height:14px;object-fit:contain;"><span class="cine-set-name">' + esc(b.text) + '</span><span class="cine-set-cnt num">' + esc(b.label) + '</span></span>').join('');
 
             const arts = (data.artifacts || []).map(a => {
                 if (!a) return '<div class="cine-art"><div class="cine-art-empty">未装備</div></div>';
@@ -4535,7 +5547,7 @@
                   <span class="cine-elem-chip"><img src="${elemIcon}" alt="">${esc(elemJa)}</span>
                   <span class="cine-stars">${stars}</span>
                 </div>
-                <h1 class="cine-name"><span class="cine-latin">${esc(String(data.element || '').toUpperCase())}</span>${nameHtml}</h1>
+                <h1 class="cine-name">${nameHtml}</h1>
                 <div class="cine-meta">
                   <span class="cine-lv num">Lv.${data.level != null ? esc(data.level) : '?'}</span>
                   ${data.friendship != null ? '<span class="cine-sep"></span><span class="cine-friend"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-10-9.3C.4 8.6 2.3 5 5.7 5c2 0 3.4 1.1 4.3 2.4h4c.9-1.3 2.3-2.4 4.3-2.4 3.4 0 5.3 3.6 3.7 6.7C19.5 16.3 12 21 12 21z"/></svg>' + esc(data.friendship) + '</span>' : ''}
@@ -4571,6 +5583,8 @@
               </div>
               <div class="cine-stats">${stats}</div>
               <div class="cine-arts">${arts}</div>
+              ${resoChips ? '<div class="cine-reso">' + resoChips + '</div>' : ''}
+              ${getSavedShowUidPref() ? '<div class="cine-uid num">UID ' + esc(uid) + '</div>' : ''}
             </div>`;
         }
         // ==========================================================
@@ -4612,6 +5626,10 @@
                 '<span class="scc-chip">' + (constUnlocked >= 6 ? '完凸' : '命星座') + ' <b class="num">C' + constUnlocked + '</b></span>',
                 (data.weaponType ? '<span class="scc-chip">' + esc(data.weaponType) + '</span>' : ''),
             ].filter(Boolean).join('');
+            // 元素共鳴チップ（手動選択・ステータス反映中）: 聖遺物行とカード下端の隙間に表示
+            const resoChips = (data.resonanceBadges || []).map(b =>
+                '<span class="scc-chip"><img src="' + assetUrl('static/assets/props/' + String(b.elem || '').toLowerCase() + '.png') + '" alt="">' + esc(b.text) + ' <b class="num">' + esc(b.label) + '</b></span>'
+            ).join('');
 
             const statRows = (data.mainStats || []).map(s => {
                 const hl = (s.label === '会心率' || s.label === '会心ダメージ') ? ' scc-hl' : '';
@@ -4620,7 +5638,8 @@
                     '</span><span class="scc-v num">' + esc(s.val) + '</span></div>';
             }).join('');
 
-            const weaponSub = (data.weaponStats || []).map(w => esc(w.name) + ' ' + esc(w.value)).join(' ・ ');
+            const weaponSubParts = (data.weaponStats || []).map(w => esc(w.name) + ' ' + esc(w.value));
+            const weaponSub = weaponSubParts.length ? weaponSubParts[0] + (weaponSubParts.length > 1 ? '<br>' + weaponSubParts.slice(1).join(' ・ ') : '') : '';
 
             const setRows = (data.setBonuses && data.setBonuses.length)
                 ? data.setBonuses.map(s => '<div class="scc-setrow"><span class="scc-setcnt num">×' + esc(s.count) + '</span><span class="scc-setname">' + esc(s.name) + '</span>' + (s.buff ? '<span class="scc-setbuff">' + esc(s.buff) + '</span>' : '') + '</div>').join('')
@@ -4711,6 +5730,8 @@
                 </div>
               </div>
               <div class="scc-arts">${artsHtml}</div>
+              ${resoChips ? '<div class="scc-reso">' + resoChips + '</div>' : ''}
+              ${getSavedShowUidPref() ? '<div class="scc-uid num">UID ' + esc(uid) + '</div>' : ''}
             </div>`;
         }
 
@@ -4779,6 +5800,14 @@
                 ? data.setBonuses.map(s => `<div class="set-row"><span class="set-name">${esc(s.name)}</span>${s.buff ? `<span class="set-buff">${esc(s.buff)}</span>` : ''}<span class="set-count">${esc(s.count)}</span></div>`).join('')
                 : `<div class="set-none">セット効果なし</div>`;
 
+            // 元素共鳴（手動選択・ステータス反映中）: カード右下隅に表示
+            const resonanceHtml = (data.resonanceBadges && data.resonanceBadges.length)
+                ? data.resonanceBadges.map(b => `<div class="set-row"><img src="${assetUrl('static/assets/props/' + String(b.elem || '').toLowerCase() + '.png')}" alt="" style="width:12px;height:12px;object-fit:contain;"><span class="set-name">${esc(b.text)}</span><span class="set-buff">${esc(b.label)}</span></div>`).join('')
+                : '';
+
+            // UID表示（表示方法トグル。共鳴チップと同じ高さの左下）
+            const uidHtml = getSavedShowUidPref() ? `<div class="uid-corner">UID ${esc(uid)}</div>` : '';
+
             const arts = data.artifacts || [];
             const artsHtml = arts.map(a => {
                 if (!a) {
@@ -4794,6 +5823,7 @@
                     }
                     return `<div class="substat-item"><div class="substat-name-col"><span class="substat-name">${esc(sub.name)}</span>${dots ? `<span class="substat-dots">${dots}</span>` : ''}</div><span class="substat-val">${esc(sub.value)}</span></div>`;
                 }).join('');
+                const hasDots = subs.includes('substat-dots');
                 return `
                 <div class="art-card">
                     <div class="art-header">
@@ -4804,7 +5834,7 @@
                         </div>
                         <div class="art-level">+${a.upgrade ?? 0}</div>
                     </div>
-                    <div class="art-substats">${subs}</div>
+                    <div class="art-substats${hasDots ? ' has-dots' : ''}">${subs}</div>
                     <div class="art-footer">
                         <div class="art-rank"><img src="/static/assets/tiers/${a.tier || 'B'}.png" alt="${a.tier || 'B'}"></div>
                         <div class="art-score"><div class="score-Label">score</div>${(Number(a.score) || 0).toFixed(1)}</div>
@@ -4813,13 +5843,13 @@
             }).join('');
 
             // 育成（growth）レイアウト: ON かつ growth データがあれば右側にパネルを追加し、
-            // build-card を全幅基準に縮小してスペースを作る
+            // カード（build-card / cine-card / scc-card）を全幅基準に縮小してスペースを作る
             let growthData = null, growthBody = '', growthK = 1, growthLeftW = 1200, growthLeftH = 800, growthPanelW = 0;
-            const cardH = getSavedSubstatDotsPref() ? 880 : 800;
             const growthMode = getSavedGrowthPref();
             const cardTheme = getSavedCardTheme();
-            // 育成（growth）パネルは glass テーマ限定の機能（cinema / scorecard は専用レイアウト）
-            if (growthMode && data && cardTheme === 'glass') {
+            // テーマごとのカード高さ（glass=800 / cinema=780 / scorecard=707）
+            const themeCardH = (cardTheme === 'cinema') ? 780 : (cardTheme === 'scorecard') ? 707 : 800;
+            if (growthMode && data) {
                 growthData = data.growth || data.progress || null;
                 if (growthData) {
                     growthBody = growthPanelHtml(growthData);
@@ -4827,7 +5857,7 @@
                         // 総合スコア列（right-section = 270px / 1200）と同じ横幅にする
                         growthK = 0.775;
                         growthLeftW = Math.round(1200 * growthK);
-                        growthLeftH = Math.round(cardH * growthK);
+                        growthLeftH = Math.round(themeCardH * growthK);
                         growthPanelW = 270;
                     } else {
                         growthData = null;
@@ -4842,8 +5872,13 @@
                     : renderScorecardThemeHtml(data, themeCtx);
                 glassEl.innerHTML = `
                 <div class="glass-card-root theme-${cardTheme}" style="--element-color:${elemColor};--element-color-dim:${elemDim}">
-                  <div class="glass-scale-wrap" id="glassScaleWrap">
+                  <div class="glass-scale-wrap" id="glassScaleWrap"${growthData && growthBody ? ` data-growth="1"` : ''}>
+              ${growthData && growthBody ? `<div class="glass-growth-layout">
+              <div class="glass-growth-left" style="width:${growthLeftW}px;height:${growthLeftH}px;--gc-growth-k:${growthK}">` : ''}
                     ${themeHtml}
+              ${growthData && growthBody ? `</div>
+              <div class="growth-panel" style="width:${growthPanelW}px;height:${growthLeftH}px;--element-color:${elemColor}">${growthBody}</div>
+              </div>` : ''}
                   </div>
                 </div>`;
             } else {
@@ -4852,7 +5887,7 @@
                   <div class="glass-scale-wrap" id="glassScaleWrap"${growthData && growthBody ? ` data-growth="1"` : ''}>
               ${growthData && growthBody ? `<div class="glass-growth-layout">
               <div class="glass-growth-left" style="width:${growthLeftW}px;height:${growthLeftH}px;--gc-growth-k:${growthK}">` : ''}
-              <div class="build-card${getSavedSubstatDotsPref() ? ' has-legend' : ''}"${growthData && growthBody ? ` style="transform:scale(${growthK});"` : ''}>
+              <div class="build-card"${growthData && growthBody ? ` style="transform:scale(${growthK});"` : ''}>
                 <div class="glass-card-base-bg" style="${baseBgStyle}"></div>
                 <div class="glass-card-bg" style="background-image:url('${splash || ''}')"></div>
                 <div class="top-section">
@@ -4895,6 +5930,8 @@
                 </div>
                 ${getSavedSubstatDotsPref() ? `<div class="substat-dot-legend"><span class="substat-dot-legend-label">伸び値</span><span class="substat-dot-legend-bars"><span class="substat-dot substat-dot-1"></span><span class="substat-dot substat-dot-2"></span><span class="substat-dot substat-dot-3"></span><span class="substat-dot substat-dot-4"></span></span></div>` : ''}
                 <div class="artifacts-grid">${artsHtml}</div>
+                ${resonanceHtml ? `<div class="resonance-corner">${resonanceHtml}</div>` : ''}
+                ${uidHtml}
               </div>
               ${growthData && growthBody ? `</div>
               <div class="growth-panel" style="width:${growthPanelW}px;height:${growthLeftH}px;--element-color:${elemColor}">${growthBody}</div>
@@ -4918,6 +5955,16 @@
             const left = wrap.querySelector('.glass-growth-left');
             // テーマルート（.build-card / .cine-card / .scc-card）に対応
             const bc = wrap.querySelector('.build-card') || wrap.querySelector('.cine-card') || wrap.querySelector('.scc-card');
+            // 育成レイアウト: 実測のカード高さに合わせて縮小後高さ（left/panel）を補正
+            if (left && bc) {
+                const k = parseFloat(getComputedStyle(left).getPropertyValue('--gc-growth-k')) || 0.775;
+                const targetH = Math.round(bc.offsetHeight * k);
+                if (parseFloat(left.style.height) !== targetH) {
+                    left.style.height = `${targetH}px`;
+                    const panel = wrap.querySelector('.growth-panel');
+                    if (panel) panel.style.height = `${targetH}px`;
+                }
+            }
             const bcH = bc ? bc.offsetHeight : 800;
             const baseH = left ? Math.round(bcH * (parseFloat(left.style.height) / bcH || 1)) : bcH;
             const scale = Math.min(1, available / baseW);
@@ -4965,6 +6012,8 @@
             if (ver === 'beta') params.set('beta', 'true');
             if (getSavedGrowthPref()) params.set('growth', 'true');
             params.set('base_prec', getSavedBasePrec());
+            const resonanceParam = getResonanceParam();
+            if (resonanceParam) params.set('resonance', resonanceParam);
 
             const requestToken = ++latestHtmlRequestToken;
             try {
@@ -5062,6 +6111,11 @@
                             <div class="text-xs text-zinc-500 mb-1">セット効果</div>
                             ${setBonusHtml}
                         </div>
+                        ${(data.resonanceBadges && data.resonanceBadges.length) ? `
+                        <div class="bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
+                            <div class="text-xs text-zinc-500 mb-1">元素共鳴</div>
+                            ${data.resonanceBadges.map(b => `<div class="text-xs text-zinc-200 flex items-center gap-1.5 py-0.5"><img src="/static/assets/props/${esc(String(b.elem || '').toLowerCase())}.png" class="w-4 h-4 object-contain shrink-0" alt=""><span class="font-semibold">${esc(b.text)}</span><span class="text-amber-300">${esc(b.label)}</span></div>`).join('')}
+                        </div>` : ''}
                         <div class="flex items-center justify-between bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
                             <span class="text-xs text-zinc-400">総合スコア</span>
                             <span class="text-2xl font-bold ${tierClass(data.tierSum)}">${(Number(data.scoreSum) || 0).toFixed(1)} <span class="text-sm">${esc(data.tierSum)}</span></span>
@@ -5111,9 +6165,10 @@
             if (selectedCharLabel && viewMode !== 'image') {
                 selectedCharLabel.textContent = '読み込み中...';
             }
-            // キャラ切替（差し替えではない）では自動生成せず、
-            // キャッシュが無ければ中央の生成ボタンを出す
-            refreshCurrentCard(charId, forceFetch, false);
+            // 別キャラへの切替時は画像を自動生成する（immediateGen）。
+            // 初回選択時は従来どおり自動生成せず、キャッシュが無ければ生成ボタンを出す。
+            const isCharSwitch = !!currentSelectedCharId && currentSelectedCharId !== charId;
+            refreshCurrentCard(charId, forceFetch, false, isCharSwitch);
             pendingForceFetchFromArtifacter = false;
 
             // 画像タブではフルカードデータを取らないため、名前だけ軽量に取得してラベル更新する。
@@ -5283,6 +6338,8 @@
         // ==========================================================
         //  編成カード（12スロット / 編成モード / 4キャラ毎に設定可能）
         // ==========================================================
+        // 編成カード生成は一時的に無効化（バックエンドは維持し、UIのみ非表示）
+        const TEAM_GEN_ENABLED = false;
         const teamCardModal = document.getElementById('teamCardModal');
         const teamSelectSlots = document.getElementById('teamSelectSlots');
         const teamSelectGrid = document.getElementById('teamSelectGrid');
@@ -5592,7 +6649,7 @@
             teamActiveIdx = 0;
             try { localStorage.removeItem(TEAM_ACTIVE_KEY); } catch (e) {}
             if (teamModeBar) teamModeBar.classList.add('hidden');
-            if (teamCardBtn) teamCardBtn.classList.remove('hidden');
+            if (teamCardBtn && TEAM_GEN_ENABLED) teamCardBtn.classList.remove('hidden');  // 無効化中は再表示しない
             setTeamViewModeRestriction(false);
             if (typeof bgColorControls !== 'undefined' && bgColorControls) bgColorControls.classList.remove('hidden');
             if (typeof updateGenerateDisable === 'function') updateGenerateDisable();
@@ -5601,6 +6658,7 @@
             if (currentSelectedCharId) selectCharById(currentSelectedCharId, false);
         }
         function restoreTeamMode() {
+            if (!TEAM_GEN_ENABLED) return false;  // 編成カード一時無効化: リロード後も復元しない
             let savedId = null;
             try { savedId = localStorage.getItem(TEAM_ACTIVE_KEY); } catch (e) {}
             if (!savedId) return false;
@@ -5709,7 +6767,7 @@
         }
 
         // ---- イベント ----
-        if (teamCardBtn) {
+        if (teamCardBtn && TEAM_GEN_ENABLED) {
             teamCardBtn.addEventListener('click', () => { openTeamCardModal(); });
         }
         if (teamCardCancelBtn) {
@@ -5915,6 +6973,41 @@
         const abyssClearBtn = document.getElementById('abyssClearBtn');
         if (abyssClearBtn) abyssClearBtn.addEventListener('click', clearAbyssBoss);
         updateAbyssUI();
+    </script>
+
+    <script src="/static/js/tutorial.js"></script>
+    <script>
+        (function () {
+            const BUILD_TUTORIAL_DONE_KEY = 'genshin_build_card_tutorial_done_build';
+            const TUTORIAL_CHOICE_KEY = 'genshin_build_card_tutorial_choice';
+            const BUILD_TUTORIAL_STEPS = [
+                { selector: '#charThumbRow', title: 'キャラクターを選ぶ', text: 'サムネイルをクリックすると、そのキャラクターのビルドを表示します。' },
+                { selector: '#viewModeToggle', title: '表示モード', text: '「ビルドカード」はHTML表示、「画像生成」は共有用画像の生成です。' },
+                { selector: '#mainDisplayBox', title: 'メイン表示', text: 'ここにビルドカードまたは生成画像が表示されます。' },
+                { selector: '#scoreCalcSelect', title: '計算方法', text: 'スコアの中心にするステータスを選びます。キャラ毎の既定値も使われます。' },
+                { selector: '#editWeaponBtn', title: '武器の差し替え', text: '武器をクリックすると、別の武器に差し替えてスコアを確認できます。' },
+                { selector: '#sidebarSwapBtn', title: 'キャラ差し替え', text: 'ショーケース外のキャラも仮想的に追加して比較できます。' },
+                { selector: '#cardActionBtns', title: '再生成 / 再取得', text: '「再生成」は現在の設定で作り直し、「再取得」はEnka APIから最新データを取得します。' },
+                { selector: '#mobileActionBar', title: 'モバイルアクション', text: 'スマホではここから生成・再取得・設定を開けます。' },
+                { selector: '#settingsBtn', title: '設定', text: 'テーマ、データバージョン、保存先などをまとめて変更できます。' },
+                { selector: '#tutorialBtn', title: 'チュートリアル', text: 'このチュートリアルはいつでも再表示できます。' },
+            ];
+
+            function startBuildTutorial() {
+                if (window.GenshinTutorial) window.GenshinTutorial.start(BUILD_TUTORIAL_STEPS, { doneKey: BUILD_TUTORIAL_DONE_KEY });
+            }
+
+            const tutorialBtn = document.getElementById('tutorialBtn');
+            if (tutorialBtn) tutorialBtn.addEventListener('click', startBuildTutorial);
+
+            function getTutorialChoice() {
+                try { return localStorage.getItem(TUTORIAL_CHOICE_KEY); } catch (e) { return null; }
+            }
+
+            if (window.GenshinTutorial && getTutorialChoice() === 'yes' && !window.GenshinTutorial.isDone(BUILD_TUTORIAL_DONE_KEY)) {
+                setTimeout(startBuildTutorial, 1200);
+            }
+        })();
     </script>
 </body>
 </html>

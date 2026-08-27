@@ -146,6 +146,35 @@
         }
         .top-link:hover { color: var(--accent); }
         .top-sep { opacity: 0.35; }
+        .top-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+        .top-logo {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+        .top-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.02em;
+            transition: color 0.15s;
+        }
+        .top-brand:hover .top-title { color: var(--accent); }
+        .top-ver {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            margin-left: 2px;
+        }
 
         /* メイン：画面の残り全体を使う */
         .main {
@@ -189,33 +218,6 @@
             flex-direction: column;
             align-items: center;
             gap: 18px;
-        }
-
-        .ver-toggle {
-            display: inline-flex;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 4px;
-            backdrop-filter: blur(12px);
-        }
-        .ver-toggle button {
-            border: none;
-            background: transparent;
-            color: var(--text-muted);
-            font-size: 13px;
-            font-weight: 600;
-            padding: 7px 20px;
-            border-radius: 7px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-        .ver-toggle button.active {
-            background: var(--accent-dim);
-            color: var(--accent);
-        }
-        .ver-toggle button:not(.active):hover {
-            color: var(--text-secondary);
         }
 
         .input-row {
@@ -420,11 +422,11 @@
             height: 24px;
         }
 
-        /* Beta 同意モーダル */
+        /* Beta 同意モーダル（初期設定ウィザードより前面に表示） */
         .modal-backdrop {
             position: fixed;
             inset: 0;
-            z-index: 50;
+            z-index: 70;
             display: none;
             align-items: center;
             justify-content: center;
@@ -510,6 +512,45 @@
             color: var(--text);
         }
 
+        /* アップデート情報モーダル（was Updated!!） */
+        .update-modal { max-width: 420px; }
+        .update-icon { background: rgba(52, 211, 153, 0.12); }
+        .update-icon svg { color: #34d399; }
+        .update-ver {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+        .update-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 22px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            max-height: 42vh;
+            overflow-y: auto;
+        }
+        .update-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+        .update-list li::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+            margin-top: 8px;
+        }
+
         /* レスポンシブ：画面幅に合わせて広がる */
         @media (min-width: 900px) {
             .content {
@@ -556,6 +597,237 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* ================= 初期設定ウィザード ================= */
+        .setup-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            background: rgba(5, 8, 14, 0.86);
+            background: color-mix(in srgb, var(--bg) 82%, transparent);
+            backdrop-filter: blur(16px);
+            overflow-y: auto;
+        }
+        .setup-backdrop.open { display: flex; }
+        .setup-card {
+            width: 100%;
+            max-width: 760px;
+            background: var(--surface-solid);
+            border: 1px solid var(--border-strong);
+            border-radius: 20px;
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin: auto;
+        }
+        .setup-head {
+            padding: 22px 28px 0;
+        }
+        .setup-step-label {
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+        .setup-head h2 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text);
+        }
+        .setup-head p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        .setup-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .setup-close:hover { color: var(--text); background: var(--accent-dim); }
+        .setup-body {
+            padding: 18px 28px 6px;
+        }
+        .setup-grid {
+            display: grid;
+            gap: 14px;
+        }
+        .setup-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .setup-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .setup-opt {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            background: var(--surface);
+            cursor: pointer;
+            text-align: left;
+            transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+        }
+        .setup-opt:hover { border-color: var(--border-strong); }
+        .setup-opt:active { transform: scale(0.985); }
+        .setup-opt.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+        .setup-opt.recommended:not(.selected) {
+            border-color: var(--accent);
+            border-style: solid;
+            outline: 2px dashed var(--accent);
+            outline-offset: 3px;
+            border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+            outline: 2px dashed color-mix(in srgb, var(--accent) 65%, transparent);
+        }
+        .setup-opt-img {
+            width: 100%;
+            aspect-ratio: 900 / 560;
+            object-fit: cover;
+            border-radius: 9px;
+            border: 1px solid var(--border);
+            background: #070b14;
+            display: block;
+        }
+        .setup-opt-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .setup-opt.selected .setup-opt-label { color: var(--accent); }
+        .setup-check {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #0a1220;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        [data-theme='light'] .setup-check { color: #fff; }
+        .setup-opt.selected .setup-check { display: flex; }
+        .setup-rec-badge {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: var(--accent);
+            color: #0a1220;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        [data-theme='light'] .setup-rec-badge { color: #fff; }
+        .setup-howto {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .setup-howto-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--surface);
+        }
+        .setup-howto-item img {
+            width: 240px;
+            flex-shrink: 0;
+            border-radius: 9px;
+            border: 1px solid var(--border);
+        }
+        .setup-howto-txt b {
+            display: block;
+            font-size: 14.5px;
+            color: var(--text);
+            margin-bottom: 3px;
+        }
+        .setup-howto-txt span {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        .setup-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 16px 28px 22px;
+        }
+        .setup-dots {
+            display: flex;
+            gap: 7px;
+        }
+        .setup-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border-strong);
+            transition: background 0.15s, transform 0.15s;
+        }
+        .setup-dots span.on {
+            background: var(--accent);
+            transform: scale(1.25);
+        }
+        .setup-btn {
+            min-width: 120px;
+            padding: 12px 22px;
+            border-radius: 11px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s, opacity 0.15s, transform 0.1s;
+        }
+        .setup-btn:active { transform: scale(0.97); }
+        .setup-btn.primary {
+            border: none;
+            background: var(--accent);
+            color: #0a1220;
+        }
+        [data-theme='light'] .setup-btn.primary { color: #fff; }
+        .setup-btn.primary:hover { background: var(--accent-hover); }
+        .setup-btn.ghost {
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+        }
+        .setup-btn.ghost:hover { color: var(--text); background: var(--accent-dim); }
+        .setup-btn.hidden { visibility: hidden; }
+        @media (max-width: 640px) {
+            .setup-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+            .setup-howto-item { flex-direction: column; align-items: stretch; }
+            .setup-howto-item img { width: 100%; }
+            .setup-foot { flex-wrap: wrap; justify-content: center; }
+        }
     </style>
 </head>
 <body>
@@ -568,11 +840,21 @@
     <div class="page">
         <header class="top-bar">
             <div class="top-left">
-                <span id="verBadge">Live</span>
-                <span class="top-sep">|</span>
-                <button type="button" class="top-link" id="themeModeBtn">ライト / ダーク</button>
+                <a href="/" class="top-brand">
+                    <img src="/static/favicon.png" alt="" class="top-logo">
+                    <span class="top-title">原神ビルドカード</span>
+                    <span class="top-ver" id="topVersionLabel"></span>
+                </a>
             </div>
-            <div class="top-right">原神ビルドカード</div>
+            <div class="top-right">
+                <button type="button" class="top-link" id="tutorialBtn" title="チュートリアルを表示します">チュートリアル</button>
+                <span class="top-sep">|</span>
+                <button type="button" class="top-link" id="themeModeBtn" title="ライト / ダークを切り替えます">ライト / ダーク</button>
+                <span class="top-sep">|</span>
+                <a href="/contact" class="top-link" title="お問い合わせフォームを開きます">問い合わせ</a>
+                <span class="top-sep">|</span>
+                <span id="verBadge" title="使用するゲームデータ">Live</span>
+            </div>
         </header>
 
         <main class="main">
@@ -586,11 +868,6 @@
                     <input type="hidden" name="from_artifacter" value="true">
                     <input type="hidden" id="verInput" name="ver" value="live">
 
-                    <div class="ver-toggle" role="group" aria-label="読み込みモード">
-                        <button type="button" id="verLiveBtn" class="active">Live</button>
-                        <button type="button" id="verBetaBtn">Beta</button>
-                    </div>
-
                     <div class="input-row">
                         <input
                             type="text"
@@ -602,8 +879,9 @@
                             inputmode="numeric"
                             autocomplete="off"
                             aria-label="UID"
+                            title="ゲーム内プロフィールのUIDを入力してください"
                         >
-                        <button type="submit" id="submitBtn" class="btn-submit">
+                        <button type="submit" id="submitBtn" class="btn-submit" title="UIDのビルドデータを読み込みます">
                             <span id="submitBtnSpinner" class="spinner" style="display:none"></span>
                             <span id="submitBtnLabel">データを読み込む</span>
                         </button>
@@ -624,10 +902,10 @@
                     {% endif %}
                 </form>
 
-                <div class="history" id="historySection">
+                <div class="history" id="historySection" title="最近検索したUID">
                     <div class="history-head">
                         <span>最近の検索</span>
-                        <button type="button" id="clearHistory">すべて削除</button>
+                        <button type="button" id="clearHistory" title="検索履歴をすべて削除します">すべて削除</button>
                     </div>
                     <div id="historyEmpty" class="history-empty">検索履歴はありません</div>
                     <div id="historyList" class="history-list" style="display:none"></div>
@@ -636,6 +914,25 @@
         </main>
 
         <div class="footer-space"></div>
+    </div>
+
+    <!-- 初期設定ウィザード（初回アクセス時に表示） -->
+    <div id="setupWizard" class="setup-backdrop" role="dialog" aria-modal="true" aria-labelledby="setupTitle">
+        <div class="setup-card" style="position:relative">
+            <button type="button" class="setup-close" id="setupCloseBtn" aria-label="設定を閉じる" style="display:none">&times;</button>
+            <div class="setup-head">
+                <div class="setup-step-label" id="setupStepLabel">STEP 1 / 5</div>
+                <h2 id="setupTitle"></h2>
+                <p id="setupDesc"></p>
+            </div>
+            <div class="setup-body" id="setupBody"></div>
+            <div class="setup-foot">
+                <button type="button" class="setup-btn ghost" id="setupBackBtn">戻る</button>
+                <div class="setup-dots" id="setupDots"></div>
+                <button type="button" class="setup-btn ghost" id="setupSkipBtn" title="ダーク / ガラス / ガラス / LIVE で開始します">スキップ</button>
+                <button type="button" class="setup-btn primary" id="setupNextBtn">次へ</button>
+            </div>
+        </div>
     </div>
 
     <div id="betaConsentModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="betaTitle"
@@ -660,6 +957,47 @@
         </div>
     </div>
 
+    <div id="tutorialConfirmModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="tutorialConfirmTitle"
+         onclick="if(event.target===this) answerTutorialChoice(false)">
+        <div class="modal">
+            <div class="modal-head">
+                <div class="modal-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <h2 id="tutorialConfirmTitle">チュートリアルをしますか？</h2>
+            </div>
+            <p>ハイライトで使い方を案内します。あとから「チュートリアル」ボタンでも表示できます。</p>
+            <div class="modal-actions">
+                <button type="button" class="agree" id="tutorialYesBtn">はい</button>
+                <button type="button" class="decline" id="tutorialNoBtn">いいえ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="updateInfoModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="updateInfoTitle"
+         onclick="if(event.target===this) closeUpdateInfo()">
+        <div class="modal update-modal">
+            <div class="modal-head">
+                <div class="modal-icon update-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                </div>
+                <h2 id="updateInfoTitle">原神ビルドカード was Updated!!</h2>
+            </div>
+            <div class="update-ver" id="updateInfoVer"></div>
+            <ul class="update-list" id="updateInfoList"></ul>
+            <div class="modal-actions">
+                <button type="button" class="agree" id="updateInfoCloseBtn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/tutorial.js"></script>
     <script>
         const uidInput = document.getElementById('uidInput');
         const searchForm = document.getElementById('searchForm');
@@ -668,8 +1006,6 @@
         const historyEmpty = document.getElementById('historyEmpty');
         const clearHistory = document.getElementById('clearHistory');
         const verInput = document.getElementById('verInput');
-        const verLiveBtn = document.getElementById('verLiveBtn');
-        const verBetaBtn = document.getElementById('verBetaBtn');
         const verBadge = document.getElementById('verBadge');
         const themeModeBtn = document.getElementById('themeModeBtn');
         const submitBtn = document.getElementById('submitBtn');
@@ -700,6 +1036,15 @@
         betaConsentAgreeBtn.addEventListener('click', () => closeBetaConsentModal(true));
         betaConsentDeclineBtn.addEventListener('click', () => closeBetaConsentModal(false));
 
+        // BETA 同意はウィザードのセッション内で1回だけ確認する
+        let setupBetaConsented = false;
+        async function ensureSetupBetaConsent() {
+            if (setupBetaConsented) return true;
+            const agreed = await openBetaConsentModal();
+            if (agreed) setupBetaConsented = true;
+            return agreed;
+        }
+
         function setSubmitLoading() {
             submitBtn.disabled = true;
             submitBtnSpinner.style.display = 'inline-block';
@@ -726,17 +1071,29 @@
 
         function getSavedVerPref() {
             try {
-                return localStorage.getItem(VER_PREF_KEY) === 'beta' ? 'beta' : 'live';
+                const v = localStorage.getItem(VER_PREF_KEY);
+                return v === 'beta' ? 'beta' : 'live';
             } catch (e) {
                 return 'live';
             }
         }
+        // ヘッダーのタイトル横表示用: サイトバージョン + 現在の live/beta データバージョン
+        let dataVersionsCache = null;
+        function updateTopVersionLabel() {
+            const tv = document.getElementById('topVersionLabel');
+            if (!tv || !dataVersionsCache) return;
+            const curVer = verInput.value === 'beta' ? 'beta' : 'live';
+            const dataVer = curVer === 'beta' ? dataVersionsCache.beta : dataVersionsCache.live;
+            const parts = [];
+            if (dataVersionsCache.site) parts.push(`v${dataVersionsCache.site}`);
+            if (dataVer) parts.push(`Ver${dataVer}`);
+            tv.textContent = parts.join(' : ');
+        }
         function applyVerModeUI() {
             const v = verInput.value === 'beta' ? 'beta' : 'live';
             verInput.value = v;
-            verLiveBtn.classList.toggle('active', v === 'live');
-            verBetaBtn.classList.toggle('active', v === 'beta');
             verBadge.textContent = v === 'beta' ? 'Beta' : 'Live';
+            updateTopVersionLabel();
         }
         verInput.value = getSavedVerPref();
         applyVerModeUI();
@@ -750,17 +1107,352 @@
             applyVerModeUI();
         }
 
-        async function setVer(next) {
-            if (next === 'beta') {
-                const agreed = await openBetaConsentModal();
-                if (!agreed) return;
-            }
-            verInput.value = next;
-            try { localStorage.setItem(VER_PREF_KEY, next); } catch (e) {}
+        function setVer(next) {
+            verInput.value = (next === 'beta') ? 'beta' : 'live';
+            try { localStorage.setItem(VER_PREF_KEY, verInput.value); } catch (e) {}
             applyVerModeUI();
         }
-        verLiveBtn.addEventListener('click', () => setVer('live'));
-        verBetaBtn.addEventListener('click', () => setVer('beta'));
+
+        // ==========================================================
+        //  初期設定ウィザード（初回アクセス時に "/" で表示）
+        //  色テーマ / HTMLテーマ / 画像テーマ / ゲームデータ / 使い方
+        // ==========================================================
+        const SETUP_DONE_KEY = 'genshin_build_card_setup_done';
+        const CARD_THEME_PREF_KEY = 'genshin_build_card_card_theme';
+        const IMAGE_THEME_PREF_KEY = 'genshin_build_card_image_theme';
+        const VALID_SETUP_CARD_THEMES = ['glass', 'cinema', 'scorecard'];
+
+        const setupWizard = document.getElementById('setupWizard');
+        const setupBody = document.getElementById('setupBody');
+        const setupTitle = document.getElementById('setupTitle');
+        const setupDesc = document.getElementById('setupDesc');
+        const setupStepLabel = document.getElementById('setupStepLabel');
+        const setupDots = document.getElementById('setupDots');
+        const setupBackBtn = document.getElementById('setupBackBtn');
+        const setupNextBtn = document.getElementById('setupNextBtn');
+        const setupCloseBtn = document.getElementById('setupCloseBtn');
+        const setupSkipBtn = document.getElementById('setupSkipBtn');
+
+        const SETUP_STEPS = [
+            {
+                key: 'color', title: '色のテーマを選ぶ', desc: 'サイト全体の見た目です。あとから「ライト / ダーク」ボタンでも切り替えられます。', cols: 2,
+                options: [
+                    { id: 'dark', label: '黒（ダーク）', img: '/static/assets/setup/color_dark.webp', recommended: true },
+                    { id: 'light', label: '白（ライト）', img: '/static/assets/setup/color_light.webp' },
+                ],
+            },
+            {
+                key: 'htmlTheme', title: 'HTML上のテーマを選ぶ', desc: 'サイト内でビルドカードを表示するときのデザインです。', cols: 3,
+                options: [
+                    { id: 'glass', label: 'ガラス', img: '/static/assets/setup/theme_glass.webp', recommended: true },
+                    { id: 'cinema', label: 'シネマ', img: '/static/assets/setup/theme_cinema.webp' },
+                    { id: 'scorecard', label: 'スコアカード', img: '/static/assets/setup/theme_scorecard.webp' },
+                ],
+            },
+            {
+                key: 'imageTheme', title: '画像上のテーマを選ぶ', desc: 'カード画像を生成するときのデザインです。', cols: 3,
+                options: [
+                    { id: 'glass', label: 'ガラス', img: '/static/assets/setup/theme_glass.webp' },
+                    { id: 'cinema', label: 'シネマ', img: '/static/assets/setup/theme_cinema.webp', recommended: true },
+                    { id: 'scorecard', label: 'スコアカード', img: '/static/assets/setup/theme_scorecard.webp' },
+                ],
+            },
+            {
+                key: 'ver', title: '使用するゲームのデータを選ぶ', desc: 'BETA は未公開の先行データ、LIVE は正式配信中のデータです。', cols: 2,
+                options: [
+                    { id: 'live', label: 'LIVE（正式版）', img: '/static/assets/setup/data_live.webp', recommended: true },
+                    { id: 'beta', label: 'BETA（先行データ）', img: '/static/assets/setup/data_beta.webp' },
+                ],
+            },
+            { key: 'howto', title: '使い方', desc: '3ステップでビルドカードを生成できます。', cols: 0, options: [] },
+        ];
+
+        const SETUP_HOWTO = [
+            { img: '/static/assets/setup/howto_1_uid.webp', t: 'UIDを入力', d: 'ゲーム内プロフィールのUIDを入力してデータを読み込みます。' },
+            { img: '/static/assets/setup/howto_2_char.webp', t: 'キャラクターを選ぶ', d: '一覧からビルドを見たいキャラクターを選択します。' },
+            { img: '/static/assets/setup/howto_3_card.webp', t: 'カードを生成・保存', d: '好みのテーマを選んでカードを生成し、画像として保存できます。' },
+        ];
+
+        let setupIdx = 0;
+        let setupFirstRun = true;
+        let setupSel = {};
+
+        function readSetupPref(key, validList, fallback) {
+            try {
+                const v = localStorage.getItem(key);
+                return validList.includes(v) ? v : fallback;
+            } catch (e) {
+                return fallback;
+            }
+        }
+        function setupDefaults() {
+            return {
+                color: getSavedThemePref(),
+                htmlTheme: readSetupPref(CARD_THEME_PREF_KEY, VALID_SETUP_CARD_THEMES, 'glass'),
+                imageTheme: readSetupPref(IMAGE_THEME_PREF_KEY, VALID_SETUP_CARD_THEMES, 'cinema'),
+                ver: getSavedVerPref(),
+            };
+        }
+
+        // live / beta の最新バージョンを取得し、データ選択のラベルとヘッダーへ追記（例: LIVE（正式版）: 7.0）
+        (async () => {
+            try {
+                const res = await fetch('/api/data_versions');
+                if (!res.ok) return;
+                const d = await res.json();
+                dataVersionsCache = d;
+                updateTopVersionLabel();
+                const step = SETUP_STEPS.find(s => s.key === 'ver');
+                if (!step) return;
+                step.options.forEach(opt => {
+                    const v = opt.id === 'beta' ? d.beta : d.live;
+                    if (v && !opt.verApplied) {
+                        opt.label = `${opt.label}: ${v}`;
+                        opt.verApplied = true;
+                    }
+                });
+                const cur = SETUP_STEPS[setupIdx];
+                if (setupWizard.classList.contains('open') && cur && cur.key === 'ver') {
+                    renderSetupStep();
+                }
+            } catch (e) {}
+        })();
+
+        function renderSetupHowto() {
+            const wrap = document.createElement('div');
+            wrap.className = 'setup-howto';
+            SETUP_HOWTO.forEach(h => {
+                const item = document.createElement('div');
+                item.className = 'setup-howto-item';
+                item.innerHTML = `<img src="${h.img}" alt="${h.t}"><div class="setup-howto-txt"><b>${h.t}</b><span>${h.d}</span></div>`;
+                wrap.appendChild(item);
+            });
+            setupBody.appendChild(wrap);
+        }
+
+        function renderSetupStep() {
+            const step = SETUP_STEPS[setupIdx];
+            setupStepLabel.textContent = `STEP ${setupIdx + 1} / ${SETUP_STEPS.length}`;
+            setupTitle.textContent = step.title;
+            setupDesc.textContent = step.desc;
+            setupBackBtn.classList.toggle('hidden', setupIdx === 0);
+            setupNextBtn.textContent = (setupIdx === SETUP_STEPS.length - 1) ? '使い始める' : '次へ';
+            setupDots.innerHTML = SETUP_STEPS.map((_, i) => `<span class="${i === setupIdx ? 'on' : ''}"></span>`).join('');
+            setupBody.innerHTML = '';
+            if (step.key === 'howto') {
+                renderSetupHowto();
+                return;
+            }
+            const grid = document.createElement('div');
+            grid.className = `setup-grid cols-${step.cols}`;
+            step.options.forEach(opt => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'setup-opt' + (opt.recommended ? ' recommended' : '') + (setupSel[step.key] === opt.id ? ' selected' : '');
+                b.innerHTML =
+                    '<span class="setup-check">✓</span>' +
+                    (opt.recommended ? '<span class="setup-rec-badge">オススメ</span>' : '') +
+                    `<img class="setup-opt-img" src="${opt.img}" alt="${opt.label}">` +
+                    `<span class="setup-opt-label">${opt.label}</span>`;
+                b.addEventListener('click', async () => {
+                    if (step.key === 'ver' && opt.id === 'beta') {
+                        const agreed = await ensureSetupBetaConsent();
+                        if (!agreed) return;
+                    }
+                    setupSel[step.key] = opt.id;
+                    if (step.key === 'color') {
+                        try { localStorage.setItem(THEME_PREF_KEY, opt.id); } catch (e) {}
+                        applyTheme();
+                    }
+                    renderSetupStep();
+                });
+                grid.appendChild(b);
+            });
+            setupBody.appendChild(grid);
+        }
+
+        function finishSetup() {
+            try {
+                localStorage.setItem(THEME_PREF_KEY, setupSel.color);
+                localStorage.setItem(CARD_THEME_PREF_KEY, setupSel.htmlTheme);
+                localStorage.setItem(IMAGE_THEME_PREF_KEY, setupSel.imageTheme);
+                localStorage.setItem(VER_PREF_KEY, setupSel.ver);
+                localStorage.setItem(SETUP_DONE_KEY, '1');
+            } catch (e) {}
+            applyTheme();
+            setVer(setupSel.ver);
+            closeSetup();
+            // 初回セットアップ完了/スキップ後、未読のアップデート情報があれば表示し、
+            // 閉じられてからチュートリアル確認へ進む
+            showUpdateInfoIfNew(() => {
+                if (setupFirstRun) askTutorialChoice();
+            });
+        }
+
+        function skipSetup() {
+            setupSel = { color: 'dark', htmlTheme: 'glass', imageTheme: 'glass', ver: 'live' };
+            finishSetup();
+        }
+
+        function openSetup(firstRun) {
+            setupFirstRun = firstRun;
+            setupSel = setupDefaults();
+            setupIdx = 0;
+            setupCloseBtn.style.display = firstRun ? 'none' : 'block';
+            renderSetupStep();
+            setupWizard.classList.add('open');
+        }
+        function closeSetup() {
+            setupWizard.classList.remove('open');
+        }
+
+        setupBackBtn.addEventListener('click', () => {
+            if (setupIdx > 0) {
+                setupIdx -= 1;
+                renderSetupStep();
+            }
+        });
+        setupNextBtn.addEventListener('click', async () => {
+            // BETA が選択されたまま次へ進む場合は閲覧同意を必須にする
+            const step = SETUP_STEPS[setupIdx];
+            if (step.key === 'ver' && setupSel.ver === 'beta') {
+                const agreed = await ensureSetupBetaConsent();
+                if (!agreed) {
+                    setupSel.ver = 'live';
+                    renderSetupStep();
+                    return;
+                }
+            }
+            if (setupIdx < SETUP_STEPS.length - 1) {
+                setupIdx += 1;
+                renderSetupStep();
+                return;
+            }
+            finishSetup();
+        });
+        setupCloseBtn.addEventListener('click', () => {
+            if (!setupFirstRun) closeSetup();
+        });
+        if (setupSkipBtn) setupSkipBtn.addEventListener('click', skipSetup);
+
+        // 初回アクセス（設定未完了）の場合に初期設定画面を表示
+        (function () {
+            let done = null;
+            try { done = localStorage.getItem(SETUP_DONE_KEY); } catch (e) {}
+            if (done !== '1') openSetup(true);
+        })();
+
+        const HOME_TUTORIAL_DONE_KEY = 'genshin_build_card_tutorial_done_home';
+        const TUTORIAL_CHOICE_KEY = 'genshin_build_card_tutorial_choice';
+        const HOME_TUTORIAL_STEPS = [
+            { selector: '#uidInput', title: 'UIDを入力', text: 'ゲーム内プロフィールに表示されているUIDを入力します。' },
+            { selector: '#submitBtn', title: 'データを読み込む', text: 'ショーケースが公開されているUIDなら、キャラクター一覧を読み込めます。' },
+            { selector: '#historySection', title: '最近の検索', text: '過去に入力したUIDをワンクリックで再読み込みできます。' },
+            { selector: '#themeModeBtn', title: 'ライト / ダーク', text: 'サイト全体の色テーマを切り替えます。' },
+            { selector: '#tutorialBtn', title: 'チュートリアル', text: 'このチュートリアルはいつでも再表示できます。' },
+        ];
+
+        function getTutorialChoice() {
+            try { return localStorage.getItem(TUTORIAL_CHOICE_KEY); } catch (e) { return null; }
+        }
+        function setTutorialChoice(v) {
+            try { localStorage.setItem(TUTORIAL_CHOICE_KEY, v); } catch (e) {}
+        }
+
+        function startHomeTutorial() {
+            if (window.GenshinTutorial) window.GenshinTutorial.start(HOME_TUTORIAL_STEPS, { doneKey: HOME_TUTORIAL_DONE_KEY });
+        }
+
+        function maybeAutoTutorial() {
+            if (!window.GenshinTutorial) return;
+            if (getTutorialChoice() !== 'yes') return;
+            if (window.GenshinTutorial.isDone(HOME_TUTORIAL_DONE_KEY)) return;
+            setTimeout(startHomeTutorial, 350);
+        }
+
+        const tutorialConfirmModal = document.getElementById('tutorialConfirmModal');
+        const tutorialYesBtn = document.getElementById('tutorialYesBtn');
+        const tutorialNoBtn = document.getElementById('tutorialNoBtn');
+
+        function askTutorialChoice() {
+            if (!tutorialConfirmModal || getTutorialChoice()) {
+                maybeAutoTutorial();
+                return;
+            }
+            tutorialConfirmModal.classList.add('open');
+        }
+
+        function answerTutorialChoice(yes) {
+            if (tutorialConfirmModal) tutorialConfirmModal.classList.remove('open');
+            setTutorialChoice(yes ? 'yes' : 'no');
+            if (yes) startHomeTutorial();
+        }
+
+        if (tutorialYesBtn) tutorialYesBtn.addEventListener('click', () => answerTutorialChoice(true));
+        if (tutorialNoBtn) tutorialNoBtn.addEventListener('click', () => answerTutorialChoice(false));
+
+        const tutorialBtn = document.getElementById('tutorialBtn');
+        if (tutorialBtn) tutorialBtn.addEventListener('click', startHomeTutorial);
+
+        // ==========================================================
+        //  アップデート情報（was Updated!!）
+        //  初回セットアップ完了/スキップ後、または既セットアップユーザーの
+        //  アクセス時に、未読のアップデートバージョンがあれば機能一覧を表示する。
+        //  閉じると閲覧済みバージョンを localStorage に保存する。
+        // ==========================================================
+        const UPDATE_SEEN_KEY = 'genshin_build_card_update_seen';
+        const updateInfoModal = document.getElementById('updateInfoModal');
+        const updateInfoVer = document.getElementById('updateInfoVer');
+        const updateInfoList = document.getElementById('updateInfoList');
+        const updateInfoCloseBtn = document.getElementById('updateInfoCloseBtn');
+        let updateInfoAfterClose = null;
+
+        function closeUpdateInfo() {
+            if (updateInfoModal) updateInfoModal.classList.remove('open');
+            const cb = updateInfoAfterClose;
+            updateInfoAfterClose = null;
+            if (cb) cb();
+        }
+
+        async function showUpdateInfoIfNew(onClosed) {
+            try {
+                const res = await fetch('/api/update_info', { cache: 'no-store' });
+                if (!res.ok) { if (onClosed) onClosed(); return; }
+                const info = await res.json();
+                const ver = info && info.version ? String(info.version) : '';
+                const feats = (info && Array.isArray(info.features)) ? info.features : [];
+                if (!ver || feats.length === 0) { if (onClosed) onClosed(); return; }
+                let seen = null;
+                try { seen = localStorage.getItem(UPDATE_SEEN_KEY); } catch (e) { seen = null; }
+                if (seen === ver) { if (onClosed) onClosed(); return; }
+                if (updateInfoVer) updateInfoVer.textContent = 'v' + ver;
+                if (updateInfoList) {
+                    updateInfoList.innerHTML = '';
+                    feats.forEach(f => {
+                        const li = document.createElement('li');
+                        li.textContent = f;
+                        updateInfoList.appendChild(li);
+                    });
+                }
+                updateInfoAfterClose = () => {
+                    try { localStorage.setItem(UPDATE_SEEN_KEY, ver); } catch (e) {}
+                    if (onClosed) onClosed();
+                };
+                if (updateInfoModal) {
+                    updateInfoModal.classList.add('open');
+                } else {
+                    updateInfoAfterClose();
+                    updateInfoAfterClose = null;
+                }
+            } catch (e) {
+                if (onClosed) onClosed();
+            }
+        }
+        if (updateInfoCloseBtn) updateInfoCloseBtn.addEventListener('click', closeUpdateInfo);
+
+        if (!setupWizard.classList.contains('open')) {
+            showUpdateInfoIfNew(() => { maybeAutoTutorial(); });
+        }
 
         function getHistory() {
             return JSON.parse(localStorage.getItem('uid_history') || '[]');
