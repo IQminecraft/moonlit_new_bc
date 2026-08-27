@@ -20,7 +20,7 @@ from app.card.cache import get_cached_font, get_resized_image
 from app.card.data import _get_card_data_sync
 from app.card.draw import (
     draw_figma_box, draw_figma_text, draw_figma_line,
-    paste_mask_image, figma_draw_scale,
+    paste_mask_image, figma_draw_scale, safe_rounded_rectangle,
 )
 from app.card.special import resolve_datas_path
 from app.card.image import ROLL_DOT_COLORS, _draw_growth_panel
@@ -353,7 +353,7 @@ def _paste_rounded(img, path, x, y, w, h, radius, beta="false", alpha=1.0):
             a = src.getchannel("A").point(lambda p: int(p * alpha))
             src.putalpha(a)
         mask = Image.new("L", (bw, bh), 0)
-        ImageDraw.Draw(mask).rounded_rectangle([0, 0, bw, bh], radius=max(1, round(radius * THEME_SY)), fill=255)
+        safe_rounded_rectangle(ImageDraw.Draw(mask), [0, 0, bw, bh], radius=max(1, round(radius * THEME_SY)), fill=255)
         r, g, b, a = src.split()
         src = Image.merge("RGBA", (r, g, b, ImageChops.multiply(a, mask)))
         img.paste(src, (bx, by), src)
@@ -383,7 +383,7 @@ def _dot_row(img, x, y, tiers, dot_w, dot_h, gap):
             corners = (False, True, True, False)
         else:
             corners = (False, False, False, False)
-        d.rounded_rectangle([cx, cy, cx + dw, cy + dh], radius=rad, fill=col, corners=corners)
+        safe_rounded_rectangle(d, [cx, cy, cx + dw, cy + dh], radius=rad, fill=col, corners=corners)
         cx += dw + gp
 
 
@@ -408,7 +408,7 @@ def _round_card(img, radius):
     """カード全体を角丸で抜く（外側を透明に）。"""
     w, h = img.size
     mask = Image.new("L", (w, h), 0)
-    ImageDraw.Draw(mask).rounded_rectangle([0, 0, w, h], radius=max(1, round(radius * THEME_SCALE)), fill=255)
+    safe_rounded_rectangle(ImageDraw.Draw(mask), [0, 0, w, h], radius=max(1, round(radius * THEME_SCALE)), fill=255)
     out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     out.paste(img, (0, 0), mask)
     return out
@@ -1011,12 +1011,12 @@ def _draw_scorecard_card(data, beta, substat_dots, light="false", uid="", show_u
                        fill_color=pal["cv_track"], outline_color=None, outline_width=0, shadow=False)
         if crit_value is not None:
             fill_frac = max(0.0, min(1.0, float(crit_value) / 300.0))
-            if fill_frac > 0.005:
-                fw = int(track_w * fill_frac * THEME_SX)
+            if fill_frac > 0.005 and track_w > 0:
+                fw = max(1, int(track_w * fill_frac * THEME_SX))
                 strip = _gradient_strip_horizontal(fw, int(6 * THEME_SY), elem_acc_rgb, pal["strip_to"])
                 mask = Image.new("L", (fw, int(6 * THEME_SY)), 0)
-                ImageDraw.Draw(mask).rounded_rectangle([0, 0, fw, int(6 * THEME_SY)],
-                                                       radius=max(1, round(3 * THEME_SY)), fill=255)
+                safe_rounded_rectangle(ImageDraw.Draw(mask), [0, 0, fw, int(6 * THEME_SY)],
+                                       radius=max(1, round(3 * THEME_SY)), fill=255)
                 strip.putalpha(ImageChops.multiply(
                     strip.getchannel("A"), mask))
                 img.alpha_composite(strip, (int(track_x * THEME_SX), int(ty * THEME_SY)))

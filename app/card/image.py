@@ -32,6 +32,7 @@ from app.card.draw import (
     draw_figma_circle, paste_figma_image, draw_figma_text, draw_figma_line,
     draw_figma_text_right, figma_draw_scale, _sx, _sy,
     draw_figma_dot, draw_figma_glass_box, figma_draw_theme,
+    safe_rounded_rectangle,
 )
 
 # 育成モードの右パネル寸法（キャンバスピクセル）: 全体を等方縮小して右に追加する
@@ -202,12 +203,13 @@ def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, bas
     radius = 32
     mask = Image.new("L", (w, h), 0)
     md = ImageDraw.Draw(mask)
-    md.rounded_rectangle([0, 0, w - 1, h - 1], radius=radius, fill=255)
+    safe_rounded_rectangle(md, [0, 0, w - 1, h - 1], radius=radius, fill=255)
     gradient.putalpha(mask.point(lambda p: int(p * panel_alpha)))
 
     layer = Image.new("RGBA", (w + 2, h + 2), (0, 0, 0, 0))
     ld = ImageDraw.Draw(layer)
-    ld.rounded_rectangle(
+    safe_rounded_rectangle(
+        ld,
         [0, 0, w, h], radius=radius,
         outline=border_c, width=2,
     )
@@ -960,7 +962,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         _ol_x2, _ol_y2 = int(729 * SX) + 1, int(703 * SY) + 1
         _outline_layer = Image.new("RGBA", (_ol_x2 - _ol_x1, _ol_y2 - _ol_y1), (0, 0, 0, 0))
         _od = ImageDraw.Draw(_outline_layer)
-        _od.rounded_rectangle([33 * SX - _ol_x1, 30 * SY - _ol_y1, 727 * SX - _ol_x1, 701 * SY - _ol_y1], radius=round(15 * SY), outline=(0, 0, 0, 220), width=max(1, round(1 * SY)))
+        safe_rounded_rectangle(_od, [33 * SX - _ol_x1, 30 * SY - _ol_y1, 727 * SX - _ol_x1, 701 * SY - _ol_y1], radius=round(15 * SY), outline=(0, 0, 0, 220), width=max(1, round(1 * SY)))
         img.alpha_composite(_outline_layer, dest=(_ol_x1, _ol_y1))
 
         if substat_dots == "1":
@@ -1023,7 +1025,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
                 draw_lock.arc([lx + 4 * SX + _dx, ly + _dy, lx + lock_w - 4 * SX + _dx, ly + 16 * SY + _dy], start=180, end=0, fill=(255, 255, 255, 220), width=_lw3)
                 draw_lock.line([lx + 4 * SX + _dx, ly + 8 * SY + _dy, lx + 4 * SX + _dx, ly + 12 * SY + _dy], fill=(255, 255, 255, 220), width=_lw3)
                 draw_lock.line([lx + lock_w - 4 * SX + _dx, ly + 8 * SY + _dy, lx + lock_w - 4 * SX + _dx, ly + 12 * SY + _dy], fill=(255, 255, 255, 220), width=_lw3)
-                draw_lock.rounded_rectangle([lx + _dx, ly + 11 * SY + _dy, lx + lock_w + _dx, ly + lock_h + _dy], radius=max(1, round(4 * SY)), fill=(20, 25, 35, 255), outline=(255, 255, 255, 220), width=max(1, round(2 * SY)))
+                safe_rounded_rectangle(draw_lock, [lx + _dx, ly + 11 * SY + _dy, lx + lock_w + _dx, ly + lock_h + _dy], radius=max(1, round(4 * SY)), fill=(20, 25, 35, 255), outline=(255, 255, 255, 220), width=max(1, round(2 * SY)))
                 draw_lock.ellipse([lx + 10 * SX + _dx, ly + 16 * SY + _dy, lx + 14 * SX + _dx, ly + 20 * SY + _dy], fill=(255, 255, 255, 220))
                 img.alpha_composite(lock_overlay, dest=(_lk_x1, _lk_y1))
             else:

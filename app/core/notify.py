@@ -57,7 +57,11 @@ def report_error_to_discord(
     line = f"[{millis}] {title}: {message}"
     if path:
         line += f" path={path}"
-    print(f"[Error] {line}")
+    print(f"[Error] {line}", flush=True)
+    if traceback_text:
+        # Traceback は Discord 送信がレート制限でスキップされても
+        # コンソール側には必ず残す（今回のように原因調査できなくなるのを防ぐ）
+        print(f"[Traceback] {title}:\n{traceback_text}", flush=True)
 
     if not _DISCORD_WEBHOOK_URL:
         return

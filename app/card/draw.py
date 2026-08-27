@@ -106,6 +106,28 @@ def _theme_color(key, dark_value):
     return dark_value
 
 
+def safe_rounded_rectangle(draw, xy, radius=0, **kwargs):
+    """座標を正規化してから rounded_rectangle を呼ぶ安全ラッパー。
+
+    PIL/Pillow-SIMD の rounded_rectangle は y1 < y0（または x1 < x0）で
+    ValueError("y1 must be greater than or equal to y0") を送出し、そのまま
+    500 になる。ここで反転した座標は入れ替え、radius は短辺の半分以下に
+    クランプする（Pillow 12 相当の挙動に統一）。Pillow-SIMD 9.5 系には
+    radius クランプがないため、版差や異常入力でも必ず描画が成功する。
+    """
+    if isinstance(xy[0], (list, tuple)):
+        (x0, y0), (x1, y1) = xy
+    else:
+        x0, y0, x1, y1 = xy
+    if x1 < x0:
+        x0, x1 = x1, x0
+    if y1 < y0:
+        y0, y1 = y1, y0
+    if radius:
+        radius = max(0, min(radius, (x1 - x0) / 2, (y1 - y0) / 2))
+    return draw.rounded_rectangle([x0, y0, x1, y1], radius=radius, **kwargs)
+
+
 def draw_figma_text_right(draw, text, x, y, font, font_size=24, fill_color=_DEFAULT, stroke_width=0, stroke_fill=None, shadow=False, **kwargs):
     if fill_color is _DEFAULT:
         fill_color = _theme_color("text", (255, 255, 255))
@@ -148,7 +170,8 @@ def draw_figma_box(img, x, y, width, height, radius=15, fill_color=None,
     dx, dy = -layer_x1, -layer_y1
 
     if shadow:
-        draw.rounded_rectangle(
+        safe_rounded_rectangle(
+            draw,
             [x1 + ox + dx, y1 + oy + dy, x2 + ox + dx, y2 + oy + dy],
             radius=radius,
             fill=(0, 0, 0, shadow_alpha),
@@ -157,7 +180,7 @@ def draw_figma_box(img, x, y, width, height, radius=15, fill_color=None,
     outline_kwargs = {}
     if outline_color and outline_width > 0:
         outline_kwargs = {"outline": outline_color, "width": outline_width}
-    draw.rounded_rectangle([x1 + dx, y1 + dy, x2 + dx, y2 + dy], radius=radius, fill=fill_color, **outline_kwargs)
+    safe_rounded_rectangle(draw, [x1 + dx, y1 + dy, x2 + dx, y2 + dy], radius=radius, fill=fill_color, **outline_kwargs)
 
     img.alpha_composite(overlay, dest=(layer_x1, layer_y1))
 
@@ -233,15 +256,15 @@ def draw_figma_glass_box(img, x, y, width, height, radius=25,
         sw, sh = w + pad * 2, h + pad * 2
         lay = Image.new("RGBA", (sw, sh), (0, 0, 0, 0))
         ld = ImageDraw.Draw(lay)
-        ld.rounded_rectangle([pad, pad + off_y, pad + w, pad + off_y + h],
-                             radius=r, fill=(0, 0, 0, shadow_alpha))
+        safe_rounded_rectangle(ld, [pad, pad + off_y, pad + w, pad + off_y + h],
+                               radius=r, fill=(0, 0, 0, shadow_alpha))
         lay = lay.filter(ImageFilter.GaussianBlur(radius=blur_r))
         _composite_clipped(img, lay, X0 - pad, Y0 - pad)
 
     # ---- 2) 縦グラデ塗り + 角丸マスク ----
     grad = _vertical_gradient_rgba(w, h, fill_top, fill_bottom)
     mask = Image.new("L", (w, h), 0)
-    ImageDraw.Draw(mask).rounded_rectangle([0, 0, w - 1, h - 1], radius=r, fill=255)
+    safe_rounded_rectangle(ImageDraw.Draw(mask), [0, 0, w - 1, h - 1], radius=r, fill=255)
     grad.putalpha(ImageChops.multiply(grad.getchannel("A"), mask))
     _composite_clipped(img, grad, X0, Y0)
 
@@ -250,9 +273,9 @@ def draw_figma_glass_box(img, x, y, width, height, radius=25,
     if min(w, h) > bw * 2 + 2:
         omask = Image.new("L", (w, h), 0)
         od = ImageDraw.Draw(omask)
-        od.rounded_rectangle([0, 0, w - 1, h - 1], radius=r, fill=255)
-        od.rounded_rectangle([bw, bw, w - 1 - bw, h - 1 - bw],
-                             radius=max(1, r - bw), fill=0)
+        safe_rounded_rectangle(od, [0, 0, w - 1, h - 1], radius=r, fill=255)
+        safe_rounded_rectangle(od, [bw, bw, w - 1 - bw, h - 1 - bw],
+                               radius=max(1, r - bw), fill=0)
         blayer = _vertical_gradient_rgba(w, h, border_top, border_bottom)
         blayer.putalpha(ImageChops.multiply(blayer.getchannel("A"), omask))
         _composite_clipped(img, blayer, X0, Y0)
@@ -397,6 +420,8 @@ def draw_figma_dot(img, x, y, size, ratio=2.2, fill_color=None, outline_color=No
     corners: (左上, 右上, 右下, 左下) の丸める有無。None なら全角丸。"""
     if fill_color is None:
         fill_color = _theme_color("icon_container", (60, 64, 72, 125))
+    if size <= 0:
+        return
     x, y = x * _sx(), y * _sy()
     size = size * _sy()
     dot_w = max(1, round(size * ratio))
@@ -412,7 +437,8 @@ def draw_figma_dot(img, x, y, size, ratio=2.2, fill_color=None, outline_color=No
     overlay = Image.new("RGBA", (layer_x2 - layer_x1, layer_y2 - layer_y1), (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
     _dot_radius = max(1, min(round(min(size, dot_w) / 2), max(1, round(size) // 2 - 1)))
-    draw.rounded_rectangle(
+    safe_rounded_rectangle(
+        draw,
         [x - layer_x1, y - layer_y1, x + dot_w - layer_x1, y + size - layer_y1],
         radius=_dot_radius,
         fill=fill_color,
@@ -442,7 +468,7 @@ def paste_figma_image(base_img, img_path, box_x, box_y, box_width, box_height, r
         else:
             corner_mask = Image.new("L", (bw, bh), 0)
             mask_draw = ImageDraw.Draw(corner_mask)
-            mask_draw.rounded_rectangle([0, 0, bw, bh], radius=max(1, round(radius * _sy())), fill=255)
+            safe_rounded_rectangle(mask_draw, [0, 0, bw, bh], radius=max(1, round(radius * _sy())), fill=255)
 
             r, g, b, a = paste_img.split()
             combined_alpha = ImageChops.multiply(a, corner_mask)
@@ -490,7 +516,7 @@ def paste_mask_image(base_img, img_path, box_x, box_y, box_width, box_height, ra
 
         corner_mask = Image.new("L", (bw, bh), 0)
         mask_draw = ImageDraw.Draw(corner_mask)
-        mask_draw.rounded_rectangle([0, 0, bw, bh], radius=max(1, round(radius * _sy())), fill=255)
+        safe_rounded_rectangle(mask_draw, [0, 0, bw, bh], radius=max(1, round(radius * _sy())), fill=255)
 
         r, g, b, a = canvas.split()
         combined_alpha = ImageChops.multiply(a, corner_mask)
