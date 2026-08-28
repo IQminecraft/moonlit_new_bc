@@ -107,24 +107,33 @@ def _theme_color(key, dark_value):
 
 
 def safe_rounded_rectangle(draw, xy, radius=0, **kwargs):
-    """座標を正規化してから rounded_rectangle を呼ぶ安全ラッパー。
+    """座標を正規化（整数化）し、角丸半径を安全値にクランプして rounded_rectangle を呼ぶ。
 
     PIL/Pillow-SIMD の rounded_rectangle は y1 < y0（または x1 < x0）で
     ValueError("y1 must be greater than or equal to y0") を送出し、そのまま
-    500 になる。ここで反転した座標は入れ替え、radius は短辺の半分以下に
-    クランプする（Pillow 12 相当の挙動に統一）。Pillow-SIMD 9.5 系には
-    radius クランプがないため、版差や異常入力でも必ず描画が成功する。
+    500 になる。ここで反転した座標は入れ替える。
+
+    座標は整数に丸める。Pillow 9.5 ベースの Pillow-SIMD は塗り fill を内部サブ矩形
+    （角丸の左右帯）で描く際、帯の上下端を r+1 ずつ詰めるため、短い辺 < 2*(r+1)
+    だと帯の矩形が反転して同じ ValueError になる。さらに枠線も x0 + width - 1 の
+    ような浮動小数点演算で 1.18 + 1 - 1 = 1.17999... < 1.18 のように極小の逆転が
+    起き得る。座標を整数化するとこれら内部演算はすべて厳密になり、Pillow 12 系
+    （内部で座標を round する）と挙動が一致する。
+
+    その上で半径は「短辺の半分」ではなく「(短辺-2)/2」以下にクランプする
+    （帯が r+1 ずつ詰める分の余裕を確保するため）。
     """
     if isinstance(xy[0], (list, tuple)):
         (x0, y0), (x1, y1) = xy
     else:
         x0, y0, x1, y1 = xy
-    if x1 < x0:
-        x0, x1 = x1, x0
-    if y1 < y0:
-        y0, y1 = y1, y0
+    x0, x1 = round(min(x0, x1)), round(max(x0, x1))
+    y0, y1 = round(min(y0, y1)), round(max(y0, y1))
+    w = kwargs.get("width")
+    if w is not None and float(w) > 0:
+        kwargs["width"] = max(1, int(round(float(w))))
     if radius:
-        radius = max(0, min(radius, (x1 - x0) / 2, (y1 - y0) / 2))
+        radius = max(0, min(radius, (x1 - x0 - 2) / 2, (y1 - y0 - 2) / 2))
     return draw.rounded_rectangle([x0, y0, x1, y1], radius=radius, **kwargs)
 
 

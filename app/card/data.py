@@ -62,6 +62,8 @@ def _build_char_list_from_showcase(showcase_data: dict, beta: str) -> list:
                     icon_path = costume_path
             char_entry = {
                 "id": current_avatar_id,
+                "name": jsondata.get("name", ""),
+                "element": jsondata.get("element", ""),
                 "icon": icon_path,
                 "active": (index == 0)
             }
