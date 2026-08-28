@@ -35,16 +35,32 @@ def _load_json_auto(path: str) -> dict:
 
 
 def _build_char_list_from_showcase(showcase_data: dict, beta: str) -> list:
-    """showcase JSON からサムネイル用キャラ一覧を構築する（fetch_uid / refresh_uid / char_list API 共通）。"""
+    """showcase JSON からサムネイル用キャラ一覧を構築する（fetch_uid / refresh_uid / char_list API 共通）。
+
+    avatarInfoList（武器・聖遺物などの詳細データ）に存在するキャラのみを一覧に出す。
+    avatarInfoList が無い（ゲーム内で「キャラクター詳細を公開」がオフ等）場合は
+    空リストを返し、呼び出し側のエラー表示に委ねる。
+    """
     player_info = showcase_data.get("playerInfo", {})
     show_avatar_list = player_info.get("showAvatarInfoList", [])
 
+    avatar_info_list = showcase_data.get("avatarInfoList") or []
+    if not avatar_info_list:
+        # 詳細データ無し（詳細非公開 or ショーケース空）→ カード生成できるキャラが居ない
+        return []
+    detailed_raw_ids = {str(a.get("avatarId")) for a in avatar_info_list if a.get("avatarId") is not None}
+
     char_list = []
-    for index, avatar in enumerate(show_avatar_list):
-        current_avatar_id = str(avatar.get("avatarId"))
-        if not current_avatar_id:
+    for avatar in show_avatar_list:
+        raw_id = str(avatar.get("avatarId"))
+        if not raw_id:
             continue
 
+        # 詳細データ（avatarInfoList）に無いキャラはカード生成できないためスキップ
+        if raw_id not in detailed_raw_ids:
+            continue
+
+        current_avatar_id = raw_id
         if current_avatar_id in SPECIAL_ELEMENT_CHARACTERS:
             current_avatar_id = resolve_special_avatar_id(avatar, beta)
 
@@ -65,7 +81,7 @@ def _build_char_list_from_showcase(showcase_data: dict, beta: str) -> list:
                 "name": jsondata.get("name", ""),
                 "element": jsondata.get("element", ""),
                 "icon": icon_path,
-                "active": (index == 0)
+                "active": (len(char_list) == 0)
             }
             char_list.append(char_entry)
         else:

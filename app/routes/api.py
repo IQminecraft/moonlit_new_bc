@@ -403,6 +403,33 @@ async def get_char_list(uid: str, beta: str = "false"):
     return {"uid": uid, "char_list": _build_char_list_from_showcase(showcase_data, beta)}
 
 
+@api_router.get("/api/showcase_status/{uid}")
+async def showcase_status(uid: str):
+    """キャッシュ済みショーケースの状態を返す（キャラ一覧が空だったときの切り分け用）。
+
+    - showcase_count: ショーケースに並んでいるキャラ数（showAvatarInfoList）
+    - detail_count:   詳細データが公開されているキャラ数（avatarInfoList）
+    detail_count=0 かつ showcase_count>0 なら「キャラクター詳細を公開」がオフ、
+    showcase_count=0 ならショーケース自体が空、と切り分けられる。
+    """
+    uid = clean_uid(uid)
+    json_path = os.path.join(STATIC_DIR, "cache", f"showcase_{uid}.json")
+    if not os.path.exists(json_path):
+        return {"uid": uid, "cached": False, "showcase_count": 0, "detail_count": 0, "nickname": ""}
+    try:
+        showcase_data = _load_json_auto(json_path)
+    except Exception:
+        return {"uid": uid, "cached": False, "showcase_count": 0, "detail_count": 0, "nickname": ""}
+    player_info = showcase_data.get("playerInfo") or {}
+    return {
+        "uid": uid,
+        "cached": True,
+        "showcase_count": len(player_info.get("showAvatarInfoList") or []),
+        "detail_count": len(showcase_data.get("avatarInfoList") or []),
+        "nickname": str(player_info.get("nickname") or "").strip(),
+    }
+
+
 
 
 @api_router.get("/api/calc_method_defaults")
