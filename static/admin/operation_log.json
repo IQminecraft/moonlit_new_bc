@@ -875,5 +875,278 @@
         "artifacts.json"
       ]
     }
+  },
+  {
+    "at": "2026-08-30T22:42:27+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T12:03:43+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T12:03:43+09:00",
+    "action": "bot_start",
+    "ok": false,
+    "message": "NEWBC_BOT_TOKEN が未設定のため起動できません（.env に設定してください）",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T12:18:27+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T12:19:04+09:00",
+    "action": "bot_stop",
+    "ok": true,
+    "message": "bot を停止しました",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T12:19:37+09:00",
+    "action": "bot_start",
+    "ok": true,
+    "message": "bot を起動しました",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T12:43:35+09:00",
+    "action": "bot_restart",
+    "ok": true,
+    "message": "bot を再起動しました",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T12:48:00+09:00",
+    "action": "bot_stop",
+    "ok": true,
+    "message": "bot を停止しました",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T12:48:05+09:00",
+    "action": "bot_clear_logs",
+    "ok": true,
+    "message": "bot のログをクリアしました",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T12:48:07+09:00",
+    "action": "bot_start",
+    "ok": true,
+    "message": "bot を起動しました",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T12:49:30+09:00",
+    "action": "bot_stop",
+    "ok": true,
+    "message": "bot を停止しました",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T12:49:34+09:00",
+    "action": "bot_clear_logs",
+    "ok": true,
+    "message": "bot のログをクリアしました",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T12:49:36+09:00",
+    "action": "bot_start",
+    "ok": true,
+    "message": "bot を起動しました",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T14:57:34+09:00",
+    "action": "bot_restart",
+    "ok": true,
+    "message": "bot を再起動しました",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T19:39:33+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T19:39:35+09:00",
+    "action": "assets_nanoka_fetch",
+    "ok": true,
+    "message": "nc new=0 fail=0 / pfp new=0 fail=0",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T22:30:46+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-01T22:30:50+09:00",
+    "action": "assets_nanoka_fetch",
+    "ok": true,
+    "message": "src=lunaris / nc new=0 fail=0 / pfp new=0 fail=0",
+    "extra": null
+  },
+  {
+    "at": "2026-09-02T19:03:48+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-03T01:30:31+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-03T01:35:21+09:00",
+    "action": "fetch_beta_nanoka_json",
+    "ok": true,
+    "message": "beta=7.0.53 scope=all",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "beta_json",
+      "live_version": "7.0",
+      "beta_version": "7.0.53",
+      "scope": "all",
+      "added_characters": [
+        "10000140",
+        "10000143"
+      ],
+      "added_weapons": [
+        "11437",
+        "11438",
+        "11522",
+        "14437",
+        "14524",
+        "15437",
+        "390002",
+        "390003"
+      ],
+      "added_artifacts": [],
+      "lists": [
+        "characters.json",
+        "weapons.json",
+        "artifacts.json"
+      ]
+    }
+  },
+  {
+    "at": "2026-09-04T01:02:25+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-04T01:03:50+09:00",
+    "action": "assets_lunaris_fetch",
+    "ok": true,
+    "message": "nc new=0 fail=0 / pfp new=121 fail=0",
+    "extra": null
+  },
+  {
+    "at": "2026-09-04T01:04:04+09:00",
+    "action": "assets_nanoka_fetch",
+    "ok": true,
+    "message": "src=lunaris / nc new=0 fail=0 / pfp new=0 fail=0",
+    "extra": null
+  },
+  {
+    "at": "2026-09-04T01:06:49+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-04T01:09:59+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-04T01:11:08+09:00",
+    "action": "fetch_beta_nanoka_json",
+    "ok": true,
+    "message": "beta=7.0.54 scope=all",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "beta_json",
+      "live_version": "7.0",
+      "beta_version": "7.0.54",
+      "scope": "all",
+      "added_characters": [
+        "10000140",
+        "10000143"
+      ],
+      "added_weapons": [
+        "11437",
+        "11438",
+        "11522",
+        "14437",
+        "14524",
+        "15437",
+        "390002",
+        "390003"
+      ],
+      "added_artifacts": [],
+      "lists": [
+        "characters.json",
+        "weapons.json",
+        "artifacts.json"
+      ]
+    }
+  },
+  {
+    "at": "2026-09-04T22:24:40+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-05T00:31:29+09:00",
+    "action": "fetch_live_nanoka_costumes_missing",
+    "ok": true,
+    "message": "missing=0 saved=0",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "live_costume_missing",
+      "characters": 148,
+      "icons": 30,
+      "missing": 0,
+      "saved": 0,
+      "failed": 0
+    }
+  },
+  {
+    "at": "2026-09-05T00:31:29+09:00",
+    "action": "discord_fetch_live_nanoka_costumes_missing",
+    "ok": true,
+    "message": "",
+    "extra": null
   }
 ]

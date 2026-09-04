@@ -10,24 +10,62 @@ except Exception as e:
     text_map_data = {}
 
 
-def get_stat_japanese(append_prop_id: str) -> str:
-    fallback_map = {
-        "FIGHT_PROP_BASE_ATTACK": "基礎攻撃力",
-        "FIGHT_PROP_CRITICAL": "会心率",
-        "FIGHT_PROP_CRITICAL_HURT": "会心ダメージ",
-        "FIGHT_PROP_CHARGE_EFFICIENCY": "チャージ効率",
-        "FIGHT_PROP_ATTACK_PERCENT": "攻撃力%",
-        "FIGHT_PROP_HP_PERCENT": "HP%",
-        "FIGHT_PROP_DEFENSE_PERCENT": "防御力%",
-        "FIGHT_PROP_ELEMENT_MASTERY": "熟知"
-    }
+_STAT_FALLBACK_JA = {
+    "FIGHT_PROP_BASE_ATTACK": "基礎攻撃力",
+    "FIGHT_PROP_CRITICAL": "会心率",
+    "FIGHT_PROP_CRITICAL_HURT": "会心ダメージ",
+    "FIGHT_PROP_CHARGE_EFFICIENCY": "チャージ効率",
+    "FIGHT_PROP_ATTACK_PERCENT": "攻撃力%",
+    "FIGHT_PROP_HP_PERCENT": "HP%",
+    "FIGHT_PROP_DEFENSE_PERCENT": "防御力%",
+    "FIGHT_PROP_ELEMENT_MASTERY": "熟知"
+}
+
+_STAT_FALLBACK_EN = {
+    "FIGHT_PROP_BASE_ATTACK": "Base ATK",
+    "FIGHT_PROP_CRITICAL": "CRIT Rate",
+    "FIGHT_PROP_CRITICAL_HURT": "CRIT DMG",
+    "FIGHT_PROP_CHARGE_EFFICIENCY": "Energy Recharge",
+    "FIGHT_PROP_ATTACK_PERCENT": "ATK%",
+    "FIGHT_PROP_HP_PERCENT": "HP%",
+    "FIGHT_PROP_DEFENSE_PERCENT": "DEF%",
+    "FIGHT_PROP_ELEMENT_MASTERY": "Elemental Mastery"
+}
+
+
+def get_stat_label(append_prop_id: str, lang: str = "ja") -> str:
+    """FIGHT_PROP_* を指定言語（ja / en）のラベルへ解決する。"""
+    fallback_map = _STAT_FALLBACK_JA if lang != "en" else _STAT_FALLBACK_EN
     if append_prop_id in fallback_map:
         return fallback_map[append_prop_id]
-    if append_prop_id in text_map_data:
-        return text_map_data[append_prop_id]
-    if "ja" in text_map_data and append_prop_id in text_map_data["ja"]:
-        return text_map_data["ja"][append_prop_id]
+    lang_dict = text_map_data.get("ja" if lang != "en" else "en")
+    if isinstance(lang_dict, dict) and append_prop_id in lang_dict:
+        return lang_dict[append_prop_id]
+    if lang == "ja":
+        # 従来の緩い参照（トップレベルに直接キーがあるケース）も維持
+        if append_prop_id in text_map_data:
+            return text_map_data[append_prop_id]
     return append_prop_id
+
+
+def get_stat_japanese(append_prop_id: str) -> str:
+    return get_stat_label(append_prop_id, "ja")
+
+
+def get_text_map_name(hash_or_key, lang: str = "ja", fallback: str = "") -> str:
+    """nameTextMapHash（または FIGHT_PROP 等のキー）を指定言語のテキストへ解決する。
+
+    text_map.json は {言語コード: {キー: テキスト}} 構造のため、
+    トップレベルに直接引くと常に miss になる（言語コード以外のキーは無い）。
+    """
+    lang_dict = text_map_data.get("ja" if lang != "en" else "en")
+    if isinstance(lang_dict, dict):
+        key = str(hash_or_key)
+        if key in lang_dict:
+            return lang_dict[key]
+        if hash_or_key in lang_dict:
+            return lang_dict[hash_or_key]
+    return fallback
 
 
 def formal_round(val):

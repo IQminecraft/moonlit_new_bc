@@ -12,6 +12,7 @@ from app.paths import FONT_PATH, FONT_LIGHT_PATH, STATIC_DIR, BASE_DIR
 from app.card.bg import _build_base_background, hex_to_rgb, region_image_path, get_region_background
 from app.card.cache import get_cached_font
 from app.card.data import _get_card_data_sync
+from app.card.labels import img_t
 from app.card.draw import (
     draw_figma_box, draw_figma_circle, paste_mask_image, draw_figma_text_with_shadow,
     paste_figma_image, draw_figma_text, draw_figma_text_right, draw_figma_line,
@@ -261,7 +262,7 @@ def _draw_row_label(img, text, y, height, beta):
                     font_size=22, fill_color=(255, 255, 255))
 
 
-def _draw_header_row(img, datas, beta):
+def _draw_header_row(img, datas, beta, lang="ja"):
     """ヘッダー行: 左ラベル「キャラ」| 各キャラ列ごとに分かれた名前ボックス（凸数バッジ + Lv）。"""
     y = _MARGIN
     draw = ImageDraw.Draw(img)
@@ -270,7 +271,7 @@ def _draw_header_row(img, datas, beta):
     draw_figma_box(img, x=_MARGIN, y=y, width=_ROW_LABEL_W - 10, height=_HEADER_H,
                    radius=12, fill_color=(60, 64, 72, 110),
                    outline_color=(140, 145, 155, 90), outline_width=1)
-    _t(draw, text="キャラ", x=_MARGIN + 12, y=y + _HEADER_H / 2 - 12,
+    _t(draw, text=img_t("キャラ", lang), x=_MARGIN + 12, y=y + _HEADER_H / 2 - 12,
                     font=_font(24), align="left", font_size=24,
                     fill_color=(255, 255, 255))
 
@@ -439,7 +440,7 @@ def _draw_stats_row(img, data, col, beta):
                                   font=f_small, fill_color=(255, 255, 255))
 
 
-def _draw_weapon_row(img, data, col, beta):
+def _draw_weapon_row(img, data, col, beta, lang="ja"):
     """WEAPON行: 武器アイコン + 名前 + レアリティ + 聖遺物セットアイコン。"""
     x = _col_x(col)
     y = _MARGIN + _HEADER_H + 15 + _IDENTITY_H + 12 + _STATS_H + 12
@@ -465,7 +466,7 @@ def _draw_weapon_row(img, data, col, beta):
                         font=_font(13), align="center", box_width=badge_w, font_size=13)
 
     # 武器名
-    _t(draw, text=data.get("weaponName") or "未装備", x=x + 96, y=y + 20,
+    _t(draw, text=data.get("weaponName") or img_t("未装備", lang), x=x + 96, y=y + 20,
                     font=_font(19), align="left", box_width=_COL_W - 180, font_size=19)
     # 武器Lv
     lv = data.get("weaponLevel")
@@ -501,7 +502,7 @@ def _draw_weapon_row(img, data, col, beta):
         right_x = ax - gap
 
 
-def _draw_artifact_row(img, art, col, y, beta):
+def _draw_artifact_row(img, art, col, y, beta, lang="ja"):
     """聖遺物 1 部位。左: 大アイコン(+Lv) / メインステ（大きく）/ サブステ縦1列（アイコン+値・値は右揃え）。
     右: 「スコア」ラベル + 数値 + ランク。"""
     x = _col_x(col)
@@ -510,7 +511,7 @@ def _draw_artifact_row(img, art, col, y, beta):
     draw = ImageDraw.Draw(img)
 
     if not art:
-        _t(draw, text="未装備", x=x, y=y + _ART_H / 2 - 10, font=_font(17),
+        _t(draw, text=img_t("未装備", lang), x=x, y=y + _ART_H / 2 - 10, font=_font(17),
                         align="center", box_width=_COL_W, font_size=17,
                         fill_color=(255, 255, 255))
         return
@@ -519,7 +520,7 @@ def _draw_artifact_row(img, art, col, y, beta):
     score_x = x + _COL_W - 90
     draw_figma_line(img, x1=score_x - 6, y1=y + 10, x2=score_x - 6, y2=y + _ART_H - 10,
                     fill_color=(255, 255, 255, 25), width=1)
-    _t(draw, text="スコア", x=score_x, y=y + 14, font=_font(12, light=True),
+    _t(draw, text=img_t("スコア", lang), x=score_x, y=y + 14, font=_font(12, light=True),
                     align="center", box_width=80, font_size=12, fill_color=(255, 255, 255))
     _t(draw, text=f"{art.get('score', 0):.1f}", x=score_x, y=y + 30,
                     font=_font(24), align="center", box_width=80, font_size=24)
@@ -568,7 +569,7 @@ def _draw_artifact_row(img, art, col, y, beta):
                                   fill_color=(255, 255, 255))
 
 
-def _draw_total_row(img, data, col, beta):
+def _draw_total_row(img, data, col, beta, lang="ja"):
     """TOTAL RATING行: 総合スコア。"""
     x = _col_x(col)
     y = _MARGIN + _HEADER_H + 15 + _IDENTITY_H + 12 + _STATS_H + 12 + _WEAPON_H + 12
@@ -579,7 +580,7 @@ def _draw_total_row(img, data, col, beta):
                     fill_color=(60, 64, 72, 135), outline_color=(140, 145, 155, 90), outline_width=1)
 
     draw = ImageDraw.Draw(img)
-    _t(draw, text="総合スコア", x=x, y=y + 13, font=_font(18, light=True),
+    _t(draw, text=img_t("総合スコア", lang), x=x, y=y + 13, font=_font(18, light=True),
                     align="center", box_width=_COL_W, font_size=18,
                     fill_color=(255, 255, 255))
     # ランク画像（右端。スコア値は箱全体の中央に揃える）
@@ -592,7 +593,7 @@ def _draw_total_row(img, data, col, beta):
     # 計算方法（数値と同じ高さで左寄せ。ラベル + 半透明線 + 値）
     calc_label = data.get("calcMethodLabel") or data.get("calcMethod", "")
     if calc_label:
-        _t(draw, text="計算方法", x=x + 15, y=y + 34,
+        _t(draw, text=img_t("計算方法", lang), x=x + 15, y=y + 34,
                         font=_font(18, light=True), align="left", font_size=18,
                         fill_color=(255, 255, 255))
         draw_figma_line(img, x1=x + 15, y1=y + 56, x2=x + 110, y2=y + 56,
@@ -602,7 +603,7 @@ def _draw_total_row(img, data, col, beta):
                         fill_color=(255, 255, 255))
 
 
-def _draw_abyss_section(img, boss, y, beta):
+def _draw_abyss_section(img, boss, y, beta, lang="ja"):
     """幽境（レイライン）セクションを画像最下部に描画。
     箱は使わず、左に「ver x.x」とボス名（2キャラ分くらいの大きい文字）、
     右にボスアイコン（右から2キャラ目 = 3列目の下に配置・はみ出さないサイズ）。
@@ -615,7 +616,7 @@ def _draw_abyss_section(img, boss, y, beta):
 
     draw = ImageDraw.Draw(img)
     # 左: 幽境ラベル（箱なし・縦中央・特大）
-    _t(draw, text="幽境", x=_MARGIN + 12, y=y + _ABYSS_H / 2 - 26,
+    _t(draw, text=img_t("幽境", lang), x=_MARGIN + 12, y=y + _ABYSS_H / 2 - 26,
                     font=_font(42), align="left", font_size=42,
                     fill_color=(255, 255, 255))
     # 幽境の右（ver x.x の左）に薄い白い縦線（境界）
@@ -649,11 +650,13 @@ def _draw_abyss_section(img, boss, y, beta):
             )
 
 
-def _generate_team_image_sync(uid: str, char_ids: list, configs=None, boss=None, beta: str = "false", img_format: str = "png"):
+def _generate_team_image_sync(uid: str, char_ids: list, configs=None, boss=None, beta: str = "false", img_format: str = "png", lang: str = "ja"):
     """4 キャラ編成カード画像を PIL で生成して PNG bytes を返す。（行ベースレイアウト版）"""
     _total_start = time.perf_counter()
     if beta != "true":
         beta = "false"
+    # 表示言語（ja / en）。_get_card_data_sync の呼び出しと固定ラベルに使う
+    lang = "en" if str(lang or "").lower() == "en" else "ja"
     print(f"[TeamCard] START uid={uid} chars={char_ids} beta={beta}", flush=True)
 
     # データ取得（configs: 各キャラの計算方法・差し替え武器/キャラ）
@@ -671,6 +674,7 @@ def _generate_team_image_sync(uid: str, char_ids: list, configs=None, boss=None,
                 fake_weapon=cfg.get("fake_weapon") or None,
                 beta=beta,
                 base_prec=cfg.get("base_prec") or "0",
+                lang=lang,
             )
             d["id"] = _display_id
         except Exception as e:
@@ -753,27 +757,27 @@ def _generate_team_image_sync(uid: str, char_ids: list, configs=None, boss=None,
     # 描画
     with _DrawCtx():
         # ヘッダー行
-        _draw_header_row(img, datas, beta)
+        _draw_header_row(img, datas, beta, lang)
 
         # 立ち絵行ラベル
         _y_id = _MARGIN + _HEADER_H + 15
-        _draw_row_label(img, "立ち絵", _y_id, _IDENTITY_H, beta)
+        _draw_row_label(img, img_t("立ち絵", lang), _y_id, _IDENTITY_H, beta)
 
         # ステータス行ラベル
         _y_stats = _y_id + _IDENTITY_H + 12
-        _draw_row_label(img, "ステータス", _y_stats, _STATS_H, beta)
+        _draw_row_label(img, img_t("ステータス", lang), _y_stats, _STATS_H, beta)
 
         # 武器行ラベル
         _y_weapon = _y_stats + _STATS_H + 12
-        _draw_row_label(img, "武器", _y_weapon, _WEAPON_H, beta)
+        _draw_row_label(img, img_t("武器", lang), _y_weapon, _WEAPON_H, beta)
 
         # 聖遺物行ラベル
         _y_art = _y_weapon + _WEAPON_H + 12
-        _draw_row_label(img, "聖遺物", _y_art, 5*_ART_H + 4*_ART_GAP, beta)
+        _draw_row_label(img, img_t("聖遺物", lang), _y_art, 5*_ART_H + 4*_ART_GAP, beta)
 
         # 総合スコア行ラベル
         _y_sum = _y_art + 5*_ART_H + 4*_ART_GAP + 12
-        _draw_row_label(img, "総合スコア", _y_sum, _SUM_H, beta)
+        _draw_row_label(img, img_t("総合スコア", lang), _y_sum, _SUM_H, beta)
 
         # 各カラム
         for col, data in enumerate(datas[:4]):
@@ -781,22 +785,22 @@ def _generate_team_image_sync(uid: str, char_ids: list, configs=None, boss=None,
             _draw_identity_row(img, data, col, beta)
             _draw_badges(img, data, col, beta)
             _draw_stats_row(img, data, col, beta)
-            _draw_weapon_row(img, data, col, beta)
+            _draw_weapon_row(img, data, col, beta, lang)
 
             # 聖遺物5行
             arts = data.get("artifacts") or []
             for i in range(5):
                 art = arts[i] if i < len(arts) else None
                 art_y = _y_art + i * (_ART_H + _ART_GAP)
-                _draw_artifact_row(img, art, col, art_y, beta)
+                _draw_artifact_row(img, art, col, art_y, beta, lang)
 
-            _draw_total_row(img, data, col, beta)
+            _draw_total_row(img, data, col, beta, lang)
             print(f"[TeamCard] column {col} drawn in {(time.perf_counter()-t_col)*1000:.0f}ms", flush=True)
 
         # 幽境セクション（ボス設定がある場合のみ）
         if boss and isinstance(boss, dict) and boss.get("version"):
             _y_abyss = _y_sum + _SUM_H + 12
-            _draw_abyss_section(img, boss, _y_abyss, beta)
+            _draw_abyss_section(img, boss, _y_abyss, beta, lang)
             print(f"[TeamCard] abyss section drawn", flush=True)
 
     # 保存

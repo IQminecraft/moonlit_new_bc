@@ -81,16 +81,6 @@ def detect_2set_buff(desc_ja: str):
     return None
 
 
-def buff_label(type_key: str, value) -> str:
-    info = BUFF_TYPES.get(type_key)
-    if not info:
-        return ""
-    try:
-        return info["label"].format(v=int(value))
-    except (TypeError, ValueError):
-        return ""
-
-
 def load_2set_buff_map() -> dict:
     """保存済みの 2set バフ選択マップ {set_id: {type, value}} を返す。"""
     if not os.path.exists(SET_BUFFS_PATH):
@@ -151,9 +141,45 @@ def apply_2set_buffs(stat_totals, set_ids, beta="false") -> None:
         apply_stat_bonus(stat_totals, info["prop"], to_ratio_if_percent(info["prop"], entry["value"]))
 
 
-def set_buff_label(set_id: str) -> str:
+# BUFF_TYPES の英語ラベル（ja ラベルと同じ {v} プレースホルダを持つ）
+_BUFF_LABEL_EN = {
+    "atk_p": "ATK +{v}%",
+    "hp_p": "HP +{v}%",
+    "def_p": "DEF +{v}%",
+    "hp_flat": "HP +{v}",
+    "def_flat": "DEF +{v}",
+    "em": "Elemental Mastery +{v}",
+    "crit_rate": "CRIT Rate +{v}%",
+    "crit_dmg": "CRIT DMG +{v}%",
+    "er": "Energy Recharge +{v}%",
+    "pyro_dmg": "Pyro DMG Bonus +{v}%",
+    "hydro_dmg": "Hydro DMG Bonus +{v}%",
+    "anemo_dmg": "Anemo DMG Bonus +{v}%",
+    "electro_dmg": "Electro DMG Bonus +{v}%",
+    "dendro_dmg": "Dendro DMG Bonus +{v}%",
+    "cryo_dmg": "Cryo DMG Bonus +{v}%",
+    "geo_dmg": "Geo DMG Bonus +{v}%",
+    "phys_dmg": "Physical DMG Bonus +{v}%",
+}
+
+
+def buff_label(type_key: str, value, lang: str = "ja") -> str:
+    info = BUFF_TYPES.get(type_key)
+    if not info:
+        return ""
+    if lang == "en":
+        template = _BUFF_LABEL_EN.get(type_key, info["label"])
+    else:
+        template = info["label"]
+    try:
+        return template.format(v=int(value))
+    except (TypeError, ValueError):
+        return ""
+
+
+def set_buff_label(set_id: str, lang: str = "ja") -> str:
     """セットIDに対応する選択済み 2set バフの表示ラベル。無ければ ""。"""
     entry = load_2set_buff_map().get(str(set_id))
     if not entry:
         return ""
-    return buff_label(entry.get("type", ""), entry.get("value", 0))
+    return buff_label(entry.get("type", ""), entry.get("value", 0), lang)

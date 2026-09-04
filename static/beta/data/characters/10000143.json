@@ -1,7 +1,7 @@
 {
   "name": "ヴェスナ",
   "en_name": "Vesna",
-  "desc": "",
+  "desc": "「冬契軍」司令官、女皇の刃。",
   "weapon": "WEAPON_SWORD_ONE_HAND",
   "rarity": "QUALITY_ORANGE",
   "element": "Anemo",
@@ -538,10 +538,10 @@
       "icon": "UI_Talent_S_Vesna_06"
     },
     {
-      "icon": "UI_Talent_S_Vesna_07"
+      "icon": "UI_Talent_S_Vesna_08"
     },
     {
-      "icon": "UI_Talent_S_Vesna_08"
+      "icon": "UI_Talent_S_Vesna_07"
     }
   ],
   "constellations": [

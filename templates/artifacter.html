@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>原神ビルドカード</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="manifest" href="/static/manifest.webmanifest">
+    <meta name="theme-color" content="#070b14">
+    <!-- i18n（言語辞書）。メインスクリプトより先に読み込む必要がある -->
+    <script src="/static/js/i18n.js?v=20260831c"></script>
     <script>
         (function () {
             try {
@@ -308,6 +312,19 @@
             opacity: 0.92;
             line-height: 1.6;
         }
+        #errorRetryBtn {
+            margin-top: 10px;
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text);
+            background: var(--surface-solid);
+            border: 1px solid var(--border-strong);
+            cursor: pointer;
+        }
+        #errorRetryBtn:hover { border-color: var(--accent); color: var(--accent); }
+        #errorRetryBtn:disabled { opacity: 0.5; cursor: not-allowed; }
         @keyframes formErrorIn {
             from { opacity: 0; transform: translateY(-4px); }
             to { opacity: 1; transform: none; }
@@ -340,10 +357,13 @@
             margin-bottom: 14px;
         }
         .history-head span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             font-size: 12.5px;
-            font-weight: 600;
-            color: var(--text-muted);
-            letter-spacing: 0.03em;
+            font-weight: 700;
+            color: #d9b96a;
+            letter-spacing: 0.08em;
         }
         .history-head button {
             background: none;
@@ -364,62 +384,275 @@
         }
         .history-list {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
+            grid-template-columns: 1fr;
+            gap: 10px;
         }
+        /* Recent Players 風: ネームカード背景 + プロフアイコン + 名前/UID/時刻/削除 */
         .history-item {
-            display: flex;
-            align-items: center;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            background: var(--surface);
+            position: relative;
+            height: 76px;
+            border: 1px solid rgba(120, 90, 120, 0.14);
+            border-radius: 14px;
+            background: linear-gradient(180deg, #fdf9fd, #f3edf5);
+            box-shadow: 0 2px 10px rgba(30, 20, 40, 0.18);
             overflow: hidden;
-            transition: border-color 0.15s, background 0.15s;
-            backdrop-filter: blur(10px);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        html[data-theme='dark'] .history-item {
+            border-color: rgba(200, 168, 107, 0.35);
+            background: linear-gradient(90deg, rgba(22, 20, 28, 0.94), rgba(14, 13, 18, 0.94));
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
         }
         .history-item:hover {
-            border-color: var(--border-strong);
-            background: color-mix(in srgb, var(--surface-solid) 80%, transparent);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(30, 20, 40, 0.28);
         }
+        .history-item .hist-namecard {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 25%;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        html[data-theme='dark'] .history-item .hist-namecard { opacity: 0.18; }
+        .history-item .hist-pfp {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            z-index: 2;
+            background: rgba(60, 55, 70, 0.4);
+        }
+        html[data-theme='dark'] .history-item .hist-pfp { border-color: rgba(200, 168, 107, 0.5); }
         .history-item button.load {
-            flex: 1;
-            min-width: 0;
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 4px;
+            /* 右端の削除ボタン分を空ける（モバイルでの重なり防止） */
+            padding: 0 110px 0 72px;
             border: none;
             background: transparent;
-            color: var(--text-secondary);
-            font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-            font-size: 13.5px;
-            padding: 11px 12px;
-            text-align: center;
             cursor: pointer;
+            text-align: left;
+            min-width: 0;
+        }
+        .history-item .history-item-name-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+        .history-item .history-item-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #403040;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
-            transition: color 0.15s;
+            min-width: 0;
         }
-        .history-item button.load:hover {
-            color: var(--accent);
-        }
-        .history-item button.del {
+        /* 世界ランク（冒険ランク）バッジ: 四角・ちょい角丸 */
+        .history-item .history-item-level {
             flex-shrink: 0;
-            width: 32px;
+            display: inline-flex;
+            align-items: center;
+            padding: 1px 6px;
+            border-radius: 6px;
+            border: 1px solid rgba(160, 120, 48, 0.45);
+            background: rgba(200, 168, 107, 0.18);
+            color: #9a7420;
+            font-size: 10px;
+            font-weight: 700;
+            font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+            line-height: 1.5;
+            letter-spacing: 0.02em;
+        }
+        .history-item .history-item-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        /* サーバー名は普通の文字で表示（UID表示の代わり） */
+        .history-item .history-item-server {
+            color: #8a7a8a;
+        }
+        /* 「さらに表示 / 折りたたむ」ボタン（囲み線なし） */
+        .btn-history-more {
+            display: block;
+            width: 100%;
+            margin-top: 8px;
+            padding: 8px 12px;
             border: none;
+            border-radius: 10px;
             background: transparent;
-            color: var(--text-muted);
-            font-size: 16px;
-            line-height: 1;
+            color: #8a7a8a;
+            font-size: 12px;
+            font-weight: 600;
             cursor: pointer;
-            padding: 10px 0;
+            transition: color 0.15s, background 0.15s;
+        }
+        .btn-history-more:hover { color: #403040; background: rgba(120, 90, 120, 0.08); }
+        html[data-theme='dark'] .btn-history-more {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.55);
+        }
+        html[data-theme='dark'] .btn-history-more:hover { color: #fff; background: rgba(200, 168, 107, 0.08); }
+
+        /* ホールド tooltip: キャッシュ済みキャラ一覧 */
+        .history-char-tip {
+            position: fixed;
+            z-index: 9999;
+            min-width: 200px;
+            max-width: min(320px, calc(100vw - 12px));
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(120, 90, 120, 0.25);
+            background: rgba(253, 249, 253, 0.97);
+            box-shadow: 0 8px 24px rgba(30, 20, 40, 0.25);
+            pointer-events: none;
+        }
+        html[data-theme='dark'] .history-char-tip {
+            border-color: rgba(200, 168, 107, 0.4);
+            background: rgba(22, 20, 28, 0.97);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+        .history-char-tip .history-char-tip-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #8a7a8a;
+            margin-bottom: 6px;
+        }
+        html[data-theme='dark'] .history-char-tip .history-char-tip-title { color: rgba(255, 255, 255, 0.55); }
+        .history-char-tip .history-char-tip-body {
+            font-size: 12px;
+            color: #403040;
+        }
+        html[data-theme='dark'] .history-char-tip .history-char-tip-body { color: #eef2f8; }
+        .history-char-tip .history-char-tip-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+        .history-char-tip .history-char-tip-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            min-width: 0;
+        }
+        .history-char-tip .history-char-tip-cell img {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: rgba(60, 55, 70, 0.25);
+        }
+        .history-char-tip .history-char-tip-cell span {
+            max-width: 52px;
+            font-size: 9px;
+            color: #6a5a6a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        html[data-theme='dark'] .history-char-tip .history-char-tip-cell span { color: rgba(255, 255, 255, 0.5); }
+
+        .history-item .history-item-copy {
+            border: 1px solid rgba(120, 90, 120, 0.35);
+            background: rgba(255, 255, 255, 0.7);
+            color: #8a7a8a;
+            border-radius: 4px;
+            font-size: 9px;
+            line-height: 1;
+            padding: 2px 5px;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .history-item .history-item-copy:hover { color: #403040; border-color: #8a7a8a; }
+        .history-item .history-item-copy.done { color: #2f9e68; border-color: rgba(47, 158, 104, 0.55); }
+        .history-item button.del {
+            position: absolute;
+            top: 50%;
+            right: 14px;
+            transform: translateY(-50%);
+            z-index: 3;
+            width: auto;
+            height: 30px;
+            padding: 0 12px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(120, 90, 120, 0.1);
+            color: #8a7a8a;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
             transition: color 0.15s, background 0.15s;
         }
         .history-item button.del:hover {
-            color: var(--danger);
-            background: rgba(248, 113, 113, 0.1);
+            color: #c04040;
+            background: rgba(220, 90, 90, 0.14);
+        }
+        html[data-theme='dark'] .history-item .history-item-name {
+            color: #eef2f8;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+        }
+        html[data-theme='dark'] .history-item .history-item-level {
+            border-color: rgba(200, 168, 107, 0.55);
+            background: rgba(200, 168, 107, 0.12);
+            color: #c8a86b;
+        }
+        html[data-theme='dark'] .history-item .history-item-server { color: rgba(255, 255, 255, 0.55); }
+        html[data-theme='dark'] .history-item .history-item-copy {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(200, 168, 107, 0.35);
+            color: #c8a86b;
+        }
+        html[data-theme='dark'] .history-item .history-item-copy.done { color: #7ee0a3; border-color: rgba(126, 224, 163, 0.55); }
+        html[data-theme='dark'] .history-item button.del {
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.55);
+        }
+        html[data-theme='dark'] .history-item button.del:hover {
+            color: #ff8a8a;
+            background: rgba(220, 90, 90, 0.2);
         }
 
         /* フッター的な余白 */
         .footer-space {
             height: 24px;
+        }
+
+        /* サイトフッター（ファンメイド・著作権表示） */
+        .site-footer {
+            padding: 18px 16px 26px;
+            text-align: center;
+            color: var(--text-muted, #6b7a90);
+            font-size: 11.5px;
+            line-height: 1.7;
+        }
+        .site-footer p {
+            margin: 0;
+            opacity: 0.9;
         }
 
         /* Beta 同意モーダル（初期設定ウィザードより前面に表示） */
@@ -559,14 +792,33 @@
             .hero h1 {
                 font-size: 28px;
             }
+            /* 横長スロットは 1 列（原神の協同画面と同じ縦積み） */
             .history-list {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: 1fr;
             }
         }
 
         @media (max-width: 640px) {
             .top-bar {
-                padding: 14px 18px;
+                padding: 12px 14px;
+                flex-wrap: wrap;
+                row-gap: 6px;
+            }
+            /* ボタン/タイトルの文字折れを防ぐ（ガタつき防止） */
+            .top-link, .top-title, .top-ver, .top-sep, #verBadge {
+                white-space: nowrap;
+            }
+            .top-link {
+                font-size: 12px;
+                padding: 2px 3px;
+            }
+            .top-title {
+                font-size: 14px;
+            }
+            .top-right {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                row-gap: 4px;
             }
             .main {
                 padding: 36px 18px 48px;
@@ -582,17 +834,17 @@
             }
             .btn-submit {
                 width: 100%;
-                height: 56px;
+                height: 64px;
+                font-size: 16px;
             }
-            .input-row input {
-                height: 56px;
+            /* 縦積み flex で flex:1 に潰されるため解除して固定高に */
+            #uidInput {
+                flex: none !important;
+                height: 64px !important;
+                font-size: 18px !important;
+                overflow: visible;
             }
-            .history-list {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        @media (max-width: 380px) {
+            /* 横長スロットはモバイルでも 1 列 */
             .history-list {
                 grid-template-columns: 1fr;
             }
@@ -715,6 +967,16 @@
             color: var(--text);
         }
         .setup-opt.selected .setup-opt-label { color: var(--accent); }
+
+        /* 言語選択ステップの副ラベル（日本語 / English の併記） */
+        .setup-opt-sub {
+            display: block;
+            margin-top: 2px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-align: center;
+        }
         .setup-check {
             position: absolute;
             top: 18px;
@@ -847,21 +1109,23 @@
                 </a>
             </div>
             <div class="top-right">
-                <button type="button" class="top-link" id="tutorialBtn" title="チュートリアルを表示します">チュートリアル</button>
+                <button type="button" class="top-link" id="langToggleBtn" data-i18n-title title="表示言語を切り替えます">EN</button>
                 <span class="top-sep">|</span>
-                <button type="button" class="top-link" id="themeModeBtn" title="ライト / ダークを切り替えます">ライト / ダーク</button>
+                <button type="button" class="top-link" id="tutorialBtn" data-i18n data-i18n-title title="チュートリアルを表示します">チュートリアル</button>
                 <span class="top-sep">|</span>
-                <a href="/contact" class="top-link" title="お問い合わせフォームを開きます">問い合わせ</a>
+                <button type="button" class="top-link" id="themeModeBtn" data-i18n data-i18n-title title="ライト / ダークを切り替えます">ライト / ダーク</button>
                 <span class="top-sep">|</span>
-                <span id="verBadge" title="使用するゲームデータ">Live</span>
+                <a href="/contact" class="top-link" data-i18n data-i18n-title title="お問い合わせフォームを開きます">問い合わせ</a>
+                <span class="top-sep">|</span>
+                <span id="verBadge" data-i18n-title title="使用するゲームデータ">Live</span>
             </div>
         </header>
 
         <main class="main">
             <div class="content">
                 <div class="hero">
-                    <h1>UIDからビルドを読み込む</h1>
-                    <p>公開プロフィールに登録されたキャラクター情報を取得します</p>
+                    <h1 data-i18n>UIDからビルドを読み込む</h1>
+                    <p data-i18n>公開プロフィールに登録されたキャラクター情報を取得します</p>
                 </div>
 
                 <form id="searchForm" class="form-block" action="/fetch_uid" method="GET" data-init-uid="{{ uid }}" data-init-ver="{{ ver }}">
@@ -873,17 +1137,19 @@
                             type="text"
                             id="uidInput"
                             name="uid"
-                            placeholder="UID 9桁"
+                            placeholder="UID"
                             required
                             maxlength="10"
                             inputmode="numeric"
                             autocomplete="off"
                             aria-label="UID"
+                            data-i18n-placeholder
+                            data-i18n-title
                             title="ゲーム内プロフィールのUIDを入力してください"
                         >
-                        <button type="submit" id="submitBtn" class="btn-submit" title="UIDのビルドデータを読み込みます">
+                        <button type="submit" id="submitBtn" class="btn-submit" data-i18n-title title="UIDのビルドデータを読み込みます">
                             <span id="submitBtnSpinner" class="spinner" style="display:none"></span>
-                            <span id="submitBtnLabel">データを読み込む</span>
+                            <span id="submitBtnLabel" data-i18n>データを読み込む</span>
                         </button>
                     </div>
 
@@ -895,25 +1161,31 @@
                                 <line x1="12" y1="9" x2="12" y2="13"></line>
                                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
                             </svg>
-                            データを取得できませんでした
+                            <span data-i18n>データを取得できませんでした</span>
                         </div>
-                        <div class="form-error-detail">{{ error }}</div>
+                        <div class="form-error-detail" data-i18n>{{ error }}</div>
+                        <button type="button" id="errorRetryBtn" data-i18n>再試行</button>
                     </div>
                     {% endif %}
                 </form>
 
-                <div class="history" id="historySection" title="最近検索したUID">
+                <div class="history" id="historySection">
                     <div class="history-head">
-                        <span>最近の検索</span>
-                        <button type="button" id="clearHistory" title="検索履歴をすべて削除します">すべて削除</button>
+                        <span data-i18n>保存したプレイヤー</span>
+                        <button type="button" id="clearHistory" data-i18n data-i18n-title title="検索履歴をすべて削除します">すべて削除</button>
                     </div>
-                    <div id="historyEmpty" class="history-empty">検索履歴はありません</div>
+                    <div id="historyEmpty" class="history-empty" data-i18n>検索履歴はありません</div>
                     <div id="historyList" class="history-list" style="display:none"></div>
                 </div>
             </div>
         </main>
 
         <div class="footer-space"></div>
+
+        <footer class="site-footer">
+            <p data-i18n>moonlit.wiki はファンメイドのWebサイトです。</p>
+            <p data-i18n>ゲーム関連の画像およびアセットの著作権・商標権はすべて HoYoverse に帰属します。</p>
+        </footer>
     </div>
 
     <!-- 初期設定ウィザード（初回アクセス時に表示） -->
@@ -927,10 +1199,10 @@
             </div>
             <div class="setup-body" id="setupBody"></div>
             <div class="setup-foot">
-                <button type="button" class="setup-btn ghost" id="setupBackBtn">戻る</button>
+                <button type="button" class="setup-btn ghost" id="setupBackBtn" data-i18n>戻る</button>
                 <div class="setup-dots" id="setupDots"></div>
-                <button type="button" class="setup-btn ghost" id="setupSkipBtn" title="ダーク / ガラス / ガラス / LIVE で開始します">スキップ</button>
-                <button type="button" class="setup-btn primary" id="setupNextBtn">次へ</button>
+                <button type="button" class="setup-btn ghost" id="setupSkipBtn" data-i18n data-i18n-title title="ダーク / ガラス / ガラス / LIVE で開始します">スキップ</button>
+                <button type="button" class="setup-btn primary" id="setupNextBtn" data-i18n>次へ</button>
             </div>
         </div>
     </div>
@@ -946,13 +1218,13 @@
                         <path d="M12 17h.01"></path>
                     </svg>
                 </div>
-                <h2 id="betaTitle">未確定データの閲覧同意</h2>
+                <h2 id="betaTitle" data-i18n>未確定データの閲覧同意</h2>
             </div>
-            <p>これから表示する内容には、ゲーム内で正式配信される前の未確定データが含まれます。今後のアップデートで数値や仕様が変更・削除される可能性があります。</p>
-            <p>内容にご注意のうえ、ご自身の判断でご覧ください。</p>
+            <p data-i18n>これから表示する内容には、ゲーム内で正式配信される前の未確定データが含まれます。今後のアップデートで数値や仕様が変更・削除される可能性があります。</p>
+            <p data-i18n>内容にご注意のうえ、ご自身の判断でご覧ください。</p>
             <div class="modal-actions">
-                <button type="button" class="agree" id="betaConsentAgreeBtn">同意して閲覧する</button>
-                <button type="button" class="decline" id="betaConsentDeclineBtn">戻る</button>
+                <button type="button" class="agree" id="betaConsentAgreeBtn" data-i18n>同意して閲覧する</button>
+                <button type="button" class="decline" id="betaConsentDeclineBtn" data-i18n>戻る</button>
             </div>
         </div>
     </div>
@@ -968,12 +1240,12 @@
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
                 </div>
-                <h2 id="tutorialConfirmTitle">チュートリアルをしますか？</h2>
+                <h2 id="tutorialConfirmTitle" data-i18n>チュートリアルをしますか？</h2>
             </div>
-            <p>ハイライトで使い方を案内します。あとから「チュートリアル」ボタンでも表示できます。</p>
+            <p data-i18n>ハイライトで使い方を案内します。あとから「チュートリアル」ボタンでも表示できます。</p>
             <div class="modal-actions">
-                <button type="button" class="agree" id="tutorialYesBtn">はい</button>
-                <button type="button" class="decline" id="tutorialNoBtn">いいえ</button>
+                <button type="button" class="agree" id="tutorialYesBtn" data-i18n>はい</button>
+                <button type="button" class="decline" id="tutorialNoBtn" data-i18n>いいえ</button>
             </div>
         </div>
     </div>
@@ -987,16 +1259,24 @@
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                     </svg>
                 </div>
-                <h2 id="updateInfoTitle">原神ビルドカード was Updated!!</h2>
+                <h2 id="updateInfoTitle" data-i18n>原神ビルドカード was Updated!!</h2>
             </div>
             <div class="update-ver" id="updateInfoVer"></div>
             <ul class="update-list" id="updateInfoList"></ul>
             <div class="modal-actions">
-                <button type="button" class="agree" id="updateInfoCloseBtn">OK</button>
+                <button type="button" class="agree" id="updateInfoCloseBtn" data-i18n>OK</button>
             </div>
         </div>
     </div>
 
+    <script>
+        // PWA: Service Worker 登録（/static/ のキャッシュで再表示を高速化）
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
+    </script>
     <script src="/static/js/tutorial.js"></script>
     <script>
         const uidInput = document.getElementById('uidInput');
@@ -1048,7 +1328,7 @@
         function setSubmitLoading() {
             submitBtn.disabled = true;
             submitBtnSpinner.style.display = 'inline-block';
-            submitBtnLabel.textContent = '読み込み中...';
+            submitBtnLabel.textContent = GenshinI18n.t('読み込み中...');
         }
 
         function getSavedThemePref() {
@@ -1067,6 +1347,29 @@
             const next = getSavedThemePref() === 'light' ? 'dark' : 'light';
             try { localStorage.setItem(THEME_PREF_KEY, next); } catch (e) {}
             applyTheme();
+        });
+
+        // 言語切替（topbar）: 現在の言語に応じたラベル（ja 表示中は「EN」、en 表示中は「日本語」）
+        const langToggleBtn = document.getElementById('langToggleBtn');
+        const applyLangToggleLabel = () => {
+            langToggleBtn.textContent = GenshinI18n.getLang() === 'en' ? '日本語' : 'EN';
+        };
+        applyLangToggleLabel();
+        langToggleBtn.addEventListener('click', () => {
+            GenshinI18n.setLang(GenshinI18n.getLang() === 'en' ? 'ja' : 'en');
+            // 'genshin:langchange' で data-i18n と履歴が再描画されるためラベルのみ同期
+            applyLangToggleLabel();
+        });
+
+        // 言語変更時に動的描画を同期（ウィザードが開いていれば再描画）
+        document.addEventListener('genshin:langchange', () => {
+            applyLangToggleLabel();
+            const cur = SETUP_STEPS[setupIdx];
+            if (setupWizard.classList.contains('open') && cur && cur.key !== 'lang') {
+                renderSetupStep();
+            }
+            // 履歴行（サーバー名・UID copy・さらに表示）も言語を反映して再描画
+            renderHistory();
         });
 
         function getSavedVerPref() {
@@ -1135,6 +1438,14 @@
 
         const SETUP_STEPS = [
             {
+                // 言語選択（スキップ不可）。タイトル/説明は両言語併記で表示する
+                key: 'lang', title: '言語を選択 / Language', desc: 'サイトの表示言語を選べます（あとから変更もできます）/ Choose the display language (can be changed later)', cols: 2,
+                options: [
+                    { id: 'ja', label: '日本語', sub: 'Japanese' },
+                    { id: 'en', label: 'English', sub: '英語' },
+                ],
+            },
+            {
                 key: 'color', title: '色のテーマを選ぶ', desc: 'サイト全体の見た目です。あとから「ライト / ダーク」ボタンでも切り替えられます。', cols: 2,
                 options: [
                     { id: 'dark', label: '黒（ダーク）', img: '/static/assets/setup/color_dark.webp', recommended: true },
@@ -1187,6 +1498,7 @@
         }
         function setupDefaults() {
             return {
+                lang: GenshinI18n.getLang(),
                 color: getSavedThemePref(),
                 htmlTheme: readSetupPref(CARD_THEME_PREF_KEY, VALID_SETUP_CARD_THEMES, 'glass'),
                 imageTheme: readSetupPref(IMAGE_THEME_PREF_KEY, VALID_SETUP_CARD_THEMES, 'cinema'),
@@ -1207,7 +1519,7 @@
                 step.options.forEach(opt => {
                     const v = opt.id === 'beta' ? d.beta : d.live;
                     if (v && !opt.verApplied) {
-                        opt.label = `${opt.label}: ${v}`;
+                        opt.ver = v;  // 表示時にラベルへ付与する（ラベル自体は i18n 辞書キーのまま保つ）
                         opt.verApplied = true;
                     }
                 });
@@ -1224,7 +1536,9 @@
             SETUP_HOWTO.forEach(h => {
                 const item = document.createElement('div');
                 item.className = 'setup-howto-item';
-                item.innerHTML = `<img src="${h.img}" alt="${h.t}"><div class="setup-howto-txt"><b>${h.t}</b><span>${h.d}</span></div>`;
+                const title = GenshinI18n.t(h.t);
+                const desc = GenshinI18n.t(h.d);
+                item.innerHTML = `<img src="${h.img}" alt="${title}"><div class="setup-howto-txt"><b>${title}</b><span>${desc}</span></div>`;
                 wrap.appendChild(item);
             });
             setupBody.appendChild(wrap);
@@ -1233,12 +1547,19 @@
         function renderSetupStep() {
             const step = SETUP_STEPS[setupIdx];
             setupStepLabel.textContent = `STEP ${setupIdx + 1} / ${SETUP_STEPS.length}`;
-            setupTitle.textContent = step.title;
-            setupDesc.textContent = step.desc;
+            // タイトル/説明/ボタンは言語設定に応じて切替（lang ステップ自体は両言語併記のため原文のまま）
+            setupTitle.textContent = (step.key === 'lang') ? step.title : GenshinI18n.t(step.title);
+            setupDesc.textContent = (step.key === 'lang') ? step.desc : GenshinI18n.t(step.desc);
             setupBackBtn.classList.toggle('hidden', setupIdx === 0);
-            setupNextBtn.textContent = (setupIdx === SETUP_STEPS.length - 1) ? '使い始める' : '次へ';
+            setupNextBtn.textContent = (setupIdx === SETUP_STEPS.length - 1) ? GenshinI18n.t('使い始める') : GenshinI18n.t('次へ');
+            // 言語選択ステップはスキップ不可（回避できない言語選択）
+            if (setupSkipBtn) setupSkipBtn.style.display = (step.key === 'lang') ? 'none' : '';
             setupDots.innerHTML = SETUP_STEPS.map((_, i) => `<span class="${i === setupIdx ? 'on' : ''}"></span>`).join('');
             setupBody.innerHTML = '';
+            if (step.key === 'lang') {
+                renderSetupLang(step);
+                return;
+            }
             if (step.key === 'howto') {
                 renderSetupHowto();
                 return;
@@ -1249,11 +1570,12 @@
                 const b = document.createElement('button');
                 b.type = 'button';
                 b.className = 'setup-opt' + (opt.recommended ? ' recommended' : '') + (setupSel[step.key] === opt.id ? ' selected' : '');
+                const label = GenshinI18n.t(opt.label) + (opt.ver ? `: ${opt.ver}` : '');
                 b.innerHTML =
                     '<span class="setup-check">✓</span>' +
-                    (opt.recommended ? '<span class="setup-rec-badge">オススメ</span>' : '') +
-                    `<img class="setup-opt-img" src="${opt.img}" alt="${opt.label}">` +
-                    `<span class="setup-opt-label">${opt.label}</span>`;
+                    (opt.recommended ? `<span class="setup-rec-badge">${GenshinI18n.t('オススメ')}</span>` : '') +
+                    `<img class="setup-opt-img" src="${opt.img}" alt="${label}">` +
+                    `<span class="setup-opt-label">${label}</span>`;
                 b.addEventListener('click', async () => {
                     if (step.key === 'ver' && opt.id === 'beta') {
                         const agreed = await ensureSetupBetaConsent();
@@ -1271,6 +1593,28 @@
             setupBody.appendChild(grid);
         }
 
+        function renderSetupLang(step) {
+            // 言語選択UI（選択した瞬間にサイト全体の表示言語を切替）
+            const grid = document.createElement('div');
+            grid.className = 'setup-grid cols-2';
+            step.options.forEach(opt => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'setup-opt' + (setupSel.lang === opt.id ? ' selected' : '');
+                b.innerHTML =
+                    '<span class="setup-check">✓</span>' +
+                    `<span class="setup-opt-label">${opt.label}</span>` +
+                    `<span class="setup-opt-sub">${opt.sub}</span>`;
+                b.addEventListener('click', () => {
+                    setupSel.lang = opt.id;
+                    GenshinI18n.setLang(opt.id);
+                    renderSetupStep();
+                });
+                grid.appendChild(b);
+            });
+            setupBody.appendChild(grid);
+        }
+
         function finishSetup() {
             try {
                 localStorage.setItem(THEME_PREF_KEY, setupSel.color);
@@ -1279,6 +1623,7 @@
                 localStorage.setItem(VER_PREF_KEY, setupSel.ver);
                 localStorage.setItem(SETUP_DONE_KEY, '1');
             } catch (e) {}
+            if (setupSel.lang) GenshinI18n.setLang(setupSel.lang);
             applyTheme();
             setVer(setupSel.ver);
             closeSetup();
@@ -1290,7 +1635,8 @@
         }
 
         function skipSetup() {
-            setupSel = { color: 'dark', htmlTheme: 'glass', imageTheme: 'glass', ver: 'live' };
+            // 言語はスキップ対象外（言語選択ステップで既に確定済み）。既定のテーマだけで開始する
+            setupSel = Object.assign(setupSel, { color: 'dark', htmlTheme: 'glass', imageTheme: 'glass', ver: 'live' });
             finishSetup();
         }
 
@@ -1315,6 +1661,14 @@
         setupNextBtn.addEventListener('click', async () => {
             // BETA が選択されたまま次へ進む場合は閲覧同意を必須にする
             const step = SETUP_STEPS[setupIdx];
+            if (step.key === 'lang') {
+                // 言語未選択のときは先へ進めない（回避できない言語選択）
+                if (!setupSel.lang) {
+                    const guessed = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+                    setupSel.lang = guessed;
+                }
+                GenshinI18n.setLang(setupSel.lang);
+            }
             if (step.key === 'ver' && setupSel.ver === 'beta') {
                 const agreed = await ensureSetupBetaConsent();
                 if (!agreed) {
@@ -1347,7 +1701,7 @@
         const HOME_TUTORIAL_STEPS = [
             { selector: '#uidInput', title: 'UIDを入力', text: 'ゲーム内プロフィールに表示されているUIDを入力します。' },
             { selector: '#submitBtn', title: 'データを読み込む', text: 'ショーケースが公開されているUIDなら、キャラクター一覧を読み込めます。' },
-            { selector: '#historySection', title: '最近の検索', text: '過去に入力したUIDをワンクリックで再読み込みできます。' },
+            { selector: '#historySection', title: '保存したプレイヤー', text: '保存したプレイヤーをワンクリックで再読み込みできます。' },
             { selector: '#themeModeBtn', title: 'ライト / ダーク', text: 'サイト全体の色テーマを切り替えます。' },
             { selector: '#tutorialBtn', title: 'チュートリアル', text: 'このチュートリアルはいつでも再表示できます。' },
         ];
@@ -1360,7 +1714,14 @@
         }
 
         function startHomeTutorial() {
-            if (window.GenshinTutorial) window.GenshinTutorial.start(HOME_TUTORIAL_STEPS, { doneKey: HOME_TUTORIAL_DONE_KEY });
+            if (!window.GenshinTutorial) return;
+            // 開始時に言語設定を反映して渡す（チュートリアル内ボタンは tutorial.js 側の原文のまま）
+            const steps = HOME_TUTORIAL_STEPS.map(s => ({
+                selector: s.selector,
+                title: GenshinI18n.t(s.title),
+                text: GenshinI18n.t(s.text),
+            }));
+            window.GenshinTutorial.start(steps, { doneKey: HOME_TUTORIAL_DONE_KEY });
         }
 
         function maybeAutoTutorial() {
@@ -1461,61 +1822,371 @@
             localStorage.setItem('uid_history', JSON.stringify(history));
         }
         function removeHistoryUid(uid) {
-            saveHistory(getHistory().filter(item => item !== uid));
+            // エントリは {uid, name, icon}（新形式）と文字列（旧形式）が混在し得る
+            saveHistory(getHistory().filter(item => (typeof item === 'object' && item !== null ? item.uid : item) !== uid));
             renderHistory();
         }
+        let historyShowAll = false;
         function renderHistory() {
+            // 上限なしで保存し、表示は5件のみ（超えたら「さらに表示」を出す）
+            const HISTORY_VISIBLE_DEFAULT = 5;
             const history = getHistory();
             if (history.length === 0) {
                 historyEmpty.style.display = 'block';
                 historyList.style.display = 'none';
                 historyList.innerHTML = '';
+                const more = document.getElementById('historyMoreWrap');
+                if (more) more.remove();
                 return;
             }
             historyEmpty.style.display = 'none';
             historyList.style.display = 'grid';
             historyList.innerHTML = '';
 
-            history.forEach(uid => {
+            // 「さらに表示」の以前のノードを掃除
+            document.getElementById('historyMoreWrap')?.remove();
+
+            // Recent Players 風: 白カード行（名前 + Lvバッジ / サーバー名 / UID copy / 削除）
+            // （読み込み時刻の表示は廃止）
+            // UID からサーバー名を推定する
+            // - 9桁: 6=America / 7=Europe / 8=Asia / 9=TW,HK,MO / 1・2・5=中国（app 側 is_cn_uid と同じ基準）
+            // - 10桁の拡張UID: 18...=Asia（enka ライブラリの定義通り）
+            const serverNameFromUid = (u) => {
+                const s = String(u || '').trim();
+                if (s.length === 9) {
+                    if ('125'.includes(s.charAt(0))) return '中国サーバー';
+                    return {
+                        '6': 'アメリカサーバー',
+                        '7': 'ヨーロッパサーバー',
+                        '8': 'アジアサーバー',
+                        '9': '台湾・香港・マカオサーバー',
+                    }[s.charAt(0)] || '';
+                }
+                if (s.length === 10 && s.startsWith('18')) return 'アジアサーバー';
+                return '';
+            };
+            // キャラ一覧 tooltip（マウスホバー / タッチは長押しで表示。/api/char_list/{uid} のキャッシュから取得）
+            let charTipEl = null;
+            let charTipTimer = null;
+            const charTipCache = new Map(); // uid -> キャラ配列 | null（キャッシュ無し確定）
+            const closeCharTip = () => {
+                if (charTipTimer) { clearTimeout(charTipTimer); charTipTimer = null; }
+                if (charTipEl) { charTipEl.remove(); charTipEl = null; }
+            };
+            // tooltip を (x, y)（マウスポインター位置）の右上に配置
+            const placeCharTip = (tip, x, y) => {
+                tip.style.left = Math.max(6, Math.min(x + 14, window.innerWidth - (tip.offsetWidth || 240) - 6)) + 'px';
+                tip.style.top = Math.max(6, Math.min(y - 8, window.innerHeight - (tip.offsetHeight || 96) - 6)) + 'px';
+            };
+            let lastTipX = 0;
+            let lastTipY = 0;
+            const renderCharTip = async (uid, cx, cy) => {
+                lastTipX = cx;
+                lastTipY = cy;
+                closeCharTip();
+                const tip = document.createElement('div');
+                tip.className = 'history-char-tip';
+                const title = document.createElement('div');
+                title.className = 'history-char-tip-title';
+                title.textContent = GenshinI18n.t('キャッシュ済みキャラ');
+                const body = document.createElement('div');
+                body.className = 'history-char-tip-body';
+                body.textContent = GenshinI18n.t('読み込み中') + '…';
+                tip.appendChild(title);
+                tip.appendChild(body);
+                document.body.appendChild(tip);
+                charTipEl = tip;
+                placeCharTip(tip, cx, cy);
+                let chars = charTipCache.get(uid);
+                if (chars === undefined) {
+                    try {
+                        const res = await fetch(`/api/char_list/${uid}`);
+                        if (!res.ok) throw new Error(String(res.status));
+                        const d = await res.json();
+                        chars = (d.char_list || []).filter(c => c && c.icon).slice(0, 12);
+                    } catch (e) {
+                        chars = null;
+                    }
+                    charTipCache.set(uid, chars);
+                }
+                if (charTipEl !== tip) return; // 表示中に閉じられた
+                if (chars && chars.length) {
+                    title.textContent = `${GenshinI18n.t('キャッシュ済みキャラ')} (${chars.length})`;
+                    body.innerHTML = '';
+                    const grid = document.createElement('div');
+                    grid.className = 'history-char-tip-grid';
+                    chars.forEach(c => {
+                        const cell = document.createElement('div');
+                        cell.className = 'history-char-tip-cell';
+                        const img = document.createElement('img');
+                        img.loading = 'lazy';
+                        img.alt = '';
+                        img.onerror = () => cell.remove();
+                        img.src = c.icon;
+                        cell.appendChild(img);
+                        const nm = document.createElement('span');
+                        nm.textContent = String(c.name || '').slice(0, 10);
+                        cell.appendChild(nm);
+                        grid.appendChild(cell);
+                    });
+                    if (!grid.childElementCount) { closeCharTip(); return; }
+                    body.appendChild(grid);
+                } else {
+                    body.textContent = GenshinI18n.t('キャッシュデータなし');
+                }
+                // 中身確定で高さが変わるため、最新のポインター位置で再配置
+                if (charTipEl === tip) placeCharTip(tip, lastTipX, lastTipY);
+            };
+            // マウスホバーで表示（わずかな遅延で誤爆防止）、離れると閉じる。
+            // タッチ端末（hover無し環境）のみホールド（長押し）で表示する。
+            const bindCharTip = (el, uid) => {
+                let timer = null;
+                let startX = 0;
+                let startY = 0;
+                const isTouch = window.matchMedia('(hover: none)').matches;
+                if (!isTouch) {
+                    el.addEventListener('pointerenter', (e) => {
+                        if (e.pointerType === 'touch') return;
+                        lastTipX = e.clientX;
+                        lastTipY = e.clientY;
+                        timer = setTimeout(() => { renderCharTip(uid, lastTipX, lastTipY); }, 120);
+                    });
+                    el.addEventListener('pointermove', (e) => {
+                        if (e.pointerType === 'touch') return;
+                        lastTipX = e.clientX;
+                        lastTipY = e.clientY;
+                        // 表示済みの tooltip もマウスに追従して動く
+                        if (charTipEl) placeCharTip(charTipEl, lastTipX, lastTipY);
+                    });
+                    el.addEventListener('pointerleave', () => {
+                        if (timer) { clearTimeout(timer); timer = null; }
+                        closeCharTip();
+                    });
+                    return;
+                }
+                el.addEventListener('pointerdown', (e) => {
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    lastTipX = e.clientX;
+                    lastTipY = e.clientY;
+                    timer = setTimeout(() => { renderCharTip(uid, lastTipX, lastTipY); }, 350);
+                });
+                el.addEventListener('pointermove', (e) => {
+                    // スクロール等で指が動いたらホールド解除
+                    if (timer && Math.abs(e.clientX - startX) + Math.abs(e.clientY - startY) > 10) {
+                        clearTimeout(timer);
+                        timer = null;
+                    }
+                });
+                el.addEventListener('pointerup', () => {
+                    if (timer) { clearTimeout(timer); timer = null; }
+                    closeCharTip();
+                });
+                el.addEventListener('pointerleave', () => {
+                    if (timer) { clearTimeout(timer); timer = null; }
+                    closeCharTip();
+                });
+                el.addEventListener('pointercancel', () => {
+                    if (timer) { clearTimeout(timer); timer = null; }
+                    closeCharTip();
+                });
+                // モバイルの長押しでシステムメニューが出ないようにする
+                el.addEventListener('contextmenu', (e) => { if (charTipEl) e.preventDefault(); });
+            };
+
+            const HISTORY_VISIBLE = 5;
+            history.forEach((item, idx) => {
+                const isObj = (typeof item === 'object' && item !== null);
+                const uid = isObj ? String(item.uid) : String(item);
+                const name = isObj ? String(item.name || '').trim() : '';
+
+                // 先頭5件のみ表示。残りは「さらに表示」で展開
+                if (!historyShowAll && idx >= HISTORY_VISIBLE) return;
+
                 const wrap = document.createElement('div');
                 wrap.className = 'history-item';
 
                 const loadBtn = document.createElement('button');
                 loadBtn.type = 'button';
                 loadBtn.className = 'load';
-                loadBtn.textContent = uid;
-                loadBtn.title = uid + ' を読み込む';
-                loadBtn.addEventListener('click', () => {
-                    uidInput.value = uid;
-                    setSubmitLoading();
-                    searchForm.submit();
+                // ネイティブ tooltip（title属性）はキャッシュキャラ tooltip の邪魔になるため付けない
+                // ネームカード背景（nameCardId → /static/assets/namecards/{id}.png）
+                const ncId = isObj ? item.nameCardId : null;
+                if (ncId) {
+                    const nc = document.createElement('img');
+                    nc.className = 'hist-namecard';
+                    nc.alt = '';
+                    nc.loading = 'lazy';
+                    nc.onerror = () => nc.remove();
+                    nc.src = `/static/assets/namecards/${ncId}.png`;
+                    loadBtn.appendChild(nc);
+                }
+                // プロフアイコン（pfpId → /static/assets/pfps/{id}.png）
+                const pfpId = isObj ? item.pfpId : null;
+                if (pfpId) {
+                    const pf = document.createElement('img');
+                    pf.className = 'hist-pfp';
+                    pf.alt = '';
+                    pf.loading = 'lazy';
+                    // アセット未取得（バージョン更新直後などで一覧にまだ無いID）のときは
+                    // 先頭キャラのアイコンへフォールバックして表示を維持する
+                    pf.onerror = () => {
+                        if (!pf.dataset.fallback && isObj && item.icon) {
+                            pf.dataset.fallback = '1';
+                            pf.src = item.icon;
+                        } else {
+                            pf.remove();
+                        }
+                    };
+                    pf.src = `/static/assets/pfps/${pfpId}.png`;
+                    loadBtn.appendChild(pf);
+                }
+                // 名前行（名前 + 世界ランク（冒険ランク）バッジ）
+                const nameRow = document.createElement('span');
+                nameRow.className = 'history-item-name-row';
+                const nameEl = document.createElement('span');
+                nameEl.className = 'history-item-name';
+                nameEl.textContent = name || uid;
+                nameRow.appendChild(nameEl);
+                // level は取得成功時に build_card 側から保存される（playerInfo.level 冒険ランク）
+                const lv = isObj ? Number(item.level) || 0 : 0;
+                if (lv > 0) {
+                    const lvEl = document.createElement('span');
+                    lvEl.className = 'history-item-level';
+                    lvEl.textContent = 'Lv.' + lv;
+                    nameRow.appendChild(lvEl);
+                }
+                loadBtn.appendChild(nameRow);
+                const meta = document.createElement('span');
+                meta.className = 'history-item-meta';
+                // サーバー名（UID先頭桁から推定）を表示（読み込み時刻の表示は廃止）
+                const serverName = serverNameFromUid(uid);
+                if (serverName) {
+                    const svEl = document.createElement('span');
+                    svEl.className = 'history-item-server';
+                    svEl.textContent = GenshinI18n.t(serverName);
+                    meta.appendChild(svEl);
+                }
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'history-item-copy';
+                copyBtn.textContent = GenshinI18n.t('UID copy');
+                copyBtn.setAttribute('aria-label', uid + ' をコピー');
+                const copyFeedback = () => {
+                    copyBtn.textContent = GenshinI18n.t('コピーしました');
+                    copyBtn.classList.add('done');
+                    setTimeout(() => { copyBtn.textContent = GenshinI18n.t('UID copy'); copyBtn.classList.remove('done'); }, 1200);
+                };
+                copyBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    try {
+                        await navigator.clipboard.writeText(uid);
+                        copyFeedback();
+                    } catch (err) {
+                        try {
+                            const ta = document.createElement('textarea');
+                            ta.value = uid;
+                            ta.style.position = 'fixed';
+                            ta.style.opacity = '0';
+                            document.body.appendChild(ta);
+                            ta.select();
+                            document.execCommand('copy');
+                            ta.remove();
+                            copyFeedback();
+                        } catch (err2) { /* 不可環境は無視 */ }
+                    }
                 });
+                meta.appendChild(copyBtn);
+                loadBtn.appendChild(meta);
+                // マウスホバー/タッチ長押し: キャッシュ済みキャラの tooltip
+                bindCharTip(loadBtn, uid);
+                loadBtn.addEventListener('click', () => {
+                    window.location.href = `/uid/${uid}?ver=${verInput.value === 'beta' ? 'beta' : 'live'}`;
+                });
+                wrap.appendChild(loadBtn);
 
                 const delBtn = document.createElement('button');
                 delBtn.type = 'button';
                 delBtn.className = 'del';
                 delBtn.setAttribute('aria-label', uid + ' を履歴から削除');
-                delBtn.innerHTML = '&times;';
+                delBtn.innerHTML = '&times; ' + GenshinI18n.t('削除');
                 delBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     removeHistoryUid(uid);
                 });
-
-                wrap.appendChild(loadBtn);
                 wrap.appendChild(delBtn);
+
                 historyList.appendChild(wrap);
             });
+
+            // 「さらに表示」/「折りたたむ」ボタン（5件超のときだけ出す）
+            let moreWrap = document.getElementById('historyMoreWrap');
+            if (history.length > HISTORY_VISIBLE) {
+                if (!moreWrap) {
+                    moreWrap = document.createElement('div');
+                    moreWrap.id = 'historyMoreWrap';
+                    const moreBtn = document.createElement('button');
+                    moreBtn.type = 'button';
+                    moreBtn.id = 'historyMoreBtn';
+                    moreBtn.className = 'btn-history-more';
+                    moreBtn.addEventListener('click', () => {
+                        historyShowAll = !historyShowAll;
+                        renderHistory();
+                    });
+                    moreWrap.appendChild(moreBtn);
+                    historyList.parentNode.insertBefore(moreWrap, historyList.nextSibling);
+                }
+                const remain = history.length - HISTORY_VISIBLE;
+                moreWrap.querySelector('button').textContent = historyShowAll
+                    ? GenshinI18n.t('折りたたむ')
+                    : GenshinI18n.t('さらに表示');
+                moreWrap.style.display = '';
+            } else if (moreWrap) {
+                moreWrap.style.display = 'none';
+            }
         }
 
         searchForm.addEventListener('submit', () => {
-            const uid = uidInput.value.trim();
-            if (!uid) return;
-            let history = getHistory().filter(item => item !== uid);
-            history.unshift(uid);
-            history = history.slice(0, 6);
-            saveHistory(history);
+            // 履歴への保存はビルドカードページ（取得成功時のみ表示されるページ）側で行う。
+            // ここで保存すると存在しないUIDも履歴に入ってしまうため、送信時は保存しない。
             setSubmitLoading();
+        });
+
+        // エラー表示の「再試行」ボタン + クールタイム中はカウントダウンしてから解禁
+        (function () {
+            const detail = document.querySelector('.form-error-detail');
+            const btn = document.getElementById('errorRetryBtn');
+            if (!detail || !btn) return;
+            const numMatch = detail.textContent.match(/(\d+)/);
+            if (numMatch) {
+                // クールタイム系メッセージ（秒数を含む）: 残秒をカウントダウンする
+                let remain = parseInt(numMatch[1], 10);
+                const baseText = detail.textContent;
+                btn.disabled = true;
+                const timer = setInterval(() => {
+                    remain -= 1;
+                    if (remain <= 0) {
+                        clearInterval(timer);
+                        detail.textContent = GenshinI18n.t('クールタイムが終わりました。「再試行」を押してください。');
+                        btn.disabled = false;
+                        return;
+                    }
+                    detail.textContent = baseText.replace(/\d+/, String(remain));
+                }, 1000);
+            }
+            btn.addEventListener('click', () => {
+                if (btn.disabled) return;
+                setSubmitLoading();
+                searchForm.submit();
+            });
+        })();
+
+        // UID入力は数字のみ許可（英語・記号・全角数字は入力不可）
+        uidInput.addEventListener('input', () => {
+            const cleaned = uidInput.value.replace(/\D/g, '');
+            if (uidInput.value !== cleaned) uidInput.value = cleaned;
         });
 
         clearHistory.addEventListener('click', () => {

@@ -4,8 +4,7 @@ import random as _random
 from PIL import Image, ImageDraw, ImageFilter
 from app.paths import CARD_W, CARD_H, SY, _REGION_STATES_DIR
 from app.card.cache import (
-    _lru_get, _lru_set, _PREBUILT_BGS, _REGION_BGS,
-    _CACHE_MAX_REGION_BGS, _SPLASH_BLUR_CACHE, _CACHE_MAX_SPLASH_BLUR,
+    _PREBUILT_BGS, REGION_BGS, SPLASH_BLUR_CACHE,
     get_cached_image,
 )
 
@@ -102,12 +101,12 @@ def get_region_background(width, height, region):
     if not region:
         return None
     key = (region, width, height)
-    hit = _lru_get(_REGION_BGS, key)
+    hit = REGION_BGS.get(key)
     if hit is not None:
-        return hit.copy()
+        return hit
     bg = _build_region_background(width, height, region)
     if bg is not None:
-        _lru_set(_REGION_BGS, key, bg, _CACHE_MAX_REGION_BGS)
+        REGION_BGS.put(key, bg)
         return bg.copy()
     return None
 
@@ -139,7 +138,9 @@ def _prebuild_backgrounds(width=CARD_W, height=CARD_H):
         "None": (0x4A, 0x55, 0x68),
     }
     for elem, rgb in elements.items():
-        _PREBUILT_BGS[elem] = _build_base_background(width, height, rgb)
+        # 背景はアルファ不使用のため RGB で保持（RGBA 比で約 25% 省メモリ）。
+        # 使用時の convert("RGBA") で変換とコピーが同時に行われる。
+        _PREBUILT_BGS[elem] = _build_base_background(width, height, rgb).convert("RGB")
     print(f"[Prebuild] {len(_PREBUILT_BGS)} element backgrounds cached in memory")
     prebuilt_regions = 0
     for region in _list_region_image_names():
@@ -165,7 +166,8 @@ def create_card_background(width, height, base_rgb, splash_path=None, element_ty
     if bg is None:
         if use_prebuilt and element_type in _PREBUILT_BGS:
             _bglog(f"prebuilt copy element={element_type}")
-            bg = _PREBUILT_BGS[element_type].copy()
+            # RGB 保持のためここで RGBA に変換（convert は新画像を返す＝コピー込み）
+            bg = _PREBUILT_BGS[element_type].convert("RGBA")
             _bglog(f"prebuilt copy done {(time.perf_counter()-t0)*1000:.0f}ms")
         else:
             _bglog("build_base_background begin")
@@ -174,11 +176,9 @@ def create_card_background(width, height, base_rgb, splash_path=None, element_ty
 
     if splash_path and os.path.exists(splash_path):
         cache_key = (splash_path, width, height)
-        layer_hit = _lru_get(_SPLASH_BLUR_CACHE, cache_key)
-        if layer_hit is not None:
-            _bglog("splash blur CACHE HIT")
-            layer = layer_hit.copy()
-            _bglog(f"splash blur cache copy done {(time.perf_counter()-t0)*1000:.0f}ms")
+        layer = SPLASH_BLUR_CACHE.get(cache_key)  # ヒット時はコピー済み
+        if layer is not None:
+            _bglog(f"splash blur CACHE HIT (copy done) {(time.perf_counter()-t0)*1000:.0f}ms")
         else:
             layer = None
             try:
@@ -207,7 +207,8 @@ def create_card_background(width, height, base_rgb, splash_path=None, element_ty
                 r, g, b, a = layer.split()
                 a = a.point(lambda p: int(p * 0.09))
                 layer = Image.merge("RGBA", (r, g, b, a))
-                _lru_set(_SPLASH_BLUR_CACHE, cache_key, layer.copy(), _CACHE_MAX_SPLASH_BLUR)
+                # put で所有権をキャッシュに移す（以降 layer は変更しない）
+                SPLASH_BLUR_CACHE.put(cache_key, layer)
                 _bglog(f"splash blur cached {(time.perf_counter()-t0)*1000:.0f}ms")
             except Exception as e:
                 print(f"[Warning] splash blur background failed: {e}", flush=True)

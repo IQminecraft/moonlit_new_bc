@@ -8,12 +8,14 @@ from fastapi import HTTPException
 from PIL import Image, ImageDraw
 from app.paths import BASE_DIR, STATIC_DIR, CARD_W, CARD_H, SX, SY, FONT_PATH, FONT_LIGHT_PATH
 from app.card.cache import get_cached_font, get_resized_image
+from app.card.jsoncache import load_json_cached
 from app.card.stats import (
-    text_map_data, get_stat_japanese, get_char_level,
+    text_map_data, get_stat_japanese, get_stat_label, get_text_map_name, get_char_level,
     score_calc,
     sum_affix_substat_values, is_percent_prop, format_substat_value, format_base_value, format_var_base_add,
     format_decimal_value, artifact_substat_rolls,
 )
+from app.card.labels import img_t
 from app.card.special import (
     SPECIAL_ELEMENT_CHARACTERS, build_special_energy_hint_map,
     resolve_special_avatar_id, resolve_datas_path, resolve_list_path,
@@ -96,14 +98,21 @@ _RESONANCE_ELEM_COLORS = {
     "Dendro": (0x46, 0x6B, 0x63),
 }
 
+# 英語モードで聖遺物ボックス内（幅が狭い）に使う短縮ラベル
+_STAT_ABBR_EN = {"Elemental Mastery": "EM", "Energy Recharge": "ER"}
 
-def _draw_resonance_badges(img, draw, resonance, beta):
+
+def _stat_abbr_en(name: str) -> str:
+    return _STAT_ABBR_EN.get(name, name)
+
+
+def _draw_resonance_badges(img, draw, resonance, beta, lang="ja"):
     """単体カードの聖遺物行とカード下端の隙間に元素共鳴チップを描画する。
 
     編成カードの _draw_badges と同じ角丸チップ様式（暗色背景＋元素色輪郭＋元素アイコン）。
     聖遺物行とは重ならないよう、隙間内に右揃え横並びで配置する（カード種類で統一）。
     """
-    badges = resonance_badges(resonance)
+    badges = resonance_badges(resonance, lang)
     if not badges:
         return
     font_badge = get_cached_font(FONT_PATH, max(1, round(14 * SY)))
@@ -166,7 +175,7 @@ def _lighten_background(img, alpha=110):
     return Image.alpha_composite(img, overlay)
 
 
-def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, base_prec="0", light="false"):
+def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, base_prec="0", light="false", lang="ja"):
     """カード右側に育成パネルを描画する。HTML 版 growth-panel と同レイアウト。
 
     - パネル幅 = 540（HTML の 270px を 2400px キャンバスに 2倍で再現）
@@ -266,7 +275,7 @@ def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, bas
         cur_y += int(stat_value_font.size * 1.4) + 10
 
     # タイトル
-    _draw_panel_text_with_shadow(draw, (inner_x, cur_y), "育成メモ", title_font, gold, shadow=shadow_c)
+    _draw_panel_text_with_shadow(draw, (inner_x, cur_y), img_t("育成メモ", lang), title_font, gold, shadow=shadow_c)
     cur_y += int(title_font.size * 1.4) + 10
 
     if not panel:
@@ -275,41 +284,44 @@ def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, bas
 
     # 1) 聖遺物セット効果
     if panel.get("sets"):
-        _section_head("聖遺物セット効果")
+        _section_head(img_t("聖遺物セット効果", lang))
         for st in panel["sets"]:
             _draw_panel_text_with_shadow(draw, (inner_x, cur_y), f"{st['name']} ×{st['count']}", set_name_font, white, shadow=shadow_c, offset=1)
             cur_y += int(set_name_font.size * 1.35) + 6
             if st.get("set2"):
                 # ステータス反映済み（apply_2set_buffs）の2セット効果は白文字で強調
                 _2set_c = white if st.get("buff_applied") else desc_c
-                cur_y = _draw_wrapped(draw, f"2セット: {st['set2']}", inner_x, cur_y, set_desc_font, _2set_c, max_w, int(set_desc_font.size * 1.5))
+                cur_y = _draw_wrapped(draw, f"{img_t('2セット:', lang)} {st['set2']}", inner_x, cur_y, set_desc_font, _2set_c, max_w, int(set_desc_font.size * 1.5))
             # 4セット効果は4点以上装備時のみ表示（2セット/2セット 編成では非表示）
             if int(st.get("count", 0)) >= 4 and st.get("set4"):
-                cur_y = _draw_wrapped(draw, f"4セット: {st['set4']}", inner_x, cur_y, set_desc_font, desc_c, max_w, int(set_desc_font.size * 1.5))
+                cur_y = _draw_wrapped(draw, f"{img_t('4セット:', lang)} {st['set4']}", inner_x, cur_y, set_desc_font, desc_c, max_w, int(set_desc_font.size * 1.5))
             cur_y += 8
         cur_y += 18
 
     # 2) 基礎ステータス %換算
     sp = panel.get("stat1pct")
     if sp:
-        _section_head("基礎ステータス %換算")
-        _stat_row(f"{sp['label']} 1%あたり", str(sp["value"]))
+        _section_head(img_t("基礎ステータス %換算", lang))
+        _stat_row(f"{sp['label']} {img_t('1%あたり', lang)}", str(sp["value"]))
         cur_y += 18
 
     # 3) サブステ伸び平均（1回あたり）: HP / 攻撃 / 防御 を % と実数で表示
     sub_list = panel.get("subavg_all") or []
     rows = []
-    short = {"hp": "HP", "atk": "攻撃", "def": "防御"}
+    if lang == "en":
+        short = {"hp": "HP", "atk": "ATK", "def": "DEF"}
+    else:
+        short = {"hp": "HP", "atk": "攻撃", "def": "防御"}
     for s in sub_list:
         label = short.get(s.get("key"), s.get("label") or "")
         if s.get("pct_avg") is not None:
             paren = f" ({format_decimal_value(s['flat_equiv'], base_prec)})" if s.get("flat_equiv") is not None else ""
             rows.append((f"{label}%", f"{_r2(s['pct_avg']):.2f}%{paren}"))
         if s.get("flat_avg") is not None:
-            rows.append((f"{label}実数", format_decimal_value(s['flat_avg'], base_prec)))
+            rows.append((f"{label}{img_t('実数', lang)}", format_decimal_value(s['flat_avg'], base_prec)))
     if rows:
-        _section_head("サブステ伸び平均")
-        _draw_panel_text_with_shadow(draw, (inner_x, cur_y), "1回あたりの平均", subhead_font, subhead_c, shadow=shadow_c, offset=1)
+        _section_head(img_t("サブステ伸び平均", lang))
+        _draw_panel_text_with_shadow(draw, (inner_x, cur_y), img_t("1回あたりの平均", lang), subhead_font, subhead_c, shadow=shadow_c, offset=1)
         cur_y += int(subhead_font.size * 1.4) + 8
         for label, value in rows:
             _stat_row(label, value)
@@ -318,7 +330,7 @@ def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, bas
 def _attach_growth_panel(img, panel, bg_base_rgb, splash_path, element_type,
                          use_prebuilt, region, panel_w=_GROWTH_PANEL_W,
                          gap=_GROWTH_PANEL_GAP, margin=_GROWTH_PANEL_MARGIN,
-                         base_prec="0", light="false"):
+                         base_prec="0", light="false", lang="ja"):
     """カード全体を等方縮小し、右側に育成パネルを追加する（幅は変えない）。
 
     元 img は CARD_W x CARD_H。縮小率 k = (CARD_W - panel_w - gap - margin) / CARD_W で
@@ -345,13 +357,13 @@ def _attach_growth_panel(img, panel, bg_base_rgb, splash_path, element_type,
 
     panel_x0 = content_w + gap
     panel_x1 = card_w - margin
-    _draw_growth_panel(bg_full, panel, panel_x0, panel_x1, content_h, bg_base_rgb, base_prec, light)
+    _draw_growth_panel(bg_full, panel, panel_x0, panel_x1, content_h, bg_base_rgb, base_prec, light, lang)
     # 縮小カード+パネルの下端（content_h）で切り抜き、下部の余白を除去する
     bg_full = bg_full.crop((0, 0, card_w, content_h))
     return bg_full
 
 
-def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", resonance: str = None, light: str = "false", show_uid: str = "false"):
+def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", resonance: str = None, light: str = "false", show_uid: str = "false", lang: str = "ja"):
     _total_start = time.perf_counter()
 
     def _plog(msg: str) -> None:
@@ -361,6 +373,16 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
 
     if beta != "true":
         beta = "false"
+    # カード画像の表示言語（"ja" / "en"）。名前・聖遺物・見出しなどの描画テキストを切替える。
+    lang = "en" if str(lang or "").lower() == "en" else "ja"
+
+    if lang == "en":
+        def _stat_abbr(name):
+            # 聖遺物ボックス内は幅が狭いため長いラベルを短縮形にする
+            return _STAT_ABBR_EN.get(name, name)
+    else:
+        def _stat_abbr(name):
+            return name
     growth = "true" if str(growth or "") == "true" else "false"
     light = "true" if str(light or "") == "true" else "false"
     show_uid = "true" if str(show_uid or "") == "true" else "false"
@@ -386,12 +408,8 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     json_path = resolve_datas_path(json_path, beta)
 
     if os.path.exists(json_path):
-        try:
-            with open(json_path, "r", encoding="utf-8") as f:
-                showcase_data = json.load(f)
-        except (UnicodeDecodeError, json.JSONDecodeError):
-            with open(json_path, "r", encoding="cp932") as f:
-                showcase_data = json.load(f)
+        # mtime 無効化のメモリキャッシュ: 同一UIDの連続生成で再パースを省略
+        showcase_data = load_json_cached(json_path)
 
         avatar_list = showcase_data.get("avatarInfoList")
         if not avatar_list and "playerInfo" in showcase_data:
@@ -425,23 +443,13 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     json_path2 = resolve_datas_path(json_path2, beta)
 
     if os.path.exists(json_path2):
-        try:
-            with open(json_path2, "r", encoding="utf-8") as f:
-                chardatas = json.load(f)
-        except (UnicodeDecodeError, json.JSONDecodeError):
-            with open(json_path2, "r", encoding="cp932") as f:
-                chardatas = json.load(f)
+        chardatas = load_json_cached(json_path2)
     else:
         base_avatar_id = str(avatar_id).split("-")[0]
         backup_path = os.path.join(STATIC_DIR, "data", "characters", f"{base_avatar_id}.json")
         backup_path = resolve_datas_path(backup_path, beta)
         if os.path.exists(backup_path):
-            try:
-                with open(backup_path, "r", encoding="utf-8") as f:
-                    chardatas = json.load(f)
-            except (UnicodeDecodeError, json.JSONDecodeError):
-                with open(backup_path, "r", encoding="cp932") as f:
-                    chardatas = json.load(f)
+            chardatas = load_json_cached(backup_path)
         else:
             raise HTTPException(status_code=404, detail=f"Character JSON file not found: {json_path2}")
     t_end = time.perf_counter()
@@ -467,6 +475,22 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     }
     element_ja = element_ja_map.get(element_type, "なし")
 
+    # 言語別ラベル（カード画像の描画テキスト用）
+    if lang == "en":
+        _lb_atk, _lb_def, _lb_em = "ATK", "DEF", "Elemental Mastery"
+        _lb_cr, _lb_cd, _lb_er = "CRIT Rate", "CRIT DMG", "Energy Recharge"
+        _dmg_buff_label = f"{element_type} DMG Bonus" if element_type != "None" else "DMG Bonus"
+        _txt_no_weapon = "Not equipped"
+        _txt_unknown_weapon = "Unknown Weapon"
+        _txt_unknown_artifact = "Unknown Artifact"
+    else:
+        _lb_atk, _lb_def, _lb_em = "攻撃力", "防御力", "元素熟知"
+        _lb_cr, _lb_cd, _lb_er = "会心率", "会心ダメージ", "元素チャージ効率"
+        _dmg_buff_label = f"{element_ja}ダメバフ"
+        _txt_no_weapon = "未装備"
+        _txt_unknown_weapon = "未知の武器"
+        _txt_unknown_artifact = "未知の聖遺物"
+
     element_base_rgb = element_colors.get(element_type, (0x4A, 0x55, 0x68))
     custom_rgb = hex_to_rgb(bg_color) if bg_color else None
     bg_base_rgb = custom_rgb if custom_rgb else element_base_rgb
@@ -481,6 +505,9 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         splash = resolve_datas_path(splash, beta)
 
     char_name = chardatas["name"]
+    if lang == "en":
+        # キャラ詳細 JSON の en_name を優先（無ければ日本語名にフォールバック）
+        char_name = chardatas.get("en_name") or char_name
     if fake_char:
         char_name = f"{char_name}(swap)"
 
@@ -520,22 +547,22 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     t_start = time.perf_counter()
     weapon_data = next((item for item in target_avatar_info.get("equipList", []) if "weapon" in item), None)
     # 未装備（ショーケースに武器が無い）でもカード生成を続行する
-    weapon_name = "未装備"
+    weapon_name = _txt_no_weapon
     weapon_icon = ""
     weapon_level = 0
     weapon_affix = 0
     weapon_stats_list = []
+    weapon_id = None
 
     if fake_weapon:
         weapon_id = fake_weapon
         weapon_json_path = resolve_datas_path(f"static/data/weapons/{weapon_id}.json", beta)
-        with open(weapon_json_path, "r", encoding="utf-8") as f:
-            weapon_jsondata = json.load(f)
+        weapon_jsondata = load_json_cached(weapon_json_path)
         # レアリティ1・2の武器はLv70（3以上はLv90）
         weapon_level = 70 if int(weapon_jsondata.get("rarity", 3)) in (1, 2) else 90
         weapon_affix = 1
         weapon_icon = weapon_jsondata.get("icon", "")
-        weapon_name = weapon_jsondata.get("name", "未知の武器")
+        weapon_name = weapon_jsondata.get("name", _txt_unknown_weapon)
         # サブオプション（会心率・チャージ効率など）は武器によって存在しないため、
         # 無い場合はエントリごとパスする（PIL描画側も None でスキップされる）
         stats_modifier = weapon_jsondata.get("stats_modifier") or {}
@@ -552,12 +579,11 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     elif weapon_data:
         weapon_id = weapon_data["itemId"]
         weapon_json_path = resolve_datas_path(f"static/data/weapons/{weapon_id}.json", beta)
-        weapon_name = "未知の武器"
+        weapon_name = _txt_unknown_weapon
         if os.path.exists(weapon_json_path):
             try:
-                with open(weapon_json_path, "r", encoding="utf-8") as f:
-                    weapon_jsondata = json.load(f)
-                weapon_name = weapon_jsondata.get("name", "未知の武器")
+                weapon_jsondata = load_json_cached(weapon_json_path)
+                weapon_name = weapon_jsondata.get("name", _txt_unknown_weapon)
             except (UnicodeDecodeError, json.JSONDecodeError, OSError):
                 pass
         weapon_icon = (weapon_data.get("flat") or {}).get("icon") or ""
@@ -568,13 +594,24 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     else:
         print(f"[Warning] no weapon equipped for avatar (uid showcase) — drawing as 未装備")
 
+    # 英語モード時は武器名を lists/weapons.json の enName で置き換える
+    # （武器詳細 JSON には日本語 name しか無いため）
+    if lang == "en" and weapon_id:
+        try:
+            _wp_list_path = resolve_list_path("static/data/lists/weapons.json", beta)
+            if os.path.exists(_wp_list_path):
+                _wp_entry = (load_json_cached(_wp_list_path) or {}).get(str(weapon_id)) or {}
+                weapon_name = _wp_entry.get("enName") or weapon_name
+        except Exception:
+            pass
+
     # キー欠落のエントリはパス（描画側も None でスキップされる）
     weapon_stat1 = None
     if len(weapon_stats_list) >= 1:
         entry1 = weapon_stats_list[0] or {}
         prop_id1 = entry1.get("appendPropId", "")
         if prop_id1:
-            stat_name1 = get_stat_japanese(prop_id1)
+            stat_name1 = get_stat_label(prop_id1, lang)
             stat_val1 = entry1.get("statValue", 0.0)
             try:
                 if "PERCENT" in prop_id1 or "CRITICAL" in prop_id1 or "CHARGE" in prop_id1:
@@ -590,7 +627,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         entry2 = weapon_stats_list[1] or {}
         prop_id2 = entry2.get("appendPropId", "")
         if prop_id2:
-            stat_name2 = get_stat_japanese(prop_id2)
+            stat_name2 = get_stat_label(prop_id2, lang)
             stat_val2 = entry2.get("statValue", 0.0)
             try:
                 if "PERCENT" in prop_id2 or "CRITICAL" in prop_id2 or "CHARGE" in prop_id2 or "HURT" in prop_id2:
@@ -654,13 +691,13 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         _def_v, _def_b, _def_a = format_var_base_add(totals["def"]["val"], totals["def"]["base"], base_prec)
         stats_mock = {
             "HP": {"val": _hp_v, "base": _hp_b, "add": "+" + _hp_a, "icon": "static/assets/props/hp.png"},
-            "攻撃力": {"val": _atk_v, "base": _atk_b, "add": "+" + _atk_a, "icon": "static/assets/props/atk.png"},
-            "防御力": {"val": _def_v, "base": _def_b, "add": "+" + _def_a, "icon": "static/assets/props/def.png"},
-            "元素熟知": {"val": format_base_value(totals["em"]["val"], base_prec), "icon": "static/assets/props/em.png"},
-            "会心率": {"val": f"{format_decimal_value(totals['crit_rate']['val'] * 100, base_prec)}%", "icon": "static/assets/props/rate.webp"},
-            "会心ダメージ": {"val": f"{format_decimal_value(totals['crit_dmg']['val'] * 100, base_prec)}%", "icon": "static/assets/props/dmg.webp"},
-            "元素チャージ効率": {"val": f"{format_decimal_value(totals['er']['val'] * 100, base_prec)}%", "icon": "static/assets/props/er.png"},
-            f"{element_ja}ダメバフ": {"val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
+            _lb_atk: {"val": _atk_v, "base": _atk_b, "add": "+" + _atk_a, "icon": "static/assets/props/atk.png"},
+            _lb_def: {"val": _def_v, "base": _def_b, "add": "+" + _def_a, "icon": "static/assets/props/def.png"},
+            _lb_em: {"val": format_base_value(totals["em"]["val"], base_prec), "icon": "static/assets/props/em.png"},
+            _lb_cr: {"val": f"{format_decimal_value(totals['crit_rate']['val'] * 100, base_prec)}%", "icon": "static/assets/props/rate.webp"},
+            _lb_cd: {"val": f"{format_decimal_value(totals['crit_dmg']['val'] * 100, base_prec)}%", "icon": "static/assets/props/dmg.webp"},
+            _lb_er: {"val": f"{format_decimal_value(totals['er']['val'] * 100, base_prec)}%", "icon": "static/assets/props/er.png"},
+            _dmg_buff_label: {"val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
         }
     else:
         prop_map = target_avatar_info.get('fightPropMap', {})
@@ -697,13 +734,13 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         _def_v, _def_b, _def_a = format_var_base_add(totals["def"]["val"], totals["def"]["base"], base_prec)
         stats_mock = {
             "HP": {"val": _hp_v, "base": _hp_b, "add": "+" + _hp_a, "icon": "static/assets/props/hp.png"},
-            "攻撃力": {"val": _atk_v, "base": _atk_b, "add": "+" + _atk_a, "icon": "static/assets/props/atk.png"},
-            "防御力": {"val": _def_v, "base": _def_b, "add": "+" + _def_a, "icon": "static/assets/props/def.png"},
-            "元素熟知": {"val": format_base_value(totals["em"]["val"], base_prec), "icon": "static/assets/props/em.png"},
-            "会心率": {"val": f"{format_decimal_value(totals['crit_rate']['val'] * 100, base_prec)}%", "icon": "static/assets/props/rate.webp"},
-            "会心ダメージ": {"val": f"{format_decimal_value(totals['crit_dmg']['val'] * 100, base_prec)}%", "icon": "static/assets/props/dmg.webp"},
-            "元素チャージ効率": {"val": f"{format_decimal_value(totals['er']['val'] * 100, base_prec)}%", "icon": "static/assets/props/er.png"},
-            f"{element_ja}ダメバフ": {"val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
+            _lb_atk: {"val": _atk_v, "base": _atk_b, "add": "+" + _atk_a, "icon": "static/assets/props/atk.png"},
+            _lb_def: {"val": _def_v, "base": _def_b, "add": "+" + _def_a, "icon": "static/assets/props/def.png"},
+            _lb_em: {"val": format_base_value(totals["em"]["val"], base_prec), "icon": "static/assets/props/em.png"},
+            _lb_cr: {"val": f"{format_decimal_value(totals['crit_rate']['val'] * 100, base_prec)}%", "icon": "static/assets/props/rate.webp"},
+            _lb_cd: {"val": f"{format_decimal_value(totals['crit_dmg']['val'] * 100, base_prec)}%", "icon": "static/assets/props/dmg.webp"},
+            _lb_er: {"val": f"{format_decimal_value(totals['er']['val'] * 100, base_prec)}%", "icon": "static/assets/props/er.png"},
+            _dmg_buff_label: {"val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
         }
 
     artifact_x_list = [33, 375, 718, 1061, 1404]
@@ -712,7 +749,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     artifacts_mock = []
     for _ in range(5):
         artifacts_mock.append({
-            "set": "0", "name": "未装備", "upgrade": 0,
+            "set": "0", "name": _txt_no_weapon, "upgrade": 0,
             "Main": ["-", "-"],
             "stats": {i: ["static/assets/props/atk_per.png", "-", "-", []] for i in range(4)},
             "score": 0.0, "tier": "-", "icon": ""
@@ -740,11 +777,12 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         target_idx = slot_to_index[last_num]
 
         name_hash = str(flat.get("nameTextMapHash", ""))
-        artifact_name = text_map_data.get(name_hash, "未知の聖遺物")
+        # text_map.json は {言語: {キー: テキスト}} 構造のため言語サブ辞書から引く
+        artifact_name = get_text_map_name(name_hash, lang, _txt_unknown_artifact)
 
         main_stat_raw = flat.get("reliquaryMainstat", {})
         main_prop_id = main_stat_raw.get("mainPropId", "")
-        main_name = get_stat_japanese(main_prop_id)
+        main_name = _stat_abbr(get_stat_label(main_prop_id, lang))
         main_val = main_stat_raw.get("statValue", 0)
         if "PERCENT" in main_prop_id or "CRITICAL" in main_prop_id or "CHARGE" in main_prop_id or "HURT" in main_prop_id:
             main_value_str = f"{format_decimal_value(main_val, base_prec)}%"
@@ -763,7 +801,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             if idx < len(sub_list):
                 sub_data = sub_list[idx]
                 sub_prop_id = sub_data.get("appendPropId", "")
-                sub_name = get_stat_japanese(sub_prop_id)
+                sub_name = _stat_abbr(get_stat_label(sub_prop_id, lang))
                 sub_val = sub_sums.get(sub_prop_id, sub_data.get("statValue", 0))
 
                 if sub_prop_id == "FIGHT_PROP_CRITICAL":
@@ -830,24 +868,25 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             os.path.join(BASE_DIR, "static", "data", "lists", "artifacts.json"),
             "artifacts.json"
         ]
+        _fallback_name = f"Set {set_id_str}" if lang == "en" else f"セット {set_id_str}"
         for raw_path in possible_paths:
             path = resolve_list_path(raw_path, beta)
             if os.path.exists(path):
-                try:
-                    with open(path, "r", encoding="utf-8") as f_art:
-                        art_json = json.load(f_art)
-                except (UnicodeDecodeError, json.JSONDecodeError):
-                    with open(path, "r", encoding="cp932") as f_art:
-                        art_json = json.load(f_art)
+                art_json = load_json_cached(path)
                 try:
                     if set_id_str in art_json:
-                        name = art_json[set_id_str].get("janame", f"セット {set_id_str}")
-                        icon_field = art_json[set_id_str].get("icon", "UI_RelicIcon_15046_4")
+                        _entry = art_json[set_id_str]
+                        # 英語モード時は enname を優先（無ければ janame にフォールバック）
+                        if lang == "en":
+                            name = _entry.get("enname") or _entry.get("janame") or _fallback_name
+                        else:
+                            name = _entry.get("janame", _fallback_name)
+                        icon_field = _entry.get("icon", "UI_RelicIcon_15046_4")
                         icon_path = resolve_datas_path(f"static/assets/artifacts/{icon_field}.webp", beta)
                         return name, icon_path
                 except Exception:
                     pass
-        return f"セット {set_id_str}", resolve_datas_path("static/assets/artifacts/UI_RelicIcon_15046_4.webp", beta)
+        return _fallback_name, resolve_datas_path("static/assets/artifacts/UI_RelicIcon_15046_4.webp", beta)
 
     sets_display = []
     if len(active_sets) == 1:
@@ -871,10 +910,17 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
     else:
         tier_sum_score = "SS"
 
-    display_map = {
-        "crit": "会心のみ", "atk": "攻撃力%", "hp": "HP%",
-        "def": "防御%", "em": "元素熟知", "charge": "チャージ効率"
-    }
+    if lang == "en":
+        # 計算方法ボックスは幅が狭いため長い値は短縮形にする（文字重なり防止）
+        display_map = {
+            "crit": "CRIT only", "atk": "ATK%", "hp": "HP%",
+            "def": "DEF%", "em": "EM", "charge": "ER"
+        }
+    else:
+        display_map = {
+            "crit": "会心のみ", "atk": "攻撃力%", "hp": "HP%",
+            "def": "防御%", "em": "元素熟知", "charge": "チャージ効率"
+        }
     display_score_way = display_map[calc_method]
     t_end = time.perf_counter()
     print(f"[Perf] セット効果処理: {(t_end - t_start)*1000:.1f}ms", flush=True)
@@ -885,7 +931,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         _g_set_bonuses = []
         for _sid, _cnt in active_sets:
             _g_name, _g_icon = get_set_info(_sid)
-            _g_set_bonuses.append({"id": str(_sid), "name": _g_name, "count": _cnt, "buff": set_buff_label(str(_sid))})
+            _g_set_bonuses.append({"id": str(_sid), "name": _g_name, "count": _cnt, "buff": set_buff_label(str(_sid), lang)})
         _wjsondata = weapon_jsondata if "weapon_jsondata" in locals() else None
         if fake_char or fake_weapon:
             growth_panel = build_growth_from_fake(
@@ -898,6 +944,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
                 raw_artifacts=raw_artifacts,
                 set_bonuses=_g_set_bonuses,
                 beta=beta,
+                lang=lang,
             )
         else:
             growth_panel = build_growth_panel(
@@ -910,6 +957,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
                 raw_artifacts=raw_artifacts,
                 set_bonuses=_g_set_bonuses,
                 beta=beta,
+                lang=lang,
             )
 
     t_start = time.perf_counter()
@@ -966,16 +1014,20 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         img.alpha_composite(_outline_layer, dest=(_ol_x1, _ol_y1))
 
         if substat_dots == "1":
-            # 伸び値凡例: スプラッシュ枠（y=701）と聖遺物（y=738）の間の空間に4色の連結バーを並べる
-            legend_y = 719
+            # 伸び値凡例: スプラッシュ枠（y=701）と聖遺物行（y=738）の間の空間に配置し、
+            # 文字は花ボックス（1番左の聖遺物 x=33）の左端に揃える。バーは文字の右に続ける
+            legend_y = 713
             legend_dot_size = 10
             legend_seg_w = round(legend_dot_size * 2.2)
-            legend_total = len(ROLL_DOT_COLORS) * legend_seg_w
-            legend_x0 = 380 - legend_total / 2
-            draw_figma_text(draw, text="伸び値", x=legend_x0 - 70, y=legend_y - 4, font=font_stats, align="left", font_size=22, fill_color=(15, 23, 42, 170) if is_light else (255, 255, 255, 220))
+            _legend_label = img_t("伸び値", lang)
+            _legend_font = get_cached_font(FONT_PATH, max(1, round(22 * SY)))
+            _label_w = draw.textlength(_legend_label, font=_legend_font) / SX
+            _legend_x = 33
+            draw_figma_text(draw, text=_legend_label, x=_legend_x, y=legend_y - 6, font=font_stats, align="left", font_size=22, fill_color=(15, 23, 42, 170) if is_light else (255, 255, 255, 220))
+            _bars_x0 = _legend_x + _label_w + 14
             for li, color in enumerate(ROLL_DOT_COLORS):
                 corners = (True, False, False, True) if li == 0 else ((False, True, True, False) if li == len(ROLL_DOT_COLORS) - 1 else (False, False, False, False))
-                draw_figma_dot(img, x=legend_x0 + li * legend_seg_w, y=legend_y, size=legend_dot_size, fill_color=color, corners=corners)
+                draw_figma_dot(img, x=_bars_x0 + li * legend_seg_w, y=legend_y, size=legend_dot_size, fill_color=color, corners=corners)
 
         draw_figma_text(draw, text=char_name, x=56, y=57, font=font_stats, font_size=50, fill_color=(0, 0, 0, 190))
         draw_figma_text(draw, text=char_name, x=53, y=53, font=font_stats, font_size=50, fill_color=(255, 255, 255))
@@ -986,7 +1038,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             draw_figma_text(draw, text=f"♥ {friendship_lv}", x=53, y=162, font=font_stats, font_size=30, fill_color=(255, 255, 255))
 
         # 元素共鳴バッジ（手動選択・最大2つ）を聖遺物行とカード下端の隙間に描画
-        _draw_resonance_badges(img, draw, resonance, beta)
+        _draw_resonance_badges(img, draw, resonance, beta, lang)
 
         # UID 表示（表示方法トグル。共鳴チップと同じ高さの左下）
         if show_uid == "true":
@@ -1039,7 +1091,15 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             draw_figma_text(draw, text=f"R{weapon_affix}", x=1357, y=48, font=font_stats, align="left", font_size=20)
         else:
             draw_figma_text(draw, text="-", x=1357, y=48, font=font_stats, align="left", font_size=20)
-        draw_figma_text(draw, text=weapon_name, x=1462, y=60, font=font_stats, align="left", font_size=23)
+        # 長い武器名（英語など）はカード右端にはみ出すため省略する
+        _wn_font = get_cached_font(FONT_PATH, max(1, round(23 * SY)))
+        _wn_max = (2388 - 1462) * SX
+        _wn_text = weapon_name
+        if draw.textlength(_wn_text, font=_wn_font) > _wn_max:
+            while _wn_text and draw.textlength(_wn_text + "...", font=_wn_font) > _wn_max:
+                _wn_text = _wn_text[:-1]
+            _wn_text = _wn_text.rstrip() + "..."
+        draw_figma_text(draw, text=_wn_text, x=1462, y=60, font=font_stats, align="left", font_size=23)
         if weapon_level:
             draw_figma_text(draw, text=f"Lv.{weapon_level}", x=1462, y=90, font=font_stats, align="left", font_size=20)
         else:
@@ -1080,7 +1140,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             draw_figma_text(draw, text=n, x=840, y=current_y, font=font_stats, align="left")
             draw_figma_text(draw, text=data["val"], x=870, y=current_y, font=font_stats, align="right", box_width=450 - 60)
 
-            if n in ["HP", "攻撃力", "防御力"] and data.get("base") and data.get("add"):
+            if n in ("HP", _lb_atk, _lb_def) and data.get("base") and data.get("add"):
                 sub_y = current_y + 32
                 green_text = data["add"]
                 gray_text = str(data["base"])
@@ -1139,7 +1199,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             _num_font_path = getattr(font_stats, "path", None)
             _num_font = get_cached_font(_num_font_path, max(1, round(40 * SY))) if _num_font_path and os.path.exists(_num_font_path) else font_stats
             _score_left_x = box_x + 287 - draw.textlength(str(artifact_data["score"]), font=_num_font) / SX
-            draw_figma_text(draw, text="スコア", x=box_x + 27, y=1090, font=font_stats_light, font_size=20, align="right", box_width=(_score_left_x - 6) - (box_x + 27))
+            draw_figma_text(draw, text=img_t("スコア", lang), x=box_x + 27, y=1090, font=font_stats_light, font_size=20, align="right", box_width=(_score_left_x - 6) - (box_x + 27))
             draw_figma_text(draw, text=artifact_data["score"], x=box_x + 207, y=1070, font=font_stats, font_size=40, align="right", box_width=80)
             paste_figma_image(img, f"static/assets/tiers/{artifact_data['tier']}.png", box_x=box_x + 27, box_y=1070, box_width=60, box_height=60, radius=15, beta=beta)
         t_end = time.perf_counter()
@@ -1156,11 +1216,11 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             draw_figma_box(img, x=_count_box_x, y=s["box_y"], width=35, height=28, radius=8, fill_color=(15, 23, 42, 28) if is_light else (255, 255, 255, 40))
             draw_figma_text(draw, text=s["count"], x=_count_box_x, y=s["text_y"], font=font_stats, align="center", font_size=18, box_width=35)
 
-        draw_figma_text(draw, text="総合スコア", x=1443, y=449, font=font_stats, align="left", font_size=30)
+        draw_figma_text(draw, text=img_t("総合スコア", lang), x=1443, y=449, font=font_stats, align="left", font_size=30)
         draw_figma_text(draw, text=round(score_sum, 1), x=1332, y=480, font=font_stats, align="center", font_size=90, box_width=386)
         draw_figma_line(img, x1=1380, y1=623, x2=1670, y2=623, width=1)
         paste_figma_image(img, f"static/assets/tiers/{tier_sum_score}.png", box_x=1620, box_y=400, box_width=80, box_height=80, radius=15, beta=beta)
-        draw_figma_text(draw, text="計算方法", x=1350, y=642, font=font_stats, align="left", font_size=30)
+        draw_figma_text(draw, text=img_t("計算方法", lang), x=1350, y=642, font=font_stats, align="left", font_size=30)
         draw_figma_text_right(draw, text=display_score_way, x=1680, y=645, font=font_stats, align="right", font_size=35)
         t_end = time.perf_counter()
         print(f"[Perf] 描画：セット効果・総合スコア: {(t_end - t_start)*1000:.1f}ms", flush=True)
@@ -1175,6 +1235,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             region=selected_region,
             base_prec=base_prec,
             light=light,
+            lang=lang,
         )
         t_end = time.perf_counter()
         print(f"[Perf] 育成パネル追加: {(t_end - t_start)*1000:.1f}ms", flush=True)

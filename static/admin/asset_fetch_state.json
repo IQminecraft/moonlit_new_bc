@@ -1,0 +1,28 @@
+{
+  "namecards": {
+    "total": 293,
+    "new": 0,
+    "skipped": 293,
+    "failed": 0
+  },
+  "pfps": {
+    "total": 428,
+    "new": 0,
+    "skipped": 428,
+    "failed": 0
+  },
+  "versions": {
+    "live": "7.0",
+    "beta": "7.0.54"
+  },
+  "sources": {
+    "namecard_list": "lunaris",
+    "pfp_list": {
+      "nanoka": 122,
+      "enka": 181,
+      "pizza": 4,
+      "lunaris": 121
+    }
+  },
+  "last_fetch": "2026-09-04 01:04:04"
+}

@@ -15,6 +15,11 @@ show_status_view_setting:
     表示/非表示。非表示時はステータス表示（html ビュー）へ切り替えられず、
     保存済みの表示モードが html の場合はビルドカード（glass）に強制される。
     ファイル未作成時は既定値（false = 非表示）。
+
+show_score_history:
+    build_card.html の「スコア履歴」グラフ（閲覧スコアの折れ線グラフ）の
+    表示/非表示。非表示時はスコアの記録も行わない。
+    ファイル未作成時は既定値（true = 表示）。
 """
 import json
 import os
@@ -27,6 +32,7 @@ UI_FLAGS_PATH = os.path.join(STATIC_DIR, "data", "setting", "ui_flags.json")
 UI_FLAG_DEFAULTS = {
     "show_team_abyss_buttons": True,
     "show_status_view_setting": False,
+    "show_score_history": True,
 }
 
 _ui_flags_cache = {"flags": dict(UI_FLAG_DEFAULTS), "mtime": None}

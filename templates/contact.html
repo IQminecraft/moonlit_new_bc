@@ -206,7 +206,24 @@
                 <div id="contactStatus" class="status" hidden></div>
             </div>
         </main>
+
+        <footer class="site-footer">
+            <p>moonlit.wiki はファンメイドのWebサイトです。</p>
+            <p>ゲーム関連の画像およびアセットの著作権・商標権はすべて HoYoverse に帰属します。</p>
+        </footer>
     </div>
+
+    <style>
+        /* サイトフッター（ファンメイド・著作権表示） */
+        .site-footer {
+            padding: 18px 16px 26px;
+            text-align: center;
+            color: var(--text-muted, #6b7a90);
+            font-size: 11.5px;
+            line-height: 1.7;
+        }
+        .site-footer p { margin: 0; opacity: 0.9; }
+    </style>
 
     <script>
         const THEME_PREF_KEY = 'genshin_build_card_theme_pref';

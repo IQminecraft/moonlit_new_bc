@@ -2,7 +2,10 @@ import os
 import threading
 from PIL import Image, ImageDraw, ImageChops, ImageFilter
 from app.paths import SX as _BASE_SX, SY as _BASE_SY
-from app.card.cache import get_cached_font, get_cached_image, get_resized_image
+from app.card.cache import (
+    get_cached_font, get_cached_image, get_resized_image,
+    get_rounded_mask, LAYER_CACHE, MASK_CACHE,
+)
 from app.card.special import resolve_datas_path
 
 
@@ -226,6 +229,61 @@ def _vertical_gradient_rgba(w, h, top, bottom):
     return strip.resize((w, h), Image.Resampling.BILINEAR)
 
 
+def _ring_mask(w, h, r, bw):
+    """枠線用リングマスク（外角丸 - 内角丸）。MASK_CACHE で共有する。"""
+    key = ("ring", w, h, r, bw)
+    hit = MASK_CACHE.get(key, copy=False)
+    if hit is not None:
+        return hit
+    omask = Image.new("L", (w, h), 0)
+    od = ImageDraw.Draw(omask)
+    safe_rounded_rectangle(od, [0, 0, w - 1, h - 1], radius=r, fill=255)
+    safe_rounded_rectangle(od, [bw, bw, w - 1 - bw, h - 1 - bw],
+                           radius=max(1, r - bw), fill=0)
+    MASK_CACHE.put(key, omask)
+    return omask
+
+
+def _build_glass_layer(w, h, r, blur_r, off_y, pad,
+                       fill_top, fill_bottom, border_top, border_bottom,
+                       border_width, highlight_alpha, shadow, shadow_alpha):
+    """ガラスボックスを位置非依存の1枚レイヤとして描く（影の余白 pad を含む）。"""
+    sw, sh = w + pad * 2, h + pad * 2
+    layer = Image.new("RGBA", (sw, sh), (0, 0, 0, 0))
+
+    # ---- 1) 控えめで締まった影 ----
+    if shadow:
+        lay = Image.new("RGBA", (sw, sh), (0, 0, 0, 0))
+        ld = ImageDraw.Draw(lay)
+        safe_rounded_rectangle(ld, [pad, pad + off_y, pad + w, pad + off_y + h],
+                               radius=r, fill=(0, 0, 0, shadow_alpha))
+        lay = lay.filter(ImageFilter.GaussianBlur(radius=blur_r))
+        layer.alpha_composite(lay)
+
+    # ---- 2) 縦グラデ塗り + 角丸マスク ----
+    grad = _vertical_gradient_rgba(w, h, fill_top, fill_bottom)
+    mask = get_rounded_mask(w, h, r)
+    grad.putalpha(ImageChops.multiply(grad.getchannel("A"), mask))
+    layer.alpha_composite(grad, dest=(pad, pad))
+
+    # ---- 3) グラデ枠線（外角丸 - 内角丸 のマスクに白グラデを流す） ----
+    bw = border_width
+    if min(w, h) > bw * 2 + 2:
+        blayer = _vertical_gradient_rgba(w, h, border_top, border_bottom)
+        blayer.putalpha(ImageChops.multiply(blayer.getchannel("A"), _ring_mask(w, h, r, bw)))
+        layer.alpha_composite(blayer, dest=(pad, pad))
+
+    # ---- 4) 上端ハイライト（反射） ----
+    if highlight_alpha > 0:
+        hh = max(2, int(h * 0.10))
+        hl = _vertical_gradient_rgba(w, hh, (255, 255, 255, highlight_alpha), (255, 255, 255, 0))
+        hmask = mask.crop((0, 0, w, hh))
+        hl.putalpha(ImageChops.multiply(hl.getchannel("A"), hmask))
+        layer.alpha_composite(hl, dest=(pad, pad))
+
+    return layer
+
+
 def draw_figma_glass_box(img, x, y, width, height, radius=25,
                          fill_top=None, fill_bottom=None,
                          border_top=None, border_bottom=None,
@@ -239,6 +297,9 @@ def draw_figma_glass_box(img, x, y, width, height, radius=25,
     - 控えめで締まった影（弱アルファ + 小ぼかし）
 
     座標・サイズは設計座標（draw_figma_box と同じ）。
+
+    描画結果はパラメータだけで決まるため LAYER_CACHE にレイヤとして保持し、
+    2回目以降は GaussianBlur・グラデ・マスク生成を飛ばして貼り付けだけ行う。
     """
     if fill_top is None:
         fill_top = _theme_color("glass_fill_top", (22, 30, 52, 72))
@@ -257,45 +318,24 @@ def draw_figma_glass_box(img, x, y, width, height, radius=25,
         return
     r = min(r, w // 2, h // 2)
 
-    # ---- 1) 控えめで締まった影 ----
-    if shadow:
-        blur_r = max(2, round(3 * _sy()))
-        pad = blur_r * 2
-        off_y = int(round(3 * _sy()))
-        sw, sh = w + pad * 2, h + pad * 2
-        lay = Image.new("RGBA", (sw, sh), (0, 0, 0, 0))
-        ld = ImageDraw.Draw(lay)
-        safe_rounded_rectangle(ld, [pad, pad + off_y, pad + w, pad + off_y + h],
-                               radius=r, fill=(0, 0, 0, shadow_alpha))
-        lay = lay.filter(ImageFilter.GaussianBlur(radius=blur_r))
-        _composite_clipped(img, lay, X0 - pad, Y0 - pad)
-
-    # ---- 2) 縦グラデ塗り + 角丸マスク ----
-    grad = _vertical_gradient_rgba(w, h, fill_top, fill_bottom)
-    mask = Image.new("L", (w, h), 0)
-    safe_rounded_rectangle(ImageDraw.Draw(mask), [0, 0, w - 1, h - 1], radius=r, fill=255)
-    grad.putalpha(ImageChops.multiply(grad.getchannel("A"), mask))
-    _composite_clipped(img, grad, X0, Y0)
-
-    # ---- 3) グラデ枠線（外角丸 - 内角丸 のマスクに白グラデを流す） ----
+    shadow = bool(shadow)
+    blur_r = max(2, round(3 * _sy())) if shadow else 0
+    pad = blur_r * 2 if shadow else 0
+    off_y = int(round(3 * _sy())) if shadow else 0
     bw = max(1, round(border_width * _sy()))
-    if min(w, h) > bw * 2 + 2:
-        omask = Image.new("L", (w, h), 0)
-        od = ImageDraw.Draw(omask)
-        safe_rounded_rectangle(od, [0, 0, w - 1, h - 1], radius=r, fill=255)
-        safe_rounded_rectangle(od, [bw, bw, w - 1 - bw, h - 1 - bw],
-                               radius=max(1, r - bw), fill=0)
-        blayer = _vertical_gradient_rgba(w, h, border_top, border_bottom)
-        blayer.putalpha(ImageChops.multiply(blayer.getchannel("A"), omask))
-        _composite_clipped(img, blayer, X0, Y0)
 
-    # ---- 4) 上端ハイライト（反射） ----
-    if highlight_alpha > 0:
-        hh = max(2, int(h * 0.10))
-        hl = _vertical_gradient_rgba(w, hh, (255, 255, 255, highlight_alpha), (255, 255, 255, 0))
-        hmask = mask.crop((0, 0, w, hh))
-        hl.putalpha(ImageChops.multiply(hl.getchannel("A"), hmask))
-        _composite_clipped(img, hl, X0, Y0)
+    key = (
+        "glass", w, h, r, blur_r, off_y, pad,
+        tuple(fill_top), tuple(fill_bottom), tuple(border_top), tuple(border_bottom),
+        bw, int(highlight_alpha), shadow, int(shadow_alpha),
+    )
+    layer = LAYER_CACHE.get(key, copy=False)  # 貼り付けは非破壊なので共有のままでよい
+    if layer is None:
+        layer = _build_glass_layer(w, h, r, blur_r, off_y, pad,
+                                   fill_top, fill_bottom, border_top, border_bottom,
+                                   bw, highlight_alpha, shadow, shadow_alpha)
+        LAYER_CACHE.put(key, layer)  # 予算超過時は保持されない（その場限りで使う）
+    _composite_clipped(img, layer, X0 - pad, Y0 - pad)
 
 
 def draw_figma_text(draw, text, x, y, font, font_size=None, fill_color=_DEFAULT, align="left", box_width=None, stroke_width=0, stroke_fill=None, shadow=False):
@@ -475,9 +515,7 @@ def paste_figma_image(base_img, img_path, box_x, box_y, box_width, box_height, r
         if max(box_width, box_height) < 50:
             base_img.paste(paste_img, (bx, by), paste_img)
         else:
-            corner_mask = Image.new("L", (bw, bh), 0)
-            mask_draw = ImageDraw.Draw(corner_mask)
-            safe_rounded_rectangle(mask_draw, [0, 0, bw, bh], radius=max(1, round(radius * _sy())), fill=255)
+            corner_mask = get_rounded_mask(bw, bh, max(1, round(radius * _sy())))
 
             r, g, b, a = paste_img.split()
             combined_alpha = ImageChops.multiply(a, corner_mask)
@@ -523,9 +561,7 @@ def paste_mask_image(base_img, img_path, box_x, box_y, box_width, box_height, ra
         offset_y = (bh - new_height) // 2 + int((new_height - bh) // 2 * oy_pct)
         canvas.paste(paste_img, (offset_x, offset_y), paste_img)
 
-        corner_mask = Image.new("L", (bw, bh), 0)
-        mask_draw = ImageDraw.Draw(corner_mask)
-        safe_rounded_rectangle(mask_draw, [0, 0, bw, bh], radius=max(1, round(radius * _sy())), fill=255)
+        corner_mask = get_rounded_mask(bw, bh, max(1, round(radius * _sy())))
 
         r, g, b, a = canvas.split()
         combined_alpha = ImageChops.multiply(a, corner_mask)

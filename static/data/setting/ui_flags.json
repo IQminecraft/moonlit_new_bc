@@ -1,4 +1,5 @@
 {
   "show_team_abyss_buttons": false,
-  "show_status_view_setting": false
+  "show_status_view_setting": false,
+  "show_score_history": false
 }

@@ -3,6 +3,7 @@
 import os
 import json
 import time
+import threading
 import hashlib as _hashlib
 from urllib.parse import urlencode, quote
 
@@ -27,6 +28,7 @@ from app.card.sign import (
 from app.core.server_stats import _server_stats_snapshot
 from app.card.pool import _run_in_card_gen_pool, _card_gen_stats
 from app.card.data import _load_json_auto, _build_char_list_from_showcase, _get_card_data_sync
+from app.card.jsoncache import invalidate_json_cache
 from app.card.image import _generate_card_image_sync
 from app.card.team_image import _generate_team_image_sync
 from app.card.theme_cards import _generate_theme_card_image_sync
@@ -68,7 +70,18 @@ def _enka_cooldown_remaining(uid):
 _CARDS_CACHE_DIR = os.path.join(STATIC_DIR, "cache", "cards")
 
 # 生成デザインを変更したときはこの値を更新する（旧デザインのディスクキャッシュを無効化）
-_CARD_CACHE_VERSION = "v5-theme-text-fit"
+_CARD_CACHE_VERSION = "v6-i18n-artifact-names"
+
+# ディスクキャッシュの容量上限（MB）。超過時は mtime が最も古いファイルから削除する。
+_CARD_DISK_CACHE_MAX_BYTES = int(float(os.environ.get("CARD_DISK_CACHE_MB", "512")) * 1024 * 1024)
+# 淘汰走査の最小間隔（秒）。保存のたびにディレクトリ走査しないためのスロットル。
+_CARD_DISK_SWEEP_MIN_INTERVAL = 60.0
+# 生成カード画像レスポンスに付与する Cache-Control の max-age（秒）。
+_CARD_HTTP_MAX_AGE = max(0, int(os.environ.get("CARD_HTTP_CACHE_MAX_AGE", "600")))
+_CARD_HTTP_CACHE_CONTROL = f"public, max-age={_CARD_HTTP_MAX_AGE}" if _CARD_HTTP_MAX_AGE > 0 else "no-store"
+
+_CARD_DISK_LOCK = threading.Lock()
+_CARD_DISK_LAST_SWEEP = 0.0
 
 
 def _card_disk_path(params):
@@ -84,17 +97,73 @@ def _serve_card_disk(params):
     if os.path.exists(path):
         try:
             with open(path, "rb") as f:
-                return f.read()
+                data = f.read()
+            # mtime を更新して LRU 淘汰順位に反映（よく配信されるカードを残す）
+            try:
+                os.utime(path)
+            except OSError:
+                pass
+            return data
         except Exception:
             return None
     return None
 
 
+def _evict_card_disk_over_budget():
+    """容量上限を超えていれば、mtime が古いものから順に削除する。"""
+    total = 0
+    entries = []
+    try:
+        with os.scandir(_CARDS_CACHE_DIR) as it:
+            for ent in it:
+                try:
+                    if not ent.is_file():
+                        continue
+                    st = ent.stat()
+                    total += st.st_size
+                    entries.append((st.st_mtime, st.st_size, ent.path))
+                except OSError:
+                    continue
+    except OSError:
+        return
+    if total <= _CARD_DISK_CACHE_MAX_BYTES:
+        return
+    entries.sort()  # 最も古い（mtime 最小）ものが先頭
+    deleted = 0
+    for _mtime, size, path in entries:
+        if total <= _CARD_DISK_CACHE_MAX_BYTES:
+            break
+        try:
+            os.remove(path)
+            total -= size
+            deleted += 1
+        except OSError:
+            continue
+    if deleted:
+        print(
+            f"[cache] card disk evicted {deleted} file(s), "
+            f"now {total / (1024 * 1024):.1f}MB (cap {_CARD_DISK_CACHE_MAX_BYTES / (1024 * 1024):.0f}MB)",
+            flush=True,
+        )
+
+
 def _save_card_disk(params, data):
+    global _CARD_DISK_LAST_SWEEP
     try:
         write_bytes_atomic(_card_disk_path(params), data)
     except Exception as e:
         print(f"[cache] card disk save failed: {e}")
+        return
+    now = time.time()
+    if now - _CARD_DISK_LAST_SWEEP >= _CARD_DISK_SWEEP_MIN_INTERVAL:
+        with _CARD_DISK_LOCK:
+            now = time.time()
+            if now - _CARD_DISK_LAST_SWEEP >= _CARD_DISK_SWEEP_MIN_INTERVAL:
+                _CARD_DISK_LAST_SWEEP = now
+                try:
+                    _evict_card_disk_over_budget()
+                except Exception as e:
+                    print(f"[cache] card disk sweep failed: {e}")
 
 _TEAM_CFG_KEYS = {"calc_method", "fake_char", "fake_weapon", "bg_mode", "bg_color", "bg_region", "base_prec"}
 
@@ -186,6 +255,12 @@ async def enka_cooldown(uid: str):
     }
 
 
+@api_router.get("/api/card_gen_status")
+async def api_card_gen_status():
+    """カード生成プールの状況（進捗表示用）。ポーリングは軽量なのでログ除外対象。"""
+    return JSONResponse({"ok": True, **_card_gen_stats()})
+
+
 @api_router.get("/api/server_stats")
 async def api_server_stats():
     """システム全体の CPU / メモリ使用率。"""
@@ -255,6 +330,13 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False, v
     char_list = _build_char_list_from_showcase(showcase_data, beta)
 
     if not char_list:
+        # メモリの JSON キャッシュに部分データ（avatarInfoList 無し）が載っている
+        # 可能性があるため、キャッシュを無効化してディスクから再読み込みして1回だけリトライ
+        invalidate_json_cache(json_path)
+        showcase_data = _load_json_auto(json_path)
+        char_list = _build_char_list_from_showcase(showcase_data, beta)
+
+    if not char_list:
         # 取得失敗時はリダイレクトせず、artifacter ページ上にエラーを表示する
         return templates.TemplateResponse("artifacter.html", {
             "request": request,
@@ -264,15 +346,42 @@ async def fetch_uid(request: Request, uid: str, from_artifacter: bool = False, v
             "ver": ver,
         }, status_code=400)
 
+    # OGP（SNS共有時のリンクプレビュー）: 絶対URLを組み立てる
+    _base = str(request.base_url).rstrip("/")
+    _player_name = str((showcase_data.get("playerInfo") or {}).get("nickname") or "").strip()
+    _pi = showcase_data.get("playerInfo") or {}
+    _pfp_id = (_pi.get("profilePicture") or {}).get("id") or ""
+    _namecard_id = _pi.get("nameCardId") or ""
+    _og_image = ""
+    if char_list and char_list[0].get("icon"):
+        # 先頭キャラのアイコン（静的アセットなのでクローラーでも軽く取得できる）
+        _icon = str(char_list[0]["icon"]).lstrip("/")
+        _og_image = f"{_base}/{_icon}"
+
     return templates.TemplateResponse("build_card.html", {
         "request": request,
         "uid": uid,
         "char_list": char_list,
         "ver": ver,
-        "player_name": str((showcase_data.get("playerInfo") or {}).get("nickname") or "").strip(),
+        "player_name": _player_name,
+        "player_level": (showcase_data.get("playerInfo") or {}).get("level"),
+        "first_char_element": (char_list[0].get("element") if char_list else None),
         "show_team_abyss_buttons": bool(load_ui_flags().get("show_team_abyss_buttons", True)),
         "show_status_view_setting": bool(load_ui_flags().get("show_status_view_setting", False)),
+        "show_score_history": bool(load_ui_flags().get("show_score_history", True)),
+        "pfp_id": _pfp_id,
+        "namecard_id": _namecard_id,
+        "og_title": f"{_player_name} ({uid})" if _player_name else f"Genshin Build Card (uid: {uid})",
+        "og_description": f"原神ビルドカード生成 | {len(char_list)}人のキャラクターのビルドを表示・カード画像を生成できます (moonlit.wiki)",
+        "og_image": _og_image,
+        "og_url": f"{_base}/uid/{uid}",
     })
+
+
+@api_router.get("/uid/{uid}", response_class=HTMLResponse)
+async def fetch_uid_short(request: Request, uid: str, ver: str = "live"):
+    """安定版URL: /uid/{uid}。/fetch_uid と同じ処理（共有しやすい短いURL・og:url の正規形）。"""
+    return await fetch_uid(request=request, uid=uid, from_artifacter=False, ver=ver)
 
 
 _CONTACT_CATEGORIES = {"不具合報告", "機能要望", "その他"}
@@ -400,7 +509,13 @@ async def get_char_list(uid: str, beta: str = "false"):
     if not os.path.exists(json_path):
         raise HTTPException(status_code=404, detail=f"UID: {uid} のキャッシュデータが見つかりませんでした。")
     showcase_data = _load_json_auto(json_path)
-    return {"uid": uid, "char_list": _build_char_list_from_showcase(showcase_data, beta)}
+    char_list = _build_char_list_from_showcase(showcase_data, beta)
+    if not char_list:
+        # 部分データがメモリキャッシュに載っている場合の自己回復
+        invalidate_json_cache(json_path)
+        showcase_data = _load_json_auto(json_path)
+        char_list = _build_char_list_from_showcase(showcase_data, beta)
+    return {"uid": uid, "char_list": char_list}
 
 
 @api_router.get("/api/showcase_status/{uid}")
@@ -409,6 +524,7 @@ async def showcase_status(uid: str):
 
     - showcase_count: ショーケースに並んでいるキャラ数（showAvatarInfoList）
     - detail_count:   詳細データが公開されているキャラ数（avatarInfoList）
+    - level / world_level: プレイヤーの冒険ランク / 世界ランク（キャッシュに無ければ null）
     detail_count=0 かつ showcase_count>0 なら「キャラクター詳細を公開」がオフ、
     showcase_count=0 ならショーケース自体が空、と切り分けられる。
     """
@@ -443,7 +559,7 @@ async def calc_method_defaults():
 
 
 @api_router.get("/api/card_data/{uid}/{avatar_id}")
-async def get_card_data(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", growth: str = "false", base_prec: str = "0", resonance: str = None):
+async def get_card_data(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", growth: str = "false", base_prec: str = "0", resonance: str = None, lang: str = "ja"):
     uid = clean_uid(uid)
     avatar_id = clean_avatar_id(avatar_id)
     fake_char = clean_fake_char(fake_char)
@@ -452,8 +568,10 @@ async def get_card_data(uid: str, avatar_id: str, calc_method: str = "crit", fak
     growth = clean_bool_str(growth)
     base_prec = clean_base_prec(base_prec)
     resonance = clean_resonance(resonance)
+    # 表示言語（ja / en）。en の場合は名前・聖遺物・ステータス等の表示名を英語で返す
+    lang = "en" if str(lang or "").lower() == "en" else "ja"
     return await run_in_threadpool(
-        _get_card_data_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta, growth, base_prec, resonance
+        _get_card_data_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta, growth, base_prec, resonance, lang
     )
 
 
@@ -622,9 +740,11 @@ async def team_card_sign(uid: str, char_ids: str, configs: str = "", boss: str =
 
 
 @api_router.get("/generate_team_image/{uid}")
-async def generate_team_image(uid: str, char_ids: str, configs: str = "", boss: str = "", beta: str = "false", img_format: str = "png", cache: str = "", card_exp: str = None, card_sig: str = None, request: Request = None):
+async def generate_team_image(uid: str, char_ids: str, configs: str = "", boss: str = "", beta: str = "false", img_format: str = "png", cache: str = "", card_exp: str = None, card_sig: str = None, lang: str = "ja", request: Request = None):
     """4キャラ分の編成カード画像を生成。専用スレッドプール・署名検証・レート制限は単体カードと同様。"""
     img_format = str(img_format or "png").lower()
+    # 表示言語（ja / en）。署名対象外（見た目のみのパラメータのため）
+    lang = "en" if str(lang or "").lower() == "en" else "ja"
     if img_format != "png":
         raise HTTPException(status_code=400, detail="WEBP形式は廃止されました。PNGのみ利用できます")
     uid = clean_uid(uid)
@@ -647,9 +767,12 @@ async def generate_team_image(uid: str, char_ids: str, configs: str = "", boss: 
             "uid": uid, "char_ids": ",".join(ids), "configs": configs_clean,
             "boss": boss_clean, "beta": beta, "img_format": img_format,
         }
+        if lang == "en":
+            team_cache_params["lang"] = lang
         hit = _serve_card_disk(team_cache_params)
         if hit is not None:
-            return Response(content=hit, media_type="image/png")
+            return Response(content=hit, media_type="image/png",
+                            headers={"Cache-Control": _CARD_HTTP_CACHE_CONTROL})
 
     try:
         img_bytes = await _run_in_card_gen_pool(
@@ -660,6 +783,7 @@ async def generate_team_image(uid: str, char_ids: str, configs: str = "", boss: 
             boss_obj,
             beta,
             img_format,
+            lang,
         )
     except HTTPException as he:
         if he.status_code >= 500:
@@ -685,11 +809,12 @@ async def generate_team_image(uid: str, char_ids: str, configs: str = "", boss: 
 
     if cache == "server":
         _save_card_disk(team_cache_params, img_bytes)
-    return Response(content=img_bytes, media_type="image/png")
+    return Response(content=img_bytes, media_type="image/png",
+                    headers={"Cache-Control": _CARD_HTTP_CACHE_CONTROL})
 
 
 @api_router.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")
-async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", resonance: str = None, theme: str = None, light: str = "false", show_uid: str = "false", cache: str = "", card_exp: str = None, card_sig: str = None, request: Request = None):
+async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", resonance: str = None, theme: str = None, light: str = "false", show_uid: str = "false", cache: str = "", card_exp: str = None, card_sig: str = None, lang: str = "ja", request: Request = None):
     """カード画像生成。専用スレッドプールで同時実行数を制限し、超過分は列待ち。
     待ち行列が満杯のときは 503 を返す（デフォルトの threadpool は占有しない）。
     署名検証（安価）→ IPレート制限 → プール投入の順で、
@@ -697,12 +822,15 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
 
     theme=cinema|scorecard の場合は HTML テーマと同じデザインの画像を生成する。
     light=true の場合はライトモード（明るい背景・暗い文字）で生成する。
+    lang=en の場合はカード内の名前・聖遺物・見出し等を英語で描画する。
     """
     img_format = str(img_format or "png").lower()
     if img_format != "png":
         # WEBP 廃止: 生成処理にも待ち行列にも入れず、即エラーを返す
         raise HTTPException(status_code=400, detail="WEBP形式は廃止されました。PNG（img_format=png）のみ利用できます")
     theme = _clean_card_theme(theme)
+    # 表示言語（ja / en）。署名対象外（見た目のみのパラメータのため）
+    lang = "en" if str(lang or "").lower() == "en" else "ja"
     uid = clean_uid(uid)
     avatar_id = clean_avatar_id(avatar_id)
     calc_method = clean_calc_method_strict(calc_method)
@@ -762,9 +890,13 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
         # show_uid=false は UID 非表示（従来出力と同一）のため、"true" のみキャッシュキーに含める
         if show_uid == "true":
             cache_params["show_uid"] = show_uid
+        # lang=ja は従来出力と同一のため、"en" のみキャッシュキーに含める
+        if lang == "en":
+            cache_params["lang"] = lang
         hit = _serve_card_disk(cache_params)
         if hit is not None:
-            return Response(content=hit, media_type="image/png")
+            return Response(content=hit, media_type="image/png",
+                            headers={"Cache-Control": _CARD_HTTP_CACHE_CONTROL})
 
     if theme:
         # cinema / scorecard: HTML テーマと同一データ・デザインの画像生成
@@ -784,6 +916,7 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
                 growth,
                 light,
                 show_uid,
+                lang,
             )
         except HTTPException as he:
             if he.status_code >= 500:
@@ -830,7 +963,8 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
 
         if cache == "server":
             _save_card_disk(cache_params, img_bytes)
-        return Response(content=img_bytes, media_type="image/png")
+        return Response(content=img_bytes, media_type="image/png",
+                        headers={"Cache-Control": _CARD_HTTP_CACHE_CONTROL})
 
     try:
         img_bytes = await _run_in_card_gen_pool(
@@ -851,6 +985,7 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
             resonance,
             light,
             show_uid,
+            lang,
         )
     except HTTPException as he:
         if he.status_code >= 500:
@@ -899,7 +1034,8 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
     # StreamingResponse(io.BytesIO) はバイナリを改行(0x0A)ごとに分割して
     # チャンク毎にスレッドプール往復するため、4MB 級の PNG で転送に数秒かかる。
     # 生成済みの bytes を丸ごと返す Response にすることで Content-Length も付き即完了。
-    return Response(content=img_bytes, media_type="image/png")
+    return Response(content=img_bytes, media_type="image/png",
+                    headers={"Cache-Control": _CARD_HTTP_CACHE_CONTROL})
 
 
 @api_router.get("/serverup", response_class=HTMLResponse)

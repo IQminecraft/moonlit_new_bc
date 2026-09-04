@@ -108,9 +108,48 @@
     <button type="button" class="admin-tab" data-tab="innateem">固有元素熟知</button>
     <button type="button" class="admin-tab" data-tab="calcmethod">デフォルト計算方式</button>
     <button type="button" class="admin-tab" data-tab="uidisplay">表示設定</button>
+            <button type="button" class="admin-tab" data-tab="bot">Bot管理</button>
         </div>
 
         <div id="tab-data" class="admin-tab-panel">
+        <!-- アセット欠落チェック -->
+        <section class="card p-5 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 class="text-lg font-semibold">アセット欠落チェック</h2>
+                <div class="flex items-center gap-2">
+                    <select id="assetCheckMode" class="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs">
+                        <option value="live">LIVE</option>
+                        <option value="beta">BETA</option>
+                    </select>
+                    <button type="button" id="assetCheckBtn" class="btn btn-ghost text-xs">欠落をチェック</button>
+                    <button type="button" id="assetFixBtn" class="btn btn-primary text-xs hidden">CDNから再取得</button>
+                </div>
+            </div>
+            <p class="text-xs text-zinc-500 mb-2">
+                キャラJSONが参照する天賦・凸・被动アイコンのうちローカルに無いものを一覧します。
+                CDN に存在するものは「CDNから再取得」で補完できます（初期ダウンロード時の取得漏れ対策）。
+            </p>
+            <div id="assetCheckStatus" class="text-xs text-zinc-400 mb-2"></div>
+            <ul id="assetMissingList" class="text-xs text-zinc-300 space-y-1 max-h-64 overflow-y-auto"></ul>
+            <!-- ネームカード/プロフアイコン一括取得 -->
+            <div class="border-t border-zinc-800 mt-4 pt-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h3 class="text-sm font-semibold">ネームカード / プロフアイコン一括取得</h3>
+                    <div class="flex items-center gap-2">
+                        <span id="namecardStatus" class="text-xs text-zinc-500"></span>
+                        <button type="button" id="namecardNanokaBtn" class="btn btn-primary text-xs">nanokaから取得</button>
+                        <button type="button" id="namecardLunarisBtn" class="btn btn-ghost text-xs">lunarisから取得</button>
+                        <button type="button" id="namecardFetchBtn" class="btn btn-ghost text-xs">enkaのみで取得</button>
+                    </div>
+                </div>
+                <p class="text-xs text-zinc-500 mt-1">
+                    依存の優先順位: ネームカード一覧は <b>lunaris 単体</b>（失敗時 amber → enka）。
+                    プロフアイコンは <b>nanoka（キャラ系・live/beta 自動追従）</b> → enka（写真系）→ pizza-studio（ポートレート系）→ lunaris（MATERIAL_AVATAR）の補完。
+                    画像は nanoka CDN 優先で取得します（キャラ系pfpはenkaの一覧に無いため必須）。
+                    「lunarisから取得」は lunaris の materiallist のみをソースにする単体検証用です。
+                </p>
+            </div>
+        </section>
         <!-- 状態 -->
         <section class="card p-5 mb-6">
             <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
@@ -289,6 +328,10 @@
 
             <div class="flex flex-wrap items-center gap-2 mb-4">
                 <input id="newRegionInput" type="text" placeholder="新しい地域キー (例: snezhnaya)" maxlength="32"
+                    class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm w-56 focus:outline-none">
+                <input id="newRegionLabelJa" type="text" placeholder="表示名（日本語 例: スネージナヤ）" maxlength="32"
+                    class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm w-56 focus:outline-none">
+                <input id="newRegionLabelEn" type="text" placeholder="表示名（英語 例: Snezhnaya）" maxlength="32"
                     class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm w-56 focus:outline-none">
                 <button type="button" id="addRegionBtn" class="btn btn-ghost text-xs">地域を追加</button>
                 <button type="button" id="renameRegionBtn" class="btn btn-ghost text-xs">選択地域をリネーム</button>
@@ -566,9 +609,86 @@
                 </div>
                 <input type="checkbox" id="uiFlagStatusView" class="accent-cyan-500 w-5 h-5 shrink-0">
             </label>
+            <label class="flex items-center justify-between gap-4 bg-zinc-900 rounded-lg p-4 border border-zinc-800 cursor-pointer mt-3">
+                <div>
+                    <div class="text-sm font-medium text-zinc-200">スコア履歴グラフ</div>
+                    <div class="text-xs text-zinc-500 mt-1">
+                        ビルドカード画面の「スコア履歴」（閲覧したスコアの折れ線グラフ）。非表示時はスコアの記録も行いません（既定: 表示）。
+                    </div>
+                </div>
+                <input type="checkbox" id="uiFlagScoreHistory" class="accent-cyan-500 w-5 h-5 shrink-0">
+            </label>
             <div id="uiFlagsSaveResult" class="text-xs mt-2 hidden"></div>
         </section>
         </div><!-- /tab-uidisplay -->
+
+        <div id="tab-bot" class="admin-tab-panel hidden">
+        <section class="card p-5 mb-6">
+            <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
+                <div>
+                    <h2 class="text-lg font-semibold">Discord Bot 管理</h2>
+                    <p class="text-xs text-zinc-500 mt-1">/buildcard を提供する bot（bot/bot.py）を子プロセスとして制御します。</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="botStartBtn" class="btn btn-primary text-xs">起動</button>
+                    <button type="button" id="botStopBtn" class="btn btn-danger text-xs">停止</button>
+                    <button type="button" id="botRestartBtn" class="btn btn-amber text-xs">再起動</button>
+                    <button type="button" id="botRefreshBtn" class="btn btn-ghost text-xs">更新</button>
+                </div>
+            </div>
+            <div id="botActionMsg" class="text-xs mb-3 hidden"></div>
+            <div id="botTokenWarn" class="text-xs mb-3 hidden text-amber-400">
+                NEWBC_BOT_TOKEN が .env に未設定のため bot を起動できません。
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                <div class="bg-zinc-900 rounded-lg p-3 border border-zinc-800">
+                    <div class="text-zinc-500 text-xs mb-1">状態</div>
+                    <div class="text-lg font-bold" id="botState">—</div>
+                </div>
+                <div class="bg-zinc-900 rounded-lg p-3 border border-zinc-800">
+                    <div class="text-zinc-500 text-xs mb-1">Bot ユーザー</div>
+                    <div class="mono truncate" id="botUser">—</div>
+                </div>
+                <div class="bg-zinc-900 rounded-lg p-3 border border-zinc-800">
+                    <div class="text-zinc-500 text-xs mb-1">Ping</div>
+                    <div class="mono" id="botPing">—</div>
+                </div>
+                <div class="bg-zinc-900 rounded-lg p-3 border border-zinc-800">
+                    <div class="text-zinc-500 text-xs mb-1">参加サーバー</div>
+                    <div class="mono" id="botGuilds">—</div>
+                </div>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3 text-sm">
+                <div class="text-zinc-400">プロセスID: <span id="botPid" class="text-white mono">—</span></div>
+                <div class="text-zinc-400">コマンド同期: <span id="botSync" class="mono">—</span></div>
+                <div class="text-zinc-400">起動時刻: <span id="botStartedAt" class="text-white mono text-xs">—</span></div>
+                <div class="text-zinc-400">最終接続: <span id="botLastReady" class="text-white mono text-xs">—</span></div>
+            </div>
+            <div id="botLastError" class="mt-3 text-xs text-red-400 hidden"></div>
+        </section>
+
+        <section class="card p-5 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <h2 class="text-lg font-semibold">Bot ログ</h2>
+                <div class="flex items-center gap-3 text-xs">
+                    <label class="flex items-center gap-1 cursor-pointer">
+                        <input type="checkbox" id="botAutoRefresh" class="accent-cyan-500" checked>自動更新(5秒)
+                    </label>
+                    <select id="botLogLines" class="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs">
+                        <option value="100">100行</option>
+                        <option value="200" selected>200行</option>
+                        <option value="500">500行</option>
+                        <option value="1000">1000行</option>
+                    </select>
+                    <button type="button" id="botLogRefreshBtn" class="btn btn-ghost text-xs">更新</button>
+                    <button type="button" id="botLogClearBtn" class="btn btn-danger text-xs">ログクリア</button>
+                </div>
+            </div>
+            <pre class="log mono text-red-300 mb-3" id="botLogErr" style="display:none"></pre>
+            <div class="text-xs text-zinc-500 mb-1" id="botLogOutLabel">stdout（起動・接続・エラーログ）</div>
+            <pre class="log mono text-zinc-300" id="botLogOut"></pre>
+        </section>
+        </div><!-- /tab-bot -->
     </div>
 
     <script>
@@ -600,7 +720,7 @@
         });
         let savedAdminTab = 'data';
         try { savedAdminTab = localStorage.getItem(ADMIN_TAB_KEY) || 'data'; } catch (e) {}
-        activateAdminTab(['data', 'region', 'splash', 'leyline', 'setbuffs', 'innateem', 'calcmethod', 'uidisplay'].includes(savedAdminTab) ? savedAdminTab : 'data');
+        activateAdminTab(['data', 'region', 'splash', 'leyline', 'setbuffs', 'innateem', 'calcmethod', 'uidisplay', 'bot'].includes(savedAdminTab) ? savedAdminTab : 'data');
 
         // ==========================================================
         //  スプラッシュオフセット プレビュー（実際のカードと同じサイズ）
@@ -1348,8 +1468,10 @@
                 if (cb) cb.checked = !!flags.show_team_abyss_buttons;
                 const cbStatus = document.getElementById('uiFlagStatusView');
                 if (cbStatus) cbStatus.checked = !!flags.show_status_view_setting;
+                const cbScore = document.getElementById('uiFlagScoreHistory');
+                if (cbScore) cbScore.checked = !!flags.show_score_history;
                 setUiFlagsSaveResult(null,
-                    `現在: 編成/幽境ボタン=${flags.show_team_abyss_buttons ? '表示' : '非表示'} / ステータス表示トグル=${flags.show_status_view_setting ? '表示' : '非表示'}`);
+                    `現在: 編成/幽境ボタン=${flags.show_team_abyss_buttons ? '表示' : '非表示'} / ステータス表示トグル=${flags.show_status_view_setting ? '表示' : '非表示'} / スコア履歴=${flags.show_score_history ? '表示' : '非表示'}`);
             } catch (e) {
                 setUiFlagsSaveResult(false, `読み込み失敗: ${e}`);
             }
@@ -1372,12 +1494,14 @@
             try {
                 const cb = document.getElementById('uiFlagTeamAbyss');
                 const cbStatus = document.getElementById('uiFlagStatusView');
+                const cbScore = document.getElementById('uiFlagScoreHistory');
                 const res = await fetch('/admin/api/ui_flags', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ flags: {
                         show_team_abyss_buttons: !!(cb && cb.checked),
                         show_status_view_setting: !!(cbStatus && cbStatus.checked),
+                        show_score_history: !!(cbScore && cbScore.checked),
                     } }),
                 });
                 if (res.status === 401) { location.href = '/admin/login'; return; }
@@ -1386,7 +1510,7 @@
                 if (res.ok && data.ok) {
                     const f = data.flags || {};
                     setUiFlagsSaveResult(true,
-                        `${ts} 保存成功: 編成/幽境ボタン=${f.show_team_abyss_buttons ? '表示' : '非表示'} / ステータス表示トグル=${f.show_status_view_setting ? '表示' : '非表示'}`);
+                        `${ts} 保存成功: 編成/幽境ボタン=${f.show_team_abyss_buttons ? '表示' : '非表示'} / ステータス表示トグル=${f.show_status_view_setting ? '表示' : '非表示'} / スコア履歴=${f.show_score_history ? '表示' : '非表示'}`);
                 } else {
                     setUiFlagsSaveResult(false, `${ts} 保存失敗: ${data.error || `status ${res.status}`}`);
                 }
@@ -1643,7 +1767,7 @@
         document.getElementById('assignModalClose').addEventListener('click', closeAssignModal);
         assignModal.addEventListener('click', (e) => { if (e.target === assignModal) closeAssignModal(); });
 
-        document.getElementById('addRegionBtn').addEventListener('click', () => {
+        document.getElementById('addRegionBtn').addEventListener('click', async () => {
             const input = document.getElementById('newRegionInput');
             const key = (input.value || '').trim();
             if (!REGION_KEY_PATTERN.test(key)) {
@@ -1657,6 +1781,22 @@
             regionMap[key] = [];
             input.value = '';
             activeRegionTab = key;
+            // 表示ラベル（日本語・英語）は region_labels.json に保存する
+            //（未入力ならサイト側はキー文字列をそのまま表示する）
+            const ja = (document.getElementById('newRegionLabelJa').value || '').trim();
+            const en = (document.getElementById('newRegionLabelEn').value || '').trim();
+            document.getElementById('newRegionLabelJa').value = '';
+            document.getElementById('newRegionLabelEn').value = '';
+            if (ja || en) {
+                try {
+                    const res = await fetch('/admin/api/region_labels', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ [key]: { ja, en } }),
+                    });
+                    if (!res.ok) console.warn('region_labels save failed:', res.status);
+                } catch (e) { console.warn('region_labels save error:', e); }
+            }
             markRegionDirty();
             renderRegionTabs();
             renderRegionGrid();
@@ -2093,9 +2233,299 @@
                 resultEl2.textContent = `保存失敗: ${e}`;
             }
         });
+        // ネームカード/プロフアイコン一括取得
+        (function () {
+            const fetchBtn = document.getElementById('namecardFetchBtn');
+            const nanokaBtn = document.getElementById('namecardNanokaBtn');
+            const lunarisBtn = document.getElementById('namecardLunarisBtn');
+            const statusEl = document.getElementById('namecardStatus');
+            if (!fetchBtn || !nanokaBtn || !statusEl) return;
+            const loadStatus = async () => {
+                try {
+                    const res = await fetch('/admin/api/assets/namecards_status');
+                    if (res.status === 401) { location.href = '/admin/login'; return; }
+                    const d = await res.json();
+                    if (d.ok) {
+                        let text = `ネームカード ${d.namecards.local}/${d.namecards.expected} ・ プロフ ${d.pfps.local}/${d.pfps.expected}`;
+                        if (d.last_nanoka_fetch) {
+                            const src = d.last_sources && d.last_sources.namecard_list ? `（一覧: ${d.last_sources.namecard_list}）` : '';
+                            text += `（最終取得: ${d.last_nanoka_fetch}${src}）`;
+                        }
+                        statusEl.textContent = text;
+                    }
+                } catch (e) { /* ignore */ }
+            };
+            const runFetch = async (url, btn) => {
+                btn.disabled = true;
+                statusEl.textContent = '取得中...（時間がかかります）';
+                try {
+                    const res = await fetch(url, { method: 'POST' });
+                    if (res.status === 401) { location.href = '/admin/login'; return; }
+                    const d = await res.json();
+                    if (!d.ok) { statusEl.textContent = `失敗: ${d.error || ''}`; return; }
+                    const src = d.sources && d.sources.namecard_list ? `一覧:${d.sources.namecard_list} / ` : '';
+                    const ver = d.versions ? `（nanoka live=${d.versions.live} / beta=${d.versions.beta}）` : '';
+                    statusEl.textContent = `完了${ver} ${src}ネームカード 新規${d.namecards.new}件（失敗${d.namecards.failed}）・ プロフ 新規${d.pfps.new}件（失敗${d.pfps.failed}）`;
+                } catch (e) {
+                    statusEl.textContent = `失敗: ${e}`;
+                } finally {
+                    btn.disabled = false;
+                    loadStatus();
+                }
+            };
+            nanokaBtn.addEventListener('click', () => runFetch('/admin/api/assets/namecards_fetch_nanoka', nanokaBtn));
+            if (lunarisBtn) lunarisBtn.addEventListener('click', () => runFetch('/admin/api/assets/namecards_fetch_lunaris', lunarisBtn));
+            fetchBtn.addEventListener('click', () => runFetch('/admin/api/assets/namecards_fetch', fetchBtn));
+            loadStatus();
+        })();
         document.getElementById('setBuffsSearch').addEventListener('input', renderSetBuffs);
         document.getElementById('setBuffsOnlyReflectable').addEventListener('change', renderSetBuffs);
         loadSetBuffs();
+
+        // ==========================================================
+        //  アセット欠落チェック
+        // ==========================================================
+        (function () {
+            const checkBtn = document.getElementById('assetCheckBtn');
+            const fixBtn = document.getElementById('assetFixBtn');
+            const statusEl = document.getElementById('assetCheckStatus');
+            const listEl = document.getElementById('assetMissingList');
+            const modeEl = document.getElementById('assetCheckMode');
+
+            function renderList(missing) {
+                listEl.innerHTML = '';
+                if (!missing.length) {
+                    const li = document.createElement('li');
+                    li.className = 'text-emerald-400';
+                    li.textContent = '欠落はありません。すべてのアイコンが揃っています。';
+                    listEl.appendChild(li);
+                    return;
+                }
+                missing.forEach(m => {
+                    const li = document.createElement('li');
+                    const cdn = m.cdn === true ? '<span class="text-emerald-400">CDN:あり</span>'
+                        : m.cdn === false ? '<span class="text-red-400">CDN:なし</span>'
+                        : '<span class="text-zinc-500">CDN:確認失敗</span>';
+                    li.innerHTML = `${esc(m.icon)} <span class="text-zinc-500">(${esc(m.char)} / ${esc(m.kind)})</span> ${cdn}`;
+                    listEl.appendChild(li);
+                });
+            }
+
+            function esc(v) {
+                return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+
+            // ==========================================================
+            //  Discord Bot 管理
+            // ==========================================================
+            (function () {
+                const stateEl = document.getElementById('botState');
+                const userEl = document.getElementById('botUser');
+                const pingEl = document.getElementById('botPing');
+                const guildsEl = document.getElementById('botGuilds');
+                const pidEl = document.getElementById('botPid');
+                const syncEl = document.getElementById('botSync');
+                const startedEl = document.getElementById('botStartedAt');
+                const lastReadyEl = document.getElementById('botLastReady');
+                const lastErrEl = document.getElementById('botLastError');
+                const tokenWarnEl = document.getElementById('botTokenWarn');
+                const actionMsgEl = document.getElementById('botActionMsg');
+                const startBtn = document.getElementById('botStartBtn');
+                const stopBtn = document.getElementById('botStopBtn');
+                const restartBtn = document.getElementById('botRestartBtn');
+                const refreshBtn = document.getElementById('botRefreshBtn');
+                const logOutEl = document.getElementById('botLogOut');
+                const logErrEl = document.getElementById('botLogErr');
+                const logLinesEl = document.getElementById('botLogLines');
+                const logRefreshBtn = document.getElementById('botLogRefreshBtn');
+                const logClearBtn = document.getElementById('botLogClearBtn');
+                const autoRefreshEl = document.getElementById('botAutoRefresh');
+
+                let botTabActive = false;
+                let botLogTimer = null;
+                let botStatusTimer = null;
+
+                function fmtTime(v) {
+                    return v ? String(v) : '—';
+                }
+
+                function setButtons(state) {
+                    const running = state === 'running' || state === 'orphan';
+                    startBtn.disabled = running;
+                    stopBtn.disabled = !running;
+                    restartBtn.disabled = !running;
+                }
+
+                function renderStatus(data) {
+                    if (!data || !data.ok) return;
+                    const st = data.state || 'stopped';
+                    const label = { running: '稼働中', orphan: '稼働中(管理外)', stopped: '停止中' }[st] || st;
+                    stateEl.textContent = label;
+                    stateEl.className = 'text-lg font-bold ' + (st === 'running' ? 'text-emerald-400' : st === 'orphan' ? 'text-amber-400' : 'text-zinc-500');
+                    const b = data.bot || {};
+                    userEl.textContent = b.user || '—';
+                    userEl.title = b.user_id ? `ID: ${b.user_id}` : '';
+                    pingEl.textContent = (st !== 'stopped' && b.latency_ms != null) ? `${b.latency_ms} ms` : '—';
+                    guildsEl.textContent = (st !== 'stopped' && b.guild_count != null) ? b.guild_count : '—';
+                    pidEl.textContent = data.pid != null ? data.pid : '—';
+                    if (st === 'stopped') {
+                        syncEl.textContent = '—';
+                        startedEl.textContent = '—';
+                        lastReadyEl.textContent = '—';
+                    } else {
+                        syncEl.textContent = b.synced === true ? '成功' : b.synced === false ? '失敗' : '未実施';
+                        syncEl.className = 'mono ' + (b.synced === true ? 'text-emerald-400' : b.synced === false ? 'text-red-400' : '');
+                        startedEl.textContent = fmtTime(b.started_at || data.started_at);
+                        lastReadyEl.textContent = fmtTime(b.last_ready_at);
+                    }
+                    if (b.last_error) {
+                        lastErrEl.textContent = `最終エラー (${b.last_error.at} / ${b.last_error.where}): ${b.last_error.error}`;
+                        lastErrEl.classList.remove('hidden');
+                    } else {
+                        lastErrEl.classList.add('hidden');
+                    }
+                    tokenWarnEl.classList.toggle('hidden', !!data.token_configured);
+                    setButtons(st);
+                }
+
+                async function loadStatus() {
+                    try {
+                        const res = await fetch('/admin/api/bot/status');
+                        if (res.status === 401) { location.href = '/admin/login'; return; }
+                        renderStatus(await res.json());
+                    } catch (e) { /* 一時的な通信断は無視 */ }
+                }
+
+                async function loadLogs() {
+                    try {
+                        const res = await fetch(`/admin/api/bot/logs?lines=${logLinesEl.value}`);
+                        if (res.status === 401) { location.href = '/admin/login'; return; }
+                        const data = await res.json();
+                        if (!data.ok) return;
+                        logOutEl.textContent = data.out || '(ログはありません)';
+                        logOutEl.scrollTop = logOutEl.scrollHeight;
+                        if (data.err) {
+                            logErrEl.textContent = data.err;
+                            logErrEl.style.display = '';
+                        } else {
+                            logErrEl.style.display = 'none';
+                        }
+                    } catch (e) { /* 無視 */ }
+                }
+
+                function showActionMsg(text, ok) {
+                    actionMsgEl.textContent = text;
+                    actionMsgEl.className = 'text-xs mb-3 ' + (ok ? 'text-emerald-400' : 'text-red-400');
+                }
+
+                async function botAction(action) {
+                    const labels = { start: '起動', stop: '停止', restart: '再起動' };
+                    showActionMsg(`${labels[action]}中...`, true);
+                    try {
+                        const res = await fetch('/admin/api/bot/action', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action }),
+                        });
+                        if (res.status === 401) { location.href = '/admin/login'; return; }
+                        const data = await res.json();
+                        showActionMsg(data.ok ? (data.message || '完了') : `失敗: ${data.error || ''}`, !!data.ok);
+                    } catch (e) {
+                        showActionMsg(`失敗: ${e}`, false);
+                    }
+                    // プロセス起動直後は Discord 接続に数秒かかるため遅延更新
+                    setTimeout(loadStatus, 1500);
+                    setTimeout(loadStatus, 5000);
+                    loadStatus();
+                    loadLogs();
+                }
+
+                startBtn.addEventListener('click', () => botAction('start'));
+                stopBtn.addEventListener('click', () => botAction('stop'));
+                restartBtn.addEventListener('click', () => botAction('restart'));
+                refreshBtn.addEventListener('click', loadStatus);
+                logRefreshBtn.addEventListener('click', loadLogs);
+
+                logClearBtn.addEventListener('click', async () => {
+                    if (!confirm('bot のログをクリアしますか？')) return;
+                    try {
+                        const res = await fetch('/admin/api/bot/clear_logs', { method: 'POST' });
+                        if (res.status === 401) { location.href = '/admin/login'; return; }
+                        await res.json();
+                    } catch (e) { /* 無視 */ }
+                    loadLogs();
+                });
+
+                function startTimers() {
+                    if (botLogTimer == null) botLogTimer = setInterval(loadLogs, 5000);
+                    if (botStatusTimer == null) botStatusTimer = setInterval(loadStatus, 5000);
+                }
+                function stopTimers() {
+                    if (botLogTimer != null) { clearInterval(botLogTimer); botLogTimer = null; }
+                    if (botStatusTimer != null) { clearInterval(botStatusTimer); botStatusTimer = null; }
+                }
+                // タブが見えている間だけポーリングする（他タブ表示中の無駄な通信を避ける）
+                const botPanel = document.getElementById('tab-bot');
+                const observer = new MutationObserver(() => {
+                    botTabActive = !botPanel.classList.contains('hidden');
+                    if (botTabActive) {
+                        loadStatus();
+                        loadLogs();
+                        if (autoRefreshEl.checked) startTimers();
+                    } else {
+                        stopTimers();
+                    }
+                });
+                observer.observe(botPanel, { attributes: true, attributeFilter: ['class'] });
+
+                autoRefreshEl.addEventListener('change', () => {
+                    if (autoRefreshEl.checked && botTabActive) startTimers();
+                    else stopTimers();
+                });
+                // ページ読み込み時に bot タブが復元されていた場合は即ロード
+                if (!botPanel.classList.contains('hidden')) {
+                    botTabActive = true;
+                    loadStatus();
+                    loadLogs();
+                    startTimers();
+                }
+            })();
+
+            checkBtn.addEventListener('click', async () => {
+                statusEl.textContent = 'チェック中...';
+                fixBtn.classList.add('hidden');
+                try {
+                    const res = await fetch(`/admin/api/assets/missing_check?mode=${modeEl.value}`);
+                    if (res.status === 401) { location.href = '/admin/login'; return; }
+                    const data = await res.json();
+                    if (!data.ok) { statusEl.textContent = `失敗: ${data.error || ''}`; return; }
+                    statusEl.textContent = `参照 ${data.total_refs} 件中、欠落 ${data.missing.length} 件`;
+                    renderList(data.missing || []);
+                    if ((data.missing || []).length) fixBtn.classList.remove('hidden');
+                } catch (e) {
+                    statusEl.textContent = `失敗: ${e}`;
+                }
+            });
+
+            fixBtn.addEventListener('click', async () => {
+                statusEl.textContent = 'CDN から再取得中...（数秒かかることがあります）';
+                try {
+                    const res = await fetch(`/admin/api/assets/missing_fix?mode=${modeEl.value}`, { method: 'POST' });
+                    if (res.status === 401) { location.href = '/admin/login'; return; }
+                    const data = await res.json();
+                    if (!data.ok) { statusEl.textContent = `失敗: ${data.error || ''}`; return; }
+                    statusEl.textContent = `${data.fixed.length} 件を復元しました` + (data.failed.length ? `（失敗 ${data.failed.length} 件）` : '');
+                    if (data.failed.length) {
+                        renderList(data.failed.map(f => ({ icon: f.icon, char: '-', kind: '-', cdn: null })));
+                    } else {
+                        renderList([]);
+                        fixBtn.classList.add('hidden');
+                    }
+                } catch (e) {
+                    statusEl.textContent = `失敗: ${e}`;
+                }
+            });
+        })();
     </script>
 </body>
 </html>

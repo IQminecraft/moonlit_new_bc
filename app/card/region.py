@@ -1,7 +1,7 @@
 import os
 import json
 from app.paths import STATIC_DIR
-from app.card.cache import _REGION_MAP_CACHE
+from app.card.jsoncache import load_json_cached
 from app.card.bg import region_image_path
 
 # 旅人（10000005/10000007）は地域マップで管理せず、元素ごとに背景地域を固定する。
@@ -17,6 +17,9 @@ _TRAVELER_ELEMENT_REGIONS = {
     "Cryo": "snezhnaya",
 }
 
+# characters.json の解析結果キャッシュ（clear_region_map_cache で無効化）
+_REGION_MAP_CACHE = None
+
 
 def _load_region_map():
     """static/assets/characters/characters.json を {地域名: [キャラ数値ID]} として読む。"""
@@ -26,8 +29,7 @@ def _load_region_map():
         path = os.path.join(STATIC_DIR, "assets", "characters", "characters.json")
         if os.path.exists(path):
             try:
-                with open(path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
+                data = load_json_cached(path)
                 if isinstance(data, dict):
                     for region, ids in data.items():
                         if not isinstance(ids, list):

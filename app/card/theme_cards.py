@@ -23,6 +23,7 @@ from app.card.draw import (
     paste_mask_image, figma_draw_scale, safe_rounded_rectangle,
 )
 from app.card.special import resolve_datas_path
+from app.card.labels import img_t
 from app.card.image import ROLL_DOT_COLORS, _draw_growth_panel
 
 # ----------------------------------------------------------------
@@ -428,7 +429,7 @@ def _gradient_strip_horizontal(w, h, rgb_from, rgb_to):
 # ================================================================
 #  CINEMA（1200 x 780）
 # ================================================================
-def _draw_cinema_card(data, beta, substat_dots, light="false", uid="", show_uid="false"):
+def _draw_cinema_card(data, beta, substat_dots, light="false", uid="", show_uid="false", lang="ja"):
     W, H = THEME_DESIGN_W, CINEMA_DESIGN_H
     pal = _palette(_CINE_PALETTE, light)
     img = Image.new("RGBA", (THEME_W, int(H * THEME_SCALE)), pal["bg"])
@@ -464,7 +465,7 @@ def _draw_cinema_card(data, beta, substat_dots, light="false", uid="", show_uid=
 
         # ---- 左上: 元素チップ + レアリティ + 名前 + メタ ----
         x0, y0 = 44, 40
-        elem_ja = _ELEM_JA.get(elem, "無")
+        elem_ja = (str(elem) if str(elem) != "None" else "None") if lang == "en" else _ELEM_JA.get(elem, "無")
         chip_font = _font(13)
         chip_txt_w = draw.textlength(elem_ja, font=chip_font) / THEME_SX
         chip_w = 13 + 18 + 7 + chip_txt_w + 13
@@ -521,7 +522,7 @@ def _draw_cinema_card(data, beta, substat_dots, light="false", uid="", show_uid=
                       fill=pal["meta_sep"], width=max(1, round(THEME_SY)))
             mx += 11
         const_n = int(data.get("constellation") or 0)
-        const_label = "完凸" if const_n >= 6 else f"C{const_n}"
+        const_label = ("C6" if const_n >= 6 else f"C{const_n}") if lang == "en" else ("完凸" if const_n >= 6 else f"C{const_n}")
         draw_figma_text(draw, text=const_label, x=mx, y=meta_y + 2,
                         font=meta_font, fill_color=_dim(pal["txt"], 0.66))
 
@@ -593,17 +594,32 @@ def _draw_cinema_card(data, beta, substat_dots, light="false", uid="", show_uid=
         wbody_x = rc_x + 16 + 64 + 14
         wbody_w = rc_w - (16 + 64 + 14) - 62 - 16
         lines = []
-        cur = ""
-        for ch in wname:
-            if draw.textlength(cur + ch, font=wname_font) / THEME_SX <= wbody_w:
-                cur += ch
-            else:
+        if " " in wname:
+            # 英語等の空白を含む名前は単語単位で折り返す（単語中で分断されないように）
+            cur = ""
+            for word in wname.split(" "):
+                cand = f"{cur} {word}" if cur else word
+                if draw.textlength(cand, font=wname_font) / THEME_SX <= wbody_w or not cur:
+                    cur = cand
+                else:
+                    lines.append(cur)
+                    cur = word
+                    if len(lines) == 2:
+                        break
+            if cur and len(lines) < 2:
                 lines.append(cur)
-                cur = ch
-                if len(lines) == 2:
-                    break
-        if cur and len(lines) < 2:
-            lines.append(cur)
+        else:
+            cur = ""
+            for ch in wname:
+                if draw.textlength(cur + ch, font=wname_font) / THEME_SX <= wbody_w:
+                    cur += ch
+                else:
+                    lines.append(cur)
+                    cur = ch
+                    if len(lines) == 2:
+                        break
+            if cur and len(lines) < 2:
+                lines.append(cur)
         if "".join(lines) != wname:
             lines = lines[:2] or [""]
             t = lines[-1]
@@ -618,7 +634,7 @@ def _draw_cinema_card(data, beta, substat_dots, light="false", uid="", show_uid=
         if wstats:
             wsub_lines = [f"{wstats[0].get('name','')} {wstats[0].get('value','')}"]
             if len(wstats) > 1:
-                wsub_lines.append(" ・ ".join(f"{w.get('name','')} {w.get('value','')}" for w in wstats[1:]))
+                wsub_lines.append((" · " if lang == "en" else " ・ ").join(f"{w.get('name','')} {w.get('value','')}" for w in wstats[1:]))
             wsy = wy + 2
             for ln in wsub_lines:
                 draw_figma_text(draw, text=_truncate(draw, ln, wsub_font, wbody_w),
@@ -745,7 +761,7 @@ def _draw_cinema_card(data, beta, substat_dots, light="false", uid="", show_uid=
             draw_figma_text(draw, text=_truncate(draw, label, k_font, cell_w - 13 - 19 - 13),
                             x=cx + 13 + 21, y=cy + 13, font=k_font,
                             fill_color=_dim(pal["txt"], 0.66))
-            is_crit = label in ("会心率", "会心ダメージ")
+            is_crit = label in ("会心率", "会心ダメージ", "CRIT Rate", "CRIT DMG")
             draw_figma_text(draw, text=str(s.get("val") or ""), x=cx + 13, y=cy + 33,
                             font=v_font, fill_color=elem_rgba if is_crit else pal["txt"])
 
@@ -766,7 +782,7 @@ def _draw_cinema_card(data, beta, substat_dots, light="false", uid="", show_uid=
                            fill_color=pal["art_fill"], outline_color=pal["art_brd"],
                            outline_width=1, shadow=False)
             if not art:
-                draw_figma_text(draw, text="未装備", x=ax, y=ay + ah / 2 - 8, font=a_font_main,
+                draw_figma_text(draw, text=img_t("未装備", lang), x=ax, y=ay + ah / 2 - 8, font=a_font_main,
                                 align="center", box_width=aw, fill_color=_dim(pal["txt"], 0.3))
                 continue
             icon_x, icon_y = ax + 14, ay + 13
@@ -818,7 +834,7 @@ _SCC_ART_H = 200
 _SCC_BOTTOM_PAD = 26
 
 
-def _draw_scorecard_card(data, beta, substat_dots, light="false", uid="", show_uid="false"):
+def _draw_scorecard_card(data, beta, substat_dots, light="false", uid="", show_uid="false", lang="ja"):
     W, H = THEME_DESIGN_W, _SCC_H
     pal = _palette(_SCC_PALETTE, light)
     img = Image.new("RGBA", (THEME_W, int(H * THEME_SCALE)), (*pal["bg"][1], 255))
@@ -902,12 +918,12 @@ def _draw_scorecard_card(data, beta, substat_dots, light="false", uid="", show_u
 
         const_n = int(data.get("constellation") or 0)
         chips = [
-            {"icon": f"static/assets/props/{str(elem).lower()}.png", "text": f"{_ELEM_JA.get(elem, '無')}元素", "bold": ""},
+            {"icon": f"static/assets/props/{str(elem).lower()}.png", "text": (str(elem) if lang == "en" else f"{_ELEM_JA.get(elem, '無')}元素"), "bold": ""},
             {"icon": "", "text": "Lv.", "bold": str(data.get("level", "?"))},
         ]
         if data.get("friendship") is not None:
-            chips.append({"icon": "", "text": "好感度 ", "bold": str(data["friendship"])})
-        chips.append({"icon": "", "text": ("完凸 " if const_n >= 6 else "命星座 "), "bold": f"C{const_n}"})
+            chips.append({"icon": "", "text": ("Friendship " if lang == "en" else "好感度 "), "bold": str(data["friendship"])})
+        chips.append({"icon": "", "text": ("Const. " if lang == "en" else ("完凸 " if const_n >= 6 else "命星座 ")), "bold": f"C{const_n}"})
         if data.get("weaponType"):
             chips.append({"icon": "", "text": str(data["weaponType"]), "bold": ""})
 
@@ -1001,7 +1017,7 @@ def _draw_scorecard_card(data, beta, substat_dots, light="false", uid="", show_u
         crit_rate = next((s.get("val") for s in stats if s.get("label") == "会心率"), "—")
         crit_dmg = next((s.get("val") for s in stats if s.get("label") == "会心ダメージ"), "—")
         note_font = _font(11)
-        note = f"会心率 {crit_rate} ／ 会心ダメ {crit_dmg}"
+        note = (f"CRIT Rate {crit_rate} / CRIT DMG {crit_dmg}" if lang == "en" else f"会心率 {crit_rate} ／ 会心ダメ {crit_dmg}")
         note_w = draw.textlength(note, font=note_font) / THEME_SX
         note_x = W - 44 - note_w
         draw_figma_text(draw, text=note, x=note_x, y=cvy + 18, font=note_font, fill_color=pal["dim"])
@@ -1051,7 +1067,7 @@ def _draw_scorecard_card(data, beta, substat_dots, light="false", uid="", show_u
             if s.get("icon"):
                 _icon_back(img, pal, sx0 - 2, sy, 19, 19, 5)
                 _paste_rounded(img, s["icon"], sx0, sy + 2, 15, 15, 3, beta)
-            is_crit = label in ("会心率", "会心ダメージ")
+            is_crit = label in ("会心率", "会心ダメージ", "CRIT Rate", "CRIT DMG")
             draw_figma_text(draw, text=_truncate(draw, label, _font(12), half_w - 15 - 7 - 60),
                             x=sx0 + 22, y=sy + 2, font=_font(12), fill_color=pal["dim"])
             draw_figma_text(draw, text=str(s.get("val") or ""), x=sx0 + half_w, y=sy + 1,
@@ -1082,7 +1098,7 @@ def _draw_scorecard_card(data, beta, substat_dots, light="false", uid="", show_u
         if wstats:
             wsub_lines = [f"{wstats[0].get('name','')} {wstats[0].get('value','')}"]
             if len(wstats) > 1:
-                wsub_lines.append(" ・ ".join(f"{w.get('name','')} {w.get('value','')}" for w in wstats[1:]))
+                wsub_lines.append((" · " if lang == "en" else " ・ ").join(f"{w.get('name','')} {w.get('value','')}" for w in wstats[1:]))
             wsy = wy0 + 27
             for ln in wsub_lines:
                 draw_figma_text(draw, text=_truncate(draw, ln, wsub_font, wbody_w),
@@ -1114,7 +1130,7 @@ def _draw_scorecard_card(data, beta, substat_dots, light="false", uid="", show_u
         else:
             draw_figma_line(img, x1=wx0 + 16, y1=set_y, x2=wx0 + col_w - 16, y2=set_y,
                             fill_color=pal["sep"], width=1)
-            draw_figma_text(draw, text="セット効果なし", x=wx0 + 16, y=set_y + 8,
+            draw_figma_text(draw, text=img_t("セット効果なし", lang), x=wx0 + 16, y=set_y + 8,
                             font=_font(12), fill_color=_dim(pal["txt"], 0.35))
 
         # Talents / Constellation タイル
@@ -1149,7 +1165,7 @@ def _draw_scorecard_card(data, beta, substat_dots, light="false", uid="", show_u
         if const_icons:
             clabel_y = my + _SCC_MID_H - 16 - 14 - 32 - 10
             _spaced_text(draw, "CONSTELLATION", tx0 + 16, clabel_y, label_font, pal["dim"], 1.8)
-            const_label = "完凸" if const_n >= 6 else f"C{const_n}"
+            const_label = ("C6" if const_n >= 6 else f"C{const_n}") if lang == "en" else ("完凸" if const_n >= 6 else f"C{const_n}")
             draw_figma_text(draw, text=const_label, x=tx0 + col_w - 16, y=clabel_y,
                             font=_font(11), align="right", fill_color=gold)
             ciy = clabel_y + 22
@@ -1187,7 +1203,7 @@ def _draw_scorecard_card(data, beta, substat_dots, light="false", uid="", show_u
                            outline_color=pal["best_brd"] if best else tile_brd,
                            outline_width=2 if best else 1, shadow=False)
             if not art:
-                draw_figma_text(draw, text="未装備", x=ax, y=ay0 + _SCC_ART_H / 2 - 8,
+                draw_figma_text(draw, text=img_t("未装備", lang), x=ax, y=ay0 + _SCC_ART_H / 2 - 8,
                                 font=a_font_main, align="center", box_width=aw,
                                 fill_color=_dim(pal["txt"], 0.3))
                 continue
@@ -1326,10 +1342,12 @@ def _generate_theme_card_image_sync(uid: str, avatar_id: str, calc_method: str, 
                                     beta: str = "false", base_prec: str = "0",
                                     substat_dots: str = "1", resonance: str = None,
                                     growth: str = "false", light: str = "false",
-                                    show_uid: str = "false") -> bytes:
+                                    show_uid: str = "false", lang: str = "ja") -> bytes:
     """cinema / scorecard テーマのカード画像を生成して PNG bytes を返す。"""
     t_total = time.perf_counter()
     theme = theme if theme in _THEMES else "cinema"
+    # 表示言語（ja / en）。_get_card_data_sync 側で名前・聖遺物等の表示名が切替わる
+    lang = "en" if str(lang or "").lower() == "en" else "ja"
     if beta != "true":
         beta = "false"
     base_prec = str(base_prec or "0")
@@ -1344,11 +1362,11 @@ def _generate_theme_card_image_sync(uid: str, avatar_id: str, calc_method: str, 
 
     t0 = time.perf_counter()
     data = _get_card_data_sync(uid, avatar_id, calc_method, fake_char, fake_weapon,
-                               beta, growth, base_prec, resonance)
+                               beta, growth, base_prec, resonance, lang=lang)
     print(f"[Perf][theme] card_data: {(time.perf_counter() - t0) * 1000:.1f}ms", flush=True)
 
     t0 = time.perf_counter()
-    img = _THEMES[theme](data, beta, substat_dots, light, uid, show_uid)
+    img = _THEMES[theme](data, beta, substat_dots, light, uid, show_uid, lang)
     print(f"[Perf][theme] draw({theme}): {(time.perf_counter() - t0) * 1000:.1f}ms size={img.size}", flush=True)
 
     if growth == "true" and data.get("growth"):

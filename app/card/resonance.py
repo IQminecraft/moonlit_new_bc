@@ -18,10 +18,10 @@ from app.card.stats import apply_stat_bonus, to_ratio_if_percent
 #   to_ratio_if_percent が percent 系を率（0.25）へ変換する。
 # ---------------------------------------------------------------------------
 RESONANCE_TYPES = {
-    "pyro":   {"elem": "Pyro",   "name": "熱誠の炎", "prop": "FIGHT_PROP_ATTACK_PERCENT",  "value": 25, "label": "攻撃力+25%"},
-    "hydro":  {"elem": "Hydro",  "name": "治療の水", "prop": "FIGHT_PROP_HP_PERCENT",      "value": 25, "label": "HP上限+25%"},
-    "cryo":   {"elem": "Cryo",   "name": "粉砕の氷", "prop": "FIGHT_PROP_CRITICAL",         "value": 15, "label": "会心率+15%"},
-    "dendro": {"elem": "Dendro", "name": "蔓生の草", "prop": "FIGHT_PROP_ELEMENT_MASTERY", "value": 50, "label": "元素熟知+50"},
+    "pyro":   {"elem": "Pyro",   "name": "熱誠の炎", "name_en": "Fervent Flames",    "prop": "FIGHT_PROP_ATTACK_PERCENT",  "value": 25, "label": "攻撃力+25%", "label_en": "ATK +25%"},
+    "hydro":  {"elem": "Hydro",  "name": "治療の水", "name_en": "Soothing Waters",   "prop": "FIGHT_PROP_HP_PERCENT",      "value": 25, "label": "HP上限+25%", "label_en": "HP +25%"},
+    "cryo":   {"elem": "Cryo",   "name": "粉砕の氷", "name_en": "Shattering Ice",    "prop": "FIGHT_PROP_CRITICAL",         "value": 15, "label": "会心率+15%", "label_en": "CRIT Rate +15%"},
+    "dendro": {"elem": "Dendro", "name": "蔓生の草", "name_en": "Sprawling Greenery", "prop": "FIGHT_PROP_ELEMENT_MASTERY", "value": 50, "label": "元素熟知+50", "label_en": "Elemental Mastery +50"},
 }
 
 # 同時に有効にできる共鳴の上限（原神の仕様と同じ2つ）
@@ -61,25 +61,33 @@ def apply_resonance_buffs(stat_totals, resonance) -> None:
         apply_stat_bonus(stat_totals, info["prop"], to_ratio_if_percent(info["prop"], info["value"]))
 
 
-def resonance_badges(resonance) -> list:
+def resonance_badges(resonance, lang: str = "ja") -> list:
     """カード下端の隙間に表示する共鳴バッジ [{kind, text, elem, label}] を返す。"""
     badges = []
     for key in parse_resonance_param(resonance):
         info = RESONANCE_TYPES.get(key)
         if not info:
             continue
+        if lang == "en":
+            _text, _label = info.get("name_en") or info["name"], info.get("label_en") or info["label"]
+        else:
+            _text, _label = info["name"], info["label"]
         badges.append({
             "kind": "resonance",
-            "text": info["name"],
+            "text": _text,
             "elem": info["elem"],
-            "label": info["label"],
+            "label": _label,
         })
     return badges
 
 
-def resonance_catalog() -> list:
+def resonance_catalog(lang: str = "ja") -> list:
     """UI（選択肢）用のカタログ [{key, elem, name, label}] を返す。"""
     out = []
     for key, info in RESONANCE_TYPES.items():
-        out.append({"key": key, "elem": info["elem"], "name": info["name"], "label": info["label"]})
+        if lang == "en":
+            _name, _label = info.get("name_en") or info["name"], info.get("label_en") or info["label"]
+        else:
+            _name, _label = info["name"], info["label"]
+        out.append({"key": key, "elem": info["elem"], "name": _name, "label": _label})
     return out

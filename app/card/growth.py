@@ -38,10 +38,14 @@ def _load_artifact_list(beta: str) -> dict:
     return {}
 
 
-# calc_method → 表示名
+# calc_method → 表示名（ja / en）
 _METHOD_STAT_LABEL = {
     "atk": "攻撃力", "hp": "HP", "def": "防御力",
     "em": "元素熟知", "charge": "チャージ効率", "crit": "会心",
+}
+_METHOD_STAT_LABEL_EN = {
+    "atk": "ATK", "hp": "HP", "def": "DEF",
+    "em": "Elemental Mastery", "charge": "Energy Recharge", "crit": "CRIT",
 }
 
 _FIXED_SUBAVG = {
@@ -51,15 +55,19 @@ _FIXED_SUBAVG = {
 }
 
 
-def _get_set_desc_ja(set_id: str, beta: str) -> tuple:
-    """指定セットIDの set2_desc_ja / set4_desc_ja を返す（無ければ空文字）。"""
+def _get_set_desc(set_id: str, beta: str, lang: str = "ja") -> tuple:
+    """指定セットIDの 2セット / 4セット効果説明を返す（無ければ空文字）。"""
     entry = _load_artifact_list(beta).get(str(set_id)) or {}
+    if lang == "en":
+        s2 = str(entry.get("set2_desc_en") or "") or str(entry.get("set2_desc_ja") or "")
+        s4 = str(entry.get("set4_desc_en") or "") or str(entry.get("set4_desc_ja") or "")
+        return s2, s4
     return str(entry.get("set2_desc_ja") or ""), str(entry.get("set4_desc_ja") or "")
 
 
 def build_growth_panel(calc_method: str, base_hp=0.0, base_atk=0.0, base_def=0.0,
                        weapon_affix=None, weapon_refinement=None, raw_artifacts=None,
-                       set_bonuses=None, beta: str = "false") -> dict:
+                       set_bonuses=None, beta: str = "false", lang: str = "ja") -> dict:
     """育成モードパネル用のデータを組み立てる。
 
     - base_hp / base_atk / base_def: 基礎ステ（atk は武器基礎攻撃を含めた値）。
@@ -68,7 +76,7 @@ def build_growth_panel(calc_method: str, base_hp=0.0, base_atk=0.0, base_def=0.0
     - set_bonuses: 既に計算済みの set_bonuses リスト [{id, name, count, ...}]。
     """
     calc_method = calc_method or "crit"
-    label = _METHOD_STAT_LABEL.get(calc_method, "")
+    label = (_METHOD_STAT_LABEL_EN if lang == "en" else _METHOD_STAT_LABEL).get(calc_method, "")
 
     # 1) 武器の凸
     affix = weapon_affix or 1
@@ -86,17 +94,17 @@ def build_growth_panel(calc_method: str, base_hp=0.0, base_atk=0.0, base_def=0.0
         sid = str(sb.get("id", ""))
         if not sid or sid == "0":
             continue
-        s2, s4 = _get_set_desc_ja(sid, beta)
+        s2, s4 = _get_set_desc(sid, beta, lang)
         if not s2 and not s4:
             continue
         sets.append({
             "id": sid,
-            "name": str(sb.get("name") or f"セット {sid}"),
+            "name": str(sb.get("name") or (f"Set {sid}" if lang == "en" else f"セット {sid}")),
             "count": sb.get("count", 2),
             "set2": s2,
             "set4": s4,
             # 2セット効果がステータス反映（apply_2set_buffs）されているか
-            "buff_applied": bool(sb.get("buff") or _set_buff_label(sid)),
+            "buff_applied": bool(sb.get("buff") or _set_buff_label(sid, lang)),
         })
 
     # 3) スコア方式が攻撃/HP/防御のときだけ 1%値 を表示。
@@ -142,7 +150,7 @@ def build_growth_panel(calc_method: str, base_hp=0.0, base_atk=0.0, base_def=0.0
 
 def build_growth_from_fake(calc_method, base_hp, base_atk, base_def,
                            weapon_affix, weapon_jsondata, raw_artifacts,
-                           set_bonuses, beta="false") -> dict:
+                           set_bonuses, beta="false", lang="ja") -> dict:
     """fake分岐（base値が既に計算済み）用のラッパー。
 
     atk の1%値は base_atk（キャラ基礎攻撃）+ weapon_base_atk を足した値の1%とする。
@@ -164,4 +172,5 @@ def build_growth_from_fake(calc_method, base_hp, base_atk, base_def,
         raw_artifacts=raw_artifacts,
         set_bonuses=set_bonuses,
         beta=beta,
+        lang=lang,
     )

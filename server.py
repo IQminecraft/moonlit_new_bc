@@ -19,6 +19,8 @@ from app.card import pool as card_pool  # noqa: F401
 from app.card.bg import _prebuild_backgrounds
 from app.routes.admin import admin_router, _admin_security_middleware
 from app.routes.api import api_router
+from app.routes.bot_admin import bot_admin_router
+from app.core.bot_manager import bot_manager
 
 app = FastAPI()
 
@@ -26,9 +28,27 @@ app = FastAPI()
 @app.on_event("startup")
 async def startup_event():
     await run_in_threadpool(_prebuild_backgrounds)
+    # Discord bot 自動起動（NEWBC_BOT_AUTOSTART=0 で無効。トークン未設定時はスキップされる）
+    if os.environ.get("NEWBC_BOT_AUTOSTART", "1").lower() in ("1", "true", "yes"):
+        result = await run_in_threadpool(bot_manager.start)
+        if result.get("ok"):
+            print(f"[OK] Discord bot autostart (pid={result.get('pid')})")
+        else:
+            print(f"[INFO] Discord bot autostart skipped: {result.get('error')}")
 
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.get("/sw.js", include_in_schema=False)
+async def service_worker():
+    """Service Worker をルートスコープで配信する（/static/ 配下だと制御対象が /static/ に限られる）。"""
+    from fastapi.responses import FileResponse
+    return FileResponse(
+        os.path.join(STATIC_DIR, "sw.js"),
+        media_type="application/javascript",
+        headers={"Service-Worker-Allowed": "/"},
+    )
 app.middleware("http")(_admin_security_middleware)
 
 # 静的アセットのクライアントキャッシュ（画像は長めにキャッシュ。JSONは都度取得）
@@ -53,8 +73,15 @@ async def _static_cache_middleware(request, call_next):
     return response
 
 
+# API 応答ログ（最後に登録 → 最外側で全リクエストを捕捉）
+from app.core.api_log import api_log_middleware  # noqa: E402
+
+app.middleware("http")(api_log_middleware)
+
+
 app.include_router(admin_router)
 app.include_router(api_router)
+app.include_router(bot_admin_router)
 
 
 if __name__ == "__main__":

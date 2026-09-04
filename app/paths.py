@@ -31,4 +31,4 @@ SX = CARD_W / DESIGN_W
 SY = CARD_H / DESIGN_H
 
 # サイト（アプリ）自体のバージョン。ヘッダーのタイトル横に表示する。
-SITE_VERSION = "2.0"
+SITE_VERSION = "2.1"

@@ -8,3 +8,8 @@ app/convert/__pycache__
 app/core/__pycache__
 app/routes/__pycache__
 static/cache
+# Discord bot (bot/bot.py) の実行時ファイル
+bot/uid_store.json
+bot/bot_status.json
+bot/bot_status.json.tmp
+logs/

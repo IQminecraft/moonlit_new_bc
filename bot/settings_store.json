@@ -1,0 +1,77 @@
+{
+  "1044973417037840456": {
+    "_char_list": [
+      {
+        "id": "10000133",
+        "name": "サンドローネ",
+        "element": "Cryo"
+      },
+      {
+        "id": "10000150",
+        "name": "オデット",
+        "element": "Cryo"
+      },
+      {
+        "id": "10000148",
+        "name": "アリョーシャ",
+        "element": "Electro"
+      },
+      {
+        "id": "10000039",
+        "name": "ディオナ",
+        "element": "Cryo"
+      },
+      {
+        "id": "10000122",
+        "name": "ネフェル",
+        "element": "Dendro"
+      },
+      {
+        "id": "10000119",
+        "name": "ラウマ",
+        "element": "Dendro"
+      },
+      {
+        "id": "10000121",
+        "name": "アイノ",
+        "element": "Hydro"
+      },
+      {
+        "id": "10000043",
+        "name": "スクロース",
+        "element": "Anemo"
+      },
+      {
+        "id": "10000125",
+        "name": "コロンビーナ",
+        "element": "Hydro"
+      },
+      {
+        "id": "10000115",
+        "name": "ダリア",
+        "element": "Hydro"
+      },
+      {
+        "id": "10000014",
+        "name": "バーバラ",
+        "element": "Hydro"
+      },
+      {
+        "id": "10000059",
+        "name": "鹿野院平蔵",
+        "element": "Anemo"
+      }
+    ],
+    "last_uid": "1812256644",
+    "last_avatar": "10000133",
+    "last_label": "サンドローネ",
+    "last_element": "Cryo",
+    "calc_methods": {
+      "10000133": "atk",
+      "10000122": "em"
+    }
+  },
+  "12345": {
+    "calc_methods": {}
+  }
+}

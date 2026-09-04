@@ -4,11 +4,7 @@ import time as _time
 import threading as _threading
 from typing import Optional, Dict, Any
 
-from app.card.cache import (
-    _IMAGE_CACHE, _RESIZED_CACHE, _SPLASH_BLUR_CACHE, _REGION_BGS, _FONT_CACHE,
-    _CACHE_MAX_IMAGES, _CACHE_MAX_RESIZED, _CACHE_MAX_SPLASH_BLUR, _CACHE_MAX_REGION_BGS,
-    _CARD_CACHE_TTL_SEC, _CARD_CACHE_LAST_RESET,
-)
+from app.card.cache import cache_stats
 from app.card.pool import _card_gen_stats
 
 # ==========================================================
@@ -261,19 +257,7 @@ def _server_stats_snapshot() -> Dict[str, Any]:
         "process_mb": process_mb,
         "loadavg": loadavg,
         "platform": sys.platform,
-        "cache": {
-            "images": len(_IMAGE_CACHE),
-            "images_max": _CACHE_MAX_IMAGES,
-            "resized": len(_RESIZED_CACHE),
-            "resized_max": _CACHE_MAX_RESIZED,
-            "splash_blur": len(_SPLASH_BLUR_CACHE),
-            "splash_blur_max": _CACHE_MAX_SPLASH_BLUR,
-            "fonts": len(_FONT_CACHE),
-            "region_bgs": len(_REGION_BGS),
-            "region_bgs_max": _CACHE_MAX_REGION_BGS,
-            "ttl_sec": round(_CARD_CACHE_TTL_SEC, 1),
-            "last_reset_ago_sec": round(_time.time() - _CARD_CACHE_LAST_RESET, 1),
-        },
+        "cache": cache_stats(),
         "card_gen": _card_gen_stats(),
         "errors": errors,
         "ts": now,

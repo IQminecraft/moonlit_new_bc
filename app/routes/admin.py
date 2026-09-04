@@ -17,7 +17,6 @@ from starlette.concurrency import run_in_threadpool
 from app.paths import BASE_DIR, STATIC_DIR, templates
 from app.core.notify import report_error_to_discord
 from app.core.jsonio import write_json_atomic
-from app.card.cache import _ADMIN_CATALOG_CACHE
 from app.card.bg import _list_region_image_names
 from app.card.region import _load_region_map, _TRAVELER_BASE_IDS, clear_region_map_cache
 from app.card.scorecard_splash import SCORECARD_SPLASH_OFFSETS_PATH, load_scorecard_splash_offsets
@@ -28,6 +27,9 @@ from app.card.calc_method import (
 from app.card.ui_flags import load_ui_flags, save_ui_flags
 
 admin_router = APIRouter()
+
+# admin カタログの単一エントリキャッシュ（lists の mtime 変化で無効化）
+_ADMIN_CATALOG_CACHE: Dict[str, Any] = {"key": None, "entry": None}
 
 _ADMIN_COOKIE = "admin_session"
 _ADMIN_MAX_AGE = 60 * 60 * 12
@@ -1091,6 +1093,736 @@ async def admin_region_map_save(request: Request):
         return JSONResponse(await run_in_threadpool(_run))
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ----------------------------------------------------------
+#  地域表示ラベル（ja / en）。フロントの地域名表示に使う。
+#  static/data/setting/region_labels.json: {key: {ja, en}}
+# ----------------------------------------------------------
+def _region_labels_path() -> str:
+    return os.path.join(STATIC_DIR, "data", "setting", "region_labels.json")
+
+
+def _load_region_labels() -> dict:
+    try:
+        with open(_region_labels_path(), "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+@admin_router.get("/admin/api/region_labels")
+async def admin_region_labels_get(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    return JSONResponse({"ok": True, "labels": _load_region_labels()})
+
+
+@admin_router.post("/admin/api/region_labels")
+async def admin_region_labels_save(request: Request):
+    """地域ラベルの保存（{key: {ja, en}} のマージ。追加時は日本語/英語両方を入力してもらう）。"""
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "invalid json"}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"ok": False, "error": "body must be {key: {ja, en}}"}, status_code=400)
+
+    merged = _load_region_labels()
+    for key, labels in body.items():
+        key = str(key).strip()
+        if not _REGION_KEY_PATTERN.match(key):
+            return JSONResponse({"ok": False, "error": f"invalid region key: {key}"}, status_code=400)
+        if not isinstance(labels, dict):
+            continue
+        ja = str(labels.get("ja") or "").strip()
+        en = str(labels.get("en") or "").strip()
+        if not ja and not en:
+            continue
+        entry = merged.get(key) if isinstance(merged.get(key), dict) else {}
+        if ja:
+            entry["ja"] = ja
+        if en:
+            entry["en"] = en
+        merged[key] = entry
+
+    try:
+        def _run():
+            path = _region_labels_path()
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            write_json_atomic(path, merged)
+            return {"ok": True, "labels": merged}
+        return JSONResponse(await run_in_threadpool(_run))
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ----------------------------------------------------------
+#  アセット欠落チェック: キャラJSONが参照するアイコンの内、
+#  ローカルに無いものを列挙し、CDNから一括再取得する。
+#  （初期ダウンロード時の取得漏れの再発防止用）
+# ----------------------------------------------------------
+def _scan_character_asset_refs(mode: str = "live") -> Dict[str, Any]:
+    """キャラJSONが参照するアイコンと、ローカルに存在しないものを返す。
+
+    種類ごとに保存先が異なる（誤検出防止のため kind を見て判定する）:
+      - icon（キャラアバターアイコン）→ static/assets/characters/{icon}.webp
+        （beta モード時は static/beta/assets/characters/ を優先。逆サイドもフォールバック参照）
+      - skills / passives / constellations → static/assets/skills/{icon}.webp
+    """
+    if mode == "beta":
+        char_dir = os.path.join(STATIC_DIR, "beta", "data", "characters")
+        skills_dir = os.path.join(STATIC_DIR, "beta", "assets", "skills")
+        skills_dirs = [skills_dir, os.path.join(STATIC_DIR, "assets", "skills")]
+        icon_dirs = [
+            os.path.join(STATIC_DIR, "beta", "assets", "characters"),
+            os.path.join(STATIC_DIR, "assets", "characters"),
+        ]
+    else:
+        char_dir = os.path.join(STATIC_DIR, "data", "characters")
+        skills_dir = os.path.join(STATIC_DIR, "assets", "skills")
+        skills_dirs = [skills_dir, os.path.join(STATIC_DIR, "beta", "assets", "skills")]
+        icon_dirs = [
+            os.path.join(STATIC_DIR, "assets", "characters"),
+            os.path.join(STATIC_DIR, "beta", "assets", "characters"),
+        ]
+
+    refs, missing = [], []
+    if not os.path.isdir(char_dir):
+        return {"refs": refs, "missing": missing, "skills_dir": skills_dir, "icon_dirs": icon_dirs}
+    for fn in sorted(os.listdir(char_dir)):
+        if not fn.endswith(".json"):
+            continue
+        char_id = fn[:-5]
+        try:
+            with open(os.path.join(char_dir, fn), "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            continue
+        icons = []
+        if data.get("icon"):
+            icons.append(("icon", str(data["icon"])))
+        for key in ("skills", "passives", "constellations"):
+            for item in data.get(key) or []:
+                if isinstance(item, dict) and item.get("icon"):
+                    icons.append((key, str(item["icon"])))
+        for kind, icon in icons:
+            # icon（アバターアイコン）は characters ディレクトリが正しい保存先
+            if kind == "icon":
+                exists = any(os.path.exists(os.path.join(d, f"{icon}.webp")) for d in icon_dirs)
+            else:
+                exists = any(os.path.exists(os.path.join(d, f"{icon}.webp")) for d in skills_dirs)
+            entry = {"char": char_id, "kind": kind, "icon": icon}
+            refs.append(entry)
+            if not exists:
+                missing.append(entry)
+    return {"refs": refs, "missing": missing, "skills_dir": skills_dir, "icon_dirs": icon_dirs}
+
+
+@admin_router.get("/admin/api/assets/missing_check")
+async def admin_assets_missing_check(request: Request, mode: str = "live"):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    mode = "beta" if str(mode).lower() == "beta" else "live"
+
+    def _run():
+        result = _scan_character_asset_refs(mode)
+        # CDN に存在するかも確認（再取得できる見込みの有無を admin に見せる）
+        checked = []
+        for m in result["missing"]:
+            available = None
+            try:
+                r = requests.head(f"https://static.nanoka.cc/assets/gi/{m['icon']}.webp", timeout=8)
+                available = r.status_code == 200
+            except Exception:
+                available = None
+            checked.append({**m, "cdn": available})
+        return {"ok": True, "mode": mode, "total_refs": len(result["refs"]), "missing": checked}
+
+    return JSONResponse(await run_in_threadpool(_run))
+
+
+@admin_router.post("/admin/api/assets/missing_fix")
+async def admin_assets_missing_fix(request: Request, mode: str = "live"):
+    """欠落アイコンを CDN から一括再ダウンロードする。"""
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    mode = "beta" if str(mode).lower() == "beta" else "live"
+
+    def _run():
+        result = _scan_character_asset_refs(mode)
+        skills_dir = result["skills_dir"]
+        icon_dirs = result.get("icon_dirs") or [os.path.join(STATIC_DIR, "assets", "characters")]
+        os.makedirs(skills_dir, exist_ok=True)
+        for d in icon_dirs:
+            os.makedirs(d, exist_ok=True)
+        fixed, failed = [], []
+        for m in result["missing"]:
+            icon = m["icon"]
+            # icon（アバターアイコン）は characters ディレクトリへ保存する
+            dest_dir = icon_dirs[0] if m.get("kind") == "icon" else skills_dir
+            dest = os.path.join(dest_dir, f"{icon}.webp")
+            try:
+                r = requests.get(f"https://static.nanoka.cc/assets/gi/{icon}.webp", timeout=15)
+                r.raise_for_status()
+                with open(dest, "wb") as f:
+                    f.write(r.content)
+                fixed.append(icon)
+            except Exception as e:
+                failed.append({"icon": icon, "error": str(e)})
+        return {"ok": True, "mode": mode, "fixed": fixed, "failed": failed,
+                "still_missing": len(result["missing"]) - len(fixed)}
+
+    return JSONResponse(await run_in_threadpool(_run))
+
+
+# ----------------------------------------------------------
+#  ネームカード / プロフアイコンの一括取得
+#  enka assets の namecards.json / pfps.json に基づき、
+#  enka.network CDN（一次）→ nanoka CDN（代替）の順で取得する。
+# ----------------------------------------------------------
+_NAMECARD_DIR = os.path.join(STATIC_DIR, "assets", "namecards")
+_PFP_DIR = os.path.join(STATIC_DIR, "assets", "pfps")
+
+
+def _load_enka_asset_map(filename: str) -> dict:
+    try:
+        with open(os.path.join(BASE_DIR, "external", "enka_py", "assets", filename), "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _bulk_fetch_namecards_pfps() -> Dict[str, Any]:
+    namecards = _load_enka_asset_map("namecards.json")
+    pfps = _load_enka_asset_map("pfps.json")
+    os.makedirs(_NAMECARD_DIR, exist_ok=True)
+    os.makedirs(_PFP_DIR, exist_ok=True)
+
+    def dl_multi(icon_base: str, dest: str) -> bool:
+        """enka → nanoka の順で webp/png を試す。"""
+        urls = [
+            f"https://enka.network/ui/{icon_base}.png",
+            f"https://static.nanoka.cc/assets/gi/{icon_base}.webp",
+        ]
+        for url in urls:
+            try:
+                r = requests.get(url, timeout=15)
+                if r.status_code == 200 and r.content:
+                    with open(dest, "wb") as f:
+                        f.write(r.content)
+                    return True
+            except Exception:
+                continue
+        return False
+
+    nc_new = nc_skip = nc_fail = 0
+    for nc_id, entry in namecards.items():
+        icon = entry.get("icon", "")
+        if not icon:
+            continue
+        dest = os.path.join(_NAMECARD_DIR, f"{nc_id}.png")
+        if os.path.exists(dest):
+            nc_skip += 1
+            continue
+        # icon は UI_NameCardPic_xxx_P 形式（フルネーム）
+        if dl_multi(icon, dest):
+            nc_new += 1
+        else:
+            nc_fail += 1
+
+    pfp_new = pfp_skip = pfp_fail = 0
+    for pfp_id, entry in pfps.items():
+        icon = entry.get("iconPath", "")
+        if not icon:
+            continue
+        dest = os.path.join(_PFP_DIR, f"{pfp_id}.png")
+        if os.path.exists(dest):
+            pfp_skip += 1
+            continue
+        # icon は UI_AvatarIcon_xxx_Circle 形式（フルネーム）
+        if dl_multi(icon, dest):
+            pfp_new += 1
+        else:
+            pfp_fail += 1
+
+    return {
+        "namecards": {"total": len(namecards), "new": nc_new, "skipped": nc_skip, "failed": nc_fail},
+        "pfps": {"total": len(pfps), "new": pfp_new, "skipped": pfp_skip, "failed": pfp_fail},
+    }
+
+
+@admin_router.get("/admin/api/assets/namecards_status")
+async def admin_assets_namecards_status(request: Request):
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+
+    def _run():
+        namecards = _load_enka_asset_map("namecards.json")
+        pfps = _load_enka_asset_map("pfps.json")
+        nc_local = len([f for f in os.listdir(_NAMECARD_DIR) if f.endswith(".png")]) if os.path.isdir(_NAMECARD_DIR) else 0
+        pfp_local = len([f for f in os.listdir(_PFP_DIR) if f.endswith(".png")]) if os.path.isdir(_PFP_DIR) else 0
+        # nanoka 取得を実行したことがあれば、マージ後の期待件数を state ファイルから使う
+        state = {}
+        try:
+            with open(_ASSET_FETCH_STATE_PATH, "r", encoding="utf-8") as f:
+                state = json.load(f)
+            if not isinstance(state, dict):
+                state = {}
+        except Exception:
+            state = {}
+        nc_expected = max(len(namecards), int(state.get("namecards", {}).get("total") or 0))
+        pfp_expected = max(len(pfps), int(state.get("pfps", {}).get("total") or 0))
+        return {
+            "ok": True,
+            "namecards": {"expected": nc_expected, "local": nc_local},
+            "pfps": {"expected": pfp_expected, "local": pfp_local},
+            "last_nanoka_fetch": state.get("last_fetch") or None,
+            "last_sources": state.get("sources") or None,
+        }
+
+    return JSONResponse(await run_in_threadpool(_run))
+
+
+@admin_router.post("/admin/api/assets/namecards_fetch_nanoka")
+async def admin_assets_namecards_fetch_nanoka(request: Request):
+    """nanoka（character.json live/beta + Amber ネームカード一覧）から一括取得する。
+
+    - 既存ファイルはスキップ
+    - 画像の取得先は nanoka CDN 優先（見つからなければ enka CDN）
+    - 実行後、マージ後の期待件数を state ファイルに保存する
+    """
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+
+    def _run():
+        result = _bulk_fetch_namecards_pfps_nanoka()
+        # ステータス表示用にマージ後の期待件数を保存
+        try:
+            os.makedirs(os.path.dirname(_ASSET_FETCH_STATE_PATH), exist_ok=True)
+            write_json_atomic(_ASSET_FETCH_STATE_PATH, {
+                "namecards": result.get("namecards") or {},
+                "pfps": result.get("pfps") or {},
+                "versions": result.get("versions") or {},
+                "sources": result.get("sources") or {},
+                "last_fetch": _time.strftime("%Y-%m-%d %H:%M:%S"),
+            })
+        except Exception as e:
+            print(f"[Warn] asset fetch state の保存に失敗しました: {e}")
+        try:
+            nc = result.get("namecards") or {}
+            pfp = result.get("pfps") or {}
+            _get_data_manager().append_log(
+                "assets_nanoka_fetch", True,
+                f"src={result.get('sources', {}).get('namecard_list')} / "
+                f"nc new={nc.get('new')} fail={nc.get('failed')} / pfp new={pfp.get('new')} fail={pfp.get('failed')}",
+            )
+        except Exception:
+            pass
+        return result
+
+    return JSONResponse(await run_in_threadpool(_run))
+
+
+@admin_router.post("/admin/api/assets/namecards_fetch_lunaris")
+async def admin_assets_namecards_fetch_lunaris(request: Request):
+    """lunaris の materiallist のみをソースとして不足分を取得する（lunaris 単体検証用）。"""
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+
+    def _run():
+        result = _bulk_fetch_namecards_pfps_lunaris()
+        try:
+            nc = result.get("namecards") or {}
+            pfp = result.get("pfps") or {}
+            _get_data_manager().append_log(
+                "assets_lunaris_fetch", bool(result.get("ok")),
+                f"nc new={nc.get('new')} fail={nc.get('failed')} / pfp new={pfp.get('new')} fail={pfp.get('failed')}",
+            )
+        except Exception:
+            pass
+        return result
+
+    return JSONResponse(await run_in_threadpool(_run))
+
+
+@admin_router.post("/admin/api/assets/namecards_fetch")
+async def admin_assets_namecards_fetch(request: Request):
+    """ネームカード / プロフアイコンを一括取得（既存ファイルはスキップ）。"""
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+
+    def _run():
+        return _bulk_fetch_namecards_pfps()
+
+    return JSONResponse(await run_in_threadpool(_run))
+
+
+# ----------------------------------------------------------
+#  nanoka 由来のネームカード / プロフアイコン一括取得
+#  - プロフアイコン: nanoka の character.json（live / beta 両方）から
+#    キャラ Circle アイコン（pfp ID = キャラ baseID）を導出。
+#    ※ enka の pfps.json にはキャラ系 pfp が含まれず完全に欠落している
+#  - ネームカード: nanoka には数値IDの一覧が無いため、
+#    Project Amber の namecard 一覧（enka より新しく 210294 まで）を
+#    数値IDソースとして使い、画像実体は nanoka CDN から取得する。
+#  - 既存の enka assets マップもマージして欠落分だけ取得する。
+# ----------------------------------------------------------
+_AMBER_NAMECARD_URL = "https://gi.yatta.moe/api/v2/en/namecard"
+# lunaris.moe: materiallist.json の MATERIAL_NAMECARD が数値ID→アイコン名の一覧
+# （293種と enka/Amber より新しいうえ、version.json がバージョン自動追従。画像CDNもあり）
+_LUNARIS_VERSION_URL = "https://api.lunaris.moe/data/version.json"
+_LUNARIS_MATERIALLIST_URL = "https://api.lunaris.moe/data/{}/materiallist.json"
+_LUNARIS_NAMECARDPIC_URL = "https://api.lunaris.moe/data/assets/namecardpic/{}.png"
+# lunaris のアバターアイコン CDN（MATERIAL_AVATAR の icon は UI_AvatarIcon_xxx_Card 形式。
+# 画像実体は Card 無しの UI_AvatarIcon_xxx.png で置かれているため Card を外して要求する）
+_LUNARIS_AVATARICON_URL = "https://api.lunaris.moe/data/assets/avataricon/{}.png"
+# pizza-studio/EnkaDBGenerator（自動生成のゲームデータ）:
+# pfps.json は enka 本家より新しく（キャラポートレート系 11700/11800 を含む）、
+# namecards.json も enka 本家（store/）より新しいため数値IDソースとして使う。
+_PIZZA_GI_URL = "https://raw.githubusercontent.com/pizza-studio/EnkaDBGenerator/main/Sources/EnkaDBFiles/Resources/Specimen/GI/{}.json"
+# 注意: アイコン名に数字のみのもの（UI_NameCardIcon_0 等）があるため
+# str.format は使わず f-string / 連結で URL を組み立てる
+_NANOKA_CDN_PREFIX = "https://static.nanoka.cc/assets/gi/"
+_ENKA_UI_PREFIX = "https://enka.network/ui/"
+_ASSET_FETCH_STATE_PATH = os.path.join(STATIC_DIR, "admin", "asset_fetch_state.json")
+
+
+def _nanoka_versions() -> tuple:
+    """nanoka manifest から (live, beta) のバージョン文字列を返す。"""
+    try:
+        r = requests.get("https://static.nanoka.cc/manifest.json", timeout=15)
+        r.raise_for_status()
+        gi = r.json().get("gi") or {}
+        live = str(gi.get("live") or gi.get("latest") or "")
+        beta = str(gi.get("latest") or live)
+        return live, beta
+    except Exception as e:
+        print(f"[Warn] nanoka manifest 取得失敗: {e}")
+        return "", ""
+
+
+def _nanoka_character_names(version: str) -> Dict[str, str]:
+    """nanoka の character.json から {キャラID: ベース名} を返す（失敗時は空）。"""
+    if not version:
+        return {}
+    try:
+        r = requests.get(f"https://static.nanoka.cc/gi/{version}/character.json", timeout=20)
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        print(f"[Warn] nanoka character.json 取得失敗 ({version}): {e}")
+        return {}
+    out = {}
+    for cid, entry in data.items():
+        if not str(cid).isdigit():
+            continue
+        icon = str((entry or {}).get("icon") or "")
+        if icon.startswith("UI_AvatarIcon_") and len(icon) > len("UI_AvatarIcon_"):
+            out[str(cid)] = icon[len("UI_AvatarIcon_"):]
+    return out
+
+
+def _amber_namecard_bases() -> Dict[str, str]:
+    """Project Amber の namecard 一覧から {数値ID: アイコンbase名} を返す（失敗時は空）。
+
+    Amber の icon は UI_NameCardIcon_xxx 形式（背景画像は UI_NameCardPic_xxx_P）。
+    """
+    try:
+        r = requests.get(_AMBER_NAMECARD_URL, timeout=20)
+        r.raise_for_status()
+        items = (r.json().get("data") or {}).get("items") or {}
+    except Exception as e:
+        print(f"[Warn] Amber namecard 一覧の取得に失敗しました: {e}")
+        return {}
+    out = {}
+    for cid, entry in items.items():
+        icon = str((entry or {}).get("icon") or "")
+        if not icon or not str(cid).isdigit():
+            continue
+        base = icon.replace("UI_NameCardIcon_", "").replace("UI_NameCardPic_", "")
+        if base.endswith("_P"):
+            base = base[:-2]
+        if base:
+            out[str(cid)] = base
+    return out
+
+
+def _load_lunaris_namecards() -> Dict[str, str]:
+    """lunaris.moe の materiallist から {数値ID: アイコンbase名} を返す（失敗時は空）。
+
+    MATERIAL_NAMECARD タイプがネームカード一覧（293種・210298まで）。icon は
+    UI_NameCardIcon_xxx / UI_NameCardPic_xxx_P のいずれかの形式で返る。
+    """
+    try:
+        v = requests.get(_LUNARIS_VERSION_URL, timeout=15)
+        v.raise_for_status()
+        version = str((v.json() or {}).get("version") or "")
+        if not version:
+            return {}
+        r = requests.get(_LUNARIS_MATERIALLIST_URL.format(version), timeout=30)
+        r.raise_for_status()
+        materials = r.json()
+    except Exception as e:
+        print(f"[Warn] lunaris materiallist の取得に失敗しました: {e}")
+        return {}
+    out = {}
+    for cid, entry in (materials or {}).items():
+        if not str(cid).isdigit() or (entry or {}).get("type") != "MATERIAL_NAMECARD":
+            continue
+        icon = str(entry.get("icon") or "")
+        base = icon.replace("UI_NameCardIcon_", "").replace("UI_NameCardPic_", "")
+        if base.endswith("_P"):
+            base = base[:-2]
+        if base:
+            out[str(cid)] = base
+    return out
+
+
+def _load_lunaris_avatar_icons() -> Dict[str, str]:
+    """lunaris.moe の materiallist から {数値ID: アバターアイコン名} を返す（失敗時は空）。
+
+    MATERIAL_AVATAR タイプ（131種）がキャラアイコン一覧。icon は
+    UI_AvatarIcon_xxx_Card 形式だが CDN 上は Card 無しの UI_AvatarIcon_xxx.png。
+    """
+    try:
+        v = requests.get(_LUNARIS_VERSION_URL, timeout=15)
+        v.raise_for_status()
+        version = str((v.json() or {}).get("version") or "")
+        if not version:
+            return {}
+        r = requests.get(_LUNARIS_MATERIALLIST_URL.format(version), timeout=30)
+        r.raise_for_status()
+        materials = r.json()
+    except Exception as e:
+        print(f"[Warn] lunaris materiallist の取得に失敗しました: {e}")
+        return {}
+    out = {}
+    for cid, entry in (materials or {}).items():
+        if not str(cid).isdigit() or (entry or {}).get("type") != "MATERIAL_AVATAR":
+            continue
+        icon = str(entry.get("icon") or "")
+        if icon.startswith("UI_AvatarIcon_") and len(icon) > len("UI_AvatarIcon_"):
+            base = icon[len("UI_AvatarIcon_"):]
+            if base.endswith("_Card"):
+                base = base[: -len("_Card")]
+            if base:
+                out[str(cid)] = f"UI_AvatarIcon_{base}"
+    return out
+
+
+def _load_pizza_asset_map(filename: str) -> Dict[str, Any]:
+    """pizza-studio/EnkaDBGenerator の pfps.json / namecards.json を取得する（失敗時は空）。"""
+    try:
+        r = requests.get(_PIZZA_GI_URL.format(filename), timeout=20)
+        r.raise_for_status()
+        data = r.json()
+        return data if isinstance(data, dict) else {}
+    except Exception as e:
+        print(f"[Warn] pizza-studio {filename} の取得に失敗しました: {e}")
+        return {}
+
+
+def _dl_first(urls: list, dest: str) -> bool:
+    """候補URLのうち最初に成功したものを dest に保存する。"""
+    for url in urls:
+        try:
+            r = requests.get(url, timeout=15)
+            if r.status_code == 200 and r.content:
+                with open(dest, "wb") as f:
+                    f.write(r.content)
+                return True
+        except Exception:
+            continue
+    return False
+
+
+def _bulk_fetch_namecards_pfps_nanoka() -> Dict[str, Any]:
+    """不足分のネームカード / プロフアイコンを取得する。
+
+    ソース依存の優先順位（上にあるものが取れたら下は呼ばない）:
+      ネームカードID一覧: lunaris 単体 → amber → enka（ローカル固定一覧）
+      プロフアイコンID一覧: nanoka（キャラ系・live/beta 自動追従）→ enka（写真系）→ pizza-studio（ポートレート系のギャップ補完）
+    画像のダウンロードは nanoka CDN 優先（無ければ lunaris CDN / enka CDN）。
+    """
+    live_ver, beta_ver = _nanoka_versions()
+    enka_nc = _load_enka_asset_map("namecards.json")
+    enka_pfp = _load_enka_asset_map("pfps.json")
+
+    # ---- ネームカードID一覧: lunaris 単体 → amber → enka の優先度チェーン
+    nc_targets: Dict[str, Dict[str, str]] = {}
+    nc_list_source = ""
+    lunaris_nc = _load_lunaris_namecards()
+    if len(lunaris_nc) >= 100:
+        # lunaris がまともな一覧を返した → これ単体で確定
+        nc_targets = {cid: {"base": base, "full": ""} for cid, base in lunaris_nc.items()}
+        nc_list_source = "lunaris"
+    else:
+        amber_nc = _amber_namecard_bases()
+        if amber_nc:
+            nc_targets = {cid: {"base": base, "full": ""} for cid, base in amber_nc.items()}
+            nc_list_source = "amber"
+    if not nc_targets:
+        # 最終フォールバック: enka ローカルの固定一覧（フルアイコン名を持つ）
+        for nc_id, entry in enka_nc.items():
+            icon = str((entry or {}).get("icon") or "")
+            if not icon:
+                continue
+            base = icon.replace("UI_NameCardPic_", "")
+            if base.endswith("_P"):
+                base = base[:-2]
+            nc_targets[str(nc_id)] = {"base": base, "full": icon}
+        nc_list_source = "enka"
+
+    # ---- プロフアイコンID一覧: nanoka（キャラ系）→ enka（写真系のギャップ補完）→ pizza-studio（ポートレート系のギャップ補完）
+    pfp_targets: Dict[str, str] = {}
+    pfp_source_counts: Dict[str, int] = {}
+    for char_names in (_nanoka_character_names(live_ver), _nanoka_character_names(beta_ver)):
+        for cid, name in char_names.items():
+            if cid not in pfp_targets:
+                pfp_targets[cid] = f"UI_AvatarIcon_{name}_Circle"
+                pfp_source_counts["nanoka"] = pfp_source_counts.get("nanoka", 0) + 1
+    for pfp_id, entry in enka_pfp.items():
+        icon = str((entry or {}).get("iconPath") or "")
+        if icon and str(pfp_id).isdigit():
+            if str(pfp_id) not in pfp_targets:
+                pfp_targets[str(pfp_id)] = icon
+                pfp_source_counts["enka"] = pfp_source_counts.get("enka", 0) + 1
+    for pfp_id, entry in _load_pizza_asset_map("pfps").items():
+        icon = str((entry or {}).get("iconPath") or "")
+        if icon and str(pfp_id).isdigit():
+            if str(pfp_id) not in pfp_targets:
+                pfp_targets[str(pfp_id)] = icon
+                pfp_source_counts["pizza"] = pfp_source_counts.get("pizza", 0) + 1
+    # lunaris（MATERIAL_AVATAR）もギャップ補完。icon は Card 無しのフル名（UI_AvatarIcon_xxx）
+    for pfp_id, icon in _load_lunaris_avatar_icons().items():
+        if pfp_id not in pfp_targets:
+            pfp_targets[pfp_id] = icon
+            pfp_source_counts["lunaris"] = pfp_source_counts.get("lunaris", 0) + 1
+
+    os.makedirs(_NAMECARD_DIR, exist_ok=True)
+    os.makedirs(_PFP_DIR, exist_ok=True)
+
+    nc_new = nc_skip = nc_fail = 0
+    for nc_id, info in nc_targets.items():
+        dest = os.path.join(_NAMECARD_DIR, f"{nc_id}.png")
+        if os.path.exists(dest):
+            nc_skip += 1
+            continue
+        base, full = info["base"], info["full"]
+        cands = [
+            f"{_NANOKA_CDN_PREFIX}UI_NameCardPic_{base}_P.webp",
+            f"{_NANOKA_CDN_PREFIX}UI_NameCardIcon_{base}.webp",
+            _LUNARIS_NAMECARDPIC_URL.format(f"UI_NameCardPic_{base}_P"),
+            f"{_ENKA_UI_PREFIX}UI_NameCardPic_{base}_P.png",
+            f"{_ENKA_UI_PREFIX}UI_NameCardIcon_{base}.png",
+        ]
+        if full:
+            cands.insert(0, f"{_NANOKA_CDN_PREFIX}{full}.webp")
+        # 重複除去（順序維持）
+        seen = set()
+        cands = [u for u in cands if not (u in seen or seen.add(u))]
+        if _dl_first(cands, dest):
+            nc_new += 1
+        else:
+            nc_fail += 1
+
+    pfp_new = pfp_skip = pfp_fail = 0
+    for pfp_id, icon in pfp_targets.items():
+        dest = os.path.join(_PFP_DIR, f"{pfp_id}.png")
+        if os.path.exists(dest):
+            pfp_skip += 1
+            continue
+        # lunaris の MATERIAL_AVATAR 由来（UI_AvatarIcon_xxx）は Card 付き/無し両方を試す
+        cands = [
+            f"{_NANOKA_CDN_PREFIX}{icon}.webp",
+            f"{_ENKA_UI_PREFIX}{icon}.png",
+            _LUNARIS_AVATARICON_URL.format(icon),
+        ]
+        if icon.startswith("UI_AvatarIcon_") and not icon.endswith("_Card"):
+            cands.insert(2, _LUNARIS_AVATARICON_URL.format(f"{icon}_Card"))
+        # 重複除去（順序維持）
+        seen = set()
+        cands = [u for u in cands if not (u in seen or seen.add(u))]
+        if _dl_first(cands, dest):
+            pfp_new += 1
+        else:
+            pfp_fail += 1
+
+    result = {
+        "ok": True,
+        "versions": {"live": live_ver, "beta": beta_ver},
+        "sources": {"namecard_list": nc_list_source, "pfp_list": pfp_source_counts},
+        "namecards": {"total": len(nc_targets), "new": nc_new, "skipped": nc_skip, "failed": nc_fail},
+        "pfps": {"total": len(pfp_targets), "new": pfp_new, "skipped": pfp_skip, "failed": pfp_fail},
+    }
+    return result
+
+
+def _bulk_fetch_namecards_pfps_lunaris() -> Dict[str, Any]:
+    """lunaris の materiallist のみをソースとして不足分を取得する（lunaris 単体検証用）。
+
+    - ネームカード一覧: lunaris MATERIAL_NAMECARD（293種）
+    - プロフアイコン一覧: lunaris MATERIAL_AVATAR（131種・旧キャラのみ。新キャラは nanoka ボタンで補完）
+    画像のダウンロードは nanoka CDN 優先（無ければ lunaris CDN / enka CDN）。
+    """
+    nc_targets: Dict[str, Dict[str, str]] = {cid: {"base": base, "full": ""} for cid, base in _load_lunaris_namecards().items()}
+    pfp_targets: Dict[str, str] = dict(_load_lunaris_avatar_icons())
+
+    os.makedirs(_NAMECARD_DIR, exist_ok=True)
+    os.makedirs(_PFP_DIR, exist_ok=True)
+
+    nc_new = nc_skip = nc_fail = 0
+    for nc_id, info in nc_targets.items():
+        dest = os.path.join(_NAMECARD_DIR, f"{nc_id}.png")
+        if os.path.exists(dest):
+            nc_skip += 1
+            continue
+        base = info["base"]
+        cands = [
+            f"{_NANOKA_CDN_PREFIX}UI_NameCardPic_{base}_P.webp",
+            f"{_NANOKA_CDN_PREFIX}UI_NameCardIcon_{base}.webp",
+            _LUNARIS_NAMECARDPIC_URL.format(f"UI_NameCardPic_{base}_P"),
+            f"{_ENKA_UI_PREFIX}UI_NameCardPic_{base}_P.png",
+            f"{_ENKA_UI_PREFIX}UI_NameCardIcon_{base}.png",
+        ]
+        seen = set()
+        cands = [u for u in cands if not (u in seen or seen.add(u))]
+        if _dl_first(cands, dest):
+            nc_new += 1
+        else:
+            nc_fail += 1
+
+    pfp_new = pfp_skip = pfp_fail = 0
+    for pfp_id, icon in pfp_targets.items():
+        dest = os.path.join(_PFP_DIR, f"{pfp_id}.png")
+        if os.path.exists(dest):
+            pfp_skip += 1
+            continue
+        cands = [
+            f"{_NANOKA_CDN_PREFIX}{icon}.webp",
+            f"{_ENKA_UI_PREFIX}{icon}.png",
+            _LUNARIS_AVATARICON_URL.format(icon),
+        ]
+        seen = set()
+        cands = [u for u in cands if not (u in seen or seen.add(u))]
+        if _dl_first(cands, dest):
+            pfp_new += 1
+        else:
+            pfp_fail += 1
+
+    ok = bool(nc_targets) or bool(pfp_targets)
+    return {
+        "ok": ok,
+        "error": None if ok else "lunaris の materiallist が取得できませんでした",
+        "sources": {"namecard_list": "lunaris" if nc_targets else "", "pfp_list": {"lunaris": len(pfp_targets)}},
+        "namecards": {"total": len(nc_targets), "new": nc_new, "skipped": nc_skip, "failed": nc_fail},
+        "pfps": {"total": len(pfp_targets), "new": pfp_new, "skipped": pfp_skip, "failed": pfp_fail},
+    }
 
 
 # ==========================================================

@@ -4,7 +4,7 @@ from collections import Counter
 from fastapi import HTTPException
 from app.paths import BASE_DIR, STATIC_DIR
 from app.card.stats import (
-    text_map_data, get_stat_japanese, get_char_level,
+    text_map_data, get_stat_japanese, get_stat_label, get_text_map_name, get_char_level,
     score_calc,
     sum_affix_substat_values, is_percent_prop, format_substat_value, format_base_value, format_decimal_value,
     artifact_substat_rolls,
@@ -22,16 +22,16 @@ from app.card.stat_calc import compute_manual_totals
 from app.card.calc_method import resolve_calc_method, get_default_calc_method
 from app.card.scorecard_splash import get_scorecard_splash_offset
 from app.card.growth import build_growth_panel, build_growth_from_fake
+from app.card.jsoncache import load_json_cached
 
 
 def _load_json_auto(path: str) -> dict:
-    """UTF-8 → cp932 の順で JSON を読み込む（キャッシュ読み込みの共通処理）。"""
-    try:
-        with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except (UnicodeDecodeError, json.JSONDecodeError):
-        with open(path, 'r', encoding='cp932') as f:
-            return json.load(f)
+    """UTF-8 → cp932 の順で JSON を読み込む（mtime 無効化のメモリキャッシュ付き）。
+
+    注意: 戻り値はキャッシュされた共有オブジェクト。呼び出し側は変更しないこと
+    （生成系の呼び出しはすべて読み取り専用のため、そのまま共有して安全）。
+    """
+    return load_json_cached(path)
 
 
 def _build_char_list_from_showcase(showcase_data: dict, beta: str) -> list:
@@ -79,6 +79,7 @@ def _build_char_list_from_showcase(showcase_data: dict, beta: str) -> list:
             char_entry = {
                 "id": current_avatar_id,
                 "name": jsondata.get("name", ""),
+                "name_en": jsondata.get("en_name", ""),
                 "element": jsondata.get("element", ""),
                 "icon": icon_path,
                 "active": (len(char_list) == 0)
@@ -91,9 +92,11 @@ def _build_char_list_from_showcase(showcase_data: dict, beta: str) -> list:
     return char_list
 
 
-def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", growth: str = "false", base_prec: str = "0", resonance: str = None):
+def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", growth: str = "false", base_prec: str = "0", resonance: str = None, lang: str = "ja"):
     if beta != "true":
         beta = "false"
+    # 表示言語（"ja" / "en"）。カード画像生成は常に ja のまま。
+    lang = "en" if str(lang or "").lower() == "en" else "ja"
     growth = "true" if str(growth or "") == "true" else "false"
     base_prec = str(base_prec or "0")
     if base_prec not in ("0", "2", "4"):
@@ -107,12 +110,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
     if not os.path.exists(json_path):
         raise HTTPException(status_code=404, detail=f"UID: {uid} のキャッシュデータが見つかりませんでした。")
 
-    try:
-        with open(json_path, "r", encoding="utf-8") as f:
-            showcase_data = json.load(f)
-    except (UnicodeDecodeError, json.JSONDecodeError):
-        with open(json_path, "r", encoding="cp932") as f:
-            showcase_data = json.load(f)
+    showcase_data = _load_json_auto(json_path)
 
     avatar_list = showcase_data.get("avatarInfoList")
     if not avatar_list and "playerInfo" in showcase_data:
@@ -144,23 +142,13 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
     json_path2 = resolve_datas_path(json_path2, beta)
 
     if os.path.exists(json_path2):
-        try:
-            with open(json_path2, "r", encoding="utf-8") as f:
-                chardatas = json.load(f)
-        except (UnicodeDecodeError, json.JSONDecodeError):
-            with open(json_path2, "r", encoding="cp932") as f:
-                chardatas = json.load(f)
+        chardatas = _load_json_auto(json_path2)
     else:
         base_avatar_id = str(avatar_id).split("-")[0]
         backup_path = os.path.join(STATIC_DIR, "data", "characters", f"{base_avatar_id}.json")
         backup_path = resolve_datas_path(backup_path, beta)
         if os.path.exists(backup_path):
-            try:
-                with open(backup_path, "r", encoding="utf-8") as f:
-                    chardatas = json.load(f)
-            except (UnicodeDecodeError, json.JSONDecodeError):
-                with open(backup_path, "r", encoding="cp932") as f:
-                    chardatas = json.load(f)
+            chardatas = _load_json_auto(backup_path)
         else:
             raise HTTPException(status_code=404, detail=f"Character JSON file not found: {json_path2}")
 
@@ -170,6 +158,18 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         "Dendro": "草", "Cryo": "氷", "Geo": "岩", "None": "無"
     }
     element_ja = element_ja_map.get(element_type, "無")
+
+    # 言語別ラベル（card_data API の表示名用。画像生成は常に ja）
+    if lang == "en":
+        _lb_atk, _lb_def, _lb_em = "ATK", "DEF", "Elemental Mastery"
+        _lb_cr, _lb_cd, _lb_er = "CRIT Rate", "CRIT DMG", "Energy Recharge"
+        element_dmg_label = f"{element_type} DMG Bonus" if element_type != "None" else "DMG Bonus"
+        slot_names = ["Flower", "Plume", "Sands", "Goblet", "Circlet"]
+    else:
+        _lb_atk, _lb_def, _lb_em = "攻撃力", "防御力", "元素熟知"
+        _lb_cr, _lb_cd, _lb_er = "会心率", "会心ダメージ", "チャージ効率"
+        element_dmg_label = f"{element_ja}ダメバフ"
+        slot_names = ["花", "羽", "時計", "杯", "冠"]
 
     raw_special_id = _special_raw_id(avatar_id)
     if fake_char or raw_special_id in _NO_CONSTELLATION_CHARS:
@@ -188,14 +188,14 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
     weapon_level = None
     weapon_affix = None
     weapon_stats_list = []
+    weapon_id = None
 
     if fake_weapon:
         weapon_id = fake_weapon
         weapon_json_path = resolve_datas_path(f"static/data/weapons/{weapon_id}.json", beta)
         if not os.path.exists(weapon_json_path):
             raise HTTPException(status_code=404, detail=f"Weapon JSON file not found: {weapon_json_path}")
-        with open(weapon_json_path, "r", encoding="utf-8") as f:
-            weapon_jsondata = json.load(f)
+        weapon_jsondata = _load_json_auto(weapon_json_path)
         # レアリティ1・2の武器はLv70（3以上はLv90）
         weapon_level = 70 if int(weapon_jsondata.get("rarity", 3)) in (1, 2) else 90
         weapon_affix = 1
@@ -219,8 +219,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         weapon_json_path = resolve_datas_path(f"static/data/weapons/{weapon_id}.json", beta)
         if os.path.exists(weapon_json_path):
             try:
-                with open(weapon_json_path, "r", encoding="utf-8") as f:
-                    weapon_jsondata = json.load(f)
+                weapon_jsondata = _load_json_auto(weapon_json_path)
                 weapon_name = weapon_jsondata.get("name", "未知の武器")
             except (UnicodeDecodeError, json.JSONDecodeError):
                 pass
@@ -228,6 +227,17 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         weapon_level = weapon_data["weapon"]["level"]
         weapon_affix = list(weapon_data["weapon"].get("affixMap", {}).values())[0] + 1 if weapon_data["weapon"].get("affixMap") else 1
         weapon_stats_list = weapon_data["flat"].get("weaponStats", [])
+
+    # 英語モード時は武器名を lists/weapons.json の enName で置き換える
+    # （武器詳細 JSON には日本語 name しか無いため）
+    if lang == "en" and weapon_id:
+        try:
+            _wp_list_path = resolve_list_path("static/data/lists/weapons.json", beta)
+            if os.path.exists(_wp_list_path):
+                _wp_entry = (_load_json_auto(_wp_list_path) or {}).get(str(weapon_id)) or {}
+                weapon_name = _wp_entry.get("enName") or weapon_name
+        except Exception:
+            pass
 
     raw_artifacts = [item for item in target_avatar_info.get("equipList", []) if "reliquary" in item]
 
@@ -276,13 +286,13 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
 
         main_stats = [
             {"label": "HP", "val": format_base_value(totals["hp"]["val"], base_prec), "base": format_base_value(totals["hp"]["base"], base_prec), "icon": "static/assets/props/hp.png"},
-            {"label": "攻撃力", "val": format_base_value(totals["atk"]["val"], base_prec), "base": format_base_value(totals["atk"]["base"], base_prec), "icon": "static/assets/props/atk.png"},
-            {"label": "防御力", "val": format_base_value(totals["def"]["val"], base_prec), "base": format_base_value(totals["def"]["base"], base_prec), "icon": "static/assets/props/def.png"},
-            {"label": "元素熟知", "val": format_base_value(totals["em"]["val"], base_prec), "icon": "static/assets/props/em.png"},
-            {"label": "会心率", "val": f"{format_decimal_value(totals['crit_rate']['val'] * 100, base_prec)}%", "icon": "static/assets/props/rate.webp"},
-            {"label": "会心ダメージ", "val": f"{format_decimal_value(totals['crit_dmg']['val'] * 100, base_prec)}%", "icon": "static/assets/props/dmg.webp"},
-            {"label": "チャージ効率", "val": f"{format_decimal_value(totals['er']['val'] * 100, base_prec)}%", "icon": "static/assets/props/er.png"},
-            {"label": f"{element_ja}ダメバフ", "val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
+            {"label": _lb_atk, "val": format_base_value(totals["atk"]["val"], base_prec), "base": format_base_value(totals["atk"]["base"], base_prec), "icon": "static/assets/props/atk.png"},
+            {"label": _lb_def, "val": format_base_value(totals["def"]["val"], base_prec), "base": format_base_value(totals["def"]["base"], base_prec), "icon": "static/assets/props/def.png"},
+            {"label": _lb_em, "val": format_base_value(totals["em"]["val"], base_prec), "icon": "static/assets/props/em.png"},
+            {"label": _lb_cr, "val": f"{format_decimal_value(totals['crit_rate']['val'] * 100, base_prec)}%", "icon": "static/assets/props/rate.webp"},
+            {"label": _lb_cd, "val": f"{format_decimal_value(totals['crit_dmg']['val'] * 100, base_prec)}%", "icon": "static/assets/props/dmg.webp"},
+            {"label": _lb_er, "val": f"{format_decimal_value(totals['er']['val'] * 100, base_prec)}%", "icon": "static/assets/props/er.png"},
+            {"label": element_dmg_label, "val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
         ]
     else:
         fight_prop = target_avatar_info.get('fightPropMap', {})
@@ -316,20 +326,19 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
 
         main_stats = [
             {"label": "HP", "val": format_base_value(totals["hp"]["val"], base_prec), "base": format_base_value(totals["hp"]["base"], base_prec), "icon": "static/assets/props/hp.png"},
-            {"label": "攻撃力", "val": format_base_value(totals["atk"]["val"], base_prec), "base": format_base_value(totals["atk"]["base"], base_prec), "icon": "static/assets/props/atk.png"},
-            {"label": "防御力", "val": format_base_value(totals["def"]["val"], base_prec), "base": format_base_value(totals["def"]["base"], base_prec), "icon": "static/assets/props/def.png"},
-            {"label": "元素熟知", "val": format_base_value(totals["em"]["val"], base_prec), "icon": "static/assets/props/em.png"},
-            {"label": "会心率", "val": f"{format_decimal_value(totals['crit_rate']['val'] * 100, base_prec)}%", "icon": "static/assets/props/rate.webp"},
-            {"label": "会心ダメージ", "val": f"{format_decimal_value(totals['crit_dmg']['val'] * 100, base_prec)}%", "icon": "static/assets/props/dmg.webp"},
-            {"label": "チャージ効率", "val": f"{format_decimal_value(totals['er']['val'] * 100, base_prec)}%", "icon": "static/assets/props/er.png"},
-            {"label": f"{element_ja}ダメバフ", "val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
+            {"label": _lb_atk, "val": format_base_value(totals["atk"]["val"], base_prec), "base": format_base_value(totals["atk"]["base"], base_prec), "icon": "static/assets/props/atk.png"},
+            {"label": _lb_def, "val": format_base_value(totals["def"]["val"], base_prec), "base": format_base_value(totals["def"]["base"], base_prec), "icon": "static/assets/props/def.png"},
+            {"label": _lb_em, "val": format_base_value(totals["em"]["val"], base_prec), "icon": "static/assets/props/em.png"},
+            {"label": _lb_cr, "val": f"{format_decimal_value(totals['crit_rate']['val'] * 100, base_prec)}%", "icon": "static/assets/props/rate.webp"},
+            {"label": _lb_cd, "val": f"{format_decimal_value(totals['crit_dmg']['val'] * 100, base_prec)}%", "icon": "static/assets/props/dmg.webp"},
+            {"label": _lb_er, "val": f"{format_decimal_value(totals['er']['val'] * 100, base_prec)}%", "icon": "static/assets/props/er.png"},
+            {"label": element_dmg_label, "val": dmg_buff_val, "icon": f"static/assets/props/{element_type.lower()}.png"},
         ]
 
     for s in main_stats:
         s["icon"] = resolve_datas_path(s["icon"], beta)
 
     slot_to_index = {"4": 0, "2": 1, "5": 2, "1": 3, "3": 4}
-    slot_names = ["花", "羽", "時計", "杯", "冠"]
     method_to_prop_id = {
         "atk": "FIGHT_PROP_ATTACK_PERCENT",
         "hp": "FIGHT_PROP_HP_PERCENT",
@@ -356,11 +365,14 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         target_idx = slot_to_index[last_num]
 
         name_hash = str(flat.get("nameTextMapHash", ""))
-        artifact_name = text_map_data.get(name_hash, "未知の聖遺物")
+        artifact_name = get_text_map_name(
+            name_hash, lang,
+            "未知の聖遺物" if lang == "ja" else "Unknown Artifact",
+        )
 
         main_stat_raw = flat.get("reliquaryMainstat", {})
         main_prop_id = main_stat_raw.get("mainPropId", "")
-        main_name = get_stat_japanese(main_prop_id)
+        main_name = get_stat_label(main_prop_id, lang)
         main_val = main_stat_raw.get("statValue", 0)
         if "PERCENT" in main_prop_id or "CRITICAL" in main_prop_id or "CHARGE" in main_prop_id or "HURT" in main_prop_id:
             main_value_str = f"{format_decimal_value(main_val, base_prec)}%"
@@ -373,7 +385,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         sub_rolls = artifact_substat_rolls(reliquary)
         for sub_data in flat.get("reliquarySubstats", []):
             sub_prop_id = sub_data.get("appendPropId", "")
-            sub_name = get_stat_japanese(sub_prop_id)
+            sub_name = get_stat_label(sub_prop_id, lang)
             sub_val = sub_sums.get(sub_prop_id, sub_data.get("statValue", 0))
 
             if sub_prop_id == "FIGHT_PROP_CRITICAL":
@@ -439,17 +451,17 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         for raw_path in possible_paths:
             path = resolve_list_path(raw_path, beta)
             if os.path.exists(path):
-                try:
-                    with open(path, "r", encoding="utf-8") as f_art:
-                        art_json = json.load(f_art)
-                except (UnicodeDecodeError, json.JSONDecodeError):
-                    with open(path, "r", encoding="cp932") as f_art:
-                        art_json = json.load(f_art)
+                art_json = _load_json_auto(path)
                 if set_id_str in art_json:
-                    return (
-                        art_json[set_id_str].get("janame", f"セット {set_id_str}"),
-                        art_json[set_id_str].get("icon"),
-                    )
+                    _entry = art_json[set_id_str]
+                    # 英語モード時は enname を優先（無ければ janame にフォールバック）
+                    if lang == "en":
+                        _set_name = _entry.get("enname") or _entry.get("janame") or f"Set {set_id_str}"
+                    else:
+                        _set_name = _entry.get("janame", f"セット {set_id_str}")
+                    return (_set_name, _entry.get("icon"))
+        if lang == "en":
+            return f"Set {set_id_str}", None
         return f"セット {set_id_str}", None
 
     set_bonuses = []
@@ -460,7 +472,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
             "count": cnt,
             "icon": (resolve_datas_path(f"static/assets/artifacts/{_set_icon}.webp", beta) if _set_icon else ""),
             "id": str(sid),
-            "buff": set_buff_label(sid),
+            "buff": set_buff_label(sid, lang),
         })
 
     # 育成モード: 右側パネル用データ（card_data API → HTML/glass 表示に使用）
@@ -477,6 +489,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
                 raw_artifacts=raw_artifacts,
                 set_bonuses=set_bonuses,
                 beta=beta,
+                lang=lang,
             )
         else:
             growth_panel = build_growth_panel(
@@ -489,6 +502,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
                 raw_artifacts=raw_artifacts,
                 set_bonuses=set_bonuses,
                 beta=beta,
+                lang=lang,
             )
 
     if score_sum < 180:
@@ -553,7 +567,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
     for w_entry in weapon_stats_list:
         w_prop = w_entry.get("appendPropId", "")
         w_val = w_entry.get("statValue", 0)
-        w_name = get_stat_japanese(w_prop)
+        w_name = get_stat_label(w_prop, lang)
         if "PERCENT" in str(w_prop).upper() or "CRITICAL" in str(w_prop).upper() or "CHARGE" in str(w_prop).upper() or "HURT" in str(w_prop).upper():
             try:
                 w_val_str = f"{format_decimal_value(float(w_val), base_prec)}%"
@@ -566,25 +580,45 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
                 w_val_str = str(w_val)
         weapon_stats_out.append({"name": w_name, "value": w_val_str})
 
-    display_map = {
-        "crit": "会心のみ",
-        "atk": "攻撃力%",
-        "hp": "HP%",
-        "def": "防御%",
-        "em": "元素熟知",
-        "charge": "チャージ効率",
-    }
+    if lang == "en":
+        # HTML/スコアカード等の計算方法表示。ボックス幅が狭い場所に描かれるため短縮形
+        display_map = {
+            "crit": "CRIT only",
+            "atk": "ATK%",
+            "hp": "HP%",
+            "def": "DEF%",
+            "em": "EM",
+            "charge": "ER",
+        }
+    else:
+        display_map = {
+            "crit": "会心のみ",
+            "atk": "攻撃力%",
+            "hp": "HP%",
+            "def": "防御%",
+            "em": "元素熟知",
+            "charge": "チャージ効率",
+        }
     display_score_way = display_map.get(calc_method, calc_method)
 
     # HTML カードテーマ（cinema / scorecard 提案デザイン）用の追加フィールド
     rarity_val = 5 if str(chardatas.get("rarity", "")) == "QUALITY_ORANGE" else 4
-    weapon_type_ja_map = {
-        "WEAPON_SWORD_ONE_HAND": "片手剣",
-        "WEAPON_CLAYMORE": "両手剣",
-        "WEAPON_POLE": "長柄武器",
-        "WEAPON_CATALYST": "法器",
-        "WEAPON_BOW": "弓",
-    }
+    if lang == "en":
+        weapon_type_ja_map = {
+            "WEAPON_SWORD_ONE_HAND": "Sword",
+            "WEAPON_CLAYMORE": "Claymore",
+            "WEAPON_POLE": "Polearm",
+            "WEAPON_CATALYST": "Catalyst",
+            "WEAPON_BOW": "Bow",
+        }
+    else:
+        weapon_type_ja_map = {
+            "WEAPON_SWORD_ONE_HAND": "片手剣",
+            "WEAPON_CLAYMORE": "両手剣",
+            "WEAPON_POLE": "長柄武器",
+            "WEAPON_CATALYST": "法器",
+            "WEAPON_BOW": "弓",
+        }
     weapon_type_ja = weapon_type_ja_map.get(str(chardatas.get("weapon", "")), "")
     char_icon_path = ""
     try:
@@ -599,8 +633,12 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
     except Exception:
         crit_value = None
 
+    _display_name = chardatas.get("name", avatar_id)
+    if lang == "en":
+        # キャラ詳細 JSON の en_name を優先（無ければ日本語名にフォールバック）
+        _display_name = chardatas.get("en_name") or _display_name
     return {
-        "displayName": (chardatas.get("name", avatar_id) + "(swap)") if fake_char else chardatas.get("name", avatar_id),
+        "displayName": (_display_name + "(swap)") if fake_char else _display_name,
         "element": element_type,
         "level": char_level,
         "friendship": friendship_lv,
@@ -621,7 +659,7 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         "mainStats": main_stats,
         "artifacts": artifacts_out,
         "setBonuses": set_bonuses,
-        "resonanceBadges": resonance_badges(resonance),
+        "resonanceBadges": resonance_badges(resonance, lang),
         "scoreSum": round(score_sum, 1),
         "tierSum": tier_sum_score,
         "calcMethod": calc_method,

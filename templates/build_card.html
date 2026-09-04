@@ -2,9 +2,24 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <!-- /uid/{uid} のようなサブパスURLでも相対パス（static/assets/...）が
+         ルート基準で解決されるように base を固定する -->
+    <base href="/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Genshin ビルドカード生成</title>
+    <!-- OGP: SNS共有時のリンクプレビュー（/fetch_uid・/uid/{uid} で値が入る） -->
+    <meta property="og:title" content="{{ og_title or 'Genshin ビルドカード生成' }}">
+    <meta property="og:description" content="{{ og_description or '原神ビルドカード生成サイト（moonlit.wiki）' }}">
+    {% if og_image %}<meta property="og:image" content="{{ og_image }}">{% endif %}
+    {% if og_url %}<meta property="og:url" content="{{ og_url }}">{% endif %}
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="moonlit.wiki">
+    <meta name="twitter:card" content="summary_large_image">
+    <!-- i18n（言語辞書）。メインスクリプトより先に読み込む -->
+    <script src="/static/js/i18n.js?v=20260831c"></script>
     <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="manifest" href="/static/manifest.webmanifest">
+    <meta name="theme-color" content="#070b14">
     <script>
         // 初回アクセス時（初期設定未完了）は強制的に "/" へリダイレクトする
         // （"/" で初期設定ウィザードが表示される。設定済みなら何もしない）
@@ -158,7 +173,37 @@
         .top-bar .top-link:hover { color: var(--accent); }
         .top-bar .top-sep { opacity: 0.35; }
         @media (max-width: 640px) {
-            .top-bar { padding: 14px 18px; }
+            .top-bar {
+                padding: 10px 14px;
+                flex-wrap: wrap;
+                row-gap: 6px;
+            }
+            /* リンク・タイトルの縦書き化（1文字ずつの改行）を防ぐ */
+            .top-link, .top-title, .top-ver, .top-sep, #verBadge {
+                white-space: nowrap;
+            }
+            .top-bar .top-left, .top-bar .top-right {
+                gap: 5px;
+            }
+            .top-link {
+                font-size: 11.5px;
+                padding: 2px 2px;
+            }
+            .top-sep {
+                margin: 0;
+            }
+            .top-title {
+                font-size: 14px;
+            }
+            .top-right {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                row-gap: 4px;
+            }
+            /* ヘッダー行の「← 戻る」ボタンも折れさせない */
+            .top-bar ~ div a[href="/"] {
+                white-space: nowrap;
+            }
         }
 
         /* 旧オレンジ系(yellow-400等)を置き換えるブランドカラー・ヘルパー */
@@ -244,6 +289,16 @@
         /* サムネイル下部のキャラ名ラベル(bg-black/70の上の文字)は
            ライト/ダーク問わず常に白文字のまま(背景が常に暗いため) */
         .char-name-label { color: #ffffff; }
+
+        /* サイトフッター（ファンメイド・著作権表示） */
+        .site-footer {
+            padding: 18px 16px 26px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 11.5px;
+            line-height: 1.7;
+        }
+        .site-footer p { margin: 0; opacity: 0.9; }
         /* セット効果名(text-cyan-300)は白モードだと薄すぎて見づらいので濃い目に */
         html[data-theme="light"] .text-cyan-300 { color: #0e7490; }
         .drag-none { user-drag: none; -webkit-user-drag: none; }
@@ -1813,9 +1868,11 @@
             height: 25px; /* build-card の gap と同じ */
             display: flex;
             align-items: center;
-            justify-content: center;
+            /* 中央寄せではなく花（左端の聖遺物ボックス）の左端に揃える。
+               padding-left 20px = build-card の padding = artifacts-grid の左端 */
+            justify-content: flex-start;
             gap: 12px;
-            padding: 0;
+            padding: 0 0 0 20px;
             z-index: 2;
         }
         .glass-card-root .substat-dot-legend-label {
@@ -2217,13 +2274,13 @@
             </a>
         </div>
         <div class="top-right">
-            <button type="button" class="top-link" id="tutorialBtn" title="チュートリアルを表示します">チュートリアル</button>
+            <button type="button" class="top-link" id="tutorialBtn" data-i18n data-i18n-title title="チュートリアルを表示します">チュートリアル</button>
             <span class="top-sep">|</span>
-            <button type="button" class="top-link" id="themeModeBtn" title="ライト / ダークを切り替えます">ライト / ダーク</button>
+            <button type="button" class="top-link" id="themeModeBtn" data-i18n data-i18n-title title="ライト / ダークを切り替えます">ライト / ダーク</button>
             <span class="top-sep">|</span>
-            <a href="/contact" class="top-link" title="お問い合わせフォームを開きます">問い合わせ</a>
+            <a href="/contact" class="top-link" data-i18n data-i18n-title title="お問い合わせフォームを開きます">問い合わせ</a>
             <span class="top-sep">|</span>
-            <span id="verBadge" title="使用するゲームデータ">{% if ver == 'beta' %}Beta{% else %}Live{% endif %}</span>
+            <span id="verBadge" data-i18n-title title="使用するゲームデータ">{% if ver == 'beta' %}Beta{% else %}Live{% endif %}</span>
         </div>
     </header>
 
@@ -2256,7 +2313,7 @@
                         </svg>
                     </button>
                 </div>
-                <a href="/" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-sm rounded-lg transition-all border border-zinc-700">← 戻る</a>
+                <a href="/" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-sm rounded-lg transition-all border border-zinc-700" data-i18n>← 戻る</a>
             </div>
         </div>
 
@@ -2268,7 +2325,7 @@
                 <div class="space-y-2.5">
                     <div>
                         <div class="flex justify-between mb-1 gap-2">
-                            <span>使用CPU</span>
+                            <span data-i18n>使用CPU</span>
                             <span id="serverStatsCpuVal" class="ssp-val">—</span>
                         </div>
                         <div class="ssp-track">
@@ -2277,7 +2334,7 @@
                     </div>
                     <div>
                         <div class="flex justify-between mb-1 gap-2">
-                            <span>メモリ</span>
+                            <span data-i18n>メモリ</span>
                             <span id="serverStatsMemVal" class="ssp-val">—</span>
                         </div>
                         <div class="ssp-track">
@@ -2287,7 +2344,7 @@
                     </div>
                     <div class="ssp-divider">
                         <div class="flex justify-between gap-2">
-                            <span>プロセス</span>
+                            <span data-i18n>プロセス</span>
                             <span id="serverStatsProcVal" class="ssp-val" style="font-weight:600">—</span>
                         </div>
                         <div id="serverStatsCacheVal" class="ssp-muted mt-1 truncate" title="画像キャッシュ数">cache —</div>
@@ -2298,21 +2355,21 @@
 
         <!-- メインタブ（ステータス表示は設定モーダルから ON にできる） -->
         <div class="flex gap-2 p-1.5 bg-zinc-900/60 rounded-xl border border-zinc-800 mb-5" id="viewModeToggle">
-            <button type="button" data-view="glass" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap" title="HTMLでビルドカードを表示します">
-                ビルドカード
+            <button type="button" data-view="glass" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap" data-i18n-title title="HTMLでビルドカードを表示します">
+                <span data-i18n>ビルドカード</span>
             </button>
-            <button type="button" data-view="image" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap" title="共有用のカード画像を生成します">
-                画像生成
+            <button type="button" data-view="image" class="view-mode-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap" data-i18n-title title="共有用のカード画像を生成します">
+                <span data-i18n>画像生成</span>
             </button>
         </div>
 
         <!-- 編成モードバー -->
         <div id="teamModeBar" class="hidden mb-3 p-3 bg-zinc-900/70 rounded-xl border border-cyan-800/60 flex items-center justify-between gap-2 flex-wrap">
-            <div class="text-sm font-semibold text-cyan-300">編成モード
+            <div class="text-sm font-semibold text-cyan-300"><span data-i18n>編成モード</span>
                 <span id="teamModeSlotLabel" class="text-zinc-400 font-normal text-xs"></span>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
-                <button id="teamExitBtn" type="button" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-sm rounded-lg border border-zinc-700 transition-all">通常モードに戻る</button>
+                <button id="teamExitBtn" type="button" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-sm rounded-lg border border-zinc-700 transition-all" data-i18n>通常モードに戻る</button>
             </div>
         </div>
 
@@ -2325,7 +2382,7 @@
                 <div class="bg-zinc-900/80 rounded-xl border border-zinc-800 overflow-hidden">
                     <button type="button" id="sidebarCharsBtn" aria-expanded="true" aria-controls="sidebarCharsBody" data-sidebar-accordion-btn title="キャラクターと武器の設定"
                         class="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer">
-                        <span>キャラクター</span>
+                        <span data-i18n>キャラクター</span>
                         <svg class="accordion-chevron shrink-0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M6 9l6 6 6-6"/>
                         </svg>
@@ -2333,7 +2390,7 @@
                     <div id="sidebarCharsBody" class="accordion-body">
                         <div class="accordion-inner space-y-4 px-4 pb-4 pt-1">
                             <div>
-                                <label class="block text-sm text-zinc-400 mb-1.5">武器</label>
+                                <label class="block text-sm text-zinc-400 mb-1.5" data-i18n>武器</label>
                                 <button id="editWeaponBtn" type="button" title="差し替える武器を選択します"
                                     class="w-full flex items-center gap-2 bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-white pl-2 pr-3 py-2 rounded-lg transition-all text-sm">
                                     <img id="editWeaponIcon" src="" class="w-7 h-7 rounded object-cover hidden">
@@ -2348,7 +2405,7 @@
                 <div class="bg-zinc-900/80 rounded-xl border border-zinc-800 overflow-hidden">
                     <button type="button" id="sidebarDisplayBtn" aria-expanded="true" aria-controls="sidebarDisplayBody" data-sidebar-accordion-btn title="計算方法や背景などの表示設定"
                         class="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer">
-                        <span>表示方法</span>
+                        <span data-i18n>表示方法</span>
                         <svg class="accordion-chevron shrink-0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M6 9l6 6 6-6"/>
                         </svg>
@@ -2356,30 +2413,30 @@
                     <div id="sidebarDisplayBody" class="accordion-body">
                         <div class="accordion-inner space-y-4 px-4 pb-4 pt-1">
                             <div>
-                                <label for="scoreCalcSelect" class="block text-sm text-zinc-400 mb-1.5">計算方法</label>
-                                <select id="scoreCalcSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer" title="スコア計算の中心にするステータス">
-                                    <option value="crit">会心</option>
-                                    <option value="atk">攻撃力%</option>
-                                    <option value="hp">HP%</option>
-                                    <option value="def">防御%</option>
-                                    <option value="em">元素熟知</option>
-                                    <option value="charge">チャージ効率</option>
+                                <label for="scoreCalcSelect" class="block text-sm text-zinc-400 mb-1.5" data-i18n>計算方法</label>
+                                <select id="scoreCalcSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer" data-i18n-title title="スコア計算の中心にするステータス">
+                                    <option value="crit" data-i18n>会心</option>
+                                    <option value="atk" data-i18n>攻撃力%</option>
+                                    <option value="hp" data-i18n>HP%</option>
+                                    <option value="def" data-i18n>防御%</option>
+                                    <option value="em" data-i18n>元素熟知</option>
+                                    <option value="charge" data-i18n>チャージ効率</option>
                                 </select>
                             </div>
 
                             <div>
-                                <label for="basePrecSelect" class="block text-sm text-zinc-400 mb-1.5">表示の精度</label>
-                                <select id="basePrecSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer" title="ステータス表示の小数精度">
-                                    <option value="0">標準</option>
-                                    <option value="2">詳細(第2位)</option>
+                                <label for="basePrecSelect" class="block text-sm text-zinc-400 mb-1.5" data-i18n>表示の精度</label>
+                                <select id="basePrecSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer" data-i18n-title title="ステータス表示の小数精度">
+                                    <option value="0" data-i18n>標準</option>
+                                    <option value="2" data-i18n>詳細(第2位)</option>
                                 </select>
                             </div>
 
                             <div>
-                                <label class="block text-sm text-zinc-400 mb-1.5">育成情報</label>
-                                <button type="button" id="settingsGrowthBtn" role="switch" aria-checked="false" title="育成情報パネルを表示します"
+                                <label class="block text-sm text-zinc-400 mb-1.5" data-i18n>育成情報</label>
+                                <button type="button" id="settingsGrowthBtn" role="switch" aria-checked="false" data-i18n-title title="育成情報パネルを表示します"
                                     class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                                    <span>育成情報を表示</span>
+                                    <span data-i18n>育成情報を表示</span>
                                     <span id="settingsGrowthToggle" class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-zinc-600 transition-colors">
                                         <span id="settingsGrowthKnob" class="inline-block h-3.5 w-3.5 transform rounded-full bg-gray-300 transition-transform"></span>
                                     </span>
@@ -2387,10 +2444,10 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm text-zinc-400 mb-1.5">サブステ伸び値</label>
-                                <button type="button" id="settingsSubstatDotsBtn" role="switch" aria-checked="true" title="サブステの伸び値をドットで表示します"
+                                <label class="block text-sm text-zinc-400 mb-1.5" data-i18n>サブステ伸び値</label>
+                                <button type="button" id="settingsSubstatDotsBtn" role="switch" aria-checked="true" data-i18n-title title="サブステの伸び値をドットで表示します"
                                     class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                                    <span>伸び値ドットを表示</span>
+                                    <span data-i18n>伸び値ドットを表示</span>
                                     <span id="settingsSubstatDotsToggle" class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-cyan-500 transition-colors">
                                         <span id="settingsSubstatDotsKnob" class="inline-block h-3.5 w-3.5 transform translate-x-4 rounded-full bg-white transition-transform"></span>
                                     </span>
@@ -2399,9 +2456,9 @@
 
                             <div>
                                 <label class="block text-sm text-zinc-400 mb-1.5">UID</label>
-                                <button type="button" id="settingsShowUidBtn" role="switch" aria-checked="false" title="カード左下にUIDを表示します（共鳴チップと同じ高さ）"
+                                <button type="button" id="settingsShowUidBtn" role="switch" aria-checked="false" data-i18n-title title="カード左下にUIDを表示します（共鳴チップと同じ高さ）"
                                     class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm bg-zinc-800 border border-zinc-700 hover:border-cyan-400 text-gray-200 transition-all">
-                                    <span>UIDを表示</span>
+                                    <span data-i18n>UIDを表示</span>
                                     <span id="settingsShowUidToggle" class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-zinc-600 transition-colors">
                                         <span id="settingsShowUidKnob" class="inline-block h-3.5 w-3.5 transform rounded-full bg-gray-300 transition-transform"></span>
                                     </span>
@@ -2409,14 +2466,14 @@
                             </div>
 
                             <div id="bgColorControls" title="ビルドカード生成の背景">
-                                <label class="block text-sm text-zinc-400 mb-1.5">背景</label>
+                                <label class="block text-sm text-zinc-400 mb-1.5" data-i18n>背景</label>
                                 <div class="flex items-center gap-2">
-                                    <select id="bgColorModeSelect" class="flex-1 bg-zinc-800 border border-zinc-700 text-white px-2.5 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer" title="カード背景のモード">
-                                        <option value="element">元素背景</option>
-                                        <option value="region">地域背景</option>
-                                        <option value="custom">カスタム色</option>
+                                    <select id="bgColorModeSelect" class="flex-1 bg-zinc-800 border border-zinc-700 text-white px-2.5 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer" data-i18n-title title="カード背景のモード">
+                                        <option value="region" selected data-i18n>地域背景</option>
+                                        <option value="element" data-i18n>元素背景</option>
+                                        <option value="custom" data-i18n>カスタム色</option>
                                     </select>
-                                    <input type="color" id="bgColorPicker" value="#4a5568" class="h-9 w-10 cursor-pointer rounded border border-zinc-700 bg-zinc-800 p-0.5 disabled:opacity-40" disabled title="カスタム背景色">
+                                    <input type="color" id="bgColorPicker" value="#4a5568" class="h-9 w-10 cursor-pointer rounded border border-zinc-700 bg-zinc-800 p-0.5 disabled:opacity-40" disabled data-i18n-title title="カスタム背景色">
                                 </div>
                                 <div id="bgRegionControls" class="mt-2 hidden">
                                     <select id="bgRegionSelect" class="w-full bg-zinc-800 border border-zinc-700 text-white px-2.5 py-2 rounded-lg focus:outline-none focus-ring-primary transition-all text-sm cursor-pointer hidden" title="背景に使う地域"></select>
@@ -2432,7 +2489,7 @@
                 <div id="sidebarStatusSection" class="bg-zinc-900/80 rounded-xl border border-zinc-800 overflow-hidden hidden">
                     <button type="button" id="sidebarStatusBtn" aria-expanded="true" aria-controls="sidebarStatusBody" data-sidebar-accordion-btn title="元素共鳴バフの選択"
                         class="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer">
-                        <span>ステータス編集</span>
+                        <span data-i18n>ステータス編集</span>
                         <svg class="accordion-chevron shrink-0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M6 9l6 6 6-6"/>
                         </svg>
@@ -2440,9 +2497,9 @@
                     <div id="sidebarStatusBody" class="accordion-body">
                         <div class="accordion-inner space-y-4 px-4 pb-4 pt-1">
                             <div>
-                                <label class="block text-sm text-zinc-400 mb-1.5">元素共鳴 <span class="text-[11px] text-zinc-600">(最大2つ)</span></label>
+                                <label class="block text-sm text-zinc-400 mb-1.5"><span data-i18n>元素共鳴</span> <span class="text-[11px] text-zinc-600" data-i18n>(最大2つ)</span></label>
                                 <div id="resonanceChips" class="space-y-1.5"></div>
-                                <p class="text-xs text-zinc-600 mt-1.5">選択した共鳴バフを単体カードのステータスへ反映します。</p>
+                                <p class="text-xs text-zinc-600 mt-1.5" data-i18n>選択した共鳴バフを単体カードのステータスへ反映します。</p>
                             </div>
                         </div>
                     </div>
@@ -2455,7 +2512,7 @@
                 <div class="bg-zinc-900/60 rounded-xl border border-zinc-800 overflow-hidden">
                     <button type="button" id="sidebarSwapBtn" aria-expanded="true" aria-controls="sidebarSwapBody" data-sidebar-accordion-btn title="別のキャラクターに差し替えます"
                         class="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer">
-                        <span>キャラ差し替え</span>
+                        <span data-i18n>キャラ差し替え</span>
                         <svg class="accordion-chevron shrink-0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M6 9l6 6 6-6"/>
                         </svg>
@@ -2473,14 +2530,17 @@
                 <!-- 選択中ラベル + キャラサムネイル横並び -->
                 <div class="bg-zinc-900/60 rounded-xl border border-zinc-800 p-4">
                     <div class="flex items-center gap-3 mb-3">
-                        <span class="text-sm text-zinc-400 shrink-0">選択中</span>
+                        <span class="text-sm text-zinc-400 shrink-0" data-i18n>選択中</span>
                         <span id="selectedCharLabel" class="text-base font-semibold text-white truncate">—</span>
                         <div id="cardActionBtns" class="ml-auto hidden sm:flex items-center gap-2">
-                            <button id="regenerateImageBtn" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-emerald-600/10 transition-all" title="現在の設定でカードを再生成します">
-                                再生成
+                            <button id="shareCardBtn" type="button" class="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg transition-all" data-i18n-title title="表示中のカード画像を共有します（共有パネル / クリップボードコピー / 保存）">
+                                <span data-i18n>シェア</span>
                             </button>
-                            <button id="regenerateApiBtn" class="px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-cyan-600/10 transition-all" title="Enka APIから最新データを再取得します">
-                                再取得
+                            <button id="regenerateImageBtn" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-emerald-600/10 transition-all" data-i18n-title title="現在の設定でカードを再生成します">
+                                <span data-i18n>再生成</span>
+                            </button>
+                            <button id="regenerateApiBtn" class="px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-sm font-bold rounded-lg shadow-lg shadow-cyan-600/10 transition-all" data-i18n-title title="Enka APIから最新データを再取得します">
+                                <span data-i18n>再取得</span>
                             </button>
                         </div>
                         <button id="abyssToggleBtn" type="button" title="幽境モード"
@@ -2519,21 +2579,23 @@
                 <!-- メイン表示ボックス（ステータス / ビルドカード / 画像） -->
                 <div id="mainDisplayBox" class="bg-zinc-950 rounded-2xl border border-zinc-800 min-h-[480px] relative overflow-hidden flex flex-col">
                     <div class="flex-1 flex justify-center items-center p-4 md:p-6 relative overflow-auto">
-                        <img id="cardImage" src="" class="max-w-full h-auto rounded-lg shadow-2xl drag-none hidden">
-                        <div id="htmlCardContainer" class="hidden w-full"></div>
+                        <img id="cardImage" src="" class="max-w-full h-auto rounded-lg shadow-2xl drag-none hidden">                        <div id="htmlCardContainer" class="hidden w-full"></div>
                         <div id="glassCardContainer" class="hidden w-full"></div>
-                        <div id="placeholderText" class="text-zinc-500 text-sm">キャラクターを選択してください</div>
+                        <div id="placeholderText" class="text-zinc-500 text-sm" data-i18n>キャラクターを選択してください</div>
                         <div id="imageAwaitBox" class="hidden flex-col items-center justify-center gap-3 text-center px-4">
-                            <div id="imageAwaitText" class="text-zinc-500 text-sm">右上の「生成」ボタンからビルドカード画像を作成できます</div>
+                            <div id="imageAwaitText" class="text-zinc-500 text-sm" data-i18n>右上の「生成」ボタンからビルドカード画像を作成できます</div>
                         </div>
                     </div>
                 </div>
 
-                <div id="disclaimerFooter" class="hidden text-right text-[10px] text-red-500 px-1 leading-relaxed">
-                    ※他のビルドカード生成サイトとは違い、武器の恒常ステータスなどは反映されていません。また、小数第二位まで表示している場合は他サイトとスコアが異なる可能性があります。
-                </div>
+                <div id="disclaimerFooter" class="hidden text-right text-[10px] text-red-500 px-1 leading-relaxed" data-i18n>※他のビルドカード生成サイトとは違い、武器の恒常ステータスなどは反映されていません。また、小数第二位まで表示している場合は他サイトとスコアが異なる可能性があります。</div>
             </div>
         </div>
+
+        <!-- スコア履歴グラフ（2回以上記録があるキャラのみ表示。admin の UI フラグで非表示化可能） -->
+        {% if show_score_history %}
+        <div id="scoreHistoryBox" class="hidden mt-3 bg-zinc-900/60 rounded-xl border border-zinc-800 p-3"></div>
+        {% endif %}
     </div>
     </div>
 
@@ -2595,7 +2657,7 @@
 
             <!-- 編成スロット一覧（最大12個） -->
             <div id="teamSlotListWrap" class="p-4 border-b border-zinc-800 shrink-0">
-                <div class="text-xs text-zinc-500 mb-2">編成スロット（最大12個）。選択するか「+」で新規作成してください</div>
+                <div class="text-xs text-zinc-500 mb-2" data-i18n>編成スロット（最大12個）。選択するか「+」で新規作成してください</div>
                 <div id="teamSlotList" class="grid grid-cols-4 sm:grid-cols-6 gap-2"></div>
             </div>
 
@@ -2620,7 +2682,7 @@
         onclick="if(event.target===this) closeFakeWeaponModal()">
         <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col">
             <div class="flex items-center justify-between p-4 border-b border-zinc-800 shrink-0">
-                <h2 class="text-lg font-bold text-cyan-400">差し替え武器を選択</h2>
+                <h2 class="text-lg font-bold text-cyan-400" data-i18n>差し替え武器を選択</h2>
                 <button onclick="closeFakeWeaponModal()" class="text-zinc-400 hover:text-white text-2xl leading-none">&times;</button>
             </div>
             <div id="fakeWeaponGridStatus" class="p-4 text-sm text-zinc-400"></div>
@@ -2639,8 +2701,8 @@
             <div class="p-4 text-xs text-zinc-500 border-b border-zinc-800 shrink-0">バージョンごとのレイライン敵から選んでください</div>
             <div id="abyssVersionGroups" class="picker-grid overflow-y-auto p-4 flex-1 min-h-0 space-y-4"></div>
             <div class="flex gap-3 p-4 border-t border-zinc-800 shrink-0">
-                <button id="abyssClearBtn" type="button" class="px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-lg">解除</button>
-                <button id="abyssCloseBtn" type="button" class="flex-1 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-sm font-bold text-zinc-300 hover:bg-zinc-700 transition-all">閉じる</button>
+                <button id="abyssClearBtn" type="button" class="px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-lg" data-i18n>解除</button>
+                <button id="abyssCloseBtn" type="button" class="flex-1 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-sm font-bold text-zinc-300 hover:bg-zinc-700 transition-all" data-i18n>閉じる</button>
             </div>
         </div>
     </div>
@@ -2663,7 +2725,7 @@
     <div id="confirmModal" class="hidden fixed inset-0 bg-black/65 backdrop-blur-sm z-[80] items-center justify-center p-4"
         onclick="if(event.target===this) closeConfirmModal(false)">
         <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-sm p-5">
-            <h2 id="confirmModalTitle" class="text-base font-bold text-white mb-2">確認</h2>
+            <h2 id="confirmModalTitle" class="text-base font-bold text-white mb-2" data-i18n>確認</h2>
             <p id="confirmModalBody" class="text-sm text-zinc-300 leading-relaxed mb-5 whitespace-pre-line"></p>
             <div class="flex gap-2">
                 <button id="confirmModalCancelBtn" type="button"
@@ -2690,7 +2752,7 @@
                         </svg>
                     </span>
                     <div>
-                        <h2 class="text-base font-bold leading-tight" style="color: var(--text);">設定</h2>
+                        <h2 class="text-base font-bold leading-tight" style="color: var(--text);" data-i18n>設定</h2>
                         <p class="text-[11px] leading-tight mt-0.5" style="color: var(--text-muted);">表示・生成の設定はいつでも変更できます</p>
                     </div>
                 </div>
@@ -2699,11 +2761,11 @@
             <div class="p-5 space-y-5 overflow-y-auto">
                 <!-- データ -->
                 <section class="settings-section">
-                    <h3 class="settings-section-title">データ</h3>
+                    <h3 class="settings-section-title" data-i18n>データ</h3>
                     <div class="settings-row">
                         <div>
-                            <div class="settings-row-title">バージョン</div>
-                            <div class="settings-row-desc">正式配信中のデータと先行データを切り替え</div>
+                            <div class="settings-row-title" data-i18n>バージョン</div>
+                            <div class="settings-row-desc" data-i18n>正式配信中のデータと先行データを切り替え</div>
                         </div>
                         <div class="settings-seg" role="radiogroup" aria-label="バージョン">
                             <button type="button" class="settings-seg-btn" data-settings-ver="live" title="正式配信中のデータを使用します">Live<span class="settings-seg-ver" data-seg-ver="live"></span></button>
@@ -2714,15 +2776,25 @@
 
                 <!-- 表示 -->
                 <section class="settings-section">
-                    <h3 class="settings-section-title">表示</h3>
+                    <h3 class="settings-section-title" data-i18n>表示</h3>
                     <div class="settings-row">
                         <div>
-                            <div class="settings-row-title">テーマ</div>
-                            <div class="settings-row-desc">サイト全体の見た目</div>
+                            <div class="settings-row-title" data-i18n>テーマ</div>
+                            <div class="settings-row-desc" data-i18n>サイト全体の見た目</div>
                         </div>
                         <div class="settings-seg" role="radiogroup" aria-label="テーマ">
-                            <button type="button" class="settings-seg-btn" data-settings-theme="dark" title="ダークテーマにします">ダーク</button>
-                            <button type="button" class="settings-seg-btn" data-settings-theme="light" title="ライトテーマにします">ライト</button>
+                            <button type="button" class="settings-seg-btn" data-settings-theme="dark" data-i18n-title title="ダークテーマにします"><span data-i18n>ダーク</span></button>
+                            <button type="button" class="settings-seg-btn" data-settings-theme="light" data-i18n-title title="ライトテーマにします"><span data-i18n>ライト</span></button>
+                        </div>
+                    </div>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-title" data-i18n>言語</div>
+                            <div class="settings-row-desc" data-i18n>サイトとカード画像の表示言語</div>
+                        </div>
+                        <div class="settings-seg" role="radiogroup" aria-label="言語">
+                            <button type="button" class="settings-seg-btn" data-settings-lang="ja" title="日本語で表示します">日本語</button>
+                            <button type="button" class="settings-seg-btn" data-settings-lang="en" title="Switch to English">English</button>
                         </div>
                     </div>
                     {% if show_status_view_setting %}
@@ -2798,28 +2870,34 @@
 
                 <!-- 生成画像 -->
                 <section class="settings-section">
-                    <h3 class="settings-section-title">生成画像</h3>
+                    <h3 class="settings-section-title" data-i18n>生成画像</h3>
                     <div class="settings-static-row">
                         <div>
-                            <div class="settings-row-title">画像形式</div>
+                            <div class="settings-row-title" data-i18n>画像形式</div>
                             <div class="settings-row-desc">WEBP は廃止されました</div>
                         </div>
                         <span id="settingsFormatLabel" class="text-xs font-bold" style="color: var(--text-secondary);">PNG（無圧縮）</span>
                     </div>
                     <div class="settings-row">
                         <div>
-                            <div class="settings-row-title">保存先</div>
-                            <div class="settings-row-desc">生成した画像の保存場所</div>
+                            <div class="settings-row-title" data-i18n>保存先</div>
+                            <div class="settings-row-desc" data-i18n>生成した画像の保存場所</div>
                         </div>
                         <div class="settings-seg" role="radiogroup" aria-label="保存先">
-                            <button type="button" class="settings-seg-btn" data-settings-savemode="client" title="ブラウザ側に一時保存します">クライアント</button>
-                            <button type="button" class="settings-seg-btn" data-settings-savemode="server" title="サーバー側にキャッシュします">サーバー</button>
+                            <button type="button" class="settings-seg-btn" data-settings-savemode="client" data-i18n-title title="ブラウザ側に一時保存します"><span data-i18n>クライアント</span></button>
+                            <button type="button" class="settings-seg-btn" data-settings-savemode="server" data-i18n-title title="サーバー側にキャッシュします"><span data-i18n>サーバー</span></button>
                         </div>
                     </div>
                 </section>
             </div>
         </div>
     </div>
+
+    <!-- サイトフッター（ファンメイド・著作権表示） -->
+    <footer class="site-footer">
+        <p data-i18n>moonlit.wiki はファンメイドのWebサイトです。</p>
+        <p data-i18n>ゲーム関連の画像およびアセットの著作権・商標権はすべて HoYoverse に帰属します。</p>
+    </footer>
 
     <!-- スマホ下部固定アクションバー（スマホのみ表示） -->
     <div id="mobileActionBar">
@@ -2828,14 +2906,14 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
             </svg>
-            <span id="mobileActionRefreshLabel">生成</span>
+            <span id="mobileActionRefreshLabel" data-i18n>生成</span>
         </button>
         <button id="mobileActionFetchBtn" type="button" title="Enka APIから再取得します"
             class="flex-1 flex items-center justify-center gap-1.5 py-3 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-sm font-bold rounded-xl transition-all">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 12a9 9 0 0 1 15.36-6.36L21 8"/><path d="M21 8V3"/><path d="M21 12a9 9 0 0 1-15.36 6.36L3 20"/><path d="M3 20v-5"/>
             </svg>
-            <span>再取得</span>
+            <span data-i18n>再取得</span>
         </button>
         <button id="mobileActionSettingsBtn" type="button" title="設定を開きます"
             class="flex-1 flex items-center justify-center gap-1.5 py-3 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-gray-200 text-sm font-bold rounded-xl border border-zinc-700 transition-all">
@@ -2843,13 +2921,270 @@
                 <circle cx="12" cy="12" r="3"></circle>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
-            <span>設定</span>
+            <span data-i18n>設定</span>
         </button>
     </div>
 
     <script>
         const uid = document.getElementById('currentUid').textContent.trim();
         const sidebarAccordionStorageKey = `sidebar_accordion_${uid}`;
+
+        // 検索履歴への保存はここ（取得成功ページ）で行う。
+        // 存在しないUIDや詳細非公開のUIDはエラーページになるため履歴に入らない。
+        // プレイヤー名と先頭キャラのアイコンも保存して履歴表示をリッチにする。
+        try {
+            const _HISTORY_KEY = 'uid_history';
+            let _history = [];
+            try { _history = JSON.parse(localStorage.getItem(_HISTORY_KEY) || '[]'); } catch (e) { _history = []; }
+            if (!Array.isArray(_history)) _history = [];
+            const _nameEl = document.getElementById('currentName');
+            const _iconEl = document.querySelector('#charThumbRow img');
+            const _icon = (_iconEl && _iconEl.getAttribute('src')) || '';
+            // マルチ画面風履歴カード用にスプラッシュ画像も保存
+            //（characters/xx_AvatarIcon_yy.webp → splash/UI_Gacha_AvatarImg_yy.webp）
+            const _splash = _icon.replace('AvatarIcon', 'Gacha_AvatarImg').replace('/characters/', '/splash/');
+            const _entry = {
+                uid: uid,
+                name: (_nameEl ? _nameEl.textContent : '').trim(),
+                icon: _icon,
+                splash: _splash,
+                level: {{ player_level or 'null' }},
+                element: {{ first_char_element | tojson if first_char_element else 'null' }},
+                t: Date.now(),
+                pfpId: {{ pfp_id if pfp_id else 'null' }},
+                nameCardId: {{ namecard_id if namecard_id else 'null' }},
+            };
+            _history = _history.filter(item => (typeof item === 'object' && item !== null ? item.uid : item) !== uid);
+            _history.unshift(_entry);
+            _history = _history.slice(0, 50);
+            localStorage.setItem(_HISTORY_KEY, JSON.stringify(_history));
+        } catch (e) { /* localStorage 使えない環境は無視 */ }
+
+        // card_data 取得時に表示言語パラメータを付与する（GenshinI18n は /static/js/i18n.js）
+        function withLang(sp) {
+            try { sp.set('lang', GenshinI18n.getLang()); } catch (e) {}
+            return sp;
+        }
+
+        // characters.json / weapons.json のエントリから表示用の名前を言語設定に応じて返す
+        function listNameOf(data) {
+            if (!data) return '';
+            if (GenshinI18n.isEn() && data.enName) return data.enName;
+            return data.jaName || data.enName || '';
+        }
+
+        // ==========================================================
+        //  card_data 先読み: ショーケースの全キャラ分をバックグラウンドで
+        //  取得しておき、キャラ切替時の待ち時間を減らす。
+        //  差し替え表示中などパラメータが違う場合は通常の取得にフォールバック。
+        // ==========================================================
+        const cardDataPrefetch = new Map(); // params 文字列 → card_data
+        let prefetchStarted = false;
+        function buildPrefetchParams(charId) {
+            const p = new URLSearchParams();
+            p.set('calc_method', getSavedCalcMethod(charId));
+            if (ver === 'beta') p.set('beta', 'true');
+            if (getSavedGrowthPref()) p.set('growth', 'true');
+            p.set('base_prec', getSavedBasePrec());
+            const resonanceParam = getResonanceParam();
+            if (resonanceParam) p.set('resonance', resonanceParam);
+            return withLang(p);
+        }
+        async function prefetchAllCardData() {
+            if (prefetchStarted) return;
+            prefetchStarted = true;
+            const ids = [...document.querySelectorAll('#charThumbRow .char-thumb')]
+                .map(el => el.getAttribute('data-char-id')).filter(Boolean);
+            for (const cid of ids) {
+                try {
+                    const key = buildPrefetchParams(cid).toString();
+                    if (cardDataPrefetch.has(key)) continue;
+                    const res = await fetch(`/api/card_data/${uid}/${cid}?${key}`, { cache: 'no-store' });
+                    if (res.ok) {
+                        cardDataPrefetch.set(key, await res.json());
+                    }
+                } catch (e) { /* 先読みはベストエフォート */ }
+                await new Promise(r => setTimeout(r, 150)); // サーバー負荷抑止
+            }
+        }
+        window.addEventListener('load', () => setTimeout(prefetchAllCardData, 1200));
+
+        // ==========================================================
+        //  生成中の進捗表示: 生成プールの待ち件数をポーリングして表示。
+        //  「生成中...」のローディング DOM が消えたら自動停止。
+        // ==========================================================
+        function startGenProgress() {
+            const tick = async () => {
+                const el = document.getElementById('genProgressText');
+                if (!el) return; // ローディング表示が無くなったら終了
+                try {
+                    const res = await fetch('/api/card_gen_status', { cache: 'no-store' });
+                    if (res.ok) {
+                        const d = await res.json();
+                        const waiting = Number(d.waiting) || 0;
+                        el.textContent = waiting > 0 ? ` / ${GenshinI18n.t('順番待ち')} ${waiting}` : '';
+                    }
+                } catch (e) { /* ignore */ }
+                setTimeout(tick, 1500);
+            };
+            tick();
+        }
+
+        // ==========================================================
+        //  スコア履歴: 閲覧したスコアをキャラ別に保存し、小さな折れ線グラフで表示
+        //  （admin の UI フラグ show_score_history=false では記録・表示とも無効）
+        // ==========================================================
+        const SCORE_HISTORY_ENABLED = {{ 'true' if show_score_history else 'false' }};
+        const SCORE_HISTORY_KEY = `score_history_${uid}`;
+        function loadScoreHistory() {
+            try {
+                const all = JSON.parse(localStorage.getItem(SCORE_HISTORY_KEY) || '{}');
+                return (all && typeof all === 'object' && !Array.isArray(all)) ? all : {};
+            } catch (e) { return {}; }
+        }
+        function recordScoreHistory(data) {
+            try {
+                if (!SCORE_HISTORY_ENABLED) return;
+                if (!data || typeof currentSelectedCharId === 'undefined' || !currentSelectedCharId) return;
+                const score = Number(data.scoreSum);
+                if (!isFinite(score)) return;
+                const method = String(data.calcMethod || '');
+                const all = loadScoreHistory();
+                const key = String(currentSelectedCharId);
+                const arr = Array.isArray(all[key]) ? all[key] : [];
+                const last = arr[arr.length - 1];
+                // 同スコア・同方式の再閲覧（30分以内）は追記しない
+                if (last && last.score === score && last.method === method && (Date.now() - last.t) < 30 * 60 * 1000) {
+                    renderScoreHistoryGraph(key);
+                    return;
+                }
+                arr.push({ t: Date.now(), score, method });
+                all[key] = arr.slice(-100);
+                localStorage.setItem(SCORE_HISTORY_KEY, JSON.stringify(all));
+                renderScoreHistoryGraph(key);
+            } catch (e) { /* ignore */ }
+        }
+        function renderScoreHistoryGraph(charId) {
+            const box = document.getElementById('scoreHistoryBox');
+            if (!box) return;
+            const arr = loadScoreHistory()[String(charId)] || [];
+            if (!Array.isArray(arr) || arr.length < 2) {
+                box.classList.add('hidden');
+                return;
+            }
+            const scores = arr.map(p => Number(p.score) || 0);
+            const min = Math.min(...scores), max = Math.max(...scores);
+            const span = Math.max(1e-6, max - min);
+            const W = 560, H = 110, PAD = 8;
+            const pts = scores.map((s, i) => {
+                const x = PAD + (i / (scores.length - 1)) * (W - PAD * 2);
+                const y = H - PAD - ((s - min) / span) * (H - PAD * 2);
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+            });
+            const dots = arr.map((p, i) => {
+                const v = Number(p.score) || 0;
+                const x = PAD + (i / (arr.length - 1)) * (W - PAD * 2);
+                const y = H - PAD - ((v - min) / span) * (H - PAD * 2);
+                const d = new Date(p.t);
+                const label = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}  ${p.score}${p.method ? ' (' + p.method + ')' : ''}`;
+                return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="var(--accent, #22d3ee)"><title>${esc(label)}</title></circle>`;
+            }).join('');
+            const label = GenshinI18n.t('スコア履歴');
+            box.innerHTML = `
+                <div class="text-xs font-semibold mb-1" style="color: var(--text-secondary);">${esc(label)}</div>
+                <svg viewBox="0 0 ${W} ${H}" class="w-full" style="height:110px" preserveAspectRatio="none">
+                    <polyline points="${pts.join(' ')}" fill="none" stroke="var(--accent, #22d3ee)" stroke-width="2" stroke-linejoin="round"/>
+                    ${dots}
+                </svg>
+                <div class="flex justify-between text-[10px]" style="color: var(--text-muted);">
+                    <span>${scores.length}${GenshinI18n.t('件')}</span>
+                    <span>min ${min.toFixed(1)} / max ${max.toFixed(1)}</span>
+                </div>`;
+            box.classList.remove('hidden');
+        }
+
+        // ==========================================================
+        //  シェア: 表示中のカード画像を Web Share / クリップボード copies / 保存で共有
+        // ==========================================================
+        async function getCurrentCardBlob() {
+            // 生成時に保持した blob を優先（blob: URL は revoke 後に fetch できないため）
+            if (window.__lastCardBlob) return window.__lastCardBlob;
+            const img = document.getElementById('cardImage');
+            const src = img ? img.getAttribute('src') : '';
+            if (!src) return null;
+            const res = await fetch(src);
+            if (!res.ok) return null;
+            return await res.blob();
+        }
+        async function shareCurrentCard() {
+            let blob = null;
+            try { blob = await getCurrentCardBlob(); } catch (e) {}
+            if (!blob) {
+                showToast(GenshinI18n.t('先にカード画像を生成してください'), 'error');
+                return;
+            }
+            const charName = (document.getElementById('selectedCharLabel') || {}).textContent || 'build card';
+            const file = new File([blob], 'build_card.png', { type: 'image/png' });
+            // 1) Web Share（ファイル共有に対応している環境 = 主にスマホ）
+            try {
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], title: charName });
+                    return;
+                }
+            } catch (e) { /* キャンセルは無視してコピーへ */ }
+            // 2) クリップボードへ画像コピー
+            try {
+                if (navigator.clipboard && window.ClipboardItem) {
+                    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                    showToast(GenshinI18n.t('カード画像をコピーしました'), 'success');
+                    return;
+                }
+            } catch (e) { /* ignore */ }
+            // 3) フォールバック: ダウンロード
+            try {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'build_card.png';
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 3000);
+                showToast(GenshinI18n.t('画像を保存しました'), 'success');
+            } catch (e) {
+                showToast(GenshinI18n.t('シェアに失敗しました'), 'error');
+            }
+        }
+
+        // 言語変更時に表示を再取得（card_data は withLang() 経由で lang パラメータ付きになる）
+        document.addEventListener('genshin:langchange', () => {
+            try {
+                if (typeof currentSelectedCharId !== 'undefined' && currentSelectedCharId && typeof refreshCurrentCard === 'function') {
+                    refreshCurrentCard(currentSelectedCharId, true);
+                }
+                // 画像生成タブ表示中はカード画像も lang 付きで再生成
+                if (typeof viewMode !== 'undefined' && viewMode === 'image' && typeof currentSelectedCharId !== 'undefined' && currentSelectedCharId && typeof loadCardImage === 'function') {
+                    loadCardImage(currentSelectedCharId, true);
+                }
+                // 再生成ボタンのラベルも現在の状態で言語を反映し直す
+                if (typeof updateImageGenButtonLabel === 'function') {
+                    const img = document.getElementById('cardImage');
+                    updateImageGenButtonLabel(!!(img && img.getAttribute('src') && !img.classList.contains('hidden')));
+                }
+                if (typeof renderComboRow === 'function') renderComboRow();
+                if (typeof updateEditWeaponUI === 'function') updateEditWeaponUI();
+                if (typeof renderFakeCharGrid === 'function') renderFakeCharGrid();
+                if (typeof renderFakeWeaponGrid === 'function') renderFakeWeaponGrid();
+                // スコア履歴グラフのラベルも言語を反映し直す
+                if (typeof currentSelectedCharId !== 'undefined' && currentSelectedCharId && typeof renderScoreHistoryGraph === 'function') {
+                    renderScoreHistoryGraph(currentSelectedCharId);
+                }
+                // 再描画で作り直された data-i18n 要素に翻訳を再適用
+                GenshinI18n.apply(document);
+            } catch (e) { /* ignore */ }
+        });
+
+        // シェアボタン: 表示中のカード画像を共有/コピー/保存
+        const shareCardBtn = document.getElementById('shareCardBtn');
+        if (shareCardBtn) shareCardBtn.addEventListener('click', shareCurrentCard);
 
         // サーバー由来・ユーザー入力系の文字列を innerHTML に埋め込む前に必ず通す。
         // これを挟まないと JSON 内の `<img onerror=...>` がそのまま HTML として実行される。
@@ -3102,7 +3437,7 @@
         if (mobileActionRefreshBtn) {
             mobileActionRefreshBtn.addEventListener('click', async () => {
                 if (teamMode) { generateActiveTeam(); return; }
-                if (!currentSelectedCharId) { showToast('キャラクターを選択してください', 'error'); return; }
+                if (!currentSelectedCharId) { showToast(GenshinI18n.t('キャラクターを選択してください'), 'error'); return; }
                 if (viewMode !== 'image') {
                     viewMode = 'image';
                     saveViewMode(viewMode);
@@ -3236,6 +3571,7 @@
 
         const settingsVerBtns = document.querySelectorAll('[data-settings-ver]');
         const settingsThemeBtns = document.querySelectorAll('[data-settings-theme]');
+        const settingsLangBtns = document.querySelectorAll('[data-settings-lang]');
         const settingsFormatLabel = document.getElementById('settingsFormatLabel');
         const settingsServerStatsBtn = document.getElementById('settingsServerStatsBtn');
         const settingsServerStatsToggle = document.getElementById('settingsServerStatsToggle');
@@ -3662,6 +3998,14 @@
                     btn.setAttribute('aria-checked', on ? 'true' : 'false');
                 });
             }
+            if (settingsLangBtns && settingsLangBtns.length) {
+                const curLang = GenshinI18n.getLang();
+                settingsLangBtns.forEach(btn => {
+                    const on = btn.dataset.settingsLang === curLang;
+                    btn.classList.toggle('selected', on);
+                    btn.setAttribute('aria-checked', on ? 'true' : 'false');
+                });
+            }
             if (settingsFormatLabel) {
                 settingsFormatLabel.textContent = 'PNG（無圧縮）';
             }
@@ -3806,6 +4150,18 @@
                         const picked = (btn.dataset.settingsTheme === 'light') ? 'light' : 'dark';
                         if (picked === getSavedThemePref()) return;
                         setThemePref(picked);
+                        applySettingsPanelUI();
+                    });
+                });
+            }
+
+            // 言語切替（設定モーダル）: ja ⇄ en。カード画像も lang 付きで再生成される
+            if (settingsLangBtns && settingsLangBtns.length) {
+                settingsLangBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const picked = (btn.dataset.settingsLang === 'en') ? 'en' : 'ja';
+                        if (picked === GenshinI18n.getLang()) return;
+                        GenshinI18n.setLang(picked);
                         applySettingsPanelUI();
                     });
                 });
@@ -4218,12 +4574,12 @@
 
             const defaultTile = document.createElement('div');
             defaultTile.className = `combo-tile relative w-14 h-14 rounded-lg border-2 border-zinc-700 bg-zinc-800 cursor-pointer ${!activeComboId ? 'active' : ''}`;
-            defaultTile.title = 'デフォルト（実データ）';
+            defaultTile.title = GenshinI18n.t('デフォルト（実データ）');
             const defaultIconSrc = currentSelectedCharId ? realCharIconSrc(currentSelectedCharId) : '';
             defaultTile.innerHTML = `
                 <div class="relative w-full h-full rounded-md overflow-hidden">
                     ${defaultIconSrc ? `<img src="${defaultIconSrc}" class="w-full h-full object-cover drag-none">` : ''}
-                    <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[9px] leading-tight text-center truncate px-0.5">デフォルト</div>
+                    <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[9px] leading-tight text-center truncate px-0.5" data-i18n>デフォルト</div>
                 </div>
             `;
             defaultTile.onclick = () => activateCombo('');
@@ -4238,14 +4594,14 @@
 
                 const tile = document.createElement('div');
                 tile.className = `combo-tile relative w-14 h-14 rounded-lg border-2 rarity-${rarity} bg-zinc-800 cursor-pointer ${activeComboId === combo.id ? 'active' : ''}`;
-                tile.title = data.jaName;
+                tile.title = listNameOf(data);
                 tile.onclick = () => activateCombo(combo.id);
 
                 const weaponIconUrl = (combo.fakeWeapon && !isSwapHiddenWeapon(combo.fakeWeapon)) ? weaponAssetUrl(combo.fakeWeapon) : '';
                 tile.innerHTML = `
                     <div class="relative w-full h-full rounded-md overflow-hidden">
-                        ${iconUrl ? `<img src="${iconUrl}" class="w-full h-full object-cover drag-none">` : `<div class="w-full h-full flex items-center justify-center text-[9px] text-zinc-400 text-center px-0.5">${esc(data.jaName)}</div>`}
-                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[9px] leading-tight text-center truncate px-0.5">${esc(data.jaName)}</div>
+                        ${iconUrl ? `<img src="${iconUrl}" class="w-full h-full object-cover drag-none">` : `<div class="w-full h-full flex items-center justify-center text-[9px] text-zinc-400 text-center px-0.5">${esc(listNameOf(data))}</div>`}
+                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[9px] leading-tight text-center truncate px-0.5">${esc(listNameOf(data))}</div>
                     </div>
                     <div class="combo-remove" onclick="event.stopPropagation(); removeCombo('${combo.id}')">&times;</div>
                     ${weaponIconUrl ? `<div class="weapon-badge"><img src="${weaponIconUrl}" class="w-full h-full object-cover"></div>` : ''}
@@ -4293,7 +4649,7 @@
                 p.set('calc_method', method);
                 // fake_char / fake_weapon は付けない＝実データ武器
                 if (ver === 'beta') p.set('beta', 'true');
-                const res = await fetch(`/api/card_data/${uid}/${charId}?${p}`);
+                const res = await fetch(`/api/card_data/${uid}/${charId}?${withLang(p)}`);
                 if (!res.ok) return;
                 const data = await res.json();
                 // 取得中にキャラや差し替えが変わっていたら適用しない
@@ -4330,7 +4686,7 @@
 
             const missingIds = Object.keys(allCharList).filter(id => charIconCache[id] === undefined);
             if (missingIds.length) {
-                fakeCharGridStatus.textContent = 'アイコンを読み込み中...';
+                fakeCharGridStatus.textContent = GenshinI18n.t('アイコンを読み込み中...');
                 await ensureAllCharIconsLoaded();
                 fakeCharGridStatus.textContent = '';
                 renderFakeCharGrid();
@@ -4351,16 +4707,16 @@
                 const rarity = qualityToRarity(data.qualityType);
                 const tile = document.createElement('div');
                 tile.className = `picker-tile relative w-24 h-24 shrink-0 cursor-pointer rounded-lg border-2 rarity-${rarity} bg-zinc-800 overflow-hidden`;
-                tile.title = data.jaName;
+                tile.title = listNameOf(data);
                 tile.onclick = () => addComboForChar(id);
 
                 if (iconUrl) {
                     tile.innerHTML = `
                         <img src="${iconUrl}" class="w-full h-full object-cover drag-none" loading="lazy">
-                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[10px] leading-tight text-center truncate px-0.5 py-0.5">${esc(data.jaName)}</div>
+                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[10px] leading-tight text-center truncate px-0.5 py-0.5">${esc(listNameOf(data))}</div>
                     `;
                 } else {
-                    tile.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 text-center px-1">${esc(data.jaName)}</div>`;
+                    tile.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 text-center px-1">${esc(listNameOf(data))}</div>`;
                 }
                 if (isBetaOnlyChar(id)) {
                     tile.insertAdjacentHTML('beforeend', betaNewBadgeHTML('lg'));
@@ -4400,7 +4756,7 @@
             const missingIds = relevantIds.filter(id => weaponIconCache[id] === undefined);
 
             if (missingIds.length) {
-                fakeWeaponGridStatus.textContent = 'アイコンを読み込み中...';
+                fakeWeaponGridStatus.textContent = GenshinI18n.t('アイコンを読み込み中...');
                 await ensureWeaponIconsLoaded(relevantIds);
                 fakeWeaponGridStatus.textContent = '';
                 renderFakeWeaponGrid();
@@ -4419,7 +4775,7 @@
 
             const noneTile = document.createElement('div');
             noneTile.className = `picker-tile relative w-16 h-16 shrink-0 cursor-pointer rounded-lg border-2 border-zinc-700 bg-zinc-800 flex items-center justify-center ${!selection.fakeWeapon ? 'selected' : ''}`;
-            noneTile.title = 'なし（実データ）';
+            noneTile.title = GenshinI18n.t('なし（実データ）');
             noneTile.innerHTML = `<span class="text-2xl text-zinc-500">✕</span>`;
             noneTile.onclick = () => selectFakeWeapon('');
             fakeWeaponGrid.appendChild(noneTile);
@@ -4430,7 +4786,7 @@
                 .sort((a, b) => Number(a) - Number(b));
 
             if (weaponType && sortedIds.length === 0) {
-                fakeWeaponGridStatus.textContent = 'この武器種の候補が見つかりませんでした。';
+                fakeWeaponGridStatus.textContent = GenshinI18n.t('この武器種の候補が見つかりませんでした。');
             }
 
             sortedIds.forEach(id => {
@@ -4439,16 +4795,16 @@
                 const rarity = qualityToRarity(data.qualityType);
                 const tile = document.createElement('div');
                 tile.className = `picker-tile relative w-16 h-16 shrink-0 cursor-pointer rounded-lg border-2 rarity-${rarity} bg-zinc-800 overflow-hidden ${selection.fakeWeapon === id ? 'selected' : ''}`;
-                tile.title = data.jaName;
+                tile.title = listNameOf(data);
                 tile.onclick = () => selectFakeWeapon(id);
 
                 if (iconUrl) {
                     tile.innerHTML = `
                         <img src="${iconUrl}" class="w-full h-full object-cover drag-none" loading="lazy">
-                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[10px] leading-tight text-center truncate px-0.5 py-0.5">${esc(data.jaName)}</div>
+                        <div class="char-name-label absolute bottom-0 inset-x-0 bg-black/70 text-[10px] leading-tight text-center truncate px-0.5 py-0.5">${esc(listNameOf(data))}</div>
                     `;
                 } else {
-                    tile.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 text-center px-1">${esc(data.jaName)}</div>`;
+                    tile.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 text-center px-1">${esc(listNameOf(data))}</div>`;
                 }
                 if (isBetaOnlyWeapon(id)) {
                     tile.insertAdjacentHTML('beforeend', betaNewBadgeHTML('md'));
@@ -4521,7 +4877,7 @@
             if (selection.fakeWeapon && allWeaponList[selection.fakeWeapon]) {
                 const data = allWeaponList[selection.fakeWeapon];
                 const iconUrl = weaponAssetUrl(selection.fakeWeapon);
-                editWeaponLabel.textContent = data.jaName;
+                editWeaponLabel.textContent = listNameOf(data);
                 if (iconUrl) {
                     editWeaponIcon.src = iconUrl;
                     editWeaponIcon.classList.remove('hidden');
@@ -4635,7 +4991,9 @@
         // 進行中の生成リクエストは古くなっているのでまとめて無効化する。
         function updateImageGenButtonLabel(hasImage) {
             if (!regenerateImageBtn) return;
-            regenerateImageBtn.textContent = hasImage ? '再生成' : '生成';
+            // ボタン内の span（data-i18n）を書き換える。textContent 直指定は
+            // 言語切替の辞書適用を壊すため、ここでも GenshinI18n.t を通す
+            regenerateImageBtn.innerHTML = `<span data-i18n>${GenshinI18n.t(hasImage ? '再生成' : '生成')}</span>`;
         }
 
         function showImageAwaitState(message) {
@@ -4646,7 +5004,7 @@
             if (glassEl) glassEl.classList.add('hidden');
             placeholderText.classList.add('hidden');
             if (imageAwaitText) {
-                imageAwaitText.textContent = message || '右上の「生成」ボタンからビルドカード画像を作成できます';
+                imageAwaitText.textContent = message ? GenshinI18n.t(message) : GenshinI18n.t('右上の「生成」ボタンからビルドカード画像を作成できます');
             }
             if (imageAwaitBox) {
                 imageAwaitBox.classList.remove('hidden');
@@ -4835,7 +5193,27 @@
             fontaine: 'フォテーヌ', natlan: 'ナタ', nodkrai: 'ノッドクライ',
             snezhnaya: 'スネージナヤ', dragonspine: 'ドラゴンスパイネ'
         };
-        function bgRegionLabel(name) { return BG_REGION_LABELS[name] || name; }
+        // 地域表示ラベル: static/data/setting/region_labels.json（ja/en 両方。admin で編集可）を読み、
+        // 無いキーは従来の BG_REGION_LABELS（ja のみ）→ キー文字列の順にフォールバック
+        let REGION_LABELS = {};
+        (async () => {
+            try {
+                const res = await fetch('/static/data/setting/region_labels.json');
+                if (res.ok) {
+                    const d = await res.json();
+                    if (d && typeof d === 'object') REGION_LABELS = d;
+                }
+            } catch (e) { /* 読めなければハードコードのラベルへフォールバック */ }
+            applyBgColorControlsUI();
+        })();
+        function bgRegionLabel(name) {
+            const entry = REGION_LABELS[name];
+            if (entry && typeof entry === 'object') {
+                const v = GenshinI18n.isEn() ? (entry.en || entry.ja) : (entry.ja || entry.en);
+                if (v) return v;
+            }
+            return BG_REGION_LABELS[name] || name;
+        }
 
         // 現在表示中キャラの所属地域（card_data の regions: [{name, image|null}]）
         let currentCharRegions = [];
@@ -4846,7 +5224,8 @@
                 const m = localStorage.getItem(BG_COLOR_MODE_KEY);
                 if (m === 'custom' || m === 'region') return m;
             } catch (e) {}
-            return 'element';
+            // 未設定時のデフォルトは地域背景（キャラの所属地域画像。無ければ元素背景にフォールバック）
+            return 'region';
         }
         function getCustomBgColor() {
             try {
@@ -4933,7 +5312,7 @@
                 if (bgRegionSelect) bgRegionSelect.classList.add('hidden');
                 if (bgRegionAutoLabel) {
                     bgRegionAutoLabel.classList.remove('hidden');
-                    bgRegionAutoLabel.textContent = `自動選択: ${bgRegionLabel(current)}`;
+                    bgRegionAutoLabel.textContent = `${GenshinI18n.t('自動選択')}: ${bgRegionLabel(current)}`;
                 }
             } else {
                 if (bgRegionAutoLabel) bgRegionAutoLabel.classList.add('hidden');
@@ -4961,7 +5340,7 @@
                 if (sel.fakeChar) p.set('fake_char', sel.fakeChar);
                 if (sel.fakeWeapon) p.set('fake_weapon', sel.fakeWeapon);
                 if (ver === 'beta') p.set('beta', 'true');
-                const res = await fetch(`/api/card_data/${uid}/${charId}?${p}`);
+                const res = await fetch(`/api/card_data/${uid}/${charId}?${withLang(p)}`);
                 if (!res.ok) return;
                 const data = await res.json();
                 // 取得中にキャラや差し替えが変わっていたら適用しない
@@ -5032,6 +5411,8 @@
             const resonanceParam = getResonanceParam();
             if (resonanceParam) params.set('resonance', resonanceParam);
             if (imageTheme === 'cinema' || imageTheme === 'scorecard') params.set('theme', imageTheme);
+            // 英語モード時はカード画像内のテキストも英語で生成する
+            if (GenshinI18n.isEn()) params.set('lang', 'en');
             const query = params.toString() ? `?${params.toString()}` : '';
             return `/generate_card_image/${uid}/${charId}/${currentMethod}${query}`;
         }
@@ -5056,8 +5437,11 @@
             const res = await fetch(`/api/card_sign?${p.toString()}`, { cache: 'no-store' });
             if (!res.ok) throw new Error(`署名の取得に失敗しました (status: ${res.status})`);
             const data = await res.json();
-            signedCardUrlCache.set(baseUrl, { url: data.url, exp: data.exp });
-            return data.url;
+            // lang は署名対象外のため、署名済みURLに直接付与する（cache=server と同じ扱い）
+            let signedUrl = data.url;
+            if (GenshinI18n.isEn()) signedUrl += (signedUrl.includes('?') ? '&' : '?') + 'lang=en';
+            signedCardUrlCache.set(baseUrl, { url: signedUrl, exp: data.exp });
+            return signedUrl;
         }
 
         async function loadCardImage(charId, forceFetch = false, cacheOnly = false, autoGenOnMiss = false) {
@@ -5075,10 +5459,11 @@
             htmlCardContainer.innerHTML = `
                 <div class="flex flex-col items-center justify-center gap-3 py-20">
                     <div class="spinner-primary w-10 h-10"></div>
-                    <div class="text-sm text-zinc-500">画像を生成中...</div>
+                    <div class="text-sm text-zinc-500">${GenshinI18n.t('画像を生成中...')} <span id="genProgressText" class="text-zinc-400"></span></div>
                 </div>`;
 
             updateDisclaimerFooter(getActiveSelection());
+            startGenProgress();
             const baseUrl = buildCardImageUrl(charId);
 
             const requestToken = ++latestImageRequestToken;
@@ -5127,6 +5512,7 @@
                     URL.revokeObjectURL(currentImageObjectUrl);
                 }
                 currentImageObjectUrl = URL.createObjectURL(blob);
+                window.__lastCardBlob = blob; // シェア機能用に最新のカード画像 blob を保持
                 currentLoadedImageUrl = url;
                 cardImage.src = currentImageObjectUrl;
                 updateImageGenButtonLabel(true);
@@ -5136,7 +5522,13 @@
                 htmlCardContainer.classList.add('hidden');
                 cardImage.classList.add('hidden');
                 currentLoadedImageUrl = null;
-                showImageAwaitState('画像の読み込みに失敗しました。もう一度お試しください。');
+                // 503（生成プール満杯）は混雑メッセージを出す（右上の「生成」ボタンで再試行できる）
+                const isBusy = /status:\s*503/.test(String(e && e.message));
+                if (isBusy) {
+                    showImageAwaitState('カード生成が混雑しています。しばらく待ってから「生成」を押してください。');
+                } else {
+                    showImageAwaitState('画像の読み込みに失敗しました。もう一度お試しください。');
+                }
             } finally {
                 imageGenActiveCount = Math.max(0, imageGenActiveCount - 1);
                 if (imageGenActiveCount === 0) setGenerationControlsDisabled(false);
@@ -5364,14 +5756,24 @@
 
             const requestToken = ++latestGlassRequestToken;
             try {
-                const res = await fetch(`/api/card_data/${uid}/${charId}?${params.toString()}`);
+                // 先読み済みなら即座に描画（パラメータが完全一致した場合のみ）
+                const pKey = withLang(params).toString();
+                if (cardDataPrefetch.has(pKey)) {
+                    const pre = cardDataPrefetch.get(pKey);
+                    cardDataPrefetch.delete(pKey);
+                    if (requestToken === latestGlassRequestToken) { renderGlassCard(pre); recordScoreHistory(pre); }
+                    return;
+                }
+                const res = await fetch(`/api/card_data/${uid}/${charId}?${pKey}`);
                 if (!res.ok) {
                     const errBody = await res.json().catch(() => ({}));
-                    throw new Error(errBody.detail || `データの取得に失敗しました (status: ${res.status})`);
+                    throw new Error(errBody.detail || `${GenshinI18n.t('データの取得に失敗しました')} (status: ${res.status})`);
                 }
                 const data = await res.json();
+                cardDataPrefetch.set(pKey, data);
                 if (requestToken !== latestGlassRequestToken) return;
                 renderGlassCard(data);
+                recordScoreHistory(data);
             } catch (e) {
                 if (requestToken !== latestGlassRequestToken) return;
                 console.error('グラスカードの読み込みに失敗しました:', e);
@@ -5410,25 +5812,25 @@
             if (g.sets && g.sets.length) {
                 const setRows = g.sets.map(s => {
                     const count = Number(s.count) || 2;
-                    const desc2 = s.set2 ? `<div class="gp-set-desc${s.buff_applied ? ' applied' : ''}">2セット: ${esc(s.set2)}</div>` : '';
+                    const desc2 = s.set2 ? `<div class="gp-set-desc${s.buff_applied ? ' applied' : ''}">${GenshinI18n.t('2セット:')} ${esc(s.set2)}</div>` : '';
                     // 4セット効果は4点以上装備時のみ表示（2セット/2セット編成では非表示）
-                    const desc4 = (count >= 4 && s.set4) ? `<div class="gp-set-desc">4セット: ${esc(s.set4)}</div>` : '';
+                    const desc4 = (count >= 4 && s.set4) ? `<div class="gp-set-desc">${GenshinI18n.t('4セット:')} ${esc(s.set4)}</div>` : '';
                     return `<div class="gp-set-row">
                         <div class="gp-set-name">${esc(s.name)} ×${esc(s.count)}</div>
                         ${desc2}
                         ${desc4}
                     </div>`;
                 }).join('');
-                blocks.push(`<div class="growth-panel-section"><div class="growth-panel-head">聖遺物セット効果</div>${setRows}</div>`);
+                blocks.push(`<div class="growth-panel-section"><div class="growth-panel-head">${GenshinI18n.t('聖遺物セット効果')}</div>${setRows}</div>`);
             }
 
             // 基礎ステータス → %換算（1%あたり）
             const sp = g.stat1pct;
             if (sp) {
                 blocks.push(`<div class="growth-panel-section">
-                    <div class="growth-panel-head">基礎ステータス %換算</div>
+                    <div class="growth-panel-head">${GenshinI18n.t('基礎ステータス %換算')}</div>
                     <div class="gp-stat-rows">
-                        <div class="gp-stat-row"><span class="gp-stat-label">${esc(sp.label)} 1%あたり</span><span class="gp-stat-value">${esc(sp.value)}</span></div>
+                        <div class="gp-stat-row"><span class="gp-stat-label">${esc(sp.label)} ${GenshinI18n.t('1%あたり')}</span><span class="gp-stat-value">${esc(sp.value)}</span></div>
                     </div></div>`);
             }
 
@@ -5438,20 +5840,20 @@
                 const rows = [];
                 subList.forEach(s => {
                     if (s.pct_avg != null || s.flat_avg != null) {
-                        const short = { hp: 'HP', atk: '攻撃', def: '防御' }[s.key] || s.label || '';
+                        const short = (GenshinI18n.isEn() ? { hp: 'HP', atk: 'ATK', def: 'DEF' } : { hp: 'HP', atk: '攻撃', def: '防御' })[s.key] || s.label || '';
                         const label = esc(short);
                         if (s.pct_avg != null) {
                             const paren = (s.flat_equiv != null) ? ` (${formatDecPrec(s.flat_equiv, getSavedBasePrec())})` : '';
                             rows.push(`<div class="gp-stat-row"><span class="gp-stat-label">${label}%</span><span class="gp-stat-value">${roundTo2(s.pct_avg)}%${paren}</span></div>`);
                         }
                         if (s.flat_avg != null) {
-                            rows.push(`<div class="gp-stat-row"><span class="gp-stat-label">${label}実数</span><span class="gp-stat-value">${formatDecPrec(s.flat_avg, getSavedBasePrec())}</span></div>`);
+                            rows.push(`<div class="gp-stat-row"><span class="gp-stat-label">${label}${GenshinI18n.t('実数')}</span><span class="gp-stat-value">${formatDecPrec(s.flat_avg, getSavedBasePrec())}</span></div>`);
                         }
                     }
                 });
                 if (rows.length) blocks.push(`<div class="growth-panel-section">
-                    <div class="growth-panel-head">サブステ伸び平均</div>
-                    <div class="gp-subhead">1回あたりの平均</div>
+                    <div class="growth-panel-head">${GenshinI18n.t('サブステ伸び平均')}</div>
+                    <div class="gp-subhead">${GenshinI18n.t('1回あたりの平均')}</div>
                     <div class="gp-stat-rows">${rows.join('')}</div></div>`);
             }
 
@@ -5524,7 +5926,7 @@
                 '<span class="cine-set"><img src="' + assetUrl('static/assets/props/' + String(b.elem || '').toLowerCase() + '.png') + '" alt="" style="width:14px;height:14px;object-fit:contain;"><span class="cine-set-name">' + esc(b.text) + '</span><span class="cine-set-cnt num">' + esc(b.label) + '</span></span>').join('');
 
             const arts = (data.artifacts || []).map(a => {
-                if (!a) return '<div class="cine-art"><div class="cine-art-empty">未装備</div></div>';
+                if (!a) return `<div class="cine-art"><div class="cine-art-empty">${GenshinI18n.t('未装備')}</div></div>`;
                 const subs = (a.substats || []).map(sub =>
                     '<div class="cine-sub"><span class="cine-nm">' + esc(sub.name) + '</span>' + themeDotsHtml(sub.rolls, 'cine') + '<span class="cine-vl num">' + esc(sub.value) + '</span></div>').join('');
                 return '<div class="cine-art">' +
@@ -5666,7 +6068,7 @@
             });
 
             const artsHtml = arts.map((a, i) => {
-                if (!a) return '<div class="scc-art"><div class="scc-art-empty">未装備</div></div>';
+                if (!a) return `<div class="scc-art"><div class="scc-art-empty">${GenshinI18n.t('未装備')}</div></div>`;
                 const subs = (a.substats || []).map(sub =>
                     '<div class="scc-sub"><span class="scc-nm">' + esc(sub.name) + '</span>' + themeDotsHtml(sub.rolls, 'scc') + '<span class="scc-vl num">' + esc(sub.value) + '</span></div>').join('');
                 return '<div class="scc-art' + (i === bestIdx ? ' best' : '') + '">' +
@@ -5811,7 +6213,7 @@
             const arts = data.artifacts || [];
             const artsHtml = arts.map(a => {
                 if (!a) {
-                    return `<div class="art-card"><div style="margin:auto;opacity:0.3">未装備</div></div>`;
+                    return `<div class="art-card"><div style="margin:auto;opacity:0.3">${GenshinI18n.t('未装備')}</div></div>`;
                 }
                 const subs = (a.substats || []).map(sub => {
                     let dots = '';
@@ -5921,14 +6323,14 @@
                     <div class="set-info-box">${setHtml}</div>
                     <div class="score-box">
                       <div class="rank-badge"><img src="/static/assets/tiers/${esc(data.tierSum || 'B')}.png" alt="${esc(data.tierSum || 'B')}"></div>
-                      <div class="score-label">総合スコア</div>
+                      <div class="score-label">${GenshinI18n.t('総合スコア')}</div>
                       <div class="score-value">${(Number(data.scoreSum) || 0).toFixed(1)}</div>
-                      <div class="score-method-title">計算方法</div>
+                      <div class="score-method-title">${GenshinI18n.t('計算方法')}</div>
                       <div class="score-method-label">${esc(data.calcMethodLabel || data.calcMethod || '')}</div>
                     </div>
                   </div>
                 </div>
-                ${getSavedSubstatDotsPref() ? `<div class="substat-dot-legend"><span class="substat-dot-legend-label">伸び値</span><span class="substat-dot-legend-bars"><span class="substat-dot substat-dot-1"></span><span class="substat-dot substat-dot-2"></span><span class="substat-dot substat-dot-3"></span><span class="substat-dot substat-dot-4"></span></span></div>` : ''}
+                ${getSavedSubstatDotsPref() ? `<div class="substat-dot-legend"><span class="substat-dot-legend-label">${GenshinI18n.t('伸び値')}</span><span class="substat-dot-legend-bars"><span class="substat-dot substat-dot-1"></span><span class="substat-dot substat-dot-2"></span><span class="substat-dot substat-dot-3"></span><span class="substat-dot substat-dot-4"></span></span></div>` : ''}
                 <div class="artifacts-grid">${artsHtml}</div>
                 ${resonanceHtml ? `<div class="resonance-corner">${resonanceHtml}</div>` : ''}
                 ${uidHtml}
@@ -6017,14 +6419,24 @@
 
             const requestToken = ++latestHtmlRequestToken;
             try {
-                const res = await fetch(`/api/card_data/${uid}/${charId}?${params.toString()}`);
+                // 先読み済みなら即座に描画（パラメータが完全一致した場合のみ）
+                const pKey = withLang(params).toString();
+                if (cardDataPrefetch.has(pKey)) {
+                    const pre = cardDataPrefetch.get(pKey);
+                    cardDataPrefetch.delete(pKey);
+                    if (requestToken === latestHtmlRequestToken) { renderHtmlCard(pre); recordScoreHistory(pre); }
+                    return;
+                }
+                const res = await fetch(`/api/card_data/${uid}/${charId}?${pKey}`);
                 if (!res.ok) {
                     const errBody = await res.json().catch(() => ({}));
-                    throw new Error(errBody.detail || `データの取得に失敗しました (status: ${res.status})`);
+                    throw new Error(errBody.detail || `${GenshinI18n.t('データの取得に失敗しました')} (status: ${res.status})`);
                 }
                 const data = await res.json();
+                cardDataPrefetch.set(pKey, data);
                 if (requestToken !== latestHtmlRequestToken) return;
                 renderHtmlCard(data);
+                recordScoreHistory(data);
             } catch (e) {
                 if (requestToken !== latestHtmlRequestToken) return;
                 console.error('ビルドカード(HTML)の読み込みに失敗しました:', e);
@@ -6050,7 +6462,7 @@
             `).join('');
 
             const artifactsHtml = data.artifacts.map(a => {
-                if (!a) return `<div class="bg-zinc-900/40 rounded-lg p-3 border border-zinc-800 text-xs text-zinc-600 flex items-center justify-center">未装備</div>`;
+                if (!a) return `<div class="bg-zinc-900/40 rounded-lg p-3 border border-zinc-800 text-xs text-zinc-600 flex items-center justify-center">${GenshinI18n.t('未装備')}</div>`;
                 const subsHtml = a.substats.map(s => {
                     let dots = '';
                     if (getSavedSubstatDotsPref() && (s.rolls || []).length) {
@@ -6108,16 +6520,16 @@
                         </div>
                         <div class="grid grid-cols-2 gap-1.5">${mainStatsHtml}</div>
                         <div class="bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
-                            <div class="text-xs text-zinc-500 mb-1">セット効果</div>
+                            <div class="text-xs text-zinc-500 mb-1">${GenshinI18n.t('セット効果')}</div>
                             ${setBonusHtml}
                         </div>
                         ${(data.resonanceBadges && data.resonanceBadges.length) ? `
                         <div class="bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
-                            <div class="text-xs text-zinc-500 mb-1">元素共鳴</div>
+                            <div class="text-xs text-zinc-500 mb-1">${GenshinI18n.t('元素共鳴')}</div>
                             ${data.resonanceBadges.map(b => `<div class="text-xs text-zinc-200 flex items-center gap-1.5 py-0.5"><img src="/static/assets/props/${esc(String(b.elem || '').toLowerCase())}.png" class="w-4 h-4 object-contain shrink-0" alt=""><span class="font-semibold">${esc(b.text)}</span><span class="text-amber-300">${esc(b.label)}</span></div>`).join('')}
                         </div>` : ''}
                         <div class="flex items-center justify-between bg-zinc-900/60 rounded-lg p-3 border border-zinc-800">
-                            <span class="text-xs text-zinc-400">総合スコア</span>
+                            <span class="text-xs text-zinc-400">${GenshinI18n.t('総合スコア')}</span>
                             <span class="text-2xl font-bold ${tierClass(data.tierSum)}">${(Number(data.scoreSum) || 0).toFixed(1)} <span class="text-sm">${esc(data.tierSum)}</span></span>
                         </div>
                     </div>
@@ -6184,7 +6596,7 @@
                         if (sel.fakeChar) p.set('fake_char', sel.fakeChar);
                         if (sel.fakeWeapon) p.set('fake_weapon', sel.fakeWeapon);
                         if (ver === 'beta') p.set('beta', 'true');
-                        const res = await fetch(`/api/card_data/${uid}/${charId}?${p}`);
+                        const res = await fetch(`/api/card_data/${uid}/${charId}?${withLang(p)}`);
                         if (!res.ok) return;
                         const data = await res.json();
                         // 取得中にキャラや差し替えが変わっていたら適用しない
@@ -6543,7 +6955,7 @@
             if (teamCardBtn) teamCardBtn.classList.add('hidden');
             const idx = teamSlots.findIndex(s => s && s.id === slotId);
             const label = document.getElementById('teamModeSlotLabel');
-            if (label) label.textContent = `（編成${idx >= 0 ? idx + 1 : ''}）`;
+            if (label) label.textContent = GenshinI18n.isEn() ? ` (Team ${idx >= 0 ? idx + 1 : ''})` : `（編成${idx >= 0 ? idx + 1 : ''}）`;
             renderTeamCharRow();
             selectTeamMember(0);
             // 編成モードでは「画像生成」のみ有効
@@ -6630,12 +7042,12 @@
                     if (sel.fakeChar) p.set('fake_char', sel.fakeChar);
                     if (sel.fakeWeapon) p.set('fake_weapon', sel.fakeWeapon);
                     if (ver === 'beta') p.set('beta', 'true');
-                    const res = await fetch(`/api/card_data/${uid}/${cid}?${p}`);
+                    const res = await fetch(`/api/card_data/${uid}/${cid}?${withLang(p)}`);
                     if (!res.ok) return;
                     const data = await res.json();
                     if (teamMode && currentSelectedCharId === cid) {
                         const label = document.getElementById('selectedCharLabel');
-                        if (label) label.textContent = `${data.displayName}（編成${teamActiveIdx + 1}）`;
+                        if (label) label.textContent = GenshinI18n.isEn() ? `${data.displayName} (Team ${teamActiveIdx + 1})` : `${data.displayName}（編成${teamActiveIdx + 1}）`;
                         setLastKnownRealWeapon(data);
                         setCurrentCharRegions(data.regions || []);
                         updateEditWeaponUI();
@@ -6705,13 +7117,17 @@
                 if (boss && boss.version) p.set('boss', JSON.stringify(boss));
                 if (ver === 'beta') p.set('beta', 'true');
                 p.set('img_format', 'png');
+                if (GenshinI18n.isEn()) p.set('lang', 'en');
                 const signRes = await fetch(`/api/team_card_sign?${p.toString()}`, { cache: 'no-store' });
                 if (!signRes.ok) {
                     const body = await signRes.json().catch(() => ({}));
                     throw new Error(body.detail || `署名の取得に失敗しました (status: ${signRes.status})`);
                 }
                 const signData = await signRes.json();
-                const url = signData.url;
+                // lang は署名対象外のため、署名済みURLに直接付与する
+                let signedTeamUrl = signData.url;
+                if (GenshinI18n.isEn()) signedTeamUrl += (signedTeamUrl.includes('?') ? '&' : '?') + 'lang=en';
+                const url = signedTeamUrl;
                 const saveMode = getSavedSaveMode();
                 const fetchUrl = saveMode === 'server' ? (url + (url.includes('?') ? '&' : '?') + 'cache=server') : url;
                 let blob = null;
@@ -6721,7 +7137,7 @@
                 htmlCardContainer.innerHTML = `
                     <div class="flex flex-col items-center justify-center gap-3 py-20">
                         <div class="spinner-primary w-10 h-10"></div>
-                        <div class="text-sm text-zinc-500">編成カードを生成中...</div>
+                        <div class="text-sm text-zinc-500">${GenshinI18n.t('編成カードを生成中...')} <span id="genProgressText" class="text-zinc-400"></span></div>
                     </div>`;
                 const glassEl = document.getElementById('glassCardContainer');
                 if (glassEl) glassEl.classList.add('hidden');
@@ -6734,7 +7150,9 @@
                     if (res.status === 403) {
                         const retry = await fetch(`/api/team_card_sign?${p.toString()}`, { cache: 'no-store' });
                         const retryData = await retry.json();
-                        const retryUrl = saveMode === 'server' ? (retryData.url + (retryData.url.includes('?') ? '&' : '?') + 'cache=server') : retryData.url;
+                        let retrySigned = retryData.url;
+                        if (GenshinI18n.isEn()) retrySigned += (retrySigned.includes('?') ? '&' : '?') + 'lang=en';
+                        const retryUrl = saveMode === 'server' ? (retrySigned + (retrySigned.includes('?') ? '&' : '?') + 'cache=server') : retrySigned;
                         res = await fetch(retryUrl, { cache: 'no-store' });
                     }
                     if (!res.ok) {
@@ -6975,6 +7393,14 @@
         updateAbyssUI();
     </script>
 
+    <script>
+        // PWA: Service Worker 登録（/static/ のキャッシュで再表示を高速化）
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
+    </script>
     <script src="/static/js/tutorial.js"></script>
     <script>
         (function () {
@@ -6994,7 +7420,14 @@
             ];
 
             function startBuildTutorial() {
-                if (window.GenshinTutorial) window.GenshinTutorial.start(BUILD_TUTORIAL_STEPS, { doneKey: BUILD_TUTORIAL_DONE_KEY });
+                if (!window.GenshinTutorial) return;
+                // 開始時に言語設定を反映
+                const steps = BUILD_TUTORIAL_STEPS.map(s => ({
+                    selector: s.selector,
+                    title: GenshinI18n.t(s.title),
+                    text: GenshinI18n.t(s.text),
+                }));
+                window.GenshinTutorial.start(steps, { doneKey: BUILD_TUTORIAL_DONE_KEY });
             }
 
             const tutorialBtn = document.getElementById('tutorialBtn');
