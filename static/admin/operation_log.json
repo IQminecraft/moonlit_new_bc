@@ -1,26 +1,5 @@
 [
   {
-    "at": "2026-08-04T20:18:28+09:00",
-    "action": "fetch_live_nanoka_json",
-    "ok": true,
-    "message": "live=6.7",
-    "extra": {
-      "source": "nanoka",
-      "ok": true,
-      "kind": "live_json",
-      "live_version": "6.7",
-      "beta_version": "6.7.54",
-      "character_count": 140,
-      "weapon_count": 247,
-      "artifact_list_count": 63,
-      "lists": [
-        "characters.json",
-        "weapons.json",
-        "artifacts.json"
-      ]
-    }
-  },
-  {
     "at": "2026-08-05T14:37:17+09:00",
     "action": "fetch_beta_nanoka_json",
     "ok": true,
@@ -1147,6 +1126,132 @@
     "action": "discord_fetch_live_nanoka_costumes_missing",
     "ok": true,
     "message": "",
+    "extra": null
+  },
+  {
+    "at": "2026-09-06T17:01:28+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-07T20:23:23+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-08T11:51:48+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-08T21:32:35+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-08T21:34:29+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-08T21:34:58+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-08T21:35:44+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-08T21:58:53+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-08T22:00:31+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-08T22:02:35+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-08T22:40:26+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-09T00:03:59+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-09T13:04:08+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-09T13:52:34+09:00",
+    "action": "bot_start",
+    "ok": true,
+    "message": "bot を起動しました",
+    "extra": null
+  },
+  {
+    "at": "2026-09-09T13:53:57+09:00",
+    "action": "bot_clear_logs",
+    "ok": true,
+    "message": "bot のログをクリアしました",
+    "extra": null
+  },
+  {
+    "at": "2026-09-09T13:54:00+09:00",
+    "action": "bot_start",
+    "ok": true,
+    "message": "bot を起動しました",
+    "extra": null
+  },
+  {
+    "at": "2026-09-09T13:54:34+09:00",
+    "action": "bot_stop",
+    "ok": true,
+    "message": "bot を停止しました",
+    "extra": null
+  },
+  {
+    "at": "2026-09-16T19:06:07+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
     "extra": null
   }
 ]

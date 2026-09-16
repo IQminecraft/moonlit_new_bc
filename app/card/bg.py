@@ -126,7 +126,6 @@ def _list_region_image_names():
 
 
 def _prebuild_backgrounds(width=CARD_W, height=CARD_H):
-    global _PREBUILT_BGS
     elements = {
         "Pyro": (0x90, 0x3B, 0x2A),
         "Hydro": (0x34, 0x45, 0x95),

@@ -8,7 +8,7 @@
     <link rel="manifest" href="/static/manifest.webmanifest">
     <meta name="theme-color" content="#070b14">
     <!-- i18n（言語辞書）。メインスクリプトより先に読み込む必要がある -->
-    <script src="/static/js/i18n.js?v=20260831c"></script>
+    <script src="/static/js/i18n.js?v=20260916c"></script>
     <script>
         (function () {
             try {
@@ -800,14 +800,16 @@
 
         @media (max-width: 640px) {
             .top-bar {
-                padding: 12px 14px;
+                padding: 12px 14px 8px;
                 flex-wrap: wrap;
                 row-gap: 6px;
+                position: relative;
             }
             /* ボタン/タイトルの文字折れを防ぐ（ガタつき防止） */
             .top-link, .top-title, .top-ver, .top-sep, #verBadge {
                 white-space: nowrap;
             }
+            .top-left { min-width: 0; padding-right: 56px; }
             .top-link {
                 font-size: 12px;
                 padding: 2px 3px;
@@ -819,6 +821,13 @@
                 flex-wrap: wrap;
                 justify-content: flex-end;
                 row-gap: 4px;
+                width: 100%;
+            }
+            #themeModeBtn, .top-sep-theme { display: none; }
+            #verBadge {
+                position: absolute;
+                top: 12px;
+                right: 14px;
             }
             .main {
                 padding: 36px 18px 48px;
@@ -850,7 +859,6 @@
             }
         }
 
-        /* ================= 初期設定ウィザード ================= */
         .setup-backdrop {
             position: fixed;
             inset: 0;
@@ -1111,10 +1119,12 @@
             <div class="top-right">
                 <button type="button" class="top-link" id="langToggleBtn" data-i18n-title title="表示言語を切り替えます">EN</button>
                 <span class="top-sep">|</span>
+                <button type="button" class="top-link" id="mySharesBtn" data-i18n data-i18n-title title="この端末で作った共有リンクを見ます">共有済み</button>
+                <span class="top-sep">|</span>
                 <button type="button" class="top-link" id="tutorialBtn" data-i18n data-i18n-title title="チュートリアルを表示します">チュートリアル</button>
                 <span class="top-sep">|</span>
                 <button type="button" class="top-link" id="themeModeBtn" data-i18n data-i18n-title title="ライト / ダークを切り替えます">ライト / ダーク</button>
-                <span class="top-sep">|</span>
+                <span class="top-sep top-sep-theme">|</span>
                 <a href="/contact" class="top-link" data-i18n data-i18n-title title="お問い合わせフォームを開きます">問い合わせ</a>
                 <span class="top-sep">|</span>
                 <span id="verBadge" data-i18n-title title="使用するゲームデータ">Live</span>
@@ -1204,6 +1214,17 @@
                 <button type="button" class="setup-btn ghost" id="setupSkipBtn" data-i18n data-i18n-title title="ダーク / ガラス / ガラス / LIVE で開始します">スキップ</button>
                 <button type="button" class="setup-btn primary" id="setupNextBtn" data-i18n>次へ</button>
             </div>
+        </div>
+    </div>
+
+    <div id="mySharesModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="共有済み"
+         onclick="if(event.target===this) closeMySharesModal()">
+        <div class="modal" style="max-width:28rem">
+            <div class="modal-head">
+                <h2 data-i18n>共有済み</h2>
+                <button type="button" class="setup-btn ghost" onclick="closeMySharesModal()" data-i18n>閉じる</button>
+            </div>
+            <div id="mySharesList" class="setup-body" style="max-height:60vh;overflow:auto"></div>
         </div>
     </div>
 
@@ -1416,10 +1437,6 @@
             applyVerModeUI();
         }
 
-        // ==========================================================
-        //  初期設定ウィザード（初回アクセス時に "/" で表示）
-        //  色テーマ / HTMLテーマ / 画像テーマ / ゲームデータ / 使い方
-        // ==========================================================
         const SETUP_DONE_KEY = 'genshin_build_card_setup_done';
         const CARD_THEME_PREF_KEY = 'genshin_build_card_card_theme';
         const IMAGE_THEME_PREF_KEY = 'genshin_build_card_image_theme';
@@ -1755,12 +1772,88 @@
         const tutorialBtn = document.getElementById('tutorialBtn');
         if (tutorialBtn) tutorialBtn.addEventListener('click', startHomeTutorial);
 
-        // ==========================================================
-        //  アップデート情報（was Updated!!）
-        //  初回セットアップ完了/スキップ後、または既セットアップユーザーの
-        //  アクセス時に、未読のアップデートバージョンがあれば機能一覧を表示する。
-        //  閉じると閲覧済みバージョンを localStorage に保存する。
-        // ==========================================================
+        const MY_SHARES_KEY = 'genshin_build_card_my_shares';
+        function loadMyShares() {
+            try {
+                const arr = JSON.parse(localStorage.getItem(MY_SHARES_KEY) || '[]');
+                return Array.isArray(arr) ? arr : [];
+            } catch (e) { return []; }
+        }
+        function saveMyShares(list) {
+            try { localStorage.setItem(MY_SHARES_KEY, JSON.stringify((list || []).slice(0, 40))); } catch (e) {}
+        }
+        function formatShareWhen(ts) {
+            const d = new Date(Number(ts) || Date.now());
+            if (!isFinite(d.getTime())) return '';
+            const p = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+        }
+        function escHome(v) {
+            return String(v == null ? '' : v)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        function openMySharesModal() {
+            renderMySharesList();
+            const el = document.getElementById('mySharesModal');
+            if (el) el.classList.add('open');
+        }
+        function closeMySharesModal() {
+            const el = document.getElementById('mySharesModal');
+            if (el) el.classList.remove('open');
+        }
+        function renderMySharesList() {
+            const box = document.getElementById('mySharesList');
+            if (!box) return;
+            const list = loadMyShares();
+            if (!list.length) {
+                box.innerHTML = `<div class="text-sm" style="color:var(--text-muted);text-align:center;padding:32px 0">${GenshinI18n.t('共有履歴はありません')}</div>`;
+                return;
+            }
+            box.innerHTML = list.map((it, i) => {
+                const kind = it.kind === 'abyss' ? GenshinI18n.t('幽境') : GenshinI18n.t('編成');
+                const uidTxt = it.showUid ? GenshinI18n.t('UID表示') : GenshinI18n.t('UID非表示');
+                const icons = (it.icons || []).filter(Boolean).slice(0, 12).map(src =>
+                    `<img src="${escHome(src)}" alt="" style="width:32px;height:32px;border-radius:6px;object-fit:cover;background:#18181b">`).join('');
+                return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+                    <div style="font-size:12px;color:var(--text-muted)">${escHome(formatShareWhen(it.at))} · ${escHome(uidTxt)} · ${escHome(kind)}</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">${icons || '—'}</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+                        <a href="${escHome(it.url)}" class="setup-btn primary" style="text-decoration:none">${GenshinI18n.t('開く')}</a>
+                        <button type="button" class="setup-btn ghost" data-myshare-copy="${i}">${GenshinI18n.t('コピー')}</button>
+                        <button type="button" class="setup-btn ghost" data-myshare-del="${i}">${GenshinI18n.t('削除')}</button>
+                    </div>
+                </div>`;
+            }).join('');
+            box.querySelectorAll('[data-myshare-copy]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const it = loadMyShares()[Number(btn.dataset.myshareCopy)];
+                    if (!it || !it.url) return;
+                    try {
+                        await navigator.clipboard.writeText(it.url);
+                    } catch (e) {
+                        const inp = document.createElement('textarea');
+                        inp.value = it.url;
+                        document.body.appendChild(inp);
+                        inp.select();
+                        document.execCommand('copy');
+                        inp.remove();
+                    }
+                });
+            });
+            box.querySelectorAll('[data-myshare-del]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = Number(btn.dataset.myshareDel);
+                    const next = loadMyShares();
+                    next.splice(idx, 1);
+                    saveMyShares(next);
+                    renderMySharesList();
+                });
+            });
+        }
+        const mySharesBtn = document.getElementById('mySharesBtn');
+        if (mySharesBtn) mySharesBtn.addEventListener('click', openMySharesModal);
+        window.closeMySharesModal = closeMySharesModal;
+
         const UPDATE_SEEN_KEY = 'genshin_build_card_update_seen';
         const updateInfoModal = document.getElementById('updateInfoModal');
         const updateInfoVer = document.getElementById('updateInfoVer');

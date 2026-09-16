@@ -1,0 +1,20 @@
+[OK] Discord error webhook configured (DISCORD_WEBHOOK_URL)
+[OK] Cache LRU (byte budget): images<=64MB resized<=64MB splash_blur<=96MB region_bgs<=48MB layers<=64MB masks<=16MB ttl=300s sweep=300s
+D:\system\desktop2\py_dev\__moonlit__\moonlit_new_bc\server.py:28: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+INFO:     Started server process [21508]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+[OK] Card-gen pool: workers=2 queue=20 timeout=8s cache_ttl=0.1h
+[OK] Admin routes embedded in server.py → /admin/login , /admin/__ping
+[Prebuild] 8 element backgrounds cached in memory
+[Prebuild] 8 region backgrounds cached in memory
+[OK] Discord bot started (pid=25160)
+[OK] Discord bot autostart (pid=25160)
+INFO:     127.0.0.1:61180 - "GET / HTTP/1.1" 200 OK

@@ -1,5 +1,4 @@
 import os
-import json
 from app.paths import STATIC_DIR
 from app.card.jsoncache import load_json_cached
 from app.card.bg import region_image_path

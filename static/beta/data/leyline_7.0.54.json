@@ -1,0 +1,314 @@
+{
+  "5269001": {
+    "id": 5269001,
+    "name": "侵略の戦い",
+    "en": "Incursion Repeller",
+    "begin": "2025-06-25 10:00:00",
+    "end": "2025-08-06 09:59:59",
+    "live_begin": "2025-06-25 10:00:00",
+    "live_end": "2025-08-06 09:59:59",
+    "enemies": [
+      {
+        "icon": "UI_MonsterIcon_Narcissusborn_Normal_01",
+        "name": "水形タルパ（通常状態）",
+        "img": "/static/beta/assets/leyline/5269001/UI_MonsterIcon_Narcissusborn_Normal_01.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_LavaTitan",
+        "name": "輝ける溶岩の龍像（通常状態）",
+        "img": "/static/beta/assets/leyline/5269001/UI_MonsterIcon_LavaTitan.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_DragonCollar",
+        "name": "秘源機兵・統御デバイス（通常状態）",
+        "img": "/static/beta/assets/leyline/5269001/UI_MonsterIcon_DragonCollar.webp"
+      }
+    ]
+  },
+  "5269002": {
+    "id": 5269002,
+    "name": "激烈な戦い",
+    "en": "Savage Onslaught",
+    "begin": "2025-08-06 10:00:00",
+    "end": "2025-09-17 09:59:59",
+    "live_begin": "2025-08-06 10:00:00",
+    "live_end": "2025-09-17 09:59:59",
+    "enemies": [
+      {
+        "icon": "UI_MonsterIcon_TheAbyss_Dendrite",
+        "name": "深遠なるミミックパピラ（通常状態）",
+        "img": "/static/beta/assets/leyline/5269002/UI_MonsterIcon_TheAbyss_Dendrite.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_Tortoise_Electric",
+        "name": "百戦錬磨のテントガメ（通常状態）",
+        "img": "/static/beta/assets/leyline/5269002/UI_MonsterIcon_Tortoise_Electric.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_Tenoyollotzin",
+        "name": "百戦錬磨のアイドルピピルパン（通常状態）",
+        "img": "/static/beta/assets/leyline/5269002/UI_MonsterIcon_Tenoyollotzin.webp"
+      }
+    ]
+  },
+  "5269003": {
+    "id": 5269003,
+    "name": "驚天の戦い",
+    "en": "Terrorshock Blitz",
+    "begin": "2025-09-17 10:00:00",
+    "end": "2025-10-29 09:59:59",
+    "live_begin": "2025-09-17 10:00:00",
+    "live_end": "2025-10-29 09:59:59",
+    "enemies": [
+      {
+        "icon": "UI_MonsterIcon_Gargoyle_Fafnir",
+        "name": "兆載永劫ドレイク（通常状態）",
+        "img": "/static/beta/assets/leyline/5269003/UI_MonsterIcon_Gargoyle_Fafnir.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_HermitCrab_Mature_Elite",
+        "name": "百戦錬磨の岩ヤドカニ（通常状態）",
+        "img": "/static/beta/assets/leyline/5269003/UI_MonsterIcon_HermitCrab_Mature_Elite.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_Oprichnik_Male_Strong_LanceArquebus_Rodya",
+        "name": "百戦錬磨の突撃兵・ファイアーブレイド（通常状態）",
+        "img": "/static/beta/assets/leyline/5269003/UI_MonsterIcon_Oprichnik_Male_Strong_LanceArquebus_Rodya.webp"
+      }
+    ]
+  },
+  "5269004": {
+    "id": 5269004,
+    "name": "勇猛な戦い",
+    "en": "Sweeping Assault",
+    "begin": "2025-10-29 10:00:00",
+    "end": "2025-12-10 09:59:59",
+    "live_begin": "2025-10-29 10:00:00",
+    "live_end": "2025-12-10 09:59:59",
+    "enemies": [
+      {
+        "icon": "UI_MonsterIcon_HerraFrost",
+        "name": "霜夜の空を巡る霊主（通常状態）",
+        "img": "/static/beta/assets/leyline/5269004/UI_MonsterIcon_HerraFrost.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_WildHunt_Male_Sigurd",
+        "name": "百戦錬磨のライトキーパー（通常状態）",
+        "img": "/static/beta/assets/leyline/5269004/UI_MonsterIcon_WildHunt_Male_Sigurd.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_Fatuus_Escadron_Ice",
+        "name": "百戦錬磨の氷霜の従者（通常状態）",
+        "img": "/static/beta/assets/leyline/5269004/UI_MonsterIcon_Fatuus_Escadron_Ice.webp"
+      }
+    ]
+  },
+  "5269005": {
+    "id": 5269005,
+    "name": "激震の戦い",
+    "en": "Tremorfall Trial",
+    "begin": "2025-12-10 10:00:00",
+    "end": "2026-01-21 09:59:59",
+    "live_begin": "2025-12-10 10:00:00",
+    "live_end": "2026-01-21 09:59:59",
+    "enemies": [
+      {
+        "icon": "UI_MonsterIcon_Invoker_Archdeacon",
+        "name": "深罪の浸礼者（通常状態）",
+        "img": "/static/beta/assets/leyline/5269005/UI_MonsterIcon_Invoker_Archdeacon.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_Natsaurus_Shamansaurus_Normal",
+        "name": "百戦錬磨のイクトミ竜（通常状態）",
+        "img": "/static/beta/assets/leyline/5269005/UI_MonsterIcon_Natsaurus_Shamansaurus_Normal.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_MachinaIustitia_Gravitas",
+        "name": "実験用フィールド生成装置（通常状態）",
+        "img": "/static/beta/assets/leyline/5269005/UI_MonsterIcon_MachinaIustitia_Gravitas.webp"
+      }
+    ]
+  },
+  "5269006": {
+    "id": 5269006,
+    "name": "厄除けの戦い",
+    "en": "Blightpurge Battle",
+    "begin": "2026-01-21 10:00:00",
+    "end": "2026-03-04 09:59:59",
+    "live_begin": "2026-01-21 10:00:00",
+    "live_end": "2026-03-04 09:59:59",
+    "enemies": [
+      {
+        "icon": "UI_MonsterIcon_Lloigor_Primo",
+        "name": "昏き魘夢の主（通常状態）",
+        "img": "/static/beta/assets/leyline/5269006/UI_MonsterIcon_Lloigor_Primo.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_Oprichnik_Male_Strong_LanceArquebus_Rodya",
+        "name": "百戦錬磨の突撃兵・ファイアーブレイド（通常状態）",
+        "img": "/static/beta/assets/leyline/5269006/UI_MonsterIcon_Oprichnik_Male_Strong_LanceArquebus_Rodya.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_HermitCrab_Primo",
+        "name": "鉄甲熔炎帝王（通常状態）",
+        "img": "/static/beta/assets/leyline/5269006/UI_MonsterIcon_HermitCrab_Primo.webp"
+      }
+    ]
+  },
+  "5269007": {
+    "id": 5269007,
+    "name": "殲滅の戦い",
+    "en": "Crush and Obliterate",
+    "begin": "2026-03-04 10:00:00",
+    "end": "2026-04-15 09:59:59",
+    "live_begin": "2026-03-04 10:00:00",
+    "live_end": "2026-04-15 09:59:59",
+    "enemies": [
+      {
+        "icon": "UI_MonsterIcon_Mandragora_Elite",
+        "name": "百戦錬磨の十六倍マンドラゴラ（通常状態）",
+        "img": "/static/beta/assets/leyline/5269007/UI_MonsterIcon_Mandragora_Elite.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_Gastrobot_01",
+        "name": "ボコボコダック（通常状態）",
+        "img": "/static/beta/assets/leyline/5269007/UI_MonsterIcon_Gastrobot_01.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_DragonCollar",
+        "name": "秘源機兵・統御デバイス（通常状態）",
+        "img": "/static/beta/assets/leyline/5269007/UI_MonsterIcon_DragonCollar.webp"
+      }
+    ]
+  },
+  "5269008": {
+    "id": 5269008,
+    "name": "砕玉の戦い",
+    "en": "Battle of Shattered Jade",
+    "begin": "2026-04-15 10:00:00",
+    "end": "2026-05-27 09:59:59",
+    "live_begin": "2026-04-15 10:00:00",
+    "live_end": "2026-05-27 09:59:59",
+    "enemies": [
+      {
+        "icon": "UI_MonsterIcon_Magbeast_Gecko",
+        "name": "集光の月ヤモリ（通常状態）",
+        "img": "/static/beta/assets/leyline/5269008/UI_MonsterIcon_Magbeast_Gecko.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_TheAbyss_Dendrite",
+        "name": "深遠なるミミックパピラ（通常状態）",
+        "img": "/static/beta/assets/leyline/5269008/UI_MonsterIcon_TheAbyss_Dendrite.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_HerraFrost",
+        "name": "霜夜の空を巡る霊主（通常状態）",
+        "img": "/static/beta/assets/leyline/5269008/UI_MonsterIcon_HerraFrost.webp"
+      }
+    ]
+  },
+  "5269009": {
+    "id": 5269009,
+    "name": "烈風の戦い",
+    "en": "Battle of the Howling Cyclone",
+    "begin": "2026-05-27 10:00:00",
+    "end": "2026-07-08 09:59:59",
+    "live_begin": "2026-05-27 10:00:00",
+    "live_end": "2026-07-08 09:59:59",
+    "enemies": [
+      {
+        "icon": "UI_MonsterIcon_Magbeast_Steppenwolf_02",
+        "name": "百戦錬磨の凛狼（通常状態）",
+        "img": "/static/beta/assets/leyline/5269009/UI_MonsterIcon_Magbeast_Steppenwolf_02.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_Narcissusborn_Normal_01",
+        "name": "水形タルパ（通常状態）",
+        "img": "/static/beta/assets/leyline/5269009/UI_MonsterIcon_Narcissusborn_Normal_01.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_Watcher_Primo_01",
+        "name": "開眼せし者（通常状態）",
+        "img": "/static/beta/assets/leyline/5269009/UI_MonsterIcon_Watcher_Primo_01.webp"
+      }
+    ]
+  },
+  "5269010": {
+    "id": 5269010,
+    "name": "慄烈の戦い",
+    "en": "Savage Tremors",
+    "begin": "2026-07-08 10:00:00",
+    "end": "2026-08-19 09:59:59",
+    "live_begin": "2026-07-08 10:00:00",
+    "live_end": "2026-08-19 09:59:59",
+    "enemies": [
+      {
+        "icon": "UI_MonsterIcon_Monitor_02",
+        "name": "先駆秘源コマンダー陣形の影（通常状態）",
+        "img": "/static/beta/assets/leyline/5269010/UI_MonsterIcon_Monitor_02.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_Lloigor_Primo",
+        "name": "昏き魘夢の主（通常状態）",
+        "img": "/static/beta/assets/leyline/5269010/UI_MonsterIcon_Lloigor_Primo.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_DragonClaw",
+        "name": "秘源機兵・機巧デバイス（通常状態）",
+        "img": "/static/beta/assets/leyline/5269010/UI_MonsterIcon_DragonClaw.webp"
+      }
+    ]
+  },
+  "5269011": {
+    "id": 5269011,
+    "name": "星芒の戦い",
+    "en": "Battle of the Starburst",
+    "begin": "2026-08-19 10:00:00",
+    "end": "2026-09-30 09:59:59",
+    "live_begin": "2026-08-19 10:00:00",
+    "live_end": "2026-09-30 09:59:59",
+    "enemies": [
+      {
+        "icon": "UI_MonsterIcon_Chimera_Manticore",
+        "name": "合成獣・フリューゲルレーヴェ（通常状態）",
+        "img": "/static/beta/assets/leyline/5269011/UI_MonsterIcon_Chimera_Manticore.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_Fatuus_Escadron_Wind",
+        "name": "百戦錬磨の烈風の従者（通常状態）",
+        "img": "/static/beta/assets/leyline/5269011/UI_MonsterIcon_Fatuus_Escadron_Wind.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_Gastrobot_01",
+        "name": "ボコボコダック（通常状態）",
+        "img": "/static/beta/assets/leyline/5269011/UI_MonsterIcon_Gastrobot_01.webp"
+      }
+    ]
+  },
+  "5269012": {
+    "id": 5269012,
+    "name": "輝星の戦いJP0F",
+    "en": "Luminous Battlefront",
+    "begin": "2026-08-11 10:00:00",
+    "end": "2026-09-08 03:59:59",
+    "live_begin": "",
+    "live_end": "",
+    "enemies": [
+      {
+        "icon": "UI_MonsterIcon_Karzelek_Tsereteli_01",
+        "name": "百戦錬磨のドモヴォーイの彫刻師（通常状態）",
+        "img": ""
+      },
+      {
+        "icon": "UI_MonsterIcon_DragonCollar",
+        "name": "秘源機兵・統御デバイス（通常状態）",
+        "img": "/static/beta/assets/leyline/5269012/UI_MonsterIcon_DragonCollar.webp"
+      },
+      {
+        "icon": "UI_MonsterIcon_Snegurochka_Contessa_02",
+        "name": "游雪のブレードガーディアン（通常状態）JP0F",
+        "img": "/static/beta/assets/leyline/5269012/UI_MonsterIcon_Snegurochka_Contessa_02.webp"
+      }
+    ]
+  }
+}

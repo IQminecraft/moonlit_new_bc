@@ -29,7 +29,7 @@ _CARD_SIGN_MAX_AGE_SEC = _CARD_SIGN_VALIDITY_SEC  # 発行済み署名の受付�
 _CARD_SIGN_RATE_LIMIT_PER_MIN = max(0, int(os.environ.get("CARD_SIGN_RATE_LIMIT_PER_MIN", "60")))
 _CARD_GEN_RATE_LIMIT_PER_MIN = max(0, int(os.environ.get("CARD_GEN_RATE_LIMIT_PER_MIN", "0")))
 _CARD_SIGN_PARAM_ORDER = ["uid", "avatar_id", "calc_method", "fake_char", "fake_weapon", "beta", "bg_color", "img_format", "bg_mode", "bg_region", "growth", "base_prec", "substat_dots", "resonance", "theme", "light"]
-_TEAM_SIGN_PARAM_ORDER = ["uid", "char_ids", "configs", "boss", "beta", "img_format"]
+_TEAM_SIGN_PARAM_ORDER = ["uid", "char_ids", "configs", "boss", "beta", "img_format", "substat_dots"]
 _rate_buckets = OrderedDict()  # key -> deque(monotonic秒) スライディングウィンドウ
 _RATE_BUCKET_MAX_KEYS = max(1000, int(os.environ.get("RATE_LIMIT_MAX_KEYS", "20000")))
 

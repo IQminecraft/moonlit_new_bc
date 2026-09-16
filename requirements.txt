@@ -18,3 +18,4 @@ aiohttp>=3.9.0
 
 # Discord bot デバッグ用拡張（!jsk コマンド。管理者のみ使用可）
 jishaku>=2.5
+boto3>=1.34

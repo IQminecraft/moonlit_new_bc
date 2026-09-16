@@ -1,0 +1,48 @@
+[OK] Discord error webhook configured (DISCORD_WEBHOOK_URL)
+[OK] Cache LRU (byte budget): images<=64MB resized<=64MB splash_blur<=96MB region_bgs<=48MB layers<=64MB masks<=16MB ttl=300s sweep=300s
+D:\system\desktop2\py_dev\__moonlit__\moonlit_new_bc\server.py:28: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+INFO:     Started server process [12812]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+[OK] Card-gen pool: workers=2 queue=20 timeout=8s cache_ttl=0.1h
+[OK] Admin routes embedded in server.py → /admin/login , /admin/__ping
+[Prebuild] 8 element backgrounds cached in memory
+[Prebuild] 8 region backgrounds cached in memory
+[Bot] stopping orphan bot process (pid=11792)
+[OK] Discord bot started (pid=13592)
+[OK] Discord bot autostart (pid=13592)
+INFO:     127.0.0.1:57033 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57034 - "GET /api/data_versions HTTP/1.1" 200 OK
+[API][2xx] GET /api/abyss_share_draft 1ms status=200
+INFO:     127.0.0.1:57035 - "GET /api/abyss_share_draft?uid=1812256644&beta=false HTTP/1.1" 200 OK
+[Cache] reset: images=8 resized=0 splash_blur=0 region_bgs=3 layers=0 masks=0 (ttl=300s force=False)
+INFO:     127.0.0.1:51636 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51637 - "GET /static/assets/brand/youtube.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51638 - "GET /api/data_versions HTTP/1.1" 200 OK
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)
+[Cache] reset: images=0 resized=0 splash_blur=0 region_bgs=0 layers=0 masks=0 (ttl=300s force=False)

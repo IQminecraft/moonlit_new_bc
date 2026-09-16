@@ -1,53 +1,83 @@
 # -*- coding: utf-8 -*-
 """編成カード画像生成（1編成 = 4キャラを1枚の横長画像にまとめる）。
-画像のような行ベースレイアウト版。
+
+HTML版（build_card.html の .tc-* 系スタイル）と完全同期したレイアウト。
+- .tc-root { width:1860px; gap:12px } → 上下左右 24px の余白付きで画像化
+- .tc-col { width:456px; gap:12px } を左ラベル列なしで 4 列並べる
+- 行パネルは .tc-cell と同じ縦グラデのガラス箱（影 + 内側白枠）
+- 背景は mainDisplayBox(bg-zinc-950) と同じフラット色。
+  元素ストリップ / 左ラベル列は HTML に存在しないため描かない。
 """
 import io
-import json
 import os
 import time
 from PIL import Image, ImageDraw, ImageFont
 
-from app.paths import FONT_PATH, FONT_LIGHT_PATH, STATIC_DIR, BASE_DIR
-from app.card.bg import _build_base_background, hex_to_rgb, region_image_path, get_region_background
+from app.paths import FONT_PATH, FONT_LIGHT_PATH, STATIC_DIR
 from app.card.cache import get_cached_font
 from app.card.data import _get_card_data_sync
 from app.card.labels import img_t
+from app.card.stats import get_stat_abbr
 from app.card.draw import (
-    draw_figma_box, draw_figma_circle, paste_mask_image, draw_figma_text_with_shadow,
+    draw_figma_box, paste_mask_image,
     paste_figma_image, draw_figma_text, draw_figma_text_right, draw_figma_line,
-    figma_draw_scale,
+    figma_draw_scale, draw_figma_glass_box, draw_figma_dot, draw_figma_text_with_shadow,
+    _vertical_gradient_rgba, _composite_clipped,
 )
 
 # ----------------------------------------------------------------
-# レイアウト設計座標（この座標系で組み、SX_TEAM/SY_TEAM で実ピクセル化）
-# コンテンツ末尾（TOTAL RATING行の下端 = 1393）＋幽境セクション分で余白を確保
-# 1920 x 1625 @ scale 1.25 -> 2400 x 2031
+# レイアウト設計座標（build_card.html の .tc-* CSS と 1:1 対応）
 # ----------------------------------------------------------------
-TEAM_DESIGN_W, TEAM_DESIGN_H = 1920, 1625
+_PAD = 24                                    # カード外周の余白（背景部分）
+TEAM_DESIGN_W = 1860                         # .tc-root と同一
+GAP_X = 12
+GAP_Y = 12
+COL_W = 456
+
+# 行高さ（CSS と同一）
+_HEADER_H = 84
+_SPLASH_H = 148
+_STATS_H = 132
+_WEAPON_H = 96
+_ART_H = 92
+_ART_GAP = 12
+_TOTAL_H = 96
+
+# 縦方向の行 y 座標（.tc-col は gap 12 で積まれる）
+_Y_HEADER = 0
+_Y_SPLASH = _Y_HEADER + _HEADER_H + GAP_Y
+_Y_STATS = _Y_SPLASH + _SPLASH_H + GAP_Y
+_Y_WEAPON = _Y_STATS + _STATS_H + GAP_Y
+_Y_ART = _Y_WEAPON + _WEAPON_H + GAP_Y
+_Y_ART_END = _Y_ART + 5 * _ART_H + 4 * _ART_GAP
+_Y_TOTAL = _Y_ART_END + GAP_Y
+_CONTENT_BOTTOM = _Y_TOTAL + _TOTAL_H       # 1124（= .tc-emptycol の高さ）
+
 TEAM_SCALE = 1.25
-TEAM_W = int(TEAM_DESIGN_W * TEAM_SCALE)
-TEAM_H = int(TEAM_DESIGN_H * TEAM_SCALE)
-SX_TEAM = TEAM_W / TEAM_DESIGN_W
-SY_TEAM = TEAM_H / TEAM_DESIGN_H
+CARD_W_PX = round(TEAM_DESIGN_W * TEAM_SCALE)
+CARD_H_PX = round(_CONTENT_BOTTOM * TEAM_SCALE)
+BG_W_PX = CARD_W_PX + round(_PAD * 2 * TEAM_SCALE)
+BG_H_PX = CARD_H_PX + round(_PAD * 2 * TEAM_SCALE)
+SX_TEAM = float(CARD_W_PX) / float(TEAM_DESIGN_W)
+SY_TEAM = float(CARD_H_PX) / float(_CONTENT_BOTTOM)
 
-_MARGIN = 30
-_ROW_LABEL_W = 160  # 左側行ラベル幅
-# 4列 + 3ギャップが左右マージン・ラベルを除いた幅にぴったり収まるようにする
-# (1920 - 30*2 - 160 - 20*3) / 4 = 410。ギャップを広げてボックス同士がくっつかないようにする
-_COL_GAP = 20
-_COL_W = 410
-_COL_START_X = _MARGIN + _ROW_LABEL_W
+def _col_x(col: int) -> int:
+    """列の設計x座標（4列: 4*456 + 3*12 = 1860）。"""
+    return col * (COL_W + GAP_X)
 
-# 行の高さ
-_HEADER_H = 90
-_IDENTITY_H = 150
-_STATS_H = 200
-_WEAPON_H = 110
-_ART_H = 118
-_ART_GAP = 10
-_SUM_H = 120
-_ABYSS_H = 210
+_TXT = (255, 255, 255, 255)
+_SUB = (255, 255, 255, 158)     # HTML: rgba(255,255,255,.62)
+_LINE = (255, 255, 255, 26)     # HTML: rgba(255,255,255,.10)
+_RADIUS = 14
+
+# HTML .tc-cell と同一質感（縦グラデ + 影 + 内側白枠）
+_GLASS_FILL_TOP = (20, 27, 46, 105)
+_GLASS_FILL_BOTTOM = (14, 20, 38, 125)
+_GLASS_BORDER_TOP = (255, 255, 255, 58)
+_GLASS_BORDER_BOTTOM = (255, 255, 255, 28)
+
+# HTML .substat-dot-N と同一配色・同一順序
+_ROLL_DOT_COLORS = [(34, 197, 94, 255), (59, 130, 246, 255), (168, 85, 247, 255), (249, 115, 22, 255)]
 
 _ELEMENT_COLORS = {
     "Pyro": (0x90, 0x3B, 0x2A),
@@ -60,111 +90,16 @@ _ELEMENT_COLORS = {
     "None": (0x4A, 0x55, 0x68),
 }
 
-# ----------------------------------------------------------------
-# 追加効果バッジ（swap / 元素共鳴 / 聖遺物2セット の3種）
-# 名前の「(swap)」サフィックスではなく、各キャラカード端の角丸チップで表示する
-# ----------------------------------------------------------------
-# 元素共鳴: 同元素2人以上でその共鳴、4元素すべて異なる場合は交錯の護り
-_RESONANCE_NAMES = {
-    "Pyro": "熱誠の炎",
-    "Hydro": "治療の水",
-    "Anemo": "迅速の風",
-    "Electro": "強権の雷",
-    "Dendro": "蔓生の草",
-    "Cryo": "粉砕の氷",
-    "Geo": "不動の岩",
-}
-_RESONANCE_ALLDIFF = "交錯の護り"
+# 追加効果バッジ（HTML tcBadges: swap）
 _SWAP_SUFFIX = "(swap)"
 
-# バッジ種別ごとのチップ配色（resonance の outline は元素色から生成）
 _BADGE_STYLES = {
-    "swap":      {"outline": (255, 193, 77, 235), "text": (255, 214, 110, 255)},
-    "resonance": {"outline": (120, 160, 255, 235), "text": (255, 255, 255, 255)},
-    "set2":      {"outline": (216, 178, 92, 230), "text": (255, 255, 255, 255)},
+    "swap": {"outline": (255, 193, 77, 235), "text": (255, 214, 110, 255)},
 }
-
-
-def _compute_team_badges(datas, configs=None):
-    """各カラムに付くバッジ（swap / 元素共鳴 / 聖遺物2セット）を判定して data["_badges"] に格納する。
-
-    - swap: 差し替えキャラ。名前の「(swap)」サフィックスは除去してバッジ化する
-    - 元素共鳴: 表示中キャラ（swap込み）の元素が同元素2人以上 → その共鳴を該当元素の列に表示。
-      4元素すべて異なる → 交錯の護りを全列に表示
-    - 2セット: 聖遺物セットの 2セット効果バフが選択済み（ステータス反映中）のとき
-      「{セット名}2セット」を表示
-    """
-    cols = datas[:4]
-    elements = [d.get("element", "None") for d in cols]
-
-    # 共鳴判定（同元素ペア優先。ペアが無くて4元素バラバラなら交錯の護り）
-    counts = {}
-    for e in elements:
-        if e in _RESONANCE_NAMES:
-            counts[e] = counts.get(e, 0) + 1
-    pair_elems = {e for e, c in counts.items() if c >= 2}
-    all_diff = (
-        not pair_elems
-        and len(cols) == 4
-        and all(e in _RESONANCE_NAMES for e in elements)
-        and len(set(elements)) == 4
-    )
-
-    for col, d in enumerate(cols):
-        badges = []
-        cfg = (configs[col] if configs and col < len(configs) and isinstance(configs[col], dict) else {}) or {}
-
-        # swap（名前のサフィックスは除去 → バッジへ）
-        name = str(d.get("displayName") or "")
-        if name.endswith(_SWAP_SUFFIX):
-            d["displayName"] = name[: -len(_SWAP_SUFFIX)]
-        if name.endswith(_SWAP_SUFFIX) or bool(cfg.get("fake_char")):
-            badges.append({"kind": "swap", "text": "swap"})
-
-        # 元素共鳴
-        elem = d.get("element", "None")
-        if all_diff:
-            badges.append({"kind": "resonance", "text": _RESONANCE_ALLDIFF, "elem": None})
-        elif elem in pair_elems:
-            badges.append({"kind": "resonance", "text": _RESONANCE_NAMES[elem], "elem": elem})
-
-        # 聖遺物2セット効果（admin 選択済み = ステータス反映中のセットのみ）
-        for sb in d.get("setBonuses") or []:
-            if sb.get("buff") and sb.get("name"):
-                badges.append({
-                    "kind": "set2",
-                    "text": f"{sb['name']}2セット",
-                    "icon": sb.get("icon") or "",
-                })
-
-        d["_badges"] = badges
-
-
-def _build_team_column_bg(w_px, h_px, elem_rgb):
-    """列ごとの元素背景。水平方向は均一（左右対称＝中央）、縦は上(暗)→中央(明るい)→下(やや暗)。
-    キャラアート（ぼかし）は重ねないので左右に寄らず、色の境目もボックスと揃う。"""
-    img = Image.new("RGBA", (w_px, h_px), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    for yy in range(h_px):
-        t = yy / max(h_px - 1, 1)
-        if t < 0.5:
-            f = 0.55 + 0.55 * (t / 0.5)          # 上0.55 → 中央1.10
-        else:
-            f = 1.10 - 0.35 * ((t - 0.5) / 0.5)  # 中央1.10 → 下0.75
-        c = tuple(max(0, min(255, int(v * f))) for v in elem_rgb)
-        d.line([(0, yy), (w_px, yy)], fill=(*c, 255))
-    return img
 
 
 class _DrawCtx:
-    """スレッドローカルな SX/SY 差し替えコンテキスト（draw.figma_draw_scale のラッパー）。
-
-    従来は app.card.draw のモジュール属性 SX/SY を直接書き換えていたため、
-    カード生成プールの別スレッド（単体カード生成）と競合して描画スケールが
-    混ざるデータレースがあった。draw.figma_draw_scale は threading.local を
-    使うため、このスレッド中だけ効果が及び、並行する単体カード生成には
-    影響しない。
-    """
+    """スレッドローカルな SX/SY 差し替えコンテキスト（draw.figma_draw_scale のラッパー）。"""
     def __init__(self):
         self._ctx = figma_draw_scale(SX_TEAM, SY_TEAM)
 
@@ -176,17 +111,6 @@ class _DrawCtx:
         return self._ctx.__exit__(exc_type, exc, tb)
 
 
-def _col_x(col: int) -> int:
-    return _COL_START_X + col * (_COL_W + _COL_GAP)
-
-
-def _col_w(col: int) -> int:
-    """列の幅。最後の列はカード右端まで伸ばしてボックスと背景を揃える。"""
-    if col == 3:
-        return TEAM_DESIGN_W - _col_x(col)
-    return _COL_W
-
-
 def _font(size, light=False):
     path = FONT_LIGHT_PATH if light else FONT_PATH
     if os.path.exists(path):
@@ -194,7 +118,29 @@ def _font(size, light=False):
     return ImageFont.load_default()
 
 
-# チームカード用: 影なしのラッパー
+def _fit_font(draw, text, max_w, size, light=False, min_size=10):
+    """max_w（design px）に収まるようフォントを縮小して返す。"""
+    s = size
+    while s > min_size:
+        f = _font(s, light)
+        if draw.textlength(str(text), font=f) / SX_TEAM <= max_w:
+            return f, s
+        s -= 1
+    return _font(min_size, light), min_size
+
+
+def _ellipsis(draw, text, max_w, size, light=False):
+    """CSS ellipsis 相当: 固定サイズのまま末尾に「…」を付けて 1 行に収める。"""
+    text = str(text or "")
+    f = _font(size, light)
+    if draw.textlength(text, font=f) / SX_TEAM <= max_w:
+        return f, text
+    crop = text
+    while crop and draw.textlength(crop + "…", font=f) / SX_TEAM > max_w:
+        crop = crop[:-1]
+    return f, (crop + "…") if crop else "…"
+
+
 def _t(draw, text, x, y, font, font_size=None, fill_color=(255, 255, 255), align="left", box_width=None, stroke_width=0, stroke_fill=None):
     return draw_figma_text(draw, text, x, y, font, font_size=font_size, fill_color=fill_color,
                            align=align, box_width=box_width, stroke_width=stroke_width,
@@ -207,34 +153,24 @@ def _tr(draw, text, x, y, font, font_size=24, fill_color=(255, 255, 255), stroke
 
 
 # ----------------------------------------------------------------
-# スプラッシュの拡大率・キャラ別オフセット（adminで調整できるようにする）
+# スプラッシュ（HTML は object-fit:cover だが、admin のスプラッシュオフセット
+# （156キャラ分チューニング済み・admin プレビューも同一仕様）を適用するため
+# zoom 3.0 + 中央基準オフセットで描画する。offset は paste_mask_image に素通し。
 # ----------------------------------------------------------------
 TEAM_SPLASH_ZOOM = 3.0
-_SPLASH_OFFSETS_PATH = os.path.join(STATIC_DIR, "data", "setting", "team_splash_offsets.json")
-_OLD_SPLASH_OFFSETS_PATH = os.path.join(STATIC_DIR, "cache", "team_splash_offsets.json")
+_TEAM_SPLASH_OFFSETS_PATH = os.path.join(STATIC_DIR, "data", "setting", "team_splash_offsets.json")
 _splash_offsets_cache = {"map": {}, "mtime": None}
 
 
 def _load_splash_offsets():
-    # 旧パス（static/cache）からの移行
-    if not os.path.exists(_SPLASH_OFFSETS_PATH) and os.path.exists(_OLD_SPLASH_OFFSETS_PATH):
-        try:
-            os.makedirs(os.path.dirname(_SPLASH_OFFSETS_PATH), exist_ok=True)
-            import shutil as _shutil
-            _shutil.copy2(_OLD_SPLASH_OFFSETS_PATH, _SPLASH_OFFSETS_PATH)
-        except Exception as e:
-            print(f"[team_image] splash offsets migration failed: {e}")
-    if not os.path.exists(_SPLASH_OFFSETS_PATH):
-        _splash_offsets_cache["map"] = {}
-        _splash_offsets_cache["mtime"] = None
-        return {}
     try:
-        mtime = os.path.getmtime(_SPLASH_OFFSETS_PATH)
+        mtime = os.path.getmtime(_TEAM_SPLASH_OFFSETS_PATH)
         if _splash_offsets_cache["mtime"] == mtime:
             return _splash_offsets_cache["map"]
-        with open(_SPLASH_OFFSETS_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        _splash_offsets_cache["map"] = data.get("offsets") if isinstance(data, dict) else {}
+        with open(_TEAM_SPLASH_OFFSETS_PATH, "r", encoding="utf-8") as f:
+            data = __import__("json").load(f)
+        m = data.get("offsets") if isinstance(data, dict) else {}
+        _splash_offsets_cache["map"] = m or {}
         _splash_offsets_cache["mtime"] = mtime
         return _splash_offsets_cache["map"] or {}
     except Exception:
@@ -242,429 +178,477 @@ def _load_splash_offsets():
 
 
 def _get_splash_offset(char_id):
-    """adminで設定されたキャラ別オフセット (x%, y%) を返す。未設定は (0,0)。"""
+    """admin で調整済みのスプラッシュオフセット (x%, y%) をそのまま返す。
+
+    paste_mask_image の offset（中央基準 ±100%）は admin プレビュー
+    （admin.html SPLASH_ZOOM=3.0 のプレビュー）と同じセマンティクスのため、
+    チューニング済みの値を変換なしで適用できる。
+    """
     raw = (_load_splash_offsets().get(str(char_id)) or {})
     try:
-        return (float(raw.get("x", 0)), float(raw.get("y", 0)))
+        ax = float(raw.get("x", 0) or 0)
     except (TypeError, ValueError):
-        return (0.0, 0.0)
+        ax = 0.0
+    try:
+        ay = float(raw.get("y", 0) or 0)
+    except (TypeError, ValueError):
+        ay = 0.0
+    return (max(-100.0, min(100.0, ax)), max(-100.0, min(100.0, ay)))
 
 
-def _draw_row_label(img, text, y, height, beta):
-    """左側の行ラベルを描画（例: IDENTITY, BASE STATS）。"""
+def _compute_team_badges(datas, configs=None):
+    """バッジ（swap）を判定して data["_badges"] に格納（HTML tcBadges と同一）。"""
+    for idx, d in enumerate(datas[:4]):
+        if d is None:
+            continue
+        badges = []
+        # swap（名前の「(swap)」サフィックスは除去 → スプラッシュ上のチップで表現）
+        name = str(d.get("displayName") or "")
+        had_swap_suffix = name.endswith(_SWAP_SUFFIX)
+        if had_swap_suffix:
+            d["displayName"] = name[: -len(_SWAP_SUFFIX)]
+        if had_swap_suffix:
+            badges.append({"kind": "swap", "text": "swap"})
+
+        d["_badges"] = badges
+
+
+def _draw_panels_one(img, data, col):
+    """1列分の行パネル（HTML .tc-cell のガラス箱）を敷く。"""
+    x = _col_x(col)
+    element = data.get("element") or "None"
+    elem_rgb = _ELEMENT_COLORS.get(element, _ELEMENT_COLORS["None"])
+    hl = tuple(min(255, c + 90) for c in elem_rgb)
+    draw_figma_glass_box(
+        img, x=x, y=_Y_HEADER, width=COL_W, height=_HEADER_H, radius=_RADIUS,
+        fill_top=_GLASS_FILL_TOP, fill_bottom=_GLASS_FILL_BOTTOM,
+        border_top=(*hl, 150), border_bottom=(*elem_rgb, 90),
+    )
+    for row_y, row_h in [
+        (_Y_SPLASH, _SPLASH_H),
+        (_Y_STATS, _STATS_H),
+        (_Y_WEAPON, _WEAPON_H),
+        (_Y_ART, 5 * _ART_H + 4 * _ART_GAP),
+        (_Y_TOTAL, _TOTAL_H),
+    ]:
+        draw_figma_glass_box(
+            img, x=x, y=row_y, width=COL_W, height=row_h, radius=_RADIUS,
+            fill_top=_GLASS_FILL_TOP, fill_bottom=_GLASS_FILL_BOTTOM,
+            border_top=_GLASS_BORDER_TOP, border_bottom=_GLASS_BORDER_BOTTOM,
+        )
+
+
+def _draw_header_row_one(img, data, col, beta, lang="ja"):
+    """ヘッダー行（HTML .tc-hd）: 名前+凸バッジ / Lv+友好度。上端に元素色ライン。"""
+    x = _col_x(col)
+    y = _Y_HEADER
+    element = data.get("element", "None")
+    elem_rgb = _ELEMENT_COLORS.get(element, _ELEMENT_COLORS["None"])
     draw = ImageDraw.Draw(img)
-    # ラベル背景（薄い枠）
-    draw_figma_box(img, x=_MARGIN, y=y, width=_ROW_LABEL_W - 10, height=height, radius=8,
-                    fill_color=(60, 64, 72, 135), outline_color=(140, 145, 155, 90), outline_width=1)
-    # ラベルテキスト（左揃え・キャラ見出しと揃える）
-    _t(draw, text=text, x=_MARGIN + 12, y=y + height/2 - 12,
-                    font=_font(22, light=True), align="left",
-                    font_size=22, fill_color=(255, 255, 255))
 
+    # 上端の元素色ライン（HTML .tc-cell.topline）
+    draw_figma_line(img, x1=x + 2, y1=y + 1, x2=x + COL_W - 2, y2=y + 1,
+                    fill_color=(*elem_rgb, 230), width=3)
 
-def _draw_header_row(img, datas, beta, lang="ja"):
-    """ヘッダー行: 左ラベル「キャラ」| 各キャラ列ごとに分かれた名前ボックス（凸数バッジ + Lv）。"""
-    y = _MARGIN
-    draw = ImageDraw.Draw(img)
+    # 名前（HTML ellipsis: 固定22px・はみ出しは「…」で打ち切り）
+    name = data.get("displayName") or ""
+    name_max = COL_W - 16 - 46 - 12 - 16  # 凸バッジ46 + 右余白16 - 左16
+    f_name, name_text = _ellipsis(draw, name, name_max, 22)
+    draw_figma_text_with_shadow(
+        draw, text=name_text, x=x + 16, y=y + 13, font=f_name, font_size=22,
+        fill_color=_TXT, shadow_color=(0, 0, 0, 190), shadow_offset=(2, 2),
+        align="left",
+    )
 
-    # 左側ラベル背景（キャラ列とは分けて独立したボックス）
-    draw_figma_box(img, x=_MARGIN, y=y, width=_ROW_LABEL_W - 10, height=_HEADER_H,
-                   radius=12, fill_color=(60, 64, 72, 110),
-                   outline_color=(140, 145, 155, 90), outline_width=1)
-    _t(draw, text=img_t("キャラ", lang), x=_MARGIN + 12, y=y + _HEADER_H / 2 - 12,
-                    font=_font(24), align="left", font_size=24,
-                    fill_color=(255, 255, 255))
+    # 凸数バッジ（右上・HTML .cbadge）
+    cons = data.get("constellation")
+    if cons is not None:
+        badge_w, badge_h = 46, 28
+        bx = x + COL_W - 16 - badge_w
+        by = y + 12
+        draw_figma_box(img, x=bx, y=by, width=badge_w, height=badge_h, radius=8,
+                       fill_color=(0, 0, 0, 90), outline_color=(*elem_rgb, 230), outline_width=2)
+        _t(draw, text=f"C{cons}", x=bx, y=by + 5,
+           font=_font(15), align="center", box_width=badge_w, font_size=15,
+           fill_color=_TXT)
 
-    # 各カラムヘッダー（列ごとに独立したボックス）
-    for col, data in enumerate(datas[:4]):
-        x = _col_x(col)
-        element = data.get("element", "None")
-        elem_rgb = _ELEMENT_COLORS.get(element, _ELEMENT_COLORS["None"])
-
-        # 列ごとの背景ボックス（繋がらない）
-        draw_figma_box(img, x=x, y=y, width=_col_w(col), height=_HEADER_H,
-                       radius=12, fill_color=(60, 64, 72, 110),
-                       outline_color=(140, 145, 155, 90), outline_width=1)
-
-        # キャラ名（左）
-        name = data.get("displayName", f"CHARACTER {chr(65+col)}")
-        _t(draw, text=name, x=x + 12, y=y + 10,
-                        font=_font(24), align="left", font_size=24,
-                        fill_color=(255, 255, 255))
-        # 凸数バッジ（名前の箱の右上・右揃え）
-        cons = data.get("constellation")
-        if cons is not None:
-            badge_w = 48
-            bx = x + _COL_W - badge_w - 12
-            by = y + 10
-            draw_figma_box(img, x=bx, y=by, width=badge_w, height=34, radius=8,
-                           fill_color=(0, 0, 0, 150), outline_color=(*elem_rgb, 230), outline_width=2)
-            _t(draw, text=f"C{cons}", x=bx, y=by + 7,
-                            font=_font(20), align="center", box_width=badge_w, font_size=20,
-                            fill_color=(255, 255, 255))
-        # Lv（名前の下・白）
-        lv = data.get("level", "?")
-        _t(draw, text=f"LV. {lv}", x=x + 12, y=y + 56,
-                        font=_font(16, light=True), align="left", font_size=16,
-                        fill_color=(255, 255, 255))
-        # 元素色の上線
-        draw_figma_line(img, x1=x, y1=y, x2=x + _col_w(col), y2=y,
-                        fill_color=(*elem_rgb, 200), width=3)
+    # 2段目: Lv のみ（HTML .r2、白）
+    lv = data.get("level")
+    if lv is not None:
+        _t(draw, text=f"Lv.{lv}", x=x + 16, y=y + 49,
+           font=_font(14, light=True), align="left", font_size=14,
+           fill_color=_TXT)
 
 
 def _draw_identity_row(img, data, col, beta):
-    """IDENTITY行: スプラッシュアートのみ（名前・凸数はヘッダー行に表示）。"""
+    """スプラッシュ行: admin 調整済みオフセット（zoom 3.0 基準）+ 下端 56px フェード。"""
     x = _col_x(col)
-    y = _MARGIN + _HEADER_H + 15
-
-    # 下にうっすら背景（スプラッシュの隙間のみ）
-    draw_figma_box(img, x=x, y=y, width=_col_w(col), height=_IDENTITY_H, radius=12,
-                   fill_color=(60, 64, 72, 125), outline_color=(140, 145, 155, 90), outline_width=1)
-
-    # スプラッシュアート（ズーム・中心据え + キャラ別オフセット）
-    splash_path = data.get("splash") or ""
-    offset = _get_splash_offset(data.get("offset_key") or data.get("id") or "")
+    y = _Y_SPLASH
     paste_mask_image(
-        img, splash_path,
+        img, data.get("splash") or "",
         box_x=x, box_y=y,
-        box_width=_col_w(col), box_height=_IDENTITY_H,
-        radius=12, zoom=TEAM_SPLASH_ZOOM, beta=beta, offset=offset,
+        box_width=COL_W, box_height=_SPLASH_H,
+        radius=_RADIUS, zoom=TEAM_SPLASH_ZOOM, beta=beta,
+        offset=_get_splash_offset(data.get("offset_key") or data.get("id") or ""),
     )
+    fade_h = 56
+    fade = _vertical_gradient_rgba(
+        max(1, round(COL_W * SX_TEAM)), max(1, round(fade_h * SY_TEAM)),
+        (10, 12, 18, 0), (10, 12, 18, 150),
+    )
+    _composite_clipped(img, fade, round(x * SX_TEAM), round((y + _SPLASH_H - fade_h) * SY_TEAM))
 
 
 def _draw_badges(img, data, col, beta):
-    """追加効果バッジ（swap / 元素共鳴 / 聖遺物2セット）をカード端（立ち絵枠の左上隅）に
-    角丸チップで描画する。幅を超えたら自動で折り返す。"""
+    """バッジ（swap）をスプラッシュ左上にチップ描画（HTML .tc-splash .chips）。"""
     badges = data.get("_badges") or []
     if not badges:
         return
-
     x = _col_x(col)
-    y = _MARGIN + _HEADER_H + 15  # 立ち絵枠（_draw_identity_row）と同じ位置
-    max_w = _col_w(col)
+    y = _Y_SPLASH
+    max_w = COL_W
     draw = ImageDraw.Draw(img)
-    font = _font(14)
-
+    font = _font(13)
     chip_h = 26
     pad_x = 9
     gap = 6
-    icon_size = 16
+    icon_size = 15
     radius = 9
     cx = x + 8
     cy = y + 8
-    row_bottom_max = y + _IDENTITY_H - chip_h - 6  # 立ち絵枠からはみ出さない
+    row_bottom_max = y + _SPLASH_H - chip_h - 6
 
     for b in badges:
         text = str(b.get("text") or "")
         if not text:
             continue
         kind = b.get("kind", "swap")
-        elem = b.get("elem")
         icon = b.get("icon") or ""
-        if kind == "resonance" and elem:
-            icon = f"static/assets/props/{str(elem).lower()}.png"
 
-        # チップ幅をテキスト実測で求める（design 座標系）
         tw = draw.textlength(text, font=font) / SX_TEAM
         icon_w = (icon_size + 5) if icon else 0
         w = pad_x * 2 + icon_w + tw
 
-        # 折り返し
         if cx + w > x + max_w - 8:
             cx = x + 8
             cy += chip_h + 6
         if cy > row_bottom_max:
-            break  # 枠に収まりきらない分は描画しない
+            break
 
-        style = _BADGE_STYLES.get(kind, _BADGE_STYLES["swap"])
-        if kind == "resonance" and elem:
-            er = _ELEMENT_COLORS.get(elem, _ELEMENT_COLORS["None"])
-            outline = (min(255, er[0] + 80), min(255, er[1] + 80), min(255, er[2] + 80), 240)
-        else:
-            outline = style["outline"]
+        outline = _BADGE_STYLES.get(kind, _BADGE_STYLES["swap"])["outline"]
+        text_col = _BADGE_STYLES.get(kind, _BADGE_STYLES["swap"])["text"]
 
         draw_figma_box(img, x=cx, y=cy, width=w, height=chip_h, radius=radius,
-                       fill_color=(12, 14, 20, 180), outline_color=outline,
+                       fill_color=(10, 12, 18, 185), outline_color=outline,
                        outline_width=2, shadow=False)
         tx = cx + pad_x
         if icon:
             paste_figma_image(img, icon, box_x=tx, box_y=cy + (chip_h - icon_size) / 2,
                               box_width=icon_size, box_height=icon_size, radius=4, beta=beta)
             tx += icon_size + 5
-        _t(draw, text=text, x=tx, y=cy + 6, font=font, align="left", font_size=14,
-           fill_color=style["text"])
+        _t(draw, text=text, x=tx, y=cy + 5, font=font, align="left", font_size=13,
+           fill_color=text_col)
         cx += w + gap
 
 
 def _draw_stats_row(img, data, col, beta):
-    """BASE STATS行: 基本ステータスを2列で表示（アイコン付き）。"""
+    """ステータス行（HTML .tc-stats）: 2列×4行・列優先（左 HP/攻/防/熟知、右 会心/充電/元素）。"""
     x = _col_x(col)
-    y = _MARGIN + _HEADER_H + 15 + _IDENTITY_H + 12
-    draw_figma_box(img, x=x, y=y, width=_col_w(col), height=_STATS_H, radius=12,
-                   fill_color=(60, 64, 72, 125), outline_color=(140, 145, 155, 90), outline_width=1)
-
+    y = _Y_STATS
     draw = ImageDraw.Draw(img)
-    f_label = _font(14)
-    f_val = _font(17)
-    f_small = _font(11, light=True)
 
     main_stats = data.get("mainStats") or []
-    n = len(main_stats)
-    if n == 0:
+    if not main_stats:
         return
 
-    half = (n + 1) // 2
-    col_w = (_COL_W - 24 - 10) / 2  # 左右パディング12, 列間10
-    row_h = (_STATS_H - 20) / half
+    inner_pad = 16
+    col_gap = 14
+    col_w = (COL_W - inner_pad * 2 - col_gap) / 2
+    n = len(main_stats)
+    rows = (n + 1) // 2
+    pitch = (_STATS_H - 10) / max(1, rows)
 
     for idx, s in enumerate(main_stats):
-        c = 0 if idx < half else 1
-        r = idx if idx < half else idx - half
-        cx = x + 12 + c * (col_w + 10)
-        cy = y + 10 + r * row_h
+        c = 0 if idx < rows else 1
+        r = idx if idx < rows else idx - rows
+        cx = x + inner_pad + c * (col_w + col_gap)
+        cy = y + 5 + r * pitch
         right_edge = cx + col_w
         icon_path = s.get("icon") or ""
         if icon_path:
-            paste_figma_image(img, icon_path, box_x=cx, box_y=cy + 3,
-                              box_width=20, box_height=20, radius=3, beta=beta)
-        _t(draw, text=s.get("label", ""), x=cx + 25, y=cy, font=f_label,
-                        align="left", font_size=14, fill_color=(255, 255, 255))
+            paste_figma_image(img, icon_path, box_x=cx, box_y=cy + 1,
+                              box_width=16, box_height=16, radius=3, beta=beta)
+        label = s.get("label", "")
+        f_label, f_label_size = _fit_font(draw, label, col_w - 24 - 52, 14, light=True, min_size=10)
+        _t(draw, text=label, x=cx + 22, y=cy, font=f_label,
+           align="left", font_size=f_label_size, fill_color=_SUB)
+        f_val, f_val_size = _fit_font(draw, s.get("val", ""), 56, 15, min_size=11)
         _tr(draw, s.get("val", ""), x=right_edge, y=cy - 1, font=f_val,
-                              fill_color=(255, 255, 255))
-        if s.get("base") is not None and s.get("add") is not None:
-            sub_y = cy + 20
-            _tr(draw, str(s.get("add")), x=right_edge, y=sub_y, font=f_small,
-                                  fill_color=(255, 255, 255))
-            add_w = draw.textlength(str(s.get("add")), font=f_small) / SX_TEAM
-            _tr(draw, str(s.get("base")), x=right_edge - add_w - 4, y=sub_y,
-                                  font=f_small, fill_color=(255, 255, 255))
+            font_size=f_val_size, fill_color=_TXT)
 
 
 def _draw_weapon_row(img, data, col, beta, lang="ja"):
-    """WEAPON行: 武器アイコン + 名前 + レアリティ + 聖遺物セットアイコン。"""
+    """武器行（HTML .tc-weapon）: アイコン62+精錬 / 名前17+Lv/武器種13 / セット48右3個。"""
     x = _col_x(col)
-    y = _MARGIN + _HEADER_H + 15 + _IDENTITY_H + 12 + _STATS_H + 12
-    draw_figma_box(img, x=x, y=y, width=_col_w(col), height=_WEAPON_H, radius=12,
-                   fill_color=(60, 64, 72, 125), outline_color=(140, 145, 155, 90), outline_width=1)
-
-    # 武器アイコン
-    icon_box = 72
-    weapon_icon = data.get("weaponIcon") or ""
-    if weapon_icon:
-        paste_figma_image(img, weapon_icon, box_x=x + 12, box_y=y + 14,
-                          box_width=icon_box, box_height=icon_box, radius=8, beta=beta)
-
+    y = _Y_WEAPON
     draw = ImageDraw.Draw(img)
 
-    # 精錬バッジ（アイコンの右上）
+    icon_box = 62
+    cy = y + (_WEAPON_H - icon_box) / 2
+    element = data.get("element", "None")
+    elem_rgb = _ELEMENT_COLORS.get(element, _ELEMENT_COLORS["None"])
+    hl = tuple(min(255, c + 90) for c in elem_rgb)
+    weapon_icon = data.get("weaponIcon") or ""
+    if weapon_icon:
+        draw_figma_box(img, x=x + 14, y=cy, width=icon_box, height=icon_box, radius=10,
+                       fill_color=(0, 0, 0, 110), outline_color=(*hl, 150), outline_width=2,
+                       shadow=False)
+        paste_figma_image(img, weapon_icon, box_x=x + 14, box_y=cy,
+                          box_width=icon_box, box_height=icon_box, radius=10, beta=beta)
     affix = data.get("weaponAffix")
     if affix:
-        badge_w, badge_h = 40, 22
-        draw_figma_box(img, x=x + 12 + icon_box - badge_w + 6, y=y + 10, width=badge_w, height=badge_h,
-                       radius=4, fill_color=(0, 0, 0, 140))
-        _t(draw, text=f"R{affix}", x=x + 12 + icon_box - badge_w + 6, y=y + 13,
-                        font=_font(13), align="center", box_width=badge_w, font_size=13)
+        bw, bh = 36, 20
+        bx = x + 14 + icon_box - bw + 8
+        by = cy - 6
+        draw_figma_box(img, x=bx, y=by, width=bw, height=bh, radius=6,
+                       fill_color=(11, 13, 19, 235),
+                       outline_color=(255, 255, 255, 115), outline_width=1)
+        _t(draw, text=f"R{affix}", x=bx, y=by + 3,
+           font=_font(12), align="center", box_width=bw, font_size=12)
 
-    # 武器名
-    _t(draw, text=data.get("weaponName") or img_t("未装備", lang), x=x + 96, y=y + 20,
-                    font=_font(19), align="left", box_width=_COL_W - 180, font_size=19)
-    # 武器Lv
-    lv = data.get("weaponLevel")
-    _t(draw, text=f"Lv.{lv}" if lv else "Lv.-", x=x + 96, y=y + 50,
-                    font=_font(15, light=True), align="left", font_size=15,
-                    fill_color=(255, 255, 255))
+    set_bonuses = [sb for sb in (data.get("setBonuses") or []) if sb.get("count")]
+    icon_size = 48
+    gap = 6
+    n = min(3, len(set_bonuses))
+    sets_left = x + COL_W - 14
+    if n:
+        total_w = n * icon_size + (n - 1) * gap
+        ax = sets_left - total_w
+        ay = y + (_WEAPON_H - icon_size) / 2
+        for i, sb in enumerate(set_bonuses[:3]):
+            sx_ = ax + i * (icon_size + gap)
+            draw_figma_box(img, x=sx_, y=ay, width=icon_size, height=icon_size, radius=9,
+                           fill_color=(0, 0, 0, 80))
+            icon = sb.get("icon") or ""
+            if not icon and sb.get("id"):
+                icon = os.path.join(STATIC_DIR, "assets", "artifacts", f"UI_RelicIcon_{sb['id']}_4.webp")
+            if icon:
+                paste_figma_image(img, icon, box_x=sx_ + 2, box_y=ay + 2,
+                                  box_width=icon_size - 4, box_height=icon_size - 4,
+                                  radius=8, beta=beta)
+            badge = 19
+            bx = sx_ + icon_size - badge
+            by = ay + icon_size - badge
+            draw_figma_box(img, x=bx, y=by, width=badge, height=badge, radius=5,
+                           fill_color=(11, 13, 19, 235), outline_color=(255, 255, 255, 100), outline_width=1)
+            _t(draw, text=str(sb.get("count", "")), x=bx, y=by + 2, font=_font(11),
+               align="center", box_width=badge, font_size=11)
 
-    # 聖遺物セットアイコン（右揃え・各アイコン右下に個数。武器アイコン72pxより少し小さい56px）
-    set_bonuses = data.get("setBonuses") or []
-    icon_size = 56
-    gap = 8
-    right_x = x + _COL_W - 10
-    for sb in reversed(set_bonuses[:3]):
-        ax = right_x - icon_size
-        ay = y + (_WEAPON_H - icon_size) // 2
-        draw_figma_box(img, x=ax, y=ay, width=icon_size, height=icon_size, radius=9,
-                       fill_color=(0, 0, 0, 80))
-        icon = sb.get("icon") or ""
-        if not icon and sb.get("id"):
-            icon = os.path.join(STATIC_DIR, "assets", "artifacts", f"UI_RelicIcon_{sb['id']}_4.webp")
-        if icon:
-            paste_figma_image(img, icon, box_x=ax + 3, box_y=ay + 3,
-                              box_width=icon_size - 6, box_height=icon_size - 6,
-                              radius=7, beta=beta)
-        # 個数バッジ
-        badge_size = 21
-        bx = ax + icon_size - badge_size
-        by = ay + icon_size - badge_size
-        draw_figma_box(img, x=bx, y=by, width=badge_size, height=badge_size, radius=6,
-                       fill_color=(0, 0, 0, 180), outline_color=(255, 255, 255, 100), outline_width=1)
-        _t(draw, text=str(sb.get("count", "")), x=bx, y=by + 2, font=_font(13),
-                        align="center", box_width=badge_size, font_size=13)
-        right_x = ax - gap
+    tx = x + 14 + icon_box + 12
+    name = data.get("weaponName") or img_t("未装備", lang)
+    name_max = (sets_left - (total_w if n else 0) - 12) - tx if n else (sets_left - 12 - tx)
+    f_name, name_text = _ellipsis(draw, name, max(name_max, 80), 17)
+    _t(draw, text=name_text, x=tx, y=y + 24, font=f_name, align="left",
+       font_size=17, fill_color=_TXT)
+    wlv = data.get("weaponLevel")
+    wtype = data.get("weaponType") or ""
+    subparts = [p for p in [f"Lv.{wlv}" if wlv is not None else "", wtype] if p]
+    if subparts:
+        _t(draw, text=" ".join(subparts), x=tx, y=y + 54, font=_font(13, light=True),
+           align="left", font_size=13, fill_color=_SUB)
 
 
-def _draw_artifact_row(img, art, col, y, beta, lang="ja"):
-    """聖遺物 1 部位。左: 大アイコン(+Lv) / メインステ（大きく）/ サブステ縦1列（アイコン+値・値は右揃え）。
-    右: 「スコア」ラベル + 数値 + ランク。"""
+def _draw_roll_dots(img, left_x, y, tiers, size=5, seg=7):
+    """サブオプの伸び値ドット（HTML .tc-art .substat-dot と同色・略称の直後に左揃え）。"""
+    _tiers = []
+    for t in (tiers or []):
+        try:
+            ti = int(t)
+        except (TypeError, ValueError):
+            continue
+        if 0 <= ti < 4:
+            _tiers.append(ti)
+    if not _tiers:
+        return
+    n = len(_tiers)
+    for dk, dt in enumerate(_tiers):
+        if n == 1:
+            corners = (True, True, True, True)
+        elif dk == 0:
+            corners = (True, False, False, True)
+        elif dk == n - 1:
+            corners = (False, True, True, False)
+        else:
+            corners = (False, False, False, False)
+        draw_figma_dot(img, x=left_x + dk * seg, y=y, size=size, ratio=1.4,
+                       fill_color=_ROLL_DOT_COLORS[dt], corners=corners)
+
+
+def _draw_artifact_row(img, art, col, y, beta, lang="ja", substat_dots="1"):
+    """聖遺物1行（HTML .tc-art, 92px）: アイコン64+強化値 / メイン100px / サブ4行 / スコア86px。"""
     x = _col_x(col)
-    draw_figma_box(img, x=x, y=y, width=_col_w(col), height=_ART_H, radius=12,
-                   fill_color=(60, 64, 72, 125), outline_color=(140, 145, 155, 90), outline_width=1)
     draw = ImageDraw.Draw(img)
 
     if not art:
-        _t(draw, text=img_t("未装備", lang), x=x, y=y + _ART_H / 2 - 10, font=_font(17),
-                        align="center", box_width=_COL_W, font_size=17,
-                        fill_color=(255, 255, 255))
+        _t(draw, text=img_t("未装備", lang), x=x, y=y + _ART_H / 2 - 9,
+           font=_font(15), align="center", box_width=COL_W, font_size=15,
+           fill_color=_SUB)
         return
 
-    # スコアブロック（右側）
-    score_x = x + _COL_W - 90
-    draw_figma_line(img, x1=score_x - 6, y1=y + 10, x2=score_x - 6, y2=y + _ART_H - 10,
-                    fill_color=(255, 255, 255, 25), width=1)
-    _t(draw, text=img_t("スコア", lang), x=score_x, y=y + 14, font=_font(12, light=True),
-                    align="center", box_width=80, font_size=12, fill_color=(255, 255, 255))
-    _t(draw, text=f"{art.get('score', 0):.1f}", x=score_x, y=y + 30,
-                    font=_font(24), align="center", box_width=80, font_size=24)
-    tier_path = os.path.join(STATIC_DIR, "assets", "tiers", f"{art.get('tier', 'B')}.png")
-    if os.path.exists(tier_path):
-        paste_figma_image(img, tier_path, box_x=score_x + 26, box_y=y + 62,
-                          box_width=32, box_height=32, radius=5, beta=beta)
-
-    # 大アイコン + 部位Lv
-    icon_size = 84
+    inner_x = x + 14
+    icon_size = 64
+    icon_cy = y + (_ART_H - icon_size) / 2
     icon_path = art.get("icon") or ""
     if icon_path:
-        paste_figma_image(img, icon_path, box_x=x + 10, box_y=y + 10,
-                          box_width=icon_size, box_height=icon_size, radius=8, beta=beta)
-    _t(draw, text=f"{art.get('slot', '')} +{art.get('upgrade', 0)}",
-                    x=x + 10, y=y + 96, font=_font(13, light=True),
-                    align="left", font_size=13, fill_color=(255, 255, 255))
+        draw_figma_box(img, x=inner_x, y=icon_cy, width=icon_size, height=icon_size, radius=10,
+                       fill_color=(0, 0, 0, 80))
+        paste_figma_image(img, icon_path, box_x=inner_x, box_y=icon_cy,
+                          box_width=icon_size, box_height=icon_size, radius=10, beta=beta)
+    _t(draw, text=f"+{art.get('upgrade', 0)}", x=inner_x, y=y + _ART_H - 18, font=_font(12),
+       align="center", box_width=icon_size, font_size=12, fill_color=_TXT,
+       stroke_width=2, stroke_fill=(0, 0, 0, 220))
 
-    # メインステ（大きく）
+    main_x = inner_x + icon_size + 12
     main = art.get("main") or {}
-    _t(draw, text=main.get("name", ""), x=x + 104, y=y + 12,
-                    font=_font(17, light=True), align="left", font_size=17,
-                    fill_color=(255, 255, 255))
-    _t(draw, text=main.get("value", ""), x=x + 104, y=y + 32,
-                    font=_font(28), align="left", font_size=28)
+    main_name = main.get("name", "")
+    f_mn, f_mn_size = _fit_font(draw, main_name, 98, 12, light=True, min_size=9)
+    _t(draw, text=main_name, x=main_x, y=y + 15, font=f_mn, align="left",
+       font_size=f_mn_size, fill_color=_SUB)
+    _t(draw, text=main.get("value", ""), x=main_x, y=y + 32, font=_font(20),
+       align="left", font_size=20, fill_color=_TXT)
 
-    # サブステ 4本を縦1列（カード全体を使い最大サイズに）
     subs = art.get("substats") or []
-    f_sub = _font(16)
-    sub_x = x + 216
-    sub_right = score_x - 12
-    sub_y = y + 12
-    sub_step = (_ART_H - 24) / 4  # y+12 から y+(_ART_H-12) まで4行
+    f_sub = _font(13)
+    f_abbr = _font(11)
+    sub_x = main_x + 100 + 10
+    score_w = 86
+    score_x = x + COL_W - 14 - score_w
+    sub_right = score_x - 16
+    sub_y0 = y + 11
+    step = (_ART_H - 22) / 4
+    show_dots = str(substat_dots or "") in ("1", "true")
     for j in range(4):
+        row_cy = sub_y0 + j * step
         sub = subs[j] if j < len(subs) else None
-        row_cy = sub_y + j * sub_step
         if sub:
             sub_icon = sub.get("icon") or ""
             if sub_icon:
                 paste_figma_image(img, sub_icon, box_x=sub_x, box_y=row_cy + 1,
-                                  box_width=18, box_height=18, radius=4, beta=beta)
-            _tr(draw, sub.get("value", ""), x=sub_right, y=row_cy,
-                                  font=f_sub, fill_color=(255, 255, 255))
+                                  box_width=14, box_height=14, radius=3, beta=beta)
+            abbr = get_stat_abbr(sub.get("name") or "", lang)
+            val_s = str(sub.get("value") or "")
+            if "%" in val_s and not str(abbr).endswith("%") and abbr in ("ATK", "DEF", "HP", "攻撃", "防御"):
+                abbr = abbr + "%"
+            _t(draw, text=abbr, x=sub_x + 17, y=row_cy + 1, font=f_abbr, align="left",
+               font_size=11, fill_color=(255, 255, 255, 200))
+            val = sub.get("value", "")
+            _tr(draw, val, x=sub_right, y=row_cy, font=f_sub,
+                font_size=13, fill_color=_TXT)
+            if show_dots:
+                abbr_w = draw.textlength(str(abbr), font=f_abbr) / SX_TEAM
+                _draw_roll_dots(img, sub_x + 17 + abbr_w + 4, row_cy + 5, sub.get("rolls"))
         else:
             _tr(draw, "-", x=sub_right, y=row_cy, font=f_sub,
-                                  fill_color=(255, 255, 255))
+                font_size=13, fill_color=(255, 255, 255, 90))
+
+    draw_figma_line(img, x1=score_x - 10, y1=y + 10, x2=score_x - 10, y2=y + _ART_H - 10,
+                    fill_color=_LINE, width=1)
+    _t(draw, text=img_t("スコア", lang), x=score_x, y=y + 11, font=_font(10, light=True),
+       align="center", box_width=score_w, font_size=10, fill_color=_SUB)
+    _t(draw, text=f"{float(art.get('score', 0) or 0):.1f}", x=score_x, y=y + 25,
+       font=_font(19), align="center", box_width=score_w, font_size=19, fill_color=_TXT)
+    tier_path = os.path.join(STATIC_DIR, "assets", "tiers", f"{art.get('tier', 'B')}.png")
+    if os.path.exists(tier_path):
+        paste_figma_image(img, tier_path, box_x=score_x + (score_w - 26) / 2, box_y=y + 54,
+                          box_width=26, box_height=26, radius=4, beta=beta)
 
 
 def _draw_total_row(img, data, col, beta, lang="ja"):
-    """TOTAL RATING行: 総合スコア。"""
+    """総合スコア行（HTML .tc-total）: ランク56左 / スコア40(影) / 計算方法右。"""
     x = _col_x(col)
-    y = _MARGIN + _HEADER_H + 15 + _IDENTITY_H + 12 + _STATS_H + 12 + _WEAPON_H + 12
-    # 5つの聖遺物行 + ギャップを加算
-    y += 5 * _ART_H + 4 * _ART_GAP + 12
-
-    draw_figma_box(img, x=x, y=y, width=_col_w(col), height=_SUM_H, radius=12,
-                    fill_color=(60, 64, 72, 135), outline_color=(140, 145, 155, 90), outline_width=1)
-
+    y = _Y_TOTAL
     draw = ImageDraw.Draw(img)
-    _t(draw, text=img_t("総合スコア", lang), x=x, y=y + 13, font=_font(18, light=True),
-                    align="center", box_width=_COL_W, font_size=18,
-                    fill_color=(255, 255, 255))
-    # ランク画像（右端。スコア値は箱全体の中央に揃える）
-    tier_path = os.path.join(STATIC_DIR, "assets", "tiers", f"{data.get('tierSum', 'B')}.png")
-    _t(draw, text=f"{round(data.get('scoreSum', 0), 1):.1f}", x=x, y=y + 32,
-                    font=_font(42), align="center", box_width=_COL_W, font_size=42)
-    if os.path.exists(tier_path):
-        paste_figma_image(img, tier_path, box_x=x + _COL_W - 58, box_y=y + 30,
-                          box_width=48, box_height=48, radius=5, beta=beta)
-    # 計算方法（数値と同じ高さで左寄せ。ラベル + 半透明線 + 値）
+
+    rank_size = 56
+    rank_path = os.path.join(STATIC_DIR, "assets", "tiers", f"{data.get('tierSum', 'B')}.png")
+    if os.path.exists(rank_path):
+        paste_figma_image(img, rank_path, box_x=x + 18, box_y=y + (_TOTAL_H - rank_size) / 2,
+                          box_width=rank_size, box_height=rank_size, radius=6, beta=beta)
+
+    score_txt = f"{round(float(data.get('scoreSum', 0) or 0), 1):.1f}"
+    draw_figma_text_with_shadow(
+        draw, text=score_txt, x=x + 90, y=y + 22, font=_font(40), font_size=40,
+        fill_color=_TXT, shadow_color=(0, 0, 0, 200), shadow_offset=(2, 3), align="left",
+    )
+
     calc_label = data.get("calcMethodLabel") or data.get("calcMethod", "")
     if calc_label:
-        _t(draw, text=img_t("計算方法", lang), x=x + 15, y=y + 34,
-                        font=_font(18, light=True), align="left", font_size=18,
-                        fill_color=(255, 255, 255))
-        draw_figma_line(img, x1=x + 15, y1=y + 56, x2=x + 110, y2=y + 56,
-                        fill_color=(255, 255, 255, 55), width=1)
-        _t(draw, text=calc_label, x=x + 15, y=y + 60,
-                        font=_font(21), align="left", font_size=21,
-                        fill_color=(255, 255, 255))
+        _t(draw, text=img_t("計算方法", lang), x=x + COL_W - 18, y=y + 22,
+           font=_font(11, light=True), align="right", font_size=11, fill_color=_SUB)
+        f_calc, f_calc_size = _fit_font(draw, calc_label, 130, 16)
+        _t(draw, text=calc_label, x=x + COL_W - 18, y=y + 40,
+           font=f_calc, align="right", font_size=f_calc_size, fill_color=_TXT)
 
 
-def _draw_abyss_section(img, boss, y, beta, lang="ja"):
-    """幽境（レイライン）セクションを画像最下部に描画。
-    箱は使わず、左に「ver x.x」とボス名（2キャラ分くらいの大きい文字）、
-    右にボスアイコン（右から2キャラ目 = 3列目の下に配置・はみ出さないサイズ）。
-    """
-    if not boss or not isinstance(boss, dict):
-        return
-    ver = str(boss.get("version") or "")
-    name = str(boss.get("name") or "")
-    img_url = str(boss.get("img") or "")
-
+def _draw_empty_column(img, col, lang="ja"):
+    """未選択メンバー列（HTML .tc-emptycol）: 破線枠 + ＋/メンバーを追加。"""
+    x = _col_x(col)
+    y = _Y_HEADER
+    h = _CONTENT_BOTTOM - _Y_HEADER
+    draw_figma_box(img, x=x, y=y, width=COL_W, height=h, radius=_RADIUS,
+                   fill_color=(20, 27, 46, 64), outline_color=(255, 255, 255, 56),
+                   outline_width=2, shadow=False)
     draw = ImageDraw.Draw(img)
-    # 左: 幽境ラベル（箱なし・縦中央・特大）
-    _t(draw, text=img_t("幽境", lang), x=_MARGIN + 12, y=y + _ABYSS_H / 2 - 26,
-                    font=_font(42), align="left", font_size=42,
-                    fill_color=(255, 255, 255))
-    # 幽境の右（ver x.x の左）に薄い白い縦線（境界）
-    draw_figma_line(img, x1=_MARGIN + _ROW_LABEL_W + 2, y1=y + 14,
-                    x2=_MARGIN + _ROW_LABEL_W + 2, y2=y + _ABYSS_H - 14,
-                    fill_color=(255, 255, 255, 85), width=2)
-
-    # 左: ver + ボス名（大きく・2キャラ分程度の領域を使用）
-    tx = _MARGIN + _ROW_LABEL_W + 24
-    _t(draw, text=f"ver {ver}", x=tx, y=y + 4,
-                    font=_font(42), align="left", font_size=42,
-                    fill_color=(255, 255, 255))
-    if name:
-        _t(draw, text=name, x=tx, y=y + 64,
-                        font=_font(24, light=True), align="left", font_size=24,
-                        fill_color=(255, 255, 255))
-
-    # 右: ボスアイコン（赤黒の渦巻きオーラを背後に敷き、その上に配置）
-    if img_url:
-        file_path = os.path.join(BASE_DIR, img_url.lstrip("/"))
-        if os.path.exists(file_path):
-            icon_size = _ABYSS_H - 40  # セクション高に収まる
-            col2_center = _col_x(2) + _COL_W / 2
-            # アイコンをセクションの縦中央に配置
-            icon_y = y + (_ABYSS_H - icon_size) / 2
-            paste_figma_image(
-                img, file_path,
-                box_x=col2_center - icon_size / 2, box_y=icon_y,
-                box_width=icon_size, box_height=icon_size,
-                radius=14, beta=beta,
-            )
+    f_plus = _font(56)
+    _t(draw, text="＋", x=x, y=y + h / 2 - 80, font=f_plus, align="center",
+       box_width=COL_W, font_size=56, fill_color=(255, 255, 255, 115))
+    f_msg = _font(16)
+    _t(draw, text=img_t("メンバーを追加", lang), x=x, y=y + h / 2,
+       font=f_msg, align="center", box_width=COL_W, font_size=16,
+       fill_color=(255, 255, 255, 115))
 
 
-def _generate_team_image_sync(uid: str, char_ids: list, configs=None, boss=None, beta: str = "false", img_format: str = "png", lang: str = "ja"):
-    """4 キャラ編成カード画像を PIL で生成して PNG bytes を返す。（行ベースレイアウト版）"""
+def _draw_error_column(img, col, error, lang="ja"):
+    """取得失敗列（HTML .tc-errcol）: 赤系破線枠 + エラーメッセージ。"""
+    x = _col_x(col)
+    y = _Y_HEADER
+    h = _CONTENT_BOTTOM - _Y_HEADER
+    draw_figma_box(img, x=x, y=y, width=COL_W, height=h, radius=_RADIUS,
+                   fill_color=(20, 27, 46, 64), outline_color=(248, 113, 113, 140),
+                   outline_width=2, shadow=False)
+    draw = ImageDraw.Draw(img)
+    msg = str(error or "")
+    f_msg, msg_size = _fit_font(draw, msg, COL_W - 80, 14, min_size=9)
+    _t(draw, text=msg, x=x + 40, y=y + h / 2 - msg_size * 0.7, font=f_msg,
+       align="center", box_width=COL_W - 80, font_size=msg_size,
+       fill_color=(252, 165, 165, 230))
+
+
+def _build_flat_bg(w, h):
+    """mainDisplayBox(bg-zinc-950 #09090b) と同じフラット背景。"""
+    return Image.new("RGBA", (max(1, w), max(1, h)), (9, 9, 11, 255))
+
+
+def _generate_team_image_sync(uid: str, char_ids: list, configs=None, boss=None, beta: str = "false", img_format: str = "png", lang: str = "ja", substat_dots: str = "1"):
+    """4キャラ編成カード画像を PIL で生成して PNG bytes を返す（HTML版と同期レイアウト）。
+
+    boss 引数は後方互換のため受け付けるが、HTML 編成カードには幽境セクションが
+    存在しないため描画には使用しない。
+    """
     _total_start = time.perf_counter()
     if beta != "true":
         beta = "false"
-    # 表示言語（ja / en）。_get_card_data_sync の呼び出しと固定ラベルに使う
     lang = "en" if str(lang or "").lower() == "en" else "ja"
     print(f"[TeamCard] START uid={uid} chars={char_ids} beta={beta}", flush=True)
 
-    # データ取得（configs: 各キャラの計算方法・差し替え武器/キャラ）
+    # データ取得（configs: 各キャラの計算方法・差し替え武器/キャラ。empty=true は未選択枠）
     t0 = time.perf_counter()
     datas = []
-    for i, cid in enumerate(char_ids):
+    for i, cid in enumerate(char_ids[:4]):
         cfg = (configs[i] if configs and i < len(configs) and isinstance(configs[i], dict) else {}) or {}
-        # 差し替えキャラ表示時はオフセット等を「表示中キャラ」に紐付ける
+        if not cid or str(cfg.get("empty") or "") == "true":
+            datas.append(None)
+            continue
         _display_id = str(cfg.get("fake_char") or cid)
         try:
             d = _get_card_data_sync(
@@ -679,129 +663,65 @@ def _generate_team_image_sync(uid: str, char_ids: list, configs=None, boss=None,
             d["id"] = _display_id
         except Exception as e:
             print(f"[TeamCard] card_data fetch failed for {cid}: {e}", flush=True)
-            d = {
-                "displayName": str(cid), "element": "None", "level": None,
-                "friendship": None, "constellation": None, "splash": "",
-                "skills": [], "weaponName": "", "weaponIcon": "",
-                "weaponLevel": None, "weaponAffix": None, "mainStats": [],
-                "artifacts": [None] * 5, "setBonuses": [],
-                "scoreSum": 0, "tierSum": "B", "calcMethodLabel": "会心",
-                "id": str(cid), "costumeId": None,
-            }
-        # オフセットのキー: 衣装適用時は「キャラID:衣装ID」、それ以外はキャラID
-        _cid = str(d.get("id") or cid)
-        _cst = d.get("costumeId")
-        d["offset_key"] = f"{_cid}:{_cst}" if _cst else _cid
+            d = {"error": str(e)}
+        d["offset_key"] = _display_id
         datas.append(d)
+    while len(datas) < 4:
+        datas.append(None)
     print(f"[TeamCard] data fetched in {(time.perf_counter()-t0)*1000:.0f}ms", flush=True)
 
-    # 追加効果バッジ（swap / 元素共鳴 / 聖遺物2セット）を判定。
-    # 名前の「(swap)」サフィックスもここで除去される（ヘッダー描画より前に実行する）
+    payload = _render_team_datas(datas, configs, beta, lang, substat_dots)
+    print(f"[TeamCard] DONE total {(time.perf_counter()-_total_start)*1000:.0f}ms", flush=True)
+    return payload
+
+
+def _render_team_datas(datas, configs, beta="false", lang="ja", substat_dots="1"):
+    """card_data のリスト（0〜4件）から編成カード画像を描画し PNG bytes を返す。
+
+    データ取得方法（live 取得 / 共有スナップショット）によらず、HTML 編成カードと
+    同じ card_data JSON が渡れば同一の描画になる（共有画像の凍結生成用）。
+    """
+    if beta != "true":
+        beta = "false"
+    lang = "en" if str(lang or "").lower() == "en" else "ja"
+    datas = list(datas or [])[:4]
+    while len(datas) < 4:
+        datas.append(None)
+
     _compute_team_badges(datas, configs)
 
-    # 幽境セクションを描画するか（ボス設定がある場合のみ）
-    _has_boss = bool(boss and isinstance(boss, dict) and boss.get("version"))
-
-    # 背景（キャンバス高さは幽境セクション有無で変える。無い時は伸ばさない）
+    # カード本体（1860×1124 設計）を描いてから、余白付き背景に合成する
     t0 = time.perf_counter()
-    _y_bg_id = _MARGIN + _HEADER_H + 15
-    _y_bg_stats = _y_bg_id + _IDENTITY_H + 12
-    _y_bg_weapon = _y_bg_stats + _STATS_H + 12
-    _y_bg_art = _y_bg_weapon + _WEAPON_H + 12
-    _y_bg_sum = _y_bg_art + 5 * _ART_H + 4 * _ART_GAP + 12
-    _content_bottom = _y_bg_sum + _SUM_H
-    _bg_height_px = max(1, round(_content_bottom * SY_TEAM))
-    _design_h = _content_bottom + 15 + ((12 + _ABYSS_H) if _has_boss else 0)
-    _canvas_h = max(1, round(_design_h * TEAM_SCALE))
-    img = _build_base_background(TEAM_W, _canvas_h, (0x1E, 0x22, 0x2C))
-
-    # 各キャラ列に元素背景を敷く。
-    # 列間の黒い隙間を埋めるため、各列の色をギャップの半分まで伸ばす
-    # （左半分＝左キャラ色、右半分＝右キャラ色になる）
-    # 左の行ラベル列はニュートラルのまま。
-    _cols = datas[:4]
-    half_gap = _COL_GAP / 2
-    for col, data in enumerate(_cols):
-        cfg = (configs[col] if configs and col < len(configs) and isinstance(configs[col], dict) else {}) or {}
-        element = data.get("element", "None")
-        elem_rgb = _ELEMENT_COLORS.get(element, _ELEMENT_COLORS["None"])
-        x = _col_x(col)
-        # 左右のギャップ半分まで拡張（最後の列はカード右端まで伸ばす）
-        left_ext = half_gap if col > 0 else 0
-        if col < len(_cols) - 1:
-            right_ext = half_gap
-        else:
-            right_ext = (TEAM_DESIGN_W - x) - _COL_W  # 右端の余白を埋める
-        bg_x = x - left_ext
-        bg_w = _COL_W + left_ext + right_ext
-        w_px = max(1, round(bg_w * SX_TEAM))
-
-        # 背景: カスタム色 > 地域画像 > 元素色
-        base_rgb = elem_rgb
-        if str(cfg.get("bg_mode") or "").lower() == "custom" and cfg.get("bg_color"):
-            base_rgb = hex_to_rgb(str(cfg.get("bg_color")).lstrip("#")) or elem_rgb
-        bg_region = cfg.get("bg_region")
-        if bg_region and region_image_path(bg_region):
-            col_bg = get_region_background(w_px, _bg_height_px, bg_region)
-            if col_bg is None:
-                col_bg = _build_team_column_bg(w_px, _bg_height_px, base_rgb)
-            else:
-                # 文字が見えるよう暗めオーバーレイ
-                ov = Image.new("RGBA", col_bg.size, (8, 10, 16, 90))
-                col_bg = Image.alpha_composite(col_bg, ov)
-        else:
-            col_bg = _build_team_column_bg(w_px, _bg_height_px, base_rgb)
-        img.alpha_composite(col_bg, (round(bg_x * SX_TEAM), 0))
-    print(f"[TeamCard] background in {(time.perf_counter()-t0)*1000:.0f}ms", flush=True)
-
-    # 描画
+    card = Image.new("RGBA", (CARD_W_PX, CARD_H_PX), (0, 0, 0, 0))
     with _DrawCtx():
-        # ヘッダー行
-        _draw_header_row(img, datas, beta, lang)
+        for col, data in enumerate(datas):
+            if data is None:
+                _draw_empty_column(card, col, lang)
+                continue
+            if data.get("error"):
+                _draw_error_column(card, col, data.get("error"), lang)
+                continue
+            _draw_panels_one(card, data, col)
+            _draw_header_row_one(card, data, col, beta, lang)
 
-        # 立ち絵行ラベル
-        _y_id = _MARGIN + _HEADER_H + 15
-        _draw_row_label(img, img_t("立ち絵", lang), _y_id, _IDENTITY_H, beta)
-
-        # ステータス行ラベル
-        _y_stats = _y_id + _IDENTITY_H + 12
-        _draw_row_label(img, img_t("ステータス", lang), _y_stats, _STATS_H, beta)
-
-        # 武器行ラベル
-        _y_weapon = _y_stats + _STATS_H + 12
-        _draw_row_label(img, img_t("武器", lang), _y_weapon, _WEAPON_H, beta)
-
-        # 聖遺物行ラベル
-        _y_art = _y_weapon + _WEAPON_H + 12
-        _draw_row_label(img, img_t("聖遺物", lang), _y_art, 5*_ART_H + 4*_ART_GAP, beta)
-
-        # 総合スコア行ラベル
-        _y_sum = _y_art + 5*_ART_H + 4*_ART_GAP + 12
-        _draw_row_label(img, img_t("総合スコア", lang), _y_sum, _SUM_H, beta)
-
-        # 各カラム
-        for col, data in enumerate(datas[:4]):
             t_col = time.perf_counter()
-            _draw_identity_row(img, data, col, beta)
-            _draw_badges(img, data, col, beta)
-            _draw_stats_row(img, data, col, beta)
-            _draw_weapon_row(img, data, col, beta, lang)
+            _draw_identity_row(card, data, col, beta)
+            _draw_badges(card, data, col, beta)
+            _draw_stats_row(card, data, col, beta)
+            _draw_weapon_row(card, data, col, beta, lang)
 
-            # 聖遺物5行
             arts = data.get("artifacts") or []
             for i in range(5):
                 art = arts[i] if i < len(arts) else None
-                art_y = _y_art + i * (_ART_H + _ART_GAP)
-                _draw_artifact_row(img, art, col, art_y, beta, lang)
+                art_y = _Y_ART + i * (_ART_H + _ART_GAP)
+                _draw_artifact_row(card, art, col, art_y, beta, lang, substat_dots)
 
-            _draw_total_row(img, data, col, beta, lang)
+            _draw_total_row(card, data, col, beta, lang)
             print(f"[TeamCard] column {col} drawn in {(time.perf_counter()-t_col)*1000:.0f}ms", flush=True)
+    print(f"[TeamCard] card drawn in {(time.perf_counter()-t0)*1000:.0f}ms", flush=True)
 
-        # 幽境セクション（ボス設定がある場合のみ）
-        if boss and isinstance(boss, dict) and boss.get("version"):
-            _y_abyss = _y_sum + _SUM_H + 12
-            _draw_abyss_section(img, boss, _y_abyss, beta, lang)
-            print(f"[TeamCard] abyss section drawn", flush=True)
+    img = _build_flat_bg(BG_W_PX, BG_H_PX)
+    img.alpha_composite(card, (round(_PAD * SX_TEAM), round(_PAD * SY_TEAM)))
 
     # 保存
     t0 = time.perf_counter()
@@ -811,5 +731,25 @@ def _generate_team_image_sync(uid: str, char_ids: list, configs=None, boss=None,
     img.save(buf, "PNG", compress_level=1)
     payload = buf.getvalue()
     print(f"[TeamCard] PNG encoded {len(payload)} bytes in {(time.perf_counter()-t0)*1000:.0f}ms", flush=True)
-    print(f"[TeamCard] DONE total {(time.perf_counter()-_total_start)*1000:.0f}ms", flush=True)
     return payload
+
+
+def _generate_team_image_from_cards(cards, beta="false", lang="ja", substat_dots="1"):
+    """共有スナップショット等の card_data JSON から編成カード画像を生成する（UID不要）。
+
+    cards: 0〜4件の card_data dict（None 可）。HTML 編成カードに渡すものと同一形式。
+    表示名末尾の「(swap)」等は _compute_team_badges 側で従来と同じ処理になる。
+    """
+    datas = []
+    for i, c in enumerate((cards or [])[:4]):
+        if not isinstance(c, dict):
+            datas.append(None)
+            continue
+        d = dict(c)
+        if d.get("error"):
+            datas.append(d)
+            continue
+        _display_id = str(d.get("id") or "")
+        d.setdefault("offset_key", _display_id)
+        datas.append(d)
+    return _render_team_datas(datas, None, beta, lang, substat_dots)

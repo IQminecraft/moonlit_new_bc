@@ -1,0 +1,154 @@
+[OK] Discord error webhook configured (DISCORD_WEBHOOK_URL)
+[OK] Cache LRU (byte budget): images<=64MB resized<=64MB splash_blur<=96MB region_bgs<=48MB layers<=64MB masks<=16MB ttl=300s sweep=300s
+D:\system\desktop2\py_dev\__moonlit__\moonlit_new_bc\server.py:28: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+INFO:     Started server process [24260]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8012 (Press CTRL+C to quit)
+[OK] Card-gen pool: workers=2 queue=20 timeout=8s cache_ttl=0.1h
+[OK] Admin routes embedded in server.py → /admin/login , /admin/__ping
+[Prebuild] 8 element backgrounds cached in memory
+[Prebuild] 8 region backgrounds cached in memory
+[Bot] stopping orphan bot process (pid=12348)
+[OK] Discord bot started (pid=4476)
+[OK] Discord bot autostart (pid=4476)
+INFO:     127.0.0.1:54064 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54064 - "GET /static/js/i18n.js?v=20260831c HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54065 - "GET /static/js/tutorial.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54064 - "GET /static/favicon.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54064 - "GET /api/data_versions HTTP/1.1" 200 OK
+[API][2xx] GET /api/bg_images 2ms status=200
+INFO:     127.0.0.1:54064 - "GET /api/bg_images HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54064 - "GET /sw.js HTTP/1.1" 200 OK
+[32m2026-09-14 21:51:21.075[0m | [34m[1mDEBUG   [0m | [36menka.assets.data[0m:[36m_open_json[0m:[36m72[0m - [34m[1mOpening .enka_py\assets\text_map.json[0m
+[32m2026-09-14 21:51:21.075[0m | [34m[1mDEBUG   [0m | [36menka.assets.data[0m:[36m_open_json[0m:[36m72[0m - [34m[1mOpening .enka_py\assets\characters.json[0m
+[32m2026-09-14 21:51:21.076[0m | [34m[1mDEBUG   [0m | [36menka.assets.data[0m:[36m_open_json[0m:[36m72[0m - [34m[1mOpening .enka_py\assets\namecards.json[0m
+[32m2026-09-14 21:51:21.076[0m | [34m[1mDEBUG   [0m | [36menka.assets.data[0m:[36m_open_json[0m:[36m72[0m - [34m[1mOpening .enka_py\assets\consts.json[0m
+[32m2026-09-14 21:51:21.078[0m | [34m[1mDEBUG   [0m | [36menka.assets.data[0m:[36m_open_json[0m:[36m72[0m - [34m[1mOpening .enka_py\assets\talents.json[0m
+[32m2026-09-14 21:51:21.079[0m | [34m[1mDEBUG   [0m | [36menka.assets.data[0m:[36m_open_json[0m:[36m72[0m - [34m[1mOpening .enka_py\assets\pfps.json[0m
+[32m2026-09-14 21:51:21.152[0m | [34m[1mDEBUG   [0m | [36menka.clients.base[0m:[36m_request[0m:[36m62[0m - [34m[1mRequesting https://enka.network/api/uid/1812256644[0m
+[Info] Fetching characters via API for UID: 1812256644 (from_artifacter: False)
+[API][SLOW] GET /uid/1812256644 2630ms status=200
+INFO:     127.0.0.1:54064 - "GET /uid/1812256644 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54064 - "GET /static/js/i18n.js?v=20260831c HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54065 - "GET /static/favicon.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54066 - "GET /static/assets/characters/UI_AvatarIcon_MarionetteNew.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54064 - "GET /static/assets/characters/UI_AvatarIcon_Alyosha.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54071 - "GET /static/assets/characters/UI_AvatarIcon_Diona.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54072 - "GET /static/assets/characters/UI_AvatarIcon_Odette.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54073 - "GET /static/assets/characters/UI_AvatarIcon_Nefer.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54065 - "GET /static/js/tutorial.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54065 - "GET /static/assets/characters/UI_AvatarIcon_Dahlia.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54073 - "GET /static/assets/characters/UI_AvatarIcon_Barbara.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54066 - "GET /static/assets/characters/UI_AvatarIcon_Lauma.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54072 - "GET /static/assets/characters/UI_AvatarIcon_Sucrose.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54064 - "GET /static/assets/characters/UI_AvatarIcon_Aino.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54071 - "GET /static/assets/characters/UI_AvatarIcon_Columbina.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54065 - "GET /static/assets/characters/UI_AvatarIcon_Heizo.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54066 - "GET /api/data_versions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54066 - "GET /static/data/setting/region_labels.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54073 - "GET /static/assets/props/hydro.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54066 - "GET /static/assets/props/pyro.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54071 - "GET /static/assets/props/cryo.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54066 - "GET /static/assets/props/dendro.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54073 - "GET /api/enka_cooldown?uid=1812256644&beta=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54073 - "GET /api/calc_method_defaults HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54073 - "GET /api/enka_cooldown?uid=1812256644&beta=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54073 - "GET /static/data/lists/weapons.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54071 - "GET /static/data/lists/characters.json HTTP/1.1" 200 OK
+[API][2xx] GET /api/card_data/1812256644/10000133 176ms status=200
+INFO:     127.0.0.1:54066 - "GET /api/card_data/1812256644/10000133?calc_method=atk&base_prec=0 HTTP/1.1" 200 OK
+[API][2xx] GET /api/card_data/1812256644/10000133 178ms status=200
+INFO:     127.0.0.1:54072 - "GET /api/card_data/1812256644/10000133?calc_method=atk&lang=ja HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54064 - "GET /static/favicon.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54064 - "GET /static/assets/splash/UI_Gacha_AvatarImg_MarionetteNew.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54071 - "GET /static/assets/props/atk.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54073 - "GET /static/assets/props/hp.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54072 - "GET /static/assets/props/def.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54066 - "GET /static/assets/props/em.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54065 - "GET /static/assets/props/rate.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54073 - "GET /static/assets/props/dmg.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54072 - "GET /static/assets/props/er.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54071 - "GET /static/assets/weapons/UI_EquipIcon_Claymore_RadianceSword.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54073 - "GET /static/assets/artifacts/UI_RelicIcon_15046_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54065 - "GET /static/assets/tiers/B.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54073 - "GET /static/assets/artifacts/UI_RelicIcon_15037_2.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54066 - "GET /static/assets/tiers/A.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54072 - "GET /static/assets/artifacts/UI_RelicIcon_15046_5.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54072 - "GET /static/assets/props/hp_per.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54071 - "GET /static/assets/artifacts/UI_RelicIcon_15046_1.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54072 - "GET /static/assets/artifacts/UI_RelicIcon_15046_3.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/js/i18n.js?v=20260831c HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54086 - "GET /static/favicon.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54087 - "GET /static/js/tutorial.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54087 - "GET /api/data_versions HTTP/1.1" 200 OK
+[API][2xx] GET /api/bg_images 2ms status=200
+INFO:     127.0.0.1:54087 - "GET /api/bg_images HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54087 - "GET /sw.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54086 - "GET /static/assets/splash/UI_Gacha_AvatarImg_Yelan.webp HTTP/1.1" 200 OK
+[Info] Fetching characters via API for UID: 1812256644 (from_artifacter: False)
+[API][2xx] GET /uid/1812256644 7ms status=200
+INFO:     127.0.0.1:54087 - "GET /uid/1812256644 HTTP/1.1" 200 OK
+Exception in callback _ProactorBasePipeTransport._call_connection_lost(None)
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost(None)>
+Traceback (most recent call last):
+  File "C:\Users\maiku\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\Users\maiku\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+ConnectionResetError: [WinError 10054] 既存の接続はリモート ホストに強制的に切断されました。
+INFO:     127.0.0.1:54087 - "GET /static/tailwind.build.css?v=1789388380 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/characters/UI_AvatarIcon_MarionetteNew.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54089 - "GET /static/assets/characters/UI_AvatarIcon_Odette.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54089 - "GET /static/assets/characters/UI_AvatarIcon_Alyosha.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/characters/UI_AvatarIcon_Diona.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/characters/UI_AvatarIcon_Nefer.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/characters/UI_AvatarIcon_Lauma.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/characters/UI_AvatarIcon_Aino.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/characters/UI_AvatarIcon_Sucrose.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/characters/UI_AvatarIcon_Columbina.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/characters/UI_AvatarIcon_Dahlia.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/characters/UI_AvatarIcon_Barbara.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/characters/UI_AvatarIcon_Heizo.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /api/data_versions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/data/setting/region_labels.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54089 - "GET /static/assets/props/hydro.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54087 - "GET /static/assets/props/pyro.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/props/cryo.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54091 - "GET /static/data/setting/region_labels.json HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:54089 - "GET /static/assets/props/dendro.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54089 - "GET /api/enka_cooldown?uid=1812256644&beta=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54091 - "GET /api/calc_method_defaults HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54091 - "GET /api/enka_cooldown?uid=1812256644&beta=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54089 - "GET /static/data/lists/characters.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54091 - "GET /static/data/lists/weapons.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54092 - "GET /static/data/lists/characters.json HTTP/1.1" 304 Not Modified
+[API][2xx] GET /api/card_data/1812256644/10000133 18ms status=200
+INFO:     127.0.0.1:54085 - "GET /api/card_data/1812256644/10000133?calc_method=atk&base_prec=0 HTTP/1.1" 200 OK
+[API][2xx] GET /api/card_data/1812256644/10000133 19ms status=200
+INFO:     127.0.0.1:54087 - "GET /api/card_data/1812256644/10000133?calc_method=atk&lang=ja HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54093 - "GET /static/data/lists/weapons.json HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:54087 - "GET /static/assets/props/hp.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/props/atk.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54093 - "GET /static/assets/splash/UI_Gacha_AvatarImg_MarionetteNew.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54087 - "GET /static/assets/props/def.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/props/em.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54093 - "GET /static/assets/props/rate.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54087 - "GET /static/assets/props/dmg.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/props/er.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54087 - "GET /static/assets/artifacts/UI_RelicIcon_15046_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54093 - "GET /static/assets/weapons/UI_EquipIcon_Claymore_RadianceSword.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/tiers/B.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54087 - "GET /static/assets/artifacts/UI_RelicIcon_15037_2.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54093 - "GET /static/assets/tiers/A.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/artifacts/UI_RelicIcon_15046_5.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54087 - "GET /static/assets/props/hp_per.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54093 - "GET /static/assets/artifacts/UI_RelicIcon_15046_1.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET /static/assets/artifacts/UI_RelicIcon_15046_3.webp HTTP/1.1" 200 OK

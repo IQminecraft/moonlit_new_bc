@@ -1,0 +1,44 @@
+{
+  "bossIcon": {
+    "x": 51,
+    "y": 11,
+    "size": 94
+  },
+  "charIcon": {
+    "x": -299,
+    "y": 37,
+    "size": 66,
+    "gap": 13,
+    "align": "right"
+  },
+  "bossName": {
+    "x": 129,
+    "y": -43,
+    "size": 21
+  },
+  "clearTime": {
+    "x": 807,
+    "y": -45,
+    "size": 18,
+    "align": "left"
+  },
+  "rowPadding": {
+    "x": 18,
+    "y": 100
+  },
+  "rowHeight": 174,
+  "rowGap": 18,
+  "header": {
+    "x": 5,
+    "y": 3,
+    "size": 28
+  },
+  "rowPanel": false,
+  "playerTag": {
+    "show": true,
+    "x": 688,
+    "y": 529,
+    "size": 15,
+    "align": "left"
+  }
+}

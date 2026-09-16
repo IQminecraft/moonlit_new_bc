@@ -47,9 +47,9 @@
         "element": "Hydro"
       },
       {
-        "id": "10000115",
-        "name": "ダリア",
-        "element": "Hydro"
+        "id": "10000116",
+        "name": "イネファ",
+        "element": "Electro"
       },
       {
         "id": "10000014",
@@ -69,7 +69,10 @@
     "calc_methods": {
       "10000133": "atk",
       "10000122": "em"
-    }
+    },
+    "theme": "cinema",
+    "base_prec": "2",
+    "substat_dots": "0"
   },
   "12345": {
     "calc_methods": {}

@@ -8,7 +8,6 @@ ReliquaryAffixExcelConfigData の合算値を使い、最後にフォーマッ�
 """
 import json
 import os
-from collections import Counter
 
 from app.paths import STATIC_DIR
 from app.card.stats import (

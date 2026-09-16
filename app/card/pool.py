@@ -50,7 +50,7 @@ def _card_gen_stats() -> Dict[str, Any]:
 
 async def _run_in_card_gen_pool(fn, *args):
     """カード生成を専用プールで実行。満杯なら 503。それ以外は列で待つ。"""
-    global _CARD_GEN_PENDING, _CARD_GEN_RUNNING
+    global _CARD_GEN_PENDING
 
     with _CARD_GEN_LOCK:
         limit = _CARD_GEN_MAX_WORKERS + _CARD_GEN_MAX_QUEUE

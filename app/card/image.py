@@ -10,9 +10,9 @@ from app.paths import BASE_DIR, STATIC_DIR, CARD_W, CARD_H, SX, SY, FONT_PATH, F
 from app.card.cache import get_cached_font, get_resized_image
 from app.card.jsoncache import load_json_cached
 from app.card.stats import (
-    text_map_data, get_stat_japanese, get_stat_label, get_text_map_name, get_char_level,
+    get_stat_label, get_text_map_name, get_char_level,
     score_calc,
-    sum_affix_substat_values, is_percent_prop, format_substat_value, format_base_value, format_var_base_add,
+    sum_affix_substat_values, is_percent_prop, format_base_value, format_var_base_add,
     format_decimal_value, artifact_substat_rolls,
 )
 from app.card.labels import img_t
@@ -30,9 +30,9 @@ from app.card.calc_method import resolve_calc_method
 from app.card.growth import build_growth_panel, build_growth_from_fake
 from app.card.bg import hex_to_rgb, create_card_background, region_image_path
 from app.card.draw import (
-    draw_figma_box, paste_mask_image, draw_figma_text_with_shadow,
+    draw_figma_box, paste_mask_image,
     draw_figma_circle, paste_figma_image, draw_figma_text, draw_figma_line,
-    draw_figma_text_right, figma_draw_scale, _sx, _sy,
+    draw_figma_text_right,
     draw_figma_dot, draw_figma_glass_box, figma_draw_theme,
     safe_rounded_rectangle,
 )
@@ -90,14 +90,6 @@ def _draw_panel_text_with_shadow(draw, xy, text, font, fill, shadow=(0, 0, 0, 20
     draw.text((x, y), text, font=font, fill=fill, anchor=anchor)
 
 
-# 元素共鳴バッジの元素色（RGB）。team_image._ELEMENT_COLORS と同一値。
-_RESONANCE_ELEM_COLORS = {
-    "Pyro": (0x90, 0x3B, 0x2A),
-    "Hydro": (0x34, 0x45, 0x95),
-    "Cryo": (0x57, 0x7F, 0xC7),
-    "Dendro": (0x46, 0x6B, 0x63),
-}
-
 # 英語モードで聖遺物ボックス内（幅が狭い）に使う短縮ラベル
 _STAT_ABBR_EN = {"Elemental Mastery": "EM", "Energy Recharge": "ER"}
 
@@ -106,57 +98,8 @@ def _stat_abbr_en(name: str) -> str:
     return _STAT_ABBR_EN.get(name, name)
 
 
-def _draw_resonance_badges(img, draw, resonance, beta, lang="ja"):
-    """単体カードの聖遺物行とカード下端の隙間に元素共鳴チップを描画する。
-
-    編成カードの _draw_badges と同じ角丸チップ様式（暗色背景＋元素色輪郭＋元素アイコン）。
-    聖遺物行とは重ならないよう、隙間内に右揃え横並びで配置する（カード種類で統一）。
-    """
-    badges = resonance_badges(resonance, lang)
-    if not badges:
-        return
-    font_badge = get_cached_font(FONT_PATH, max(1, round(14 * SY)))
-    chip_h = 18
-    pad_x = 8
-    gap_x = 6
-    icon_size = 12
-    radius = 6
-    # 下端の隙間: 聖遺物行の下端 y=1137 〜 カード下端 y=1159（22px）
-    right_x = 1718
-    cy = 1139
-    dims = []
-    for b in badges:
-        text = str(b.get("text") or "")
-        if not text:
-            continue
-        elem = b.get("elem")
-        icon = f"static/assets/props/{str(elem).lower()}.png" if elem else ""
-        tw = draw.textlength(text, font=font_badge) / SX
-        icon_w = (icon_size + 4) if icon else 0
-        w = pad_x * 2 + icon_w + tw
-        dims.append((text, elem, icon, w))
-    if not dims:
-        return
-    total_w = sum(w for *_, w in dims) + gap_x * (len(dims) - 1)
-    cx = right_x - total_w
-    for text, elem, icon, w in dims:
-        er = _RESONANCE_ELEM_COLORS.get(elem, (0x4A, 0x55, 0x68))
-        outline = (min(255, er[0] + 80), min(255, er[1] + 80), min(255, er[2] + 80), 240)
-        draw_figma_box(img, x=cx, y=cy, width=w, height=chip_h, radius=radius,
-                       fill_color=(12, 14, 20, 180), outline_color=outline,
-                       outline_width=1, shadow=False)
-        tx = cx + pad_x
-        if icon:
-            paste_figma_image(img, icon, box_x=tx, box_y=cy + (chip_h - icon_size) / 2,
-                              box_width=icon_size, box_height=icon_size, radius=4, beta=beta)
-            tx += icon_size + 4
-        draw_figma_text(draw, text=text, x=tx, y=cy + 2, font=font_badge, align="left",
-                        font_size=14, fill_color=(255, 255, 255, 255))
-        cx += w + gap_x
-
-
 def _draw_uid_badge(img, draw, uid, beta):
-    """聖遺物行とカード下端の隙間・左下へ UID テキストを描画する（共鳴チップと同じ高さ）。"""
+    """聖遺物行とカード下端の隙間・左下へ UID テキストを描画する。"""
     text = f"UID {uid}" if uid else ""
     if not text:
         return
@@ -167,6 +110,62 @@ def _draw_uid_badge(img, draw, uid, beta):
     draw_figma_text(draw, text=text, x=left_x, y=cy + 2, font=font_badge, align="left",
                     font_size=14, fill_color=(255, 255, 255, 220),
                     stroke_width=2, stroke_fill=(0, 0, 0, 160))
+
+
+# 元素共鳴チップ（カード下端・右寄せ）。HTML ガラスカードの .resonance-corner と同じ見た目を狙う。
+_RESONANCE_NAME_COLORS = {
+    "dark": {"bg": (8, 12, 22, 158), "border": (255, 255, 255, 46), "name": (125, 255, 175, 255), "buff": (255, 210, 125, 255)},
+    "light": {"bg": (255, 255, 255, 184), "border": (15, 23, 42, 31), "name": (4, 120, 87, 255), "buff": (180, 83, 9, 255)},
+}
+
+
+def _draw_resonance_badges(img, draw, resonance, beta, lang="ja", light="false"):
+    """単体カード下端の隙間・右側に元素共鳴チップを描画する（HTMLの右下ピルと同じ仕様）。"""
+    badges = resonance_badges(resonance, lang)
+    if not badges:
+        return
+    pal = _RESONANCE_NAME_COLORS["light" if str(light or "") == "true" else "dark"]
+    font_name = get_cached_font(FONT_PATH, max(1, round(14 * SY)))
+    font_buff = get_cached_font(FONT_PATH, max(1, round(13 * SY)))
+    chip_h = 20
+    pad_x = 10
+    gap_x = 6
+    icon = 12
+    # 下端の隙間: 聖遺物行の下端 y=1137 〜 カード下端 y=1159（UIDと同じ列の高さ）
+    right_x = 1715
+    cy = 1137
+    dims = []
+    for b in badges:
+        text = str(b.get("text") or "")
+        label = str(b.get("label") or "")
+        if not text:
+            continue
+        elem = b.get("elem")
+        icon_path = f"static/assets/props/{str(elem).lower()}.png" if elem else ""
+        w_name = draw.textlength(text, font=font_name) / SX
+        w_buff = (draw.textlength(label, font=font_buff) / SX + 4) if label else 0
+        w_icon = (icon + 4) if icon_path else 0
+        dims.append((text, label, icon_path, pad_x * 2 + w_icon + w_name + w_buff))
+    if not dims:
+        return
+    total_w = sum(w for *_, w in dims) + gap_x * (len(dims) - 1)
+    cx = right_x - total_w
+    radius = chip_h / 2
+    for text, label, icon_path, w in dims:
+        draw_figma_box(img, x=cx, y=cy, width=w, height=chip_h, radius=radius,
+                       fill_color=pal["bg"], outline_color=pal["border"], outline_width=1, shadow=False)
+        tx = cx + pad_x
+        if icon_path:
+            paste_figma_image(img, icon_path, box_x=tx, box_y=cy + (chip_h - icon) / 2,
+                              box_width=icon, box_height=icon, radius=4, beta=beta)
+            tx += icon + 4
+        draw_figma_text(draw, text=text, x=tx, y=cy + 3, font=font_name, align="left",
+                        font_size=14, fill_color=pal["name"])
+        tx += draw.textlength(text, font=font_name) / SX
+        if label:
+            draw_figma_text(draw, text=label, x=tx + 4, y=cy + 4, font=font_buff, align="left",
+                            font_size=13, fill_color=pal["buff"])
+        cx += w + gap_x
 
 
 def _lighten_background(img, alpha=110):
@@ -188,7 +187,7 @@ def _draw_growth_panel(img, panel, panel_x0, panel_x1, panel_h, bg_base_rgb, bas
     x0 = panel_x0
     w = panel_x1 - x0
     h = int(panel_h)
-    y0, y1 = 0, h
+    y0 = 0
 
     # パネル背景（HTML の linear-gradient + border 相当）
     if is_light:
@@ -592,7 +591,7 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         weapon_affix = (list(affix_map.values())[0] + 1) if affix_map else 1
         weapon_stats_list = (weapon_data.get("flat") or {}).get("weaponStats") or []
     else:
-        print(f"[Warning] no weapon equipped for avatar (uid showcase) — drawing as 未装備")
+        print("[Warning] no weapon equipped for avatar (uid showcase) — drawing as 未装備")
 
     # 英語モード時は武器名を lists/weapons.json の enName で置き換える
     # （武器詳細 JSON には日本語 name しか無いため）
@@ -1037,12 +1036,12 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             draw_figma_text(draw, text=f"♥ {friendship_lv}", x=56, y=166, font=font_stats, font_size=30, fill_color=(0, 0, 0, 190))
             draw_figma_text(draw, text=f"♥ {friendship_lv}", x=53, y=162, font=font_stats, font_size=30, fill_color=(255, 255, 255))
 
-        # 元素共鳴バッジ（手動選択・最大2つ）を聖遺物行とカード下端の隙間に描画
-        _draw_resonance_badges(img, draw, resonance, beta, lang)
-
-        # UID 表示（表示方法トグル。共鳴チップと同じ高さの左下）
+        # UID 表示（表示方法トグル。カード下端の隙間・左下）
         if show_uid == "true":
             _draw_uid_badge(img, draw, uid, beta)
+
+        # 元素共鳴チップ（HTMLガラスカード右下 .resonance-corner と同じ位置・スタイル）
+        _draw_resonance_badges(img, draw, resonance, beta, lang, light)
 
         y_skill_base = 389
         for i in range(3):

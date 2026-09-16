@@ -30,6 +30,7 @@ LABELS_EN = {
     "実数": " (flat)",
     "攻撃": "ATK",
     "防御": "DEF",
+    "好感度": "Friendship",
 }
 
 

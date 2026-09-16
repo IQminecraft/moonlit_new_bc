@@ -1,0 +1,187 @@
+[OK] Discord error webhook configured (DISCORD_WEBHOOK_URL)
+[OK] Cache LRU (byte budget): images<=64MB resized<=64MB splash_blur<=96MB region_bgs<=48MB layers<=64MB masks<=16MB ttl=300s sweep=300s
+D:\system\desktop2\py_dev\__moonlit__\moonlit_new_bc\server.py:28: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+INFO:     Started server process [17668]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
+[OK] Card-gen pool: workers=2 queue=20 timeout=8s cache_ttl=0.1h
+[OK] Admin routes embedded in server.py → /admin/login , /admin/__ping
+[Prebuild] 8 element backgrounds cached in memory
+[Prebuild] 8 region backgrounds cached in memory
+[Bot] stopping orphan bot process (pid=26508)
+[OK] Discord bot started (pid=2008)
+[OK] Discord bot autostart (pid=2008)
+INFO:     127.0.0.1:56030 - "GET /admin/login HTTP/1.1" 200 OK
+[API][2xx] GET /api/abyss_share_layout 1ms status=200
+INFO:     127.0.0.1:56037 - "GET /api/abyss_share_layout HTTP/1.1" 200 OK
+[API][2xx] GET /api/abyss_share_layout 1ms status=200
+INFO:     127.0.0.1:56038 - "GET /api/abyss_share_layout HTTP/1.1" 200 OK
+[API][2xx] GET /api/abyss_share_layout 1ms status=200
+INFO:     127.0.0.1:56039 - "GET /api/abyss_share_layout HTTP/1.1" 200 OK
+[API][2xx] GET /api/card_data/1812256644/10000014 213ms status=200
+INFO:     127.0.0.1:56093 - "GET /api/card_data/1812256644/10000014?calc_method=crit HTTP/1.1" 200 OK
+[API][2xx] GET /api/card_data/1812256644/10000059 45ms status=200
+INFO:     127.0.0.1:56094 - "GET /api/card_data/1812256644/10000059?calc_method=crit HTTP/1.1" 200 OK
+[API][2xx] GET /api/card_data/1812256644/10000133 50ms status=200
+INFO:     127.0.0.1:56095 - "GET /api/card_data/1812256644/10000133?calc_method=crit HTTP/1.1" 200 OK
+[API][2xx] GET /api/card_data/1812256644/10000150 56ms status=200
+INFO:     127.0.0.1:56096 - "GET /api/card_data/1812256644/10000150?calc_method=crit HTTP/1.1" 200 OK
+[Cache] reset: images=8 resized=0 splash_blur=0 region_bgs=3 layers=0 masks=0 (ttl=300s force=False)
+[API][2xx] GET /api/abyss_share_layout 1ms status=200
+INFO:     127.0.0.1:57954 - "GET /api/abyss_share_layout HTTP/1.1" 200 OK
+[API][2xx] GET /api/abyss_share_layout 2ms status=200
+INFO:     127.0.0.1:57955 - "GET /api/abyss_share_layout HTTP/1.1" 200 OK
+[API][2xx] GET /api/abyss_share_layout 1ms status=200
+INFO:     127.0.0.1:57956 - "GET /api/abyss_share_layout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57960 - "GET /share/789ced9c5b73d44616c7bf4a6aaaf2945959adeb8cdf0c9b5abc1548364ef2b2454dc9331a5b85e6b29206d65054610fc61702cb1248e200c53d0bde40c26db1c1c087119ab19ff215b6bb351749a31eb534b229a8502e6c69a4d3b77f9feefef5e93991b1e6ea6a66fca38c323d679a99ec4799865642d72007384e94244140378faa86a9d5aae8039961d19d92562e6bc5866ecda19bf0b756512c157da26bd52326bc79e224bc98ae99a68aaefe7e2253552a3829bb79d55ed89cf87d6b79e7d44fcec6467bf57fadc5b3bf6fada0b7b5ca0c7a66ccb4144b2b8e29f075cb1cd3d53968561d133929cfb260ecebc9c2c15ad5b45463b258ab160e29465133cd86395d33e055cda8287a8105cc3175ba8eb3e4be3e894b866e14671503e72a0358f40fe052ba7f8bf9dedf80e7fb7f8b6ce630bc8005c5a560c138c78f0b620616f3832b1b370ed87136ff41968d1d1773e32c973989ee4eab9602ef9615dd54e165bd5bd6c9bf5560c24543295b385dc528614df7d3451725cdacebcadca15e055db09b5bf8fffbe82d55572b6ad5421f1d982b1935b74847551ddee1f3f0a26c686ab564ce6a757407a5832b47d7611de2de86eea124cc5964c45fb7ee7d54a57f5160bd14268e2a96624c56660afb14635a31945e35166ba6d5a8b8d5586de83a327a44d3f54ebfd48a6ecf0e98c74f8c4da15f8589c27e685c9f33adc2c13f7b9ac72d0bc01d1d26a296ba758985436178aa9b597fb3bb76059f5dcb68509bfd7498d9b0ec1e0e563ed2a7abb4d06460ad7fa5e8b071c34b40ff0e47fbced709def1a4c3274827497904f71d549fc754a55eab763b47fbd275e7f545bb791e7791e54cef81c9d0e6743fc3897cfa8f8656c7fea227c2897add80096b45b59745f785cf3c6decde9980e3d43f7d77a660428121c9b9fea27de77cebd2cbd6c5a6b37a050f798adec09f71bceb2a2a8ae67d5557a6714a99035f741ec7c3663ecb8b32ba31ad98f87521cbb2d83385cbb66ed4eae6d86c9da957675c77db331ccc0eb606725ee3b95c9465c53a12627ae7c7c7ceeb9b41d3bcd734270b51b64b6a39c4b6b3d86c3fbdd13e73bd7dfdaec73c2f4699532b21d6de6efde4bc69b6cf2f792b39c7481f475933e074c415479841bb79ca6ede44525cd8f058967391764b959930b37673de6ede760d3aab9b810cf362a45dd50893c06f4fbb398583ca658f4936d2e02c1a725c9b48be8a616965a5d895afa9d7f0c0b4bdfa087770155fc1c192c7eaed768cf6b9db6f5fbdb1e74fdbf30fb71f3c6ffff2339e23d6670ca5841ee0d84ecfc0e361f7ad5e976874ba809c6351c9326663da1cec7dc4ba735f0780b6f2e05346ad33aec1fece1df6cd5f82a2ef766f06d00add6b9ff71b3ff0c5c77eb33223443751bd500fc93a1cf5e10f2a00fcc39f8caf5b75aa476278caaee54d843d8c6561166b0632c3322c9e24a906b2b18f6cb0a723e49abf5475ad885d33564e41f0748daec2daaf5ff915067c0a6bfdf8a0f5e067282ff85cebc6268dbcc2fd340fc0108d85373ef424916e29acf1c1e1c0cc78a8802586bafbc7501810192ea9c2d8306d055d6d27199689ee7f7d671bd0311431f00b8d63196e54a501b9c08528adb5b6b07d6f7998d87696febdb3ba08c5d6fae16effe96877e6af794142e30f596b01f727c3e7696700410f86ab2fba91780a8585b711c94706bc1960f2d123a35a2689cdfd09a4d5ebc6feb468640d6735a149717eadc9a33b352835314c6ad77e1da6b3edf5efdc31130aaef368da228b1c34193989d3e1069a292535736112204ec63a85e029b4d09b90055c0f1b3d72c27964829133e0d0502653501908519973e6c6309539bf9d7136ee4295398b57df81c444267ab61cde4729bc001cdda2f54b72033cd61a4f33fd73a7bbb1c77f825f262b59a0a82c9292035e0dd94a41701d22e09a56ad7db56a6300d53ae79acee3fbed955bce95172e496a609e25244b52e815af0399bb8a9e6e94cbae423fe1e0ca06e7c950cd5a55a916d57d4a69c6cd58af16a61a15782d8abd9ee7de70eba2a8e8c583aa355bc369140dcdf2dffd2cb0149c7f68cfbf418fc096561abab5dffb7e8797190a3433d729b98b11beea90f3d693cbceda3d9cc4ac6284d30cf409ac14d5c0d5d22175a85e06501d4ce69b8e68f2b07bc25b3346ed9885f81f06ea863aa375c854bf992ab56a092658c205d52aca8c3a980574a59a63bd47fb2b4317247e5e2ebb7ee64406e112773d804afc2731cfe44fa2b47b9c35847dee6cbed9593abfb376cbd97cb27de959007f4e54d58a0f7f8ac87a24fe647bb90b290f117f1e50b5e3b5f7037ee2acd2324a6af619cbea28e4732021da376250cfc469c4209e7173d54b834c3bdfdc6c9f5f81aea1fdaf1ba3a1cebfc2119d003905361ba49c623621e504393913355f12e3905029cb4b3e562966253192b450835039e733ceb391e3780c129a177cb6a548be128b84ca91b5404f42598a694522129ae329f85522161a67651268ab5bf70834948bceab8286a0f83854f0c3aaabebb02d110b9dff7e67fe457be5be7fde4d434365200f997313a6c302058421cd86d958335529e9926baf9898772a2c8dbef41228a9653c21ec02b80cac8f687ad110221373214e955aa82a0616e20485e7193eb9c209e549b2620dc7646e317c1c9367f814b447cb3153f043848a978721805ddd3321485ba6500249d97c2c2744831ac3b69652df3a112829e3bb5681ff1d89621b96d450dc2ed2b93d1aedd21f88a818600a1a88a814ec8a29a628fee6e2a39bab3b051f323b216e0a447b6e220da4e18000b660129796fe36aa4087e6da4f17b76f9e420d7f6fcb8be6c491e640590f9a137c68aed7309f801c35a1e34546cebedf842e4093bc7c4ec09d9e82cf6955e578a3a244d3b9ce83f46c4ee618becfe650dc63585ce2c233bbf9c46eaed8cd0738faea5c00cfed37e67c742e3f40e7009b4d0bcf1d840d55abaa96a51e528fa58ae958619078a13c26c673beaca68ee922ade743ac8f82eb8809c67d3306be4b2dcd18382f696e07d224e23de75cb3dd5c76e308b6b7d693113ed8432bd05316be544a1af2a253c76a468980faf283a82f7140a32c800cc56209855dc50b7cccfb0208019fe5b8c8290135f0e3b292c8faec67d95c2498a3877e39207aadcb22f574800afa0110b9694e4dfd243156484e0ceac7b1729c7dca38d88f031440911004f93c711064118e6c09a09fe49b62df38ed2caea06df6d370bef5dff6e5357bfeb5bd70767be5b1f38a8afba41b0f29244367f13020c21bc956466e6c194b138021e612852e023738922e302a69f05a306c2dcf8823cfec253ad41808c15d7be93c7ab47d0a87addd5bdb2dceb827a27b57cb7c4e4ebacee7702c2e2d60a42122c458c9c052526019c1a3b889248ae36300469fcf73e6579c3bffb1e7d7a19f73eedc42e1b9571eee9cb9682fcc7b5da0b3fc32961ee3c51f11e023cb449e7a085ba95335204dd436b1016332f57c9c1db68087e507029006c283598a1e4b080f063878ca2b465e480170499490d3a7c4f6dd6bcee2864f74df5fdb595ada45dda5ddb74951bc647725d29055c2760bd78dba8e01c2014731da87478b461f50e068f7bb03bdd5a7bf1c931fd51942fdd10156bf27bc7575fbc22baffe5adffe6a2fac3a0f2ed048308a3f7368608acb5a452efad842186b0d8d8b24a93d7ac00c57fbe05899a226a241ae009844219ddc609c25e71b8093fa3caa38cb578fa0c25a8f97ed8553cee64b2fcf4d126ad99f6866bd3c571a99e70251ecd5c9ae01dd0c942e6e9a2ed1ed07357589eedb8d9bad95b3ceca6d9c4c7ca84b60901eb8cbc91cf6381474d7acaac767abca1c05dfed3d1a23fa124e033d84576433a18477dd6e2ed9cd66e764ed10b69b43dcc8c776e56c5a68f7f312aad274996eaad075aa93455ada4acd72c966a510b3a340dcc194a85f89816d47482506a88d9db17e2a4434db7af6bcf5fc19f230cdcbf6029cf2ace22d8f5ffa4c3506a3c548b6f04dcda82b3a3d994d1c84294a81af13214c60e172568a0567a56c9ecffbe0299705627ac7d2b9ac24f9e06f4e4ef1647ade7fa25ea63fb341856685c883eed464164e3ee24c9be2905940b3344d1690c9fe416629c92c29184f18211286dfc383b814be65ef224d814841284867a2827c421cfd4c142d9e75fd453f00e75aeb071c80b3fe5dfbe9e95858c2571dc3f16cea9a083d024ed0374df40d49de3141440c5f347cd119253e9aef1021d13730b0560cf08964fa13de67584b880a13934585c53c5d9918a5027a22222646c3547b618290682f6cf07828cfa61098fc7ea3dabda4f8898fa80f6e611216054262d807280f418ff03528be3dd25c0ad18fef33a44df0052dc46fb2a0774c23ed7147eb2f25171eae3c918dfe3209c2017c7660c7348d20ec0f8cd7f2f9dd3f224fc16bdb2b4b23f1da2058f4825a31477b4c7e97412d607227e1bfff034cb20994 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57960 - "GET /static/js/i18n.js?v=20260831c HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57961 - "GET /static/favicon.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57962 - "GET /static/js/tutorial.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57961 - "GET /api/data_versions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57962 - "GET /static/assets/props/pyro.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57960 - "GET /static/data/setting/region_labels.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57965 - "GET /static/assets/props/hydro.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57966 - "GET /static/assets/props/cryo.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57967 - "GET /static/assets/props/dendro.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57967 - "GET /sw.js HTTP/1.1" 200 OK
+[API][2xx] GET /api/abyss_share_layout 2ms status=200
+INFO:     127.0.0.1:57966 - "GET /api/abyss_share_layout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57967 - "GET /static/assets/abyss_share_base.png?v=1788864580 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57962 - "GET /static/assets/weapons/UI_EquipIcon_Catalyst_Jade.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57961 - "GET /static/assets/weapons/UI_EquipIcon_Sword_Vorpal.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57965 - "GET /static/assets/weapons/UI_EquipIcon_Catalyst_Apprentice.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57960 - "GET /static/assets/weapons/UI_EquipIcon_Claymore_RadianceSword.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57961 - "GET /static/assets/characters/UI_AvatarIcon_Barbara.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57965 - "GET /static/assets/characters/UI_AvatarIcon_Heizo.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57961 - "GET /share/789ced9ced73d3461ec7ff958e67faaa3e45cfb2f32e709d233785f69ab66f6e188f62cb8906f9e124192e30cce0989038148ea3d0360586e71ee40a2d4f470201fe18213b79d57fe17657b62cc95a6b252b6160ca3060c9d26f9fbefbdbddcffed62732e6425dc94c7e949167170c2393fd28d3504bf01a7e3caae8865aabc24b89a2e19d925a2eabc586662ec09be07fb5229b0afc4653ab470c70f3c44970315b330c055efdfd44a62a57500256ebaab5b839f5fbd6cacea99fec8d8deeeaff3a4b677fdf6ac3b7d5ca1c7c66c23065532d4ec8e075d398d094056056991058314fd3ccc4d7d38583b5aa612afa74b1562d1c92f5a26a180d63b6a683ab9a5e91b502cd50c794d93aca92f3fab45b9ee2bcaca35c65181afe617878d7f92ce4ddcf0cc70d3e0b74e630b8000545a5a09949969be4850c28e60757367692a127e9fc0759367a52c84dd26ce624bc3bab9832b85b9635430197f57e59a7ff5601091775b96ca27465bd84343d48175e9454a3aec90b87dc0aba60b5b6d0bff7e15b8aa65494aa09bf3ab050d26b4e918e2a1ab8c3e5c1455957956ac99857ebf00e4c07558ea6813a44bd0dde834918f3d088bf6e9dfbb04aff22837a294c1d954d599faecc15f6c9faacaccb6e35166b86d9a838d5586d681a347a44d5b45ebf548b4ecf0e98474f4cccc0ff0a5385fdc0b8b6609885837ff6348f5316067574908852ead725120e81e1997e66fdcdeed8e57d764dbd416cf6d35166c3b27b3858f9509f8ed2429301b5fe95ac81c60d2f01f93b2ce93b5f2778c7930e97209d24e5e19d77607d1e53e47aaddaef1cdd4bd7edd717add679d4455632ee03d3a1cde97c8712f9f41f0db58efc852bc2a97a5d0709ab45c5cda2f3c2679e3676ee4c8171ea9fbe3b3320a1c090645f7fd1bd73be73e965e762cb5ebd82863c596ba0ef58ce71151559f5beaac9b328a5cc812f7a8fc30b269fe50409de98950df43a9fa569e499c2655bd76b756362be4ed5ab738ebb750d07b383ac3139aff15c2ecab26c1e0931bdf3e363fbf5cda069ce6b9a95f828db25a51c62db5e6a759fdee89eb9debd7ed7639e13a2cc2995106b6fb77eb2dfb4bae797bd959ca3c48fa3ace9603ae28823cca0d53a65b56e42292e6e782c4bb948bba5ca5c9859abd5b45ab71d83f6ea6620c39c106957d1c324f0dbd37e4ec1a072d963928e34380f871cc72694afac9b6a592ef6e56b683534306daf3e421d5c415760b0e4907afb1da37beef6db576face669abf970fbc1f3ee2f3fa399617d4e974bf00196eef50c341ef6df72bb44a3d705a41c0d4b96311ab3c670efc3d69df33ac390561e784aaff5c635d0dfd9c3bef94b50f4fdee4d31a442f7dae7fcc60f7cf1b1dfac44f1d14d542fd443b20e467df01716007cf027e3eb56bdea11298eb06b7913a10f235918c59a0ecdd0148d26498a0e6decc31b7475045df3978aa616916b46ca29f09eaed15758f7f52bbfc2189fc23a3f3ee83cf819c80b3cd7b9b14922af703fcd31cc088d85373ef024916e29acf199c38199f148018b1471f78fa13046a0d8a40aa3c3b41574b5bd64682abaff0d9c6d40c740c48c5f682c4db1e32a8d910a6c88d23a6b8bdbf75646896d67f9df3bab4b406c9d1fee0e9e8e7667fe9ae74538fee0b516707f12789e740610f460a8faa21b89235058781be17c64c09b31543e7a6454ca38b1397f0369b9ddd89f1689acc1ac263429d6af35697ca706a4268449eddaafa374b6bdfe9d336602c1f51e4d5b649183262525713aec5033a5a466364c02d8c958af101c8116dc0959c0f5d0d123279847261839030e0d6632059531212ab3cfdc18a532fbb733f6c65da0327be9ea3b90984045cf96c3fb28811700a35bb47e716e80435ae348a67fce7437f6f88ff1cb7825f30495855372c0ab415b2908ae47041cd38ab9af566d0ca15afb5ccb7e7cbfdbbe655f79e190a406e2597cb22479b7780e5a76153ddb28971d857ec282950dca93ae18b5aa5c2d2afbe4d29c9331b716661a15702d086ecf736e38755194b5e241c59cafa1348aba6afaef7e16580a361f5acd37f011d0d2724333f77bdfeff1325d0666167a257730c2573d5ede7972d95ebb87929897f5709a01bf0195a2e8a85a7aa40ed6cb10aa03c97cd3134d1e744f706b4eaf1d3321ff43405d57e6d41e991a3453a5562d81044ba8a06a459e5386b300af1463c27d74b0327440e2e7e5b2e3674e64202e71d603b0c47f12f254fe244cdbe5ac21ec7367f3cdcef2f99db55bf6e693ed4bcf02f873aaaa547cf85380d623f127ede62ea43c58fc7940518fd7de0ff889b24aca2889d9672cabe390cfa18448df88413d13a7118378c6cd959b069e76beb9d93ddf06aea1fbaf1be3a1cebf82111d0339793a1ba49c423621e5647252266abe24c421a16296137dac52c88a4224692106a152ce679ca323c7f1182434cffb6c8b917c25160995226b819c84d204d38a442434c711f0ab442c34ceca24d056b7ee6168281b9d57190e41f17128ef875557d7415b4216dafc7ea7f9a2dbbeef9f7793d050899146ccb931d3619e00c2e066c374ac99aa9874c9b5574ccc3b1516c75f7af184d4329e1076015c06d64724bd68049189b910274a2d5415430b718cc2f314975ce198f22459b1866332a7183e8ec9515c0ada23e59829f8214cc54ba310c0aeee9960a42d112801a76c2e961322418d615b4ba96f9df08494f15dabc0ff8e48b00d8b6b287617e9dc1e8d76e90f44440c30050d44540a72c50453147f7371d1cdd59f828f989d603705a23d37960692704006b460129796fe362a4f86e6ba4f97b66f9e820d7f6fcb8be684b1e640590f9ae37d68ce6d984f981c31a1e3044acabedf842e4093bc7c8e479d9e80cfa955f978a32247d3b9de83e46c4e62296ec0e660dc63585ce2e233abf5c46ab5add603147d752e80e7f6eb0b3e3a971fa2730c9d4d0bcf1d040d55ab2aa6a91c528ea58ae9687e9878c13c26c673beaca68ee922ade743ac8f83ebb009c67d3306be4b2dcd18382f696e87d2c4e23dfb5cabdb5a71e208b6b7d693113ed0432bc05316be944b2af4a233c76a7a0983faf2c3a82f7140a3c4331982c5120cbb8a17f898f70510325c966523a704c4c08fcd8a02edb39fa57391608e1cfae518c16b5d1288a70344d08f612237cd89a99f28c40ac98941fd585a8ab34f1907fbb10c0150c404413e4f1c045904235b02e827faa6d8374edb4b6db8cd7e1accb7fedbbdbc66355f5b8b67b7db8fed5744dc27dd78483e193a8b870121de48b6327262cb6892000c2197287491718223c902a39206af05c3d6f29430f6cc5e24438d8110dcb597f6a347dba750d8dabdb5dde28c7b22ba77b5cc67a5a4eb7c16c5e29202461222828d950c2c25799ae23d8a9b4aa2382e0660f4f93cbbd9b6effcc76aae033f67dfb905c373af3cdc3973d15a6c7a5da0bdf232961ee3c51f61e0234d459e7a085ba913352049d436b6016332f57c9c1db68087e586029086c28369821e8b090f6650f094578c1c9f02e0120921a74f89ddbbd7eca50d9fe8bebfb6b3bcbc8bba4bbb6fe3a278f1ee4a2021ab98ed16b61f751d0384332cc1681f1e2d1a7d408125ddef0ef4569ffe72547e5c6708f4470658fd9ef0d6d5ed0bafbcfaeb7cfbabb5b86a3fb84022c128feccc281292e6b15d8e8630b61ac35342e12a7f6e801335cedc363658a9a8806b93c43250ae96487e32c59df009cd4e711c559be7a0414d679bc622d9eb2375f7a796e9250cbc14433ebe5b9e2d83c971104b74e760de866807451d3f489ee20a8a94f74df6edcecb4cfdaeddb2899f85017c3203d70979558e47108e8ae51558ecf57e50502beeb3e1a23fa124c033d8457a033a18477dd6a2d5bad56ef64ed08b69b83dcc8c776a56c5a68f7f312acd274996eaad075a6974552da4acc72f166c510b3e340dce194885f89816dc7482506a88d9db1412a5834db79f6bcf3fc19f430adcbd62298f2aca22d8f5f064c3506a34548b6f04d4dafcb1a39994d1c842988819f13c14c60c172568c0567c56c9ecbfbe0299b6584f48ea5b35951f4c1df9c94e2c9f4bcff44bd447e668308cdf29107dd89c92c987cc49936c521b30cc9d234594026fd07992524b3b8603c7e8c48186e0f0fe212f896bd8b3465040242813b1315e413c2f867a248f1ace32f060138d73a3fa0009cf5efba4f4fc7c212beea188d6753d744e811708cbe49a26f70f28e092262f8a2d18bce28f191fc86088ebe31436bc5009f48a63ffe7d86b598a83021595458ccd39589512a434e4484c46898682f8ce713ed850d1f0fe5e8140293df6f54bb97143ff111f5e12d4ccca2804f0cfb18c243d063fc0c8a6f8f349742f4e3fb0c6913fc400bf6972cc81dd3587bdcd1fa4bc985872b4fa0a37f4c0273009f1eda314d2308fb03e3b55c7ef78fc813f0da6e7b792c5e1b048b5e502be4488fc9ef32a865a8dc49f0e7ff2950078d HTTP/1.1" 200 OK
+Exception in callback _ProactorBasePipeTransport._call_connection_lost(None)
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost(None)>
+Traceback (most recent call last):
+  File "C:\Users\maiku\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\Users\maiku\AppData\Local\Programs\Python\Python312\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+ConnectionResetError: [WinError 10054] 既存の接続はリモート ホストに強制的に切断されました。
+INFO:     127.0.0.1:57968 - "GET /api/data_versions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57969 - "GET /static/data/setting/region_labels.json HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:57969 - "GET /static/data/setting/region_labels.json HTTP/1.1" 304 Not Modified
+[API][2xx] GET /api/abyss_share_layout 1ms status=200
+INFO:     127.0.0.1:57969 - "GET /api/abyss_share_layout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57969 - "GET /static/assets/leyline/5269001/UI_MonsterIcon_Narcissusborn_Normal_01.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57968 - "GET /static/assets/weapons/UI_EquipIcon_Catalyst_Jade.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57970 - "GET /static/assets/weapons/UI_EquipIcon_Claymore_RadianceSword.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57970 - "GET /static/assets/characters/UI_AvatarIcon_Heizo.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57969 - "GET /static/assets/characters/UI_AvatarIcon_MarionetteNew.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57968 - "GET /static/assets/characters/UI_AvatarIcon_Odette.webp HTTP/1.1" 200 OK
+[API][2xx] POST /api/abyss_share_layout 29ms status=200
+INFO:     127.0.0.1:57971 - "POST /api/abyss_share_layout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /share/789ced9c5b73d44616c7bf4a6aaaf2945959adeb8cdf0c9b5abc1548364ef2b2454dc9331a5b85e6b29206d65054610fc61702cb1248e200c53d0bde40c26db1c1c087119ab19ff215b6bb351749a31eb534b229a8502e6c69a4d3b77f9feefef5e93991b1e6ea6a66fca38c323d679a99ec4799865642d72007384e94244140378faa86a9d5aae8039961d19d92562e6bc5866ecda19bf0b756512c157da26bd52326bc79e224bc98ae99a68aaefe7e2253552a3829bb79d55ed89cf87d6b79e7d44fcec6467bf57fadc5b3bf6fada0b7b5ca0c7a66ccb4144b2b8e29f075cb1cd3d53968561d133929cfb260ecebc9c2c15ad5b45463b258ab160e29465133cd86395d33e055cda8287a8105cc3175ba8eb3e4be3e894b866e14671503e72a0358f40fe052ba7f8bf9dedf80e7fb7f8b6ce630bc8005c5a560c138c78f0b620616f3832b1b370ed87136ff41968d1d1773e32c973989ee4eab9602ef9615dd54e165bd5bd6c9bf5560c24543295b385dc528614df7d3451725cdacebcadca15e055db09b5bf8fffbe82d55572b6ad5421f1d982b1935b74847551ddee1f3f0a26c686ab564ce6a757407a5832b47d7611de2de86eea124cc5964c45fb7ee7d54a57f5160bd14268e2a96624c56660afb14635a31945e35166ba6d5a8b8d5586de83a327a44d3f54ebfd48a6ecf0e98c74f8c4da15f8589c27e685c9f33adc2c13f7b9ac72d0bc01d1d26a296ba758985436178aa9b597fb3bb76059f5dcb68509bfd7498d9b0ec1e0e563ed2a7abb4d06460ad7fa5e8b071c34b40ff0e47fbced709def1a4c3274827497904f71d549fc754a55eab763b47fbd275e7f545bb791e7791e54cef81c9d0e6743fc3897cfa8f8656c7fea227c2897add80096b45b59745f785cf3c6decde9980e3d43f7d77a660428121c9b9fea27de77cebd2cbd6c5a6b37a050f798adec09f71bceb2a2a8ae67d5557a6714a99035f741ec7c3663ecb8b32ba31ad98f87521cbb2d83385cbb66ed4eae6d86c9da957675c77db331ccc0eb606725ee3b95c9465c53a12627ae7c7c7ceeb9b41d3bcd734270b51b64b6a39c4b6b3d86c3fbdd13e73bd7dfdaec73c2f4699532b21d6de6efde4bc69b6cf2f792b39c7481f475933e074c415479841bb79ca6ede44525cd8f058967391764b959930b37673de6ede760d3aab9b810cf362a45dd50893c06f4fbb398583ca658f4936d2e02c1a725c9b48be8a616965a5d895afa9d7f0c0b4bdfa087770155fc1c192c7eaed768cf6b9db6f5fbdb1e74fdbf30fb71f3c6ffff2339e23d6670ca5841ee0d84ecfc0e361f7ad5e976874ba809c6351c9326663da1cec7dc4ba735f0780b6f2e05346ad33aec1fece1df6cd5f82a2ef766f06d00add6b9ff71b3ff0c5c77eb33223443751bd500fc93a1cf5e10f2a00fcc39f8caf5b75aa476278caaee54d843d8c6561166b0632c3322c9e24a906b2b18f6cb0a723e49abf5475ad885d33564e41f0748daec2daaf5ff915067c0a6bfdf8a0f5e067282ff85cebc6268dbcc2fd340fc0108d85373ef424916e29acf1c1e1c0cc78a8802586bafbc7501810192ea9c2d8306d055d6d27199689ee7f7d671bd0311431f00b8d63196e54a501b9c08528adb5b6b07d6f7998d87696febdb3ba08c5d6fae16effe96877e6af794142e30f596b01f727c3e7696700410f86ab2fba91780a8585b711c94706bc1960f2d123a35a2689cdfd09a4d5ebc6feb468640d6735a149717eadc9a33b352835314c6ad77e1da6b3edf5efdc31130aaef368da228b1c34193989d3e1069a292535736112204ec63a85e029b4d09b90055c0f1b3d72c27964829133e0d0502653501908519973e6c6309539bf9d7136ee4295398b57df81c444267ab61cde4729bc001cdda2f54b72033cd61a4f33fd73a7bbb1c77f825f262b59a0a82c9292035e0dd94a41701d22e09a56ad7db56a6300d53ae79acee3fbed955bce95172e496a609e25244b52e815af0399bb8a9e6e94cbae423fe1e0ca06e7c950cd5a55a916d57d4a69c6cd58af16a61a15782d8abd9ee7de70eba2a8e8c583aa355bc369140dcdf2dffd2cb0149c7f68cfbf418fc096561abab5dffb7e8797190a3433d729b98b11beea90f3d693cbceda3d9cc4ac6284d30cf409ac14d5c0d5d22175a85e06501d4ce69b8e68f2b07bc25b3346ed9885f81f06ea863aa375c854bf992ab56a092658c205d52aca8c3a980574a59a63bd47fb2b4317247e5e2ebb7ee64406e112773d804afc2731cfe44fa2b47b9c35847dee6cbed9593abfb376cbd97cb27de959007f4e54d58a0f7f8ac87a24fe647bb90b290f117f1e50b5e3b5f7037ee2acd2324a6af619cbea28e4732021da376250cfc469c4209e7173d54b834c3bdfdc6c9f5f81aea1fdaf1ba3a1cebfc2119d003905361ba49c623621e504393913355f12e3905029cb4b3e562966253192b450835039e733ceb391e3780c129a177cb6a548be128b84ca91b5404f42598a694522129ae329f85522161a67651268ab5bf70834948bceab8286a0f83854f0c3aaabebb02d110b9dff7e67fe457be5be7fde4d434365200f997313a6c302058421cd86d958335529e9926baf9898772a2c8dbef41228a9653c21ec02b80cac8f687ad110221373214e955aa82a0616e20485e7193eb9c209e549b2620dc7646e317c1c9367f814b447cb3153f043848a978721805ddd3321485ba6500249d97c2c2744831ac3b69652df3a112829e3bb5681ff1d89621b96d450dc2ed2b93d1aedd21f88a818600a1a88a814ec8a29a628fee6e2a39bab3b051f323b216e0a447b6e220da4e18000b660129796fe36aa4087e6da4f17b76f9e420d7f6fcb8be6c491e640590f9a137c68aed7309f801c35a1e34546cebedf842e4093bc7c4ec09d9e82cf6955e578a3a244d3b9ce83f46c4ee618becfe650dc63585ce2c233bbf9c46eaed8cd0738faea5c00cfed37e67c742e3f40e7009b4d0bcf1d840d55abaa96a51e528fa58ae958619078a13c26c673beaca68ee922ade743ac8f82eb8809c67d3306be4b2dcd18382f696e07d224e23de75cb3dd5c76e308b6b7d693113ed8432bd05316be544a1af2a253c76a468980faf283a82f7140a32c800cc56209855dc50b7cccfb0208019fe5b8c8290135f0e3b292c8faec67d95c2498a3877e39207aadcb22f574800afa0110b9694e4dfd243156484e0ceac7b1729c7dca38d88f031440911004f93c711064118e6c09a09fe49b62df38ed2caea06df6d370bef5dff6e5357bfeb5bd70767be5b1f38a8afba41b0f29244367f13020c21bc956466e6c194b138021e612852e023738922e302a69f05a306c2dcf8823cfec253ad41808c15d7be93c7ab47d0a87addd5bdb2dceb827a27b57cb7c4e4ebacee7702c2e2d60a42122c458c9c052526019c1a3b889248ae36300469fcf73e6579c3bffb1e7d7a19f73eedc42e1b9571eee9cb9682fcc7b5da0b3fc32961ee3c51f11e023cb449e7a085ba95335204dd436b1016332f57c9c1db68087e507029006c283598a1e4b080f063878ca2b465e480170499490d3a7c4f6dd6bcee2864f74df5fdb595ada45dda5ddb74951bc647725d29055c2760bd78dba8e01c2014731da87478b461f50e068f7bb03bdd5a7bf1c931fd51942fdd10156bf27bc7575fbc22baffe5adffe6a2fac3a0f2ed048308a3f7368608acb5a452efad842186b0d8d8b24a93d7ac00c57fbe05899a226a241ae009844219ddc609c25e71b8093fa3caa38cb578fa0c25a8f97ed8553cee64b2fcf4d126ad99f6866bd3c571a99e70251ecd5c9ae01dd0c942e6e9a2ed1ed07357589eedb8d9bad95b3ceca6d9c4c7ca84b60901eb8cbc91cf6381474d7acaac767abca1c05dfed3d1a23fa124e033d84576433a18477dd6e2ed9cd66e764ed10b69b43dcc8c776e56c5a68f7f312aad274996eaad075aa93455ada4acd72c966a510b3a340dcc194a85f89816d47482506a88d9db17e2a4434db7af6bcf5fc19f230cdcbf6029cf2ace22d8f5ffa4c3506a3c548b6f04dcda82b3a3d994d1c84294a81af13214c60e172568a0567a56c9ecffbe0299705627ac7d2b9ac24f9e06f4e4ef1647ade7fa25ea63fb341856685c883eed464164e3ee24c9be2905940b3344d1690c9fe416629c92c29184f18211286dfc383b814be65ef224d814841284867a2827c421cfd4c142d9e75fd453f00e75aeb071c80b3fe5dfbe9e95858c2571dc3f16cea9a083d024ed0374df40d49de3141440c5f347cd119253e9aef1021d13730b0560cf08964fa13de67584b880a13934585c53c5d9918a5027a22222646c3547b618290682f6cf07828cfa61098fc7ea3dabda4f8898fa80f6e611216054262d807280f418ff03528be3dd25c0ad18fef33a44df0052dc46fb2a0774c23ed7147eb2f25171eae3c918dfe3209c2017c7660c7348d20ec0f8cd7f2f9dd3f224fc16bdb2b4b23f1da2058f4825a31477b4c7e97412d607227e1bfff034cb20994 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /api/data_versions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/data/setting/region_labels.json HTTP/1.1" 304 Not Modified
+[API][2xx] GET /api/abyss_share_layout 1ms status=200
+INFO:     127.0.0.1:57972 - "GET /api/abyss_share_layout HTTP/1.1" 200 OK
+[API][2xx] POST /api/abyss_share_layout 6ms status=200
+INFO:     127.0.0.1:57973 - "POST /api/abyss_share_layout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /admin/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "POST /admin/login HTTP/1.1" 302 Found
+INFO:     127.0.0.1:57972 - "GET /admin HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57977 - "GET /admin/api/ui_flags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57978 - "GET /admin/api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57978 - "GET /admin/api/leyline_versions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57978 - "GET /admin/api/assets/namecards_status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57978 - "GET /admin/api/artifact_2set_buffs HTTP/1.1" 200 OK
+[API][2xx] GET /api/abyss_share_layout 1ms status=200
+INFO:     127.0.0.1:57978 - "GET /api/abyss_share_layout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /admin/api/scorecard_splash_offsets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_10001_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /admin/api/innate_em HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /admin/api/team_splash_offsets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57977 - "GET /admin/api/region_map HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_10003_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_10002_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57976 - "GET /admin/api/default_calc_method HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57977 - "GET /sw.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_10004_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_10005_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_10007_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_10006_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_10009_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_10008_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_10010_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_10012_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_10013_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_10011_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_14001_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_14002_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_14003_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_14004_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15001_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15002_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15003_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15004_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15007_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15006_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15005_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15008_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15009_3.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15010_3.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15011_3.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15012_3.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15013_3.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15014_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15015_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15016_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15017_4.webp HTTP/1.1" 200 OK
+[API][2xx] POST /api/abyss_share_layout 12ms status=200
+INFO:     127.0.0.1:57977 - "POST /api/abyss_share_layout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15018_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15019_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15020_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15021_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15022_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15023_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57978 - "GET /admin/api/leyline_data?version=7.0.54 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15024_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15025_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15026_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15027_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15028_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15029_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15030_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15031_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15032_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15033_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15034_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15035_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15037_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15036_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15038_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15039_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15040_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15041_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57975 - "GET /static/assets/artifacts/UI_RelicIcon_15042_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15043_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15044_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15045_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15046_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57974 - "GET /static/assets/artifacts/UI_RelicIcon_15047_4.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /static/assets/artifacts/UI_RelicIcon_15048_4.webp HTTP/1.1" 200 OK
+[API][2xx] GET /api/abyss_share_layout 1ms status=200
+INFO:     127.0.0.1:57986 - "GET /api/abyss_share_layout HTTP/1.1" 200 OK
+[API][2xx] POST /api/abyss_share_layout 7ms status=200
+INFO:     127.0.0.1:57987 - "POST /api/abyss_share_layout HTTP/1.1" 200 OK
+[API][2xx] POST /api/team_share_image 166ms status=200
+INFO:     127.0.0.1:57988 - "POST /api/team_share_image HTTP/1.1" 200 OK
+[API][2xx] POST /api/abyss_share_layout 8ms status=200
+INFO:     127.0.0.1:57989 - "POST /api/abyss_share_layout HTTP/1.1" 200 OK
+[API][2xx] POST /api/team_share_image 121ms status=200
+INFO:     127.0.0.1:57990 - "POST /api/team_share_image HTTP/1.1" 200 OK
+[API][2xx] POST /api/abyss_share_layout 7ms status=200
+INFO:     127.0.0.1:57991 - "POST /api/abyss_share_layout HTTP/1.1" 200 OK

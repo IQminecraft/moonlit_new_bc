@@ -46,10 +46,73 @@ def get_stat_label(append_prop_id: str, lang: str = "ja") -> str:
         if append_prop_id in text_map_data:
             return text_map_data[append_prop_id]
     return append_prop_id
+    return append_prop_id
 
 
 def get_stat_japanese(append_prop_id: str) -> str:
     return get_stat_label(append_prop_id, "ja")
+
+# 編成カードの聖遺物サブステ用短縮ラベル（幅が狭い行向け）
+# 日本語は日本語の短縮、英語は英略語。言語を混ぜない。
+_STAT_ABBR_JA = {
+    "基礎攻撃力": "攻撃",
+    "攻撃力": "攻撃",
+    "攻撃力%": "攻撃%",
+    "攻撃%": "攻撃%",
+    "HP": "HP",
+    "HP%": "HP%",
+    "防御力": "防御",
+    "防御力%": "防御%",
+    "熟知": "熟知",
+    "元素熟知": "熟知",
+    "チャージ": "チャージ",
+    "チャージ効率": "チャージ",
+    "元素チャージ効率": "チャージ",
+    "会心率": "会心率",
+    "会心ダメ": "会心ダメ",
+    "会心ダメージ": "会心ダメ",
+}
+_STAT_ABBR_EN = {
+    "基礎攻撃力": "ATK",
+    "攻撃力": "ATK",
+    "攻撃力%": "ATK%",
+    "攻撃%": "ATK%",
+    "防御力": "DEF",
+    "防御力%": "DEF%",
+    "熟知": "EM",
+    "元素熟知": "EM",
+    "チャージ": "ER",
+    "チャージ効率": "ER",
+    "元素チャージ効率": "ER",
+    "会心率": "CR",
+    "会心ダメ": "CD",
+    "会心ダメージ": "CD",
+    "Base ATK": "ATK",
+    "ATK": "ATK",
+    "ATK%": "ATK%",
+    "HP": "HP",
+    "HP%": "HP%",
+    "DEF": "DEF",
+    "DEF%": "DEF%",
+    "CRIT Rate": "CR",
+    "CRIT DMG": "CD",
+    "Energy Recharge": "ER",
+    "Elemental Mastery": "EM",
+}
+
+
+def get_stat_abbr(name: str, lang: str = "ja") -> str:
+    """聖遺物サブステ表示用の短縮形ラベルを返す。
+
+    ja: 攻撃 / 攻撃% / 防御 / 会心率 / 会心ダメ / チャージ / 熟知
+    en: ATK / ATK% / DEF / CR / CD / ER / EM
+    対応する短縮形が無ければ name をそのまま返す。
+    """
+    key = str(name or "")
+    if lang == "en":
+        return _STAT_ABBR_EN.get(key, key)
+    return _STAT_ABBR_JA.get(key, key)
+
 
 
 def get_text_map_name(hash_or_key, lang: str = "ja", fallback: str = "") -> str:

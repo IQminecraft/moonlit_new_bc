@@ -15,7 +15,6 @@ import threading
 from collections import OrderedDict
 # 環境変数を import 時に読むため、.env（dotenv は app.paths の import 副作用で
 # 読み込まれる）がどの import 順でも先に載るように app.paths を参照しておく。
-from app.paths import BASE_DIR  # noqa: F401
 
 # 件数上限（環境変数で調整可）。1エントリは数百KB〜数MBのパース済みdict。
 _JSON_CACHE_MAX_ENTRIES = max(16, int(os.environ.get("JSON_CACHE_MAX_ENTRIES", "192")))

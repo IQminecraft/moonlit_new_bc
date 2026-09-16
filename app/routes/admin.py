@@ -1920,3 +1920,107 @@ async def admin_artifact_2set_buffs_save(request: Request):
         return JSONResponse({"ok": True, "updated": len(cleaned)})
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+# ---- 幽境共有データ（R2 snapshots）: 管理パネルからの一覧/削除 ----
+_ABYSs_SID_RE = _re.compile(r'^s\d{13}[0-9a-f]{6}$')
+
+
+@admin_router.get("/admin/api/abyss_shares")
+async def admin_abyss_shares(request: Request):
+    """R2 に保存された幽境編成共有スナップショットを一覧化（作成日時/UID/幽境バージョン/キャラアイコン）。"""
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+
+    def _scan():
+        from app import share_store
+        items = []
+        for key in share_store.list_keys("snapshots/"):
+            try:
+                raw = share_store.get(key)
+                if not raw:
+                    continue
+                d = json.loads(raw.decode("utf-8"))
+            except Exception:
+                continue
+            kind = d.get("kind") or ("abyss" if isinstance(d.get("abyss"), dict) else None)
+            if kind != "abyss":
+                continue
+            sid = str(d.get("sid") or key.rsplit("/", 1)[-1][:-5])
+            try:
+                created = float(d.get("created") or 0)
+            except Exception:
+                created = 0.0
+            if created <= 0:
+                try:
+                    created = int(sid[1:14]) / 1000.0
+                except Exception:
+                    created = 0.0
+            icons = []
+            for entry in (d.get("chars") or {}).values():
+                ic = str((entry or {}).get("icon") or "")
+                if ic and ic not in icons:
+                    icons.append(ic)
+            ab = d.get("abyss") if isinstance(d.get("abyss"), dict) else {}
+            items.append({
+                "sid": sid,
+                "created": created,
+                "uid": str(d.get("uid") or "-"),
+                "version": str(ab.get("version") or "-"),
+                "difficulty": str(ab.get("difficulty") or "-"),
+                "bosses": ab.get("bosses") or [],
+                "icons": icons[:12],
+                "permanent": float(d.get("exp", 0) or 0) == 0,
+            })
+        items.sort(key=lambda x: -x["created"])
+        return items
+
+    try:
+        items = await run_in_threadpool(_scan)
+        return JSONResponse({"ok": True, "items": items})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@admin_router.post("/admin/api/abyss_shares/delete")
+async def admin_abyss_shares_delete(request: Request):
+    """幽境編成共有スナップショットを1件または複数削除する（リンクは即座に「見つかりません」になる）。"""
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "invalid JSON"}, status_code=400)
+    raw = (body or {}).get("sids")
+    if raw is None:
+        raw = [(body or {}).get("sid")]
+    if not isinstance(raw, list):
+        raw = [raw]
+    sids = []
+    for s in raw:
+        sid = str(s or "")
+        if not sid:
+            continue
+        if not _ABYSs_SID_RE.match(sid):
+            return JSONResponse({"ok": False, "error": "sid が不正です"}, status_code=400)
+        if sid not in sids:
+            sids.append(sid)
+    if not sids:
+        return JSONResponse({"ok": False, "error": "sid が不正です"}, status_code=400)
+    if len(sids) > 200:
+        return JSONResponse({"ok": False, "error": "一度に削除できる件数は200件までです"}, status_code=400)
+
+    def _del():
+        from app import share_store
+        n = 0
+        for sid in sids:
+            key = f"snapshots/{sid}.json"
+            if share_store.get(key) is not None:
+                share_store.delete(key)
+                n += 1
+        return n
+
+    try:
+        deleted = await run_in_threadpool(_del)
+        return JSONResponse({"ok": True, "deleted": deleted, "count": deleted})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)

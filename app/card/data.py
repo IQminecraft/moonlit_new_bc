@@ -4,9 +4,9 @@ from collections import Counter
 from fastapi import HTTPException
 from app.paths import BASE_DIR, STATIC_DIR
 from app.card.stats import (
-    text_map_data, get_stat_japanese, get_stat_label, get_text_map_name, get_char_level,
+    get_stat_label, get_text_map_name, get_char_level,
     score_calc,
-    sum_affix_substat_values, is_percent_prop, format_substat_value, format_base_value, format_decimal_value,
+    sum_affix_substat_values, is_percent_prop, format_base_value, format_decimal_value,
     artifact_substat_rolls,
 )
 from app.card.special import (

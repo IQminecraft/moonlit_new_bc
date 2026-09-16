@@ -10,7 +10,7 @@ import re
 import json
 from collections import Counter
 
-from app.paths import BASE_DIR, STATIC_DIR
+from app.paths import STATIC_DIR
 from app.core.jsonio import write_json_atomic
 from app.card.stats import apply_stat_bonus, to_ratio_if_percent
 

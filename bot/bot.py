@@ -18,7 +18,6 @@ import json
 import os
 import signal
 import sys
-import time
 from datetime import datetime
 
 import aiohttp
@@ -159,7 +158,6 @@ class _NewBCBot(commands.Bot):
                     # discord.py は cog_check を「Cog のメソッド」として扱う
                     # （_get_overridden_method が __func__ を参照する）。
                     # Cog サブクラスを動的に作って型レベルで差し替えるのが確実。
-                    import types
                     cog_cls = type(cog)
                     cog_cls.cog_check = _admin_or_owner
                     break

@@ -1,0 +1,41 @@
+[OK] Discord error webhook configured (DISCORD_WEBHOOK_URL)
+[OK] Cache LRU (byte budget): images<=64MB resized<=64MB splash_blur<=96MB region_bgs<=48MB layers<=64MB masks<=16MB ttl=300s sweep=300s
+D:\system\desktop2\py_dev\__moonlit__\moonlit_new_bc\server.py:28: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+INFO:     Started server process [15952]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8011 (Press CTRL+C to quit)
+[OK] Card-gen pool: workers=2 queue=20 timeout=8s cache_ttl=0.1h
+[OK] Admin routes embedded in server.py → /admin/login , /admin/__ping
+[Prebuild] 8 element backgrounds cached in memory
+[Prebuild] 8 region backgrounds cached in memory
+[Bot] stopping orphan bot process (pid=18832)
+[OK] Discord bot started (pid=18444)
+[OK] Discord bot autostart (pid=18444)
+INFO:     127.0.0.1:61313 - "GET / HTTP/1.1" 200 OK
+[32m2026-09-14 19:33:12.641[0m | [34m[1mDEBUG   [0m | [36menka.assets.data[0m:[36m_open_json[0m:[36m72[0m - [34m[1mOpening .enka_py\assets\text_map.json[0m
+[32m2026-09-14 19:33:12.641[0m | [34m[1mDEBUG   [0m | [36menka.assets.data[0m:[36m_open_json[0m:[36m72[0m - [34m[1mOpening .enka_py\assets\characters.json[0m
+[32m2026-09-14 19:33:12.642[0m | [34m[1mDEBUG   [0m | [36menka.assets.data[0m:[36m_open_json[0m:[36m72[0m - [34m[1mOpening .enka_py\assets\namecards.json[0m
+[32m2026-09-14 19:33:12.642[0m | [34m[1mDEBUG   [0m | [36menka.assets.data[0m:[36m_open_json[0m:[36m72[0m - [34m[1mOpening .enka_py\assets\consts.json[0m
+[32m2026-09-14 19:33:12.642[0m | [34m[1mDEBUG   [0m | [36menka.assets.data[0m:[36m_open_json[0m:[36m72[0m - [34m[1mOpening .enka_py\assets\talents.json[0m
+[32m2026-09-14 19:33:12.642[0m | [34m[1mDEBUG   [0m | [36menka.assets.data[0m:[36m_open_json[0m:[36m72[0m - [34m[1mOpening .enka_py\assets\pfps.json[0m
+[32m2026-09-14 19:33:12.737[0m | [34m[1mDEBUG   [0m | [36menka.clients.base[0m:[36m_request[0m:[36m62[0m - [34m[1mRequesting https://enka.network/api/uid/1812256644[0m
+[Info] Fetching characters via API for UID: 1812256644 (from_artifacter: False)
+[API][SLOW] GET /uid/1812256644 2834ms status=200
+INFO:     127.0.0.1:61314 - "GET /uid/1812256644 HTTP/1.1" 200 OK
+[TeamCard] column 0 drawn in 188ms
+[TeamCard] column 1 drawn in 146ms
+[TeamCard] card drawn in 464ms
+[TeamCard] PNG encoded 902603 bytes in 78ms
+[API][2xx] POST /api/team_share_image 714ms status=200
+INFO:     127.0.0.1:61316 - "POST /api/team_share_image HTTP/1.1" 200 OK
+[API][2xx] GET /api/share_data/s1788836438999c13e09 2ms status=200
+INFO:     127.0.0.1:61317 - "GET /api/share_data/s1788836438999c13e09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61318 - "GET /api/enka_cooldown?uid=1812256644 HTTP/1.1" 200 OK
+[Cache] reset: images=31 resized=32 splash_blur=0 region_bgs=3 layers=5 masks=13 (ttl=300s force=False)

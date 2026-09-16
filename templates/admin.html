@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin · データ管理</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/tailwind.build.css?v={{ asset_ver('tailwind.build.css') }}">
     <style>
         body { background: #0a0a0c; color: #e4e4e7; font-family: 'Inter', system-ui, sans-serif; }
         .card { background: #18181b; border: 1px solid #27272a; border-radius: 12px; }
@@ -108,6 +108,8 @@
     <button type="button" class="admin-tab" data-tab="innateem">固有元素熟知</button>
     <button type="button" class="admin-tab" data-tab="calcmethod">デフォルト計算方式</button>
     <button type="button" class="admin-tab" data-tab="uidisplay">表示設定</button>
+    <button type="button" class="admin-tab" data-tab="abysslayout">幽境共有レイアウト</button>
+                <button type="button" class="admin-tab" data-tab="abyssshares">幽境共有データ</button>
             <button type="button" class="admin-tab" data-tab="bot">Bot管理</button>
         </div>
 
@@ -622,6 +624,88 @@
         </section>
         </div><!-- /tab-uidisplay -->
 
+        <div id="tab-abysslayout" class="admin-tab-panel hidden">
+        <section class="card p-5 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 class="text-lg font-semibold">幽境共有レイアウト</h2>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="abyssLayoutReloadBtn" class="btn btn-ghost text-xs">再読み込み</button>
+                    <button type="button" id="abyssLayoutDefaultBtn" class="btn btn-ghost text-xs">初期位置に戻す</button>
+                    <button type="button" id="abyssLayoutSaveBtn" class="btn btn-primary text-xs">保存</button>
+                </div>
+            </div>
+            <p class="text-xs text-zinc-500 mb-3">
+                baseimg上の要素をドラッグして位置を調整します（共有閲覧ページと共有画像の両方に反映）。ボス行の上など、要素を重ねてもドラッグは最前面のボックスから動きます。<strong class="text-cyan-400">「名前/UID」ボックス(既定は右下)もドラッグで移動でき、位置は「サイズ / 余白」の「名前/UID X/Y」でも直接指定できます。</strong>
+                アイコンサイズ・名前文字サイズ・余白は下の入力欄で指定できます。右上の「保存」ボタンで確定します。
+            </p>
+            <div class="grid lg:grid-cols-[auto_20rem] gap-5">
+                <div>
+                    <div style="overflow-x:auto;max-width:100%">
+                        <div id="abyssLayoutCanvas" style="position:relative;width:868px;height:560px;flex:none;
+                            background-image:url('/static/assets/abyss_share_base.png?v={{ asset_ver("assets/abyss_share_base.png") }}');background-size:100% 100%;background-position:center;background-repeat:no-repeat;
+                            border:1px solid var(--border);border-radius:8px;overflow:hidden;touch-action:none">
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-zinc-500 mt-1">ドラッグで移動(キャンバスは868×560固定・実表示と同じ比率)。保存ボタンで確定します。</p>
+                </div>
+                <div class="space-y-3 text-xs">
+                    <div class="card p-3">
+                        <div class="font-semibold mb-2">サイズ / 余白</div>
+                        <label class="flex items-center justify-between gap-2 mb-1">ボスアイコン<input type="number" id="lay_bossIcon_size" class="w-16 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-right"></label>
+                        <label class="flex items-center justify-between gap-2 mb-1">キャラアイコン<input type="number" id="lay_charIcon_size" class="w-16 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-right"></label>
+                        <label class="flex items-center justify-between gap-2 mb-1">キャラ間隔<input type="number" id="lay_charIcon_gap" class="w-16 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-right"></label>
+                        <label class="flex items-center justify-between gap-2 mb-1">名前文字<input type="number" id="lay_bossName_size" class="w-16 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-right"></label>
+                        <label class="flex items-center justify-between gap-2 mb-1">行の高さ<input type="number" id="lay_rowHeight" class="w-16 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-right"></label>
+                        <label class="flex items-center justify-between gap-2 mb-1">行間の余白<input type="number" id="lay_rowGap" class="w-16 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-right"></label>
+                        <label class="flex items-center justify-between gap-2 mb-1">上の余白<input type="number" id="lay_rowTop" class="w-16 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-right"></label>
+                        <label class="flex items-center justify-between gap-2 mb-1">行の枠/背景<input type="checkbox" id="lay_rowPanel" class="accent-cyan-500 w-4 h-4"></label>
+                        <label class="flex items-center justify-between gap-2 mb-1">名前/UID表示<input type="checkbox" id="lay_playerTag" class="accent-cyan-500 w-4 h-4"></label>
+                        <label class="flex items-center justify-between gap-2 mb-1">名前/UID X<input type="number" id="lay_playerTag_x" class="w-16 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-right"></label>
+                        <label class="flex items-center justify-between gap-2 mb-1">名前/UID Y<input type="number" id="lay_playerTag_y" class="w-16 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-right"></label>
+                        <label class="flex items-center justify-between gap-2">名前/UID 文字<input type="number" id="lay_playerTag_size" class="w-16 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-right"></label>
+                    </div>
+                    <div class="card p-3">
+                        <div class="font-semibold mb-2">並び</div>
+                        <label class="flex items-center justify-between gap-2 mb-1">キャラ位置<select id="lay_charIcon_align" class="bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5"><option value="right">右寄せ</option><option value="left">左寄せ</option></select></label>
+                        <label class="flex items-center justify-between gap-2 mb-1">名前/UID揃え<select id="lay_playerTag_align" class="bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5"><option value="right">右揃え(X=右端)</option><option value="left">左揃え(X=左端)</option></select></label>
+                        <label class="flex items-center justify-between gap-2">タイム位置<select id="lay_clearTime_align" class="bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5"><option value="right">右寄せ</option><option value="left">左寄せ</option></select></label>
+                    </div>
+                    <div id="abyssLayoutSaveResult" class="hidden"></div>
+                </div>
+            </div>
+        </section>
+        </div><!-- /tab-abysslayout -->
+
+        <div id="tab-abyssshares" class="admin-tab-panel hidden">
+        <section class="card p-5 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 class="text-lg font-semibold">幽境共有データ（R2保存）</h2>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="abyssSharesDeleteSelBtn" class="btn btn-danger text-xs" disabled>選択を削除</button>
+                    <button type="button" id="abyssSharesReloadBtn" class="btn btn-ghost text-xs">再読み込み</button>
+                </div>
+            </div>
+            <p class="text-xs text-zinc-500 mb-3">
+                幽境編成の共有リンクが参照する凍結データの一覧です。幽境分は無期限で残り続けるため、不要なものはここで削除してください（削除すると該当リンクは即座に「データが見つかりません」になります）。
+            </p>
+            <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead><tr class="text-left text-xs text-zinc-500 border-b border-zinc-800">
+                    <th class="py-2 pr-2 w-8"><input type="checkbox" id="abyssSharesCheckAll" class="accent-cyan-500" title="すべて選択"></th>
+                    <th class="py-2 pr-3">作成日時</th>
+                    <th class="py-2 pr-3">UID</th>
+                    <th class="py-2 pr-3">幽境</th>
+                    <th class="py-2 pr-3">ボス</th>
+                    <th class="py-2 pr-3">キャラ</th>
+                    <th class="py-2 pr-3">期限</th>
+                    <th class="py-2"></th>
+                </tr></thead>
+                <tbody id="abyssSharesBody"><tr><td colspan="8" class="py-4 text-zinc-500 text-xs">読み込み中…</td></tr></tbody>
+            </table>
+            </div>
+        </section>
+        </div>
+
         <div id="tab-bot" class="admin-tab-panel hidden">
         <section class="card p-5 mb-6">
             <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
@@ -704,9 +788,6 @@
             crit: '会心のみ', atk: '攻撃力%', hp: 'HP%', def: '防御%', em: '元素熟知', charge: 'チャージ効率',
         };
 
-        // ==========================================================
-        //  管理タブ切り替え
-        // ==========================================================
         const ADMIN_TAB_KEY = 'admin_active_tab';
         function activateAdminTab(tab) {
             document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.add('hidden'));
@@ -720,11 +801,147 @@
         });
         let savedAdminTab = 'data';
         try { savedAdminTab = localStorage.getItem(ADMIN_TAB_KEY) || 'data'; } catch (e) {}
-        activateAdminTab(['data', 'region', 'splash', 'leyline', 'setbuffs', 'innateem', 'calcmethod', 'uidisplay', 'bot'].includes(savedAdminTab) ? savedAdminTab : 'data');
+        activateAdminTab(['data', 'region', 'splash', 'leyline', 'setbuffs', 'innateem', 'calcmethod', 'uidisplay', 'abysslayout', 'abyssshares', 'bot'].includes(savedAdminTab) ? savedAdminTab : 'data');
 
-        // ==========================================================
-        //  スプラッシュオフセット プレビュー（実際のカードと同じサイズ）
-        // ==========================================================
+        // ---- 幽境共有データ（R2）一覧・削除 ----
+        (function initAbyssShares() {
+            const tbody = document.getElementById('abyssSharesBody');
+            if (!tbody) return;
+            const checkAll = document.getElementById('abyssSharesCheckAll');
+            const delSelBtn = document.getElementById('abyssSharesDeleteSelBtn');
+            const fmt = ts => {
+                if (!ts) return '-';
+                const d = new Date(ts * 1000);
+                const p = n => String(n).padStart(2, '0');
+                return d.getFullYear() + '/' + p(d.getMonth() + 1) + '/' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+            };
+            function selectedSids() {
+                return Array.prototype.map.call(tbody.querySelectorAll('.abyss-share-check:checked'), el => el.value).filter(Boolean);
+            }
+            function syncSelUi() {
+                const boxes = tbody.querySelectorAll('.abyss-share-check');
+                const n = selectedSids().length;
+                if (delSelBtn) {
+                    delSelBtn.disabled = n === 0;
+                    delSelBtn.textContent = n ? ('選択を削除 (' + n + ')') : '選択を削除';
+                }
+                if (checkAll) {
+                    checkAll.checked = boxes.length > 0 && n === boxes.length;
+                    checkAll.indeterminate = n > 0 && n < boxes.length;
+                }
+            }
+            async function deleteSids(sids, confirmMsg) {
+                if (!sids.length) return;
+                if (!confirm(confirmMsg)) return;
+                try {
+                    const r = await fetch('/admin/api/abyss_shares/delete', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sids: sids }),
+                    });
+                    const j2 = await r.json();
+                    if (!j2.ok) throw new Error(j2.error || ('status ' + r.status));
+                    load();
+                } catch (e) {
+                    alert('削除に失敗しました: ' + e.message);
+                }
+            }
+            async function load() {
+                tbody.innerHTML = '';
+                if (checkAll) { checkAll.checked = false; checkAll.indeterminate = false; }
+                if (delSelBtn) { delSelBtn.disabled = true; delSelBtn.textContent = '選択を削除'; }
+                const loading = document.createElement('tr');
+                loading.innerHTML = '<td colspan="8" class="py-4 text-zinc-500 text-xs">読み込み中…</td>';
+                tbody.appendChild(loading);
+                try {
+                    const res = await fetch('/admin/api/abyss_shares', { cache: 'no-store' });
+                    const j = await res.json();
+                    if (!j.ok) throw new Error(j.error || ('status ' + res.status));
+                    tbody.innerHTML = '';
+                    const items = j.items || [];
+                    if (!items.length) {
+                        tbody.innerHTML = '<tr><td colspan="8" class="py-4 text-zinc-500 text-xs">幽境共有データはありません</td></tr>';
+                        return;
+                    }
+                    items.forEach(it => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'border-b border-zinc-800/60 align-top';
+                        const tdChk = document.createElement('td');
+                        tdChk.className = 'py-2 pr-2';
+                        const chk = document.createElement('input');
+                        chk.type = 'checkbox';
+                        chk.className = 'abyss-share-check accent-cyan-500';
+                        chk.value = it.sid;
+                        chk.addEventListener('change', syncSelUi);
+                        tdChk.appendChild(chk);
+                        tr.appendChild(tdChk);
+                        const bossTxt = (it.bosses || []).map((b, i) => (i + 1) + '.' + (b.name || '?') + '(' + (b.n || 0) + ')' + (b.time ? ' ' + b.time : '')).join(' / ');
+                        [
+                            fmt(it.created),
+                            String(it.uid || '-'),
+                            (it.version || '-') + (it.difficulty && it.difficulty !== '-' ? ' / ' + it.difficulty : ''),
+                            bossTxt || '-',
+                        ].forEach(c => {
+                            const td = document.createElement('td');
+                            td.className = 'py-2 pr-3 text-xs';
+                            td.textContent = c;
+                            tr.appendChild(td);
+                        });
+                        const tdIcons = document.createElement('td');
+                        tdIcons.className = 'py-2 pr-3';
+                        const iw = document.createElement('div');
+                        iw.className = 'flex items-center gap-1 flex-wrap';
+                        (it.icons || []).forEach(src => {
+                            const im = document.createElement('img');
+                            im.src = src; im.alt = '';
+                            im.className = 'w-7 h-7 rounded-md object-cover bg-zinc-800';
+                            im.loading = 'lazy';
+                            iw.appendChild(im);
+                        });
+                        if (!(it.icons || []).length) iw.textContent = '-';
+                        tdIcons.appendChild(iw);
+                        tr.appendChild(tdIcons);
+                        const tdExp = document.createElement('td');
+                        tdExp.className = 'py-2 pr-3 text-xs';
+                        tdExp.textContent = it.permanent ? '無期限' : '30日';
+                        tr.appendChild(tdExp);
+                        const tdAct = document.createElement('td');
+                        tdAct.className = 'py-2 text-right';
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'btn btn-ghost text-xs';
+                        btn.style.color = '#f87171';
+                        btn.textContent = '削除';
+                        btn.addEventListener('click', () => {
+                            deleteSids([it.sid], '作成 ' + fmt(it.created) + ' / UID ' + it.uid + ' / 幽境 ' + it.version + ' の共有を削除します。\nこのリンクは即座に開けなくなりますが、よろしいですか？');
+                        });
+                        tdAct.appendChild(btn);
+                        tr.appendChild(tdAct);
+                        tbody.appendChild(tr);
+                    });
+                } catch (e) {
+                    tbody.innerHTML = '';
+                    const tr = document.createElement('tr');
+                    const td = document.createElement('td');
+                    td.colSpan = 8;
+                    td.className = 'py-4 text-red-400 text-xs';
+                    td.textContent = '読み込みに失敗しました: ' + e.message;
+                    tr.appendChild(td);
+                    tbody.appendChild(tr);
+                }
+            }
+            const rb = document.getElementById('abyssSharesReloadBtn');
+            if (rb) rb.addEventListener('click', load);
+            if (checkAll) checkAll.addEventListener('change', () => {
+                tbody.querySelectorAll('.abyss-share-check').forEach(el => { el.checked = checkAll.checked; });
+                syncSelUi();
+            });
+            if (delSelBtn) delSelBtn.addEventListener('click', () => {
+                const sids = selectedSids();
+                deleteSids(sids, sids.length + '件の共有を削除します。\n該当リンクは即座に開けなくなりますが、よろしいですか？');
+            });
+            load();
+        })();
+
         const SPLASH_PREVIEW_W = 525;  // _COL_W(420) * 1.25
         const SPLASH_PREVIEW_H = 188;  // _IDENTITY_H(150) * 1.25
         const SPLASH_ZOOM = 3.0;       // team_image.TEAM_SPLASH_ZOOM と同じ
@@ -1043,9 +1260,6 @@
         document.getElementById('splashOffsetSearch')?.addEventListener('input', renderSplashOffsets);
         loadSplashOffsets();
 
-        // ==========================================================
-        //  SCORECARD スプラッシュオフセット（background-position: cover）
-        // ==========================================================
         const SC_PREVIEW_W = 700;  // scc-banner 1400×216 の 50%
         const SC_PREVIEW_H = 108;
         let scPreviewCharId = null;
@@ -1237,9 +1451,6 @@
         document.getElementById('scorecardOffsetSearch')?.addEventListener('input', renderScorecardOffsets);
         loadScorecardOffsets();
 
-        // ==========================================================
-        //  固有元素熟知
-        // ==========================================================
         function renderInnateEmList() {
             const listEl = document.getElementById('innateEmList');
             if (!listEl) return;
@@ -1345,9 +1556,6 @@
         document.getElementById('innateEmOnlySet')?.addEventListener('change', renderInnateEmList);
         loadInnateEm();
 
-        // ==========================================================
-        //  キャラ毎デフォルト計算方式（calc_method）
-        // ==========================================================
         function renderCalcMethodList() {
             const listEl = document.getElementById('calcMethodList');
             if (!listEl) return;
@@ -1454,9 +1662,6 @@
         document.getElementById('calcMethodOnlySet')?.addEventListener('change', renderCalcMethodList);
         loadCalcMethod();
 
-        // ==========================================================
-        //  UI 表示フラグ（編成/幽境ボタンの表示切替）
-        // ==========================================================
         async function loadUiFlags() {
             try {
                 const res = await fetch('/admin/api/ui_flags');
@@ -1607,9 +1812,6 @@
         refreshBtn.addEventListener('click', loadStatus);
         loadStatus();
 
-        // ==========================================================
-        //  キャラ地域割り当て
-        // ==========================================================
         const REGION_LABELS = {
             mondstadt: 'モンド', liyue: '璃月', inazuma: '稲妻', sumeru: 'スメール',
             fontaine: 'フォテーヌ', natlan: 'ナタ', nodkrai: 'ノッドクライ',
@@ -1883,9 +2085,6 @@
 
         loadRegionMap();
 
-        // ==========================================================
-        //  Leyline（イベント）データ取得・表示
-        // ==========================================================
         //  Leyline バージョン管理（admin で追加した一覧はサーバーに保存）
         let leylineAvailable = { live: null, latest: null, available: [], saved_versions: [] };
         function leylineSavedVersions() {
@@ -2070,9 +2269,6 @@
         }
         initLeylineVersions();
 
-        // ==========================================================
-        //  レイラインの敵3体画像表示（サーバーがローカルへダウンロード済みの画像を使う）
-        // ==========================================================
         function leylineCloseEnemyModal() {
             const m = document.getElementById('leylineEnemyModal');
             if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
@@ -2099,9 +2295,6 @@
         const leylineEnemyModal = document.getElementById('leylineEnemyModal');
         if (leylineEnemyModal) leylineEnemyModal.addEventListener('click', (e) => { if (e.target === leylineEnemyModal) leylineCloseEnemyModal(); });
 
-        // ==========================================================
-        //  聖遺物 2セット効果バフ設定
-        // ==========================================================
         let setBuffTypes = [];
         let setBuffRows = [];
         function setBuffTypeLabel(type) {
@@ -2282,9 +2475,6 @@
         document.getElementById('setBuffsOnlyReflectable').addEventListener('change', renderSetBuffs);
         loadSetBuffs();
 
-        // ==========================================================
-        //  アセット欠落チェック
-        // ==========================================================
         (function () {
             const checkBtn = document.getElementById('assetCheckBtn');
             const fixBtn = document.getElementById('assetFixBtn');
@@ -2315,9 +2505,6 @@
                 return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             }
 
-            // ==========================================================
-            //  Discord Bot 管理
-            // ==========================================================
             (function () {
                 const stateEl = document.getElementById('botState');
                 const userEl = document.getElementById('botUser');
@@ -2526,6 +2713,194 @@
                 }
             });
         })();
+    (function () {
+        const canvas = document.getElementById('abyssLayoutCanvas');
+        if (!canvas) return;
+        const W = 868, H = 560;
+        const ELEMS = [
+            { key: 'bossIcon', label: 'ボスアイコン', kind: 'icon' },
+            { key: 'bossName', label: '名前', kind: 'text' },
+            { key: 'clearTime', label: 'タイム', kind: 'text' },
+            { key: 'charIcon', label: 'キャラ×4', kind: 'members' },
+        ];
+        let layout = null;
+        let drag = null;
+
+        function defaultLayout() {
+            return {
+                bossIcon: { x: 20, y: 60, size: 64 },
+                charIcon: { x: 0, y: 0, size: 60, gap: 10, align: 'right' },
+                bossName: { x: 96, y: 62, size: 17 },
+                clearTime: { x: 0, y: 0, size: 15, align: 'right' },
+                rowPadding: { x: 18, y: 14 },
+                rowPanel: false,
+                playerTag: { show: true, x: 846, y: 526, size: 15, align: 'right' },
+                rowHeight: 120,
+                rowGap: 14,
+                header: { x: 24, y: 24, size: 34 },
+            };
+        }
+
+        function render() {
+            if (!layout) return;
+            canvas.innerHTML = '';
+            const rows = 3;
+            const rowH = Number(layout.rowHeight) || 120;
+            const rowGap = Number(layout.rowGap ?? 14);
+            const rowX = Number((layout.rowPadding || {}).x ?? 18);
+            const rowY0 = Number((layout.rowPadding || {}).y ?? 14);
+            const showPanel = !!layout.rowPanel;
+            for (let r = 0; r < rows; r++) {
+                const frame = document.createElement('div');
+                const panelStyle = showPanel ? 'background:rgba(20,16,20,.78);border:1px solid rgba(230,90,70,.43);' : 'border:1px dashed rgba(230,90,70,.25);';
+                frame.style.cssText = 'position:absolute;left:' + rowX + 'px;top:' + (rowY0 + r * rowH) + 'px;width:' + (W - rowX * 2) + 'px;height:' + (rowH - rowGap) + 'px;border-radius:12px;pointer-events:none;' + panelStyle;
+                canvas.appendChild(frame);
+            }
+            addDrag('header', -1, '幽境危路 7.0', (layout.header || {}).x ?? 24, (layout.header || {}).y ?? 24, 150, 34, null);
+            const ptCfg = (layout.playerTag && typeof layout.playerTag === 'object') ? layout.playerTag : {};
+            const ptAl = ptCfg.align || 'right', ptW = 170;
+            const ptX = Number(ptCfg.x ?? 846), ptBx = ptAl === 'right' ? ptX - ptW : ptX;
+            addDrag('playerTag', -1, '名前/UID', ptBx, Number(ptCfg.y ?? 526), ptW, Number(ptCfg.size ?? 15) + 8, null);
+            const ptEl = [...canvas.children].reverse().find(d => d.textContent.trim() === '名前/UID');
+            if (ptEl) ptEl.style.zIndex = '30';
+            ELEMS.forEach(def => {
+                for (let r = 0; r < rows; r++) {
+                    const cfg = layout[def.key] || {};
+                    if (def.key === 'bossIcon') {
+                        const sz = Number(cfg.size) || 56;
+                        addDrag(def.key, r, def.label, rowX + Number(cfg.x ?? 0), rowY0 + r * rowH + Number(cfg.y ?? 0), sz, sz, { round: true });
+                    } else if (def.key === 'bossName') {
+                        addDrag(def.key, r, def.label, rowX + Number(cfg.x ?? 0), rowY0 + r * rowH + Number(cfg.y ?? 0), 140, 24, null);
+                    } else if (def.key === 'clearTime') {
+                        addDrag(def.key, r, def.label, rowX + Number(cfg.x ?? 96), rowY0 + r * rowH + Number(cfg.y ?? 44), 110, 24, null);
+                    } else if (def.key === 'charIcon') {
+                        const sz = Number(cfg.size) || 60, gap = Number(cfg.gap) || 10;
+                        const align = cfg.align || 'right';
+                        const bx = align === 'right' ? (W - rowX - 18 - 4 * (sz + gap) + gap + Number(cfg.x ?? 0)) : (rowX + Number(cfg.x ?? 0));
+                        addDrag(def.key, r, def.label, bx, rowY0 + r * rowH + Number(cfg.y ?? 0), 4 * sz + 3 * gap, sz, { sz: sz, gap: gap });
+                    }
+                }
+            });
+            syncInputs();
+        }
+
+        function addDrag(key, row, label, x, y, w, h, extra) {
+            const el = document.createElement('div');
+            const radius = (extra && extra.round) ? '50%' : '8px';
+            el.style.cssText = 'position:absolute;left:' + Math.round(x) + 'px;top:' + Math.round(y) + 'px;min-width:' + Math.round(w) + 'px;height:' + Math.round(h) + 'px;' +
+                'border:2px dashed rgba(34,211,238,.8);background:rgba(34,211,238,.12);color:#67e8f9;' +
+                'font-size:10px;display:flex;align-items:center;justify-content:center;cursor:move;user-select:none;border-radius:' + radius + ';overflow:hidden';
+            el.textContent = label;
+            if (extra) {
+                el.innerHTML = '';
+                for (let i = 0; i < 4; i++) {
+                    const c = document.createElement('div');
+                    c.style.cssText = 'width:' + extra.sz + 'px;height:' + extra.sz + 'px;border:1px dashed rgba(103,232,249,.6);border-radius:8px;margin-right:' + extra.gap + 'px';
+                    el.appendChild(c);
+                }
+            }
+            el.addEventListener('pointerdown', ev => {
+                drag = { key: key, row: row, sx: ev.clientX, sy: ev.clientY, ox: el.offsetLeft, oy: el.offsetTop, el: el };
+                el.setPointerCapture(ev.pointerId);
+            });
+            el.addEventListener('pointermove', ev => {
+                if (!drag || drag.el !== el) return;
+                el.style.left = (drag.ox + ev.clientX - drag.sx) + 'px';
+                el.style.top = (drag.oy + ev.clientY - drag.sy) + 'px';
+            });
+            el.addEventListener('pointerup', () => {
+                if (!drag || drag.el !== el) return;
+                const rowX = Number((layout.rowPadding || {}).x ?? 18);
+                const rowY0 = Number((layout.rowPadding || {}).y ?? 14);
+                const rowH = Number(layout.rowHeight) || 120;
+                const nx = Math.round(el.offsetLeft), ny = Math.round(el.offsetTop);
+                const cfg = layout[key] || (layout[key] = {});
+                if (key === 'header') {
+                    cfg.x = nx; cfg.y = ny;
+                } else if (key === 'playerTag') {
+                    cfg.y = ny;
+                    cfg.x = ((cfg.align || 'right') === 'right') ? nx + el.offsetWidth : nx;
+                } else if (key === 'charIcon' && (cfg.align || 'right') === 'right') {
+                    const sz = Number(cfg.size) || 60, gap = Number(cfg.gap) || 10;
+                    cfg.x = nx - (W - rowX - 18 - 4 * (sz + gap) + gap); cfg.y = ny - (rowY0 + Math.max(0, row) * rowH);
+                } else {
+                    cfg.x = nx - rowX; cfg.y = ny - (rowY0 + Math.max(0, row) * rowH);
+                }
+                drag = null;
+                render();
+            });
+            canvas.appendChild(el);
+        }
+
+        function syncInputs() {
+            const map = {
+                lay_bossIcon_size: ['bossIcon', 'size'],
+                lay_charIcon_size: ['charIcon', 'size'],
+                lay_charIcon_gap: ['charIcon', 'gap'],
+                lay_bossName_size: ['bossName', 'size'],
+                lay_playerTag_x: ['playerTag', 'x'],
+                lay_playerTag_y: ['playerTag', 'y'],
+                lay_playerTag_size: ['playerTag', 'size'],
+                lay_rowHeight: ['rowHeight', null],
+                lay_rowGap: ['rowGap', null],
+                lay_rowTop: ['rowPadding', 'y'],
+            };
+            Object.keys(map).forEach(id => {
+                const k = map[id][0], f = map[id][1];
+                const el = document.getElementById(id);
+                if (!el || !layout[k]) return;
+                el.value = f ? (layout[k][f] ?? '') : layout[k];
+                el.onchange = () => {
+                    const v = Number(el.value);
+                    if (!Number.isFinite(v)) return;
+                    if (f) layout[k][f] = v; else layout[k] = v;
+                    render();
+                };
+            });
+            const ca = document.getElementById('lay_charIcon_align');
+            if (ca) { ca.value = (layout.charIcon && layout.charIcon.align) || 'right'; ca.onchange = () => { layout.charIcon.align = ca.value; render(); }; }
+            const ta = document.getElementById('lay_clearTime_align');
+            if (ta) { ta.value = (layout.clearTime && layout.clearTime.align) || 'right'; ta.onchange = () => { layout.clearTime.align = ta.value; render(); }; }
+            const pa = document.getElementById('lay_playerTag_align');
+            if (pa) { pa.value = (layout.playerTag && layout.playerTag.align) || 'right'; pa.onchange = () => { layout.playerTag.align = pa.value; render(); }; }
+            const rp = document.getElementById('lay_rowPanel');
+            if (rp) { rp.checked = !!layout.rowPanel; rp.onchange = () => { layout.rowPanel = rp.checked; render(); }; }
+            const pt = document.getElementById('lay_playerTag');
+            if (pt) { pt.checked = !(layout.playerTag && layout.playerTag.show === false); pt.onchange = () => { if (typeof layout.playerTag !== 'object' || !layout.playerTag) layout.playerTag = { x: 846, y: 526, size: 15, align: 'right' }; layout.playerTag.show = pt.checked; render(); }; }
+        }
+
+        async function loadLayout() {
+            try {
+                const res = await fetch('/api/abyss_share_layout', { cache: 'no-store' });
+                const j = await res.json();
+                layout = j.layout || defaultLayout();
+                if (typeof layout.playerTag !== 'object' || !layout.playerTag) {
+                    layout.playerTag = { show: layout.playerTag !== false, x: 846, y: 526, size: 15, align: 'right' };
+                }
+            } catch (e) { layout = defaultLayout(); }
+            render();
+        }
+
+        const rel = document.getElementById('abyssLayoutReloadBtn');
+        if (rel) rel.addEventListener('click', loadLayout);
+        const rdef = document.getElementById('abyssLayoutDefaultBtn');
+        if (rdef) rdef.addEventListener('click', () => { layout = defaultLayout(); render(); });
+        const sav = document.getElementById('abyssLayoutSaveBtn');
+        if (sav) sav.addEventListener('click', async () => {
+            const res = await fetch('/api/abyss_share_layout', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ layout: layout }),
+            });
+            const j = await res.json().catch(() => ({}));
+            const out = document.getElementById('abyssLayoutSaveResult');
+            if (out) {
+                out.classList.remove('hidden');
+                out.textContent = res.ok ? '保存しました（共有ページ/共有画像に即反映）' : '保存に失敗: ' + (j.detail || res.status);
+                out.className = res.ok ? 'text-xs text-cyan-400' : 'text-xs text-red-400';
+            }
+        });
+        loadLayout();
+    })();
     </script>
 </body>
 </html>

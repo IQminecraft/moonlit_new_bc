@@ -19,7 +19,6 @@ from PIL import Image, ImageDraw, ImageFont
 # .env の読み込み（dotenv）は app.paths の import 副作用で行われる。
 # このモジュールは環境変数を import 時に読むため、どの import 順でも
 # .env が先に載るよう app.paths をここで参照しておく。
-from app.paths import BASE_DIR  # noqa: F401
 
 # ==========================================================
 #  バイト予算制 LRU

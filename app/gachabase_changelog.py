@@ -1,5 +1,4 @@
 import json
-import sys
 import re
 import requests
 
@@ -90,7 +89,6 @@ def normalize_item(item, is_character=False):
 
 def main():
     target_url = "https://gi.gachabase.net/changelog/beta/__data.json?lang=ja"
-    output_file = sys.argv[1] if len(sys.argv) >= 2 else "parsed_data.json"
 
     objects = fetch_and_parse_json(target_url)
     if not objects:
@@ -188,18 +186,6 @@ def main():
         "artifacts": normalize_list(full_rev_obj.get("artifacts", []), is_character=False),
     }
 
-    """try:
-        # 🌟 書き出し時も確実に utf-8 を指定
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(result, f, indent=2, ensure_ascii=False)
-        print(f"\n✅ 文字化け対策版の解析が完了しました！")
-        print(f"   - 確定バージョン: {version}")
-        print(f"   - キャラクター: {len(result['characters'])} 件")
-        print(f"   - 武器: {len(result['weapons'])} 件")
-        print(f"   - 聖遺物: {len(result['artifacts'])} 件")
-    except Exception as e:
-        print(f"❌ ファイル保存エラー: {e}")"""
-    
     return result
 
 if __name__ == "__main__":
