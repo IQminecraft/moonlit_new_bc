@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>編成フロー（動きの試作）</title>
+  <style>
+    :root {
+      --bg: #070b14;
+      --surface: #121a28;
+      --border: rgba(255,255,255,.08);
+      --border-strong: rgba(255,255,255,.14);
+      --text: #eef2f8;
+      --text-2: #9aa8bc;
+      --text-3: #6b7a90;
+      --accent: #5eead4;
+      --accent-dim: rgba(94,234,212,.14);
+      --on-accent: #0a1220;
+      --sky: #0284c7;
+      --rose: #be123c;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, system-ui, sans-serif;
+    }
+    button, input, select { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 18px 16px 40px; }
+    .banner {
+      display: flex; justify-content: space-between; gap: 12px; align-items: center;
+      margin-bottom: 16px; font-size: 12px; color: var(--text-3);
+    }
+    .banner b { color: var(--text); font-size: 14px; }
+    .page { display: none; }
+    .page.on { display: block; }
+
+    .uidbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    h1 { font-size: 18px; margin: 0; }
+    .viewrow {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin-bottom: 14px;
+    }
+    .scope {
+      display: inline-flex; padding: 3px; gap: 2px;
+      border: 1px solid var(--border); border-radius: 10px;
+      background: color-mix(in srgb, var(--bg) 60%, transparent);
+      flex-shrink: 0;
+    }
+    .scope button {
+      border: none; background: transparent; padding: 6px 12px; border-radius: 8px;
+      font-size: 12.5px; font-weight: 700; color: var(--text-3);
+    }
+    .scope button.on { background: var(--accent); color: var(--on-accent); }
+    .tabs {
+      display: flex; gap: 8px; padding: 6px; border: 1px solid var(--border);
+      background: rgba(18,26,40,.7); border-radius: 12px;
+      flex: 1; min-width: 0;
+    }
+    .tabs span {
+      flex: 1; text-align: center; padding: 8px; border-radius: 8px;
+      font-size: 13px; font-weight: 700; color: var(--text-3);
+    }
+    .tabs .on { background: var(--accent-dim); color: var(--accent); }
+
+    .box {
+      border: 1px solid var(--border);
+      background: rgba(18,26,40,.65);
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .selrow { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .selrow .nm { font-weight: 700; }
+    .muted { color: var(--text-3); font-size: 12px; }
+    .thumbs { display: flex; gap: 8px; overflow-x: auto; }
+    .thumb {
+      width: 56px; height: 56px; border-radius: 10px; overflow: hidden;
+      border: 2px solid transparent; background: #1a2233; flex: none;
+    }
+    .thumb.on { border-color: var(--accent); }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .fake-card {
+      margin-top: 12px; min-height: 280px; border-radius: 16px;
+      border: 1px solid var(--border); background: #0b101c;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-3); font-size: 13px; text-align: center; padding: 20px;
+    }
+    .fake-card b { display: block; color: var(--text-2); margin-bottom: 6px; }
+
+    .bar {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      margin-bottom: 12px; padding: 10px 12px;
+      border: 1px solid rgba(34,211,238,.25); background: rgba(8,20,28,.7);
+      border-radius: 12px;
+    }
+    .bar .left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .bar button.name {
+      background: none; border: none; color: #67e8f9; font-weight: 700; padding: 0;
+      max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .bar .acts { display: flex; gap: 8px; flex-shrink: 0; }
+    .uidbar .scope { margin-left: auto; }
+    .btn {
+      border: none; border-radius: 9px; padding: 8px 12px;
+      font-size: 13px; font-weight: 700;
+    }
+    .btn-sky { background: var(--sky); color: #fff; }
+    .btn-zinc { background: #27272a; border: 1px solid #3f3f46; color: #e4e4e7; }
+    .btn-main { background: var(--accent); color: var(--on-accent); }
+    .ghost {
+      background: none; border: 1px solid var(--border); color: var(--text-2);
+      border-radius: 9px; padding: 8px 12px; font-size: 13px;
+    }
+
+    .team-thumbs { display: flex; gap: 10px; margin-bottom: 12px; }
+    .tslot {
+      width: 64px; height: 64px; border-radius: 12px; position: relative;
+      border: 2px dashed #52525b; background: #18181b;
+      display: flex; align-items: center; justify-content: center;
+      color: #71717a; font-size: 22px;
+    }
+    .tslot.filled { border-style: solid; border-color: #3f3f46; padding: 0; overflow: visible; }
+    .tslot img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: block; }
+    .badge {
+      position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+      border-radius: 50%; background: var(--accent); color: var(--on-accent);
+      font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+    }
+    .change {
+      position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%);
+      border: none; background: #0891b2; color: #fff; font-size: 10px; font-weight: 700;
+      border-radius: 999px; padding: 1px 8px; white-space: nowrap;
+    }
+
+    .sheet {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.68);
+      z-index: 20; align-items: center; justify-content: center; padding: 16px;
+    }
+    .sheet.on { display: flex; }
+    .modal {
+      width: min(520px, 100%); max-height: 86vh; overflow: auto;
+      background: #18181b; border: 1px solid #3f3f46; border-radius: 16px;
+    }
+    .modal.wide { width: min(680px, 100%); }
+    .mh, .mf { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid #27272a; }
+    .mf { border-bottom: none; border-top: 1px solid #27272a; gap: 8px; }
+    .mh h2 { margin: 0; font-size: 16px; color: #67e8f9; }
+    .mb { padding: 14px 16px; }
+    .hint { font-size: 12px; color: var(--text-3); margin: 0 0 12px; line-height: 1.5; }
+    .x { background: none; border: none; color: #a1a1aa; font-size: 22px; line-height: 1; }
+
+    .list { display: flex; flex-direction: column; gap: 8px; }
+    .row {
+      width: 100%; text-align: left; background: #0f1420; border: 1px solid #27272a;
+      border-radius: 12px; padding: 10px; display: flex; align-items: center; gap: 10px;
+    }
+    .row:hover { border-color: #3f3f46; }
+    .faces { display: flex; gap: 4px; }
+    .face, .face-empty {
+      width: 32px; height: 32px; border-radius: 8px; background: #27272a; overflow: hidden;
+    }
+    .face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .grow { flex: 1; min-width: 0; }
+    .grow b { display: block; font-size: 13px; }
+    .grow span { font-size: 11px; color: var(--text-3); }
+    .create {
+      width: 100%; border: 1px dashed #52525b; background: none; color: var(--text-2);
+      border-radius: 12px; padding: 12px; font-weight: 700;
+    }
+
+    .quad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0 14px; }
+    @media (max-width: 640px) { .quad { grid-template-columns: 1fr 1fr; } }
+    .q {
+      min-height: 92px; border-radius: 12px; border: 2px dashed #52525b;
+      background: #0f1420; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #71717a; font-size: 12px; gap: 4px;
+    }
+    .q b { font-size: 18px; font-weight: 500; }
+    .q.on { border-style: solid; border-color: #22d3ee; color: var(--text); padding: 8px; }
+    .q img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 8px; }
+    .pick {
+      display: flex; align-items: center; gap: 8px; text-align: left;
+      background: #0f1420; border: 1px solid #27272a; border-radius: 10px; padding: 8px;
+    }
+    .pick:hover { border-color: #22d3ee; }
+    .pick[disabled] { opacity: .35; }
+    .pick img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; }
+    .pick b { display: block; font-size: 12px; }
+    .pick span { font-size: 11px; color: var(--text-3); }
+
+    .choice { display: flex; flex-direction: column; gap: 8px; }
+    .choice button {
+      text-align: left; background: #0f1420; border: 1px solid #27272a;
+      border-radius: 12px; padding: 12px;
+    }
+    .choice button:hover { border-color: #22d3ee; }
+    .choice b { display: block; margin-bottom: 4px; }
+    .choice span { font-size: 12px; color: var(--text-3); }
+
+    .chk { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text-2); }
+    .warn { display: none; font-size: 12px; color: #fca5a5; margin-top: 6px; }
+    .ok { display: none; background: #052e16; border: 1px solid #166534; color: #86efac;
+      border-radius: 10px; padding: 8px 10px; font-size: 12px; margin-top: 10px; word-break: break-all; }
+    .steps { display: flex; gap: 6px; margin-bottom: 12px; font-size: 11px; color: var(--text-3); }
+    .steps i { font-style: normal; padding: 3px 8px; border-radius: 999px; border: 1px solid #27272a; }
+    .steps .on { color: #67e8f9; border-color: #155e75; }
+    .field { width: 100%; background: #27272a; border: 1px solid #3f3f46; border-radius: 10px; padding: 8px 10px; }
+    .toast {
+      position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+      background: #134e4a; color: #ccfbf1; border-radius: 999px; padding: 8px 14px;
+      font-size: 12px; display: none; z-index: 40;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="banner">
+      <div><b>編成フロー試作</b> · カード絵は出さない · 本番未接続</div>
+      <div>保存済み編成だけ一覧 / 新規は4人まとめて / 共有は1ボタン</div>
+    </div>
+
+    <section class="page on" id="pageSolo">
+      <div class="uidbar">
+        <h1>aiku <span class="muted">(uid : 1812256644)</span></h1>
+        <div class="scope" role="group" aria-label="見る対象">
+          <button type="button" class="on" data-scope="solo">キャラ</button>
+          <button type="button" data-scope="team" id="openTeamsFromSolo">編成</button>
+        </div>
+      </div>
+      <div class="viewrow">
+        <div class="tabs"><span class="on">ビルドカード</span><span>画像生成</span></div>
+      </div>
+      <div class="box">
+        <div class="selrow"><span class="muted">選択中</span><span class="nm">アリョーシャ</span></div>
+        <div class="thumbs" id="soloThumbs"></div>
+        <div class="fake-card">
+          <div>
+            <b>ここは今の単体カードのまま（触らない）</b>
+            この試作は、編成を開く〜共有するまでの動きだけ。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="pageTeam">
+      <div class="uidbar">
+        <h1>aiku <span class="muted">(uid : 1812256644)</span></h1>
+        <div class="scope" role="group" aria-label="見る対象">
+          <button type="button" id="exitTeamBtn">キャラ</button>
+          <button type="button" class="on" id="teamScopeBtn">編成</button>
+        </div>
+      </div>
+      <div class="bar">
+        <div class="left">
+          <button class="name" type="button" id="teamNameBtn" title="編成一覧を開く"></button>
+        </div>
+        <div class="acts">
+          <button class="btn btn-sky" type="button" id="shareOpenBtn">共有</button>
+        </div>
+      </div>
+      <div class="box">
+        <div class="selrow"><span class="muted">選択中</span><span class="nm" id="selLabel"></span></div>
+        <div class="team-thumbs" id="teamThumbs"></div>
+        <div class="fake-card">
+          <div>
+            <b>ここは今の編成カードのまま（触らない）</b>
+            <span id="cardNote"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="sheet" id="listSheet">
+    <div class="modal">
+      <div class="mh"><h2>編成</h2><button class="x" type="button" data-close="listSheet">&times;</button></div>
+      <div class="mb">
+        <p class="hint">保存してある編成だけ出します。空の12行は出しません。</p>
+        <div class="list" id="teamRows"></div>
+        <button class="create" type="button" id="newTeamBtn" style="margin-top:10px">編成を作る</button>
+      </div>
+      <div class="mf"><button class="btn btn-zinc" type="button" data-close="listSheet" style="flex:1">閉じる</button></div>
+    </div>
+  </div>
+
+  <div class="sheet" id="buildSheet">
+    <div class="modal wide">
+      <div class="mh"><h2>編成を作る</h2><button class="x" type="button" data-close="buildSheet">&times;</button></div>
+      <div class="mb">
+        <p class="hint">4人をここでまとめて選んでからカードへ行きます。足りなくても開けます。</p>
+        <input class="field" id="newName" maxlength="24" placeholder="編成名">
+        <div class="quad" id="buildSlots"></div>
+        <div class="grid" id="buildGrid"></div>
+      </div>
+      <div class="mf">
+        <button class="ghost" type="button" data-close="buildSheet">やめる</button>
+        <button class="btn btn-main" type="button" id="openBuiltBtn">この編成を開く</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="swapSheet">
+    <div class="modal wide">
+      <div class="mh"><h2>この枠のメンバー</h2><button class="x" type="button" data-close="swapSheet">&times;</button></div>
+      <div class="mb">
+        <p class="hint">あとから入れ替えるときだけ、1枠のピッカーを使います。名前つき。</p>
+        <div class="grid" id="swapGrid"></div>
+      </div>
+      <div class="mf">
+        <button class="ghost" type="button" id="clearSlotBtn">この枠を空にする</button>
+        <button class="btn btn-zinc" type="button" data-close="swapSheet">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="shareKindSheet">
+    <div class="modal">
+      <div class="mh"><h2>共有</h2><button class="x" type="button" data-close="shareKindSheet">&times;</button></div>
+      <div class="mb">
+        <div class="choice">
+          <button type="button" id="shareThisBtn">
+            <b>この編成</b>
+            <span>今開いている編成をリンクか画像にする</span>
+          </button>
+          <button type="button" id="shareAbyssBtn">
+            <b>幽境（3ボス）</b>
+            <span>バージョンを選んで、ボスごとにパーティを載せる</span>
+          </button>
+        </div>
+        <button class="create" type="button" id="openHistoryBtn" style="margin-top:12px">この端末の履歴</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="shareThisSheet">
+    <div class="modal">
+      <div class="mh"><h2>この編成を共有</h2><button class="x" type="button" data-close="shareThisSheet">&times;</button></div>
+      <div class="mb">
+        <p class="hint" id="shareThisHint"></p>
+        <div class="faces" id="shareFaces" style="margin-bottom:12px"></div>
+        <label class="chk"><input type="checkbox" id="uidOn"> UIDを表示する</label>
+        <div class="warn" id="uidWarn">UIDを出すと、受け取った人が同じUIDのページを開けます。</div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <label class="chk"><input type="radio" name="out" value="link" checked> リンク</label>
+          <label class="chk"><input type="radio" name="out" value="image"> 画像</label>
+        </div>
+        <div class="ok" id="shareResult"></div>
+      </div>
+      <div class="mf">
+        <button class="btn btn-zinc" type="button" data-close="shareThisSheet" style="flex:1">閉じる</button>
+        <button class="btn btn-sky" type="button" id="doShareBtn" style="flex:1">コピーする</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="abyssSheet">
+    <div class="modal">
+      <div class="mh"><h2>幽境として共有</h2><button class="x" type="button" data-close="abyssSheet">&times;</button></div>
+      <div class="mb">
+        <div class="steps" id="abyssSteps"></div>
+        <div id="abyssBody"></div>
+      </div>
+      <div class="mf">
+        <button class="ghost" type="button" id="abyssBack">戻る</button>
+        <button class="btn btn-main" type="button" id="abyssNext">次へ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="histSheet">
+    <div class="modal">
+      <div class="mh"><h2>この端末の履歴</h2><button class="x" type="button" data-close="histSheet">&times;</button></div>
+      <div class="mb">
+        <div class="list" id="histList"></div>
+      </div>
+      <div class="mf"><button class="btn btn-zinc" type="button" data-close="histSheet" style="flex:1">閉じる</button></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const ICONS = "/static/assets/characters/";
+    const roster = [
+      { id: "sandrone", name: "サンドローネ", icon: ICONS + "UI_AvatarIcon_MarionetteNew.webp" },
+      { id: "columbina", name: "コロンビーナ", icon: ICONS + "UI_AvatarIcon_Odette.webp" },
+      { id: "alyosha", name: "アリョーシャ", icon: ICONS + "UI_AvatarIcon_Alyosha.webp" },
+      { id: "diona", name: "ディオナ", icon: ICONS + "UI_AvatarIcon_Diona.webp" },
+      { id: "nefer", name: "ネフェル", icon: ICONS + "UI_AvatarIcon_Nefer.webp" },
+      { id: "ineffa", name: "イネファ", icon: ICONS + "UI_AvatarIcon_Ineffa.webp" }
+    ];
+    const byId = id => roster.find(c => c.id === id);
+    const esc = s => String(s).replace(/[&<>"']/g, ch => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[ch]));
+
+    const state = {
+      teams: [
+        { name: "氷共鳴 主軸", chars: ["sandrone", "columbina", "alyosha", "diona"] },
+        { name: "草雷", chars: ["nefer", "ineffa", null, null] }
+      ],
+      active: 0,
+      selected: 0,
+      build: [null, null, null, null],
+      buildFocus: 0,
+      swapSlot: 0,
+      abyssStep: 0,
+      abyss: { ver: "7.0", diff: "マスター", parties: [null, null, null], times: ["1:32", "1:48", ""] },
+      history: [
+        { when: "2時間前", kind: "編成", name: "氷共鳴 主軸" },
+        { when: "昨日", kind: "幽境", name: "Ver 7.0 マスター" }
+      ]
+    };
+
+    function showPage(id) {
+      document.querySelectorAll(".page").forEach(p => p.classList.toggle("on", p.id === id));
+    }
+    function openSheet(id) { document.getElementById(id).classList.add("on"); }
+    function closeSheet(id) { document.getElementById(id).classList.remove("on"); }
+    function toast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.style.display = "block";
+      clearTimeout(toast._id);
+      toast._id = setTimeout(() => { t.style.display = "none"; }, 1600);
+    }
+
+    function faceHtml(id) {
+      const c = byId(id);
+      return c ? `<div class="face"><img src="${c.icon}" alt=""></div>` : `<div class="face-empty"></div>`;
+    }
+
+    function renderSoloThumbs() {
+      document.getElementById("soloThumbs").innerHTML = roster.map((c, i) =>
+        `<div class="thumb${i===2?" on":""}"><img src="${c.icon}" alt="${esc(c.name)}"></div>`
+      ).join("");
+    }
+
+    function renderList() {
+      document.getElementById("teamRows").innerHTML = state.teams.map((t, i) => `
+        <button class="row" type="button" data-open-team="${i}">
+          <div class="faces">${t.chars.map(faceHtml).join("")}</div>
+          <div class="grow"><b>${esc(t.name)}</b><span>${t.chars.filter(Boolean).length}/4</span></div>
+        </button>
+      `).join("") || `<p class="hint">まだ編成がありません。</p>`;
+    }
+
+    function renderTeam() {
+      const t = state.teams[state.active];
+      document.getElementById("teamNameBtn").textContent = t.name;
+      const cur = byId(t.chars[state.selected]);
+      document.getElementById("selLabel").textContent = cur ? cur.name : ((state.selected + 1) + ": 未選択");
+      document.getElementById("cardNote").textContent = t.chars.filter(Boolean).length
+        ? "人数ぶんの今の編成カードが、ここに出る想定。"
+        : "メンバーが空でもカード枠は出る。空列は今どおり。";
+      document.getElementById("teamThumbs").innerHTML = t.chars.map((id, i) => {
+        const c = byId(id);
+        if (!c) {
+          return `<button class="tslot" type="button" data-slot="${i}" title="メンバーを入れる"><span class="badge">${i+1}</span>＋</button>`;
+        }
+        return `<div class="tslot filled">
+          <span class="badge">${i+1}</span>
+          <img src="${c.icon}" alt="">
+          <button class="change" type="button" data-slot="${i}">変更</button>
+        </div>`;
+      }).join("");
+    }
+
+    function renderBuild() {
+      document.getElementById("buildSlots").innerHTML = state.build.map((id, i) => {
+        const c = byId(id);
+        if (!c) return `<div class="q" data-bfocus="${i}"><b>＋</b>${i+1}</div>`;
+        return `<button class="q on" type="button" data-bfocus="${i}"><img src="${c.icon}" alt=""><span>${esc(c.name)}</span></button>`;
+      }).join("");
+      const used = new Set(state.build.filter(Boolean));
+      document.getElementById("buildGrid").innerHTML = roster.map(c => `
+        <button class="pick" type="button" data-build-id="${c.id}" ${used.has(c.id)?"disabled":""}>
+          <img src="${c.icon}" alt=""><div><b>${esc(c.name)}</b><span>ショーケース</span></div>
+        </button>
+      `).join("");
+    }
+
+    function renderSwap() {
+      const used = new Set(state.teams[state.active].chars.filter(Boolean));
+      const cur = state.teams[state.active].chars[state.swapSlot];
+      document.getElementById("swapGrid").innerHTML = roster.map(c => `
+        <button class="pick" type="button" data-swap-id="${c.id}" ${used.has(c.id)&&c.id!==cur?"disabled":""}>
+          <img src="${c.icon}" alt=""><div><b>${esc(c.name)}</b><span>${c.id===cur?"いまこの枠":"入れる"}</span></div>
+        </button>
+      `).join("");
+    }
+
+    function enterTeam(i) {
+      state.active = i;
+      state.selected = Math.max(0, state.teams[i].chars.findIndex(Boolean));
+      if (state.selected < 0) state.selected = 0;
+      closeSheet("listSheet");
+      closeSheet("buildSheet");
+      showPage("pageTeam");
+      renderTeam();
+    }
+
+    function startBuild() {
+      state.build = [null, null, null, null];
+      state.buildFocus = 0;
+      document.getElementById("newName").value = "編成 " + (state.teams.length + 1);
+      closeSheet("listSheet");
+      renderBuild();
+      openSheet("buildSheet");
+    }
+
+    function renderShareThis() {
+      const t = state.teams[state.active];
+      document.getElementById("shareThisHint").textContent = "今開いている「" + t.name + "」がすでに選ばれています。";
+      document.getElementById("shareFaces").innerHTML = t.chars.map(faceHtml).join("");
+      document.getElementById("shareResult").style.display = "none";
+      document.getElementById("doShareBtn").textContent =
+        document.querySelector("input[name=out]:checked").value === "image" ? "画像を保存" : "コピーする";
+    }
+
+    function renderAbyss() {
+      const s = state.abyssStep;
+      document.getElementById("abyssSteps").innerHTML = ["準備","ボス1","ボス2","ボス3","出す"].map((n,i) =>
+        `<i class="${i===s?"on":""}">${n}</i>`
+      ).join("");
+      document.getElementById("abyssBack").style.visibility = s === 0 ? "hidden" : "visible";
+      const next = document.getElementById("abyssNext");
+      next.textContent = s === 4 ? "コピーする" : "次へ";
+      const body = document.getElementById("abyssBody");
+      if (s === 0) {
+        body.innerHTML = `
+          <label class="hint">バージョン</label>
+          <select class="field" id="abyssVer"><option>7.0</option><option>6.2</option></select>
+          <div style="height:10px"></div>
+          <label class="hint">難易度</label>
+          <select class="field" id="abyssDiff"><option>マスター</option><option>エキスパート</option></select>`;
+        document.getElementById("abyssVer").value = state.abyss.ver;
+        document.getElementById("abyssDiff").value = state.abyss.diff;
+      } else if (s <= 3) {
+        const i = s - 1;
+        const names = ["ボスA", "ボスB", "ボスC"];
+        const pid = state.abyss.parties[i];
+        const team = pid != null ? state.teams[pid] : null;
+        body.innerHTML = `
+          <p class="hint">${names[i]} のパーティと時間。空でも次へ行けます。</p>
+          <div class="list" id="abyssPick"></div>
+          <div style="height:10px"></div>
+          <input class="field" id="abyssTime" placeholder="1:32" value="${esc(state.abyss.times[i] || "")}">`;
+        document.getElementById("abyssPick").innerHTML = state.teams.map((t, ti) => `
+          <button class="row" type="button" data-abyss-team="${ti}" style="${ti===pid?"border-color:#22d3ee":""}">
+            <div class="faces">${t.chars.map(faceHtml).join("")}</div>
+            <div class="grow"><b>${esc(t.name)}</b><span>${t.chars.filter(Boolean).length}/4</span></div>
+          </button>
+        `).join("");
+      } else {
+        body.innerHTML = `<p class="hint">確認用リンクとUIDは最後だけ。デモなので入力しても保存しません。</p>
+          <input class="field" placeholder="https://...">
+          <div style="height:10px"></div>
+          <label class="chk"><input type="checkbox" checked> UIDを表示する</label>`;
+      }
+    }
+
+    document.getElementById("openTeamsFromSolo").onclick = () => {
+      if (state.teams.length) { enterTeam(state.active); return; }
+      renderList();
+      openSheet("listSheet");
+    };
+    document.getElementById("teamScopeBtn").onclick = () => { renderList(); openSheet("listSheet"); };
+    document.getElementById("teamNameBtn").onclick = () => { renderList(); openSheet("listSheet"); };
+    document.getElementById("exitTeamBtn").onclick = () => showPage("pageSolo");
+    document.getElementById("newTeamBtn").onclick = startBuild;
+    document.getElementById("teamRows").addEventListener("click", e => {
+      const b = e.target.closest("[data-open-team]");
+      if (b) enterTeam(Number(b.dataset.openTeam));
+    });
+
+    document.getElementById("buildSlots").addEventListener("click", e => {
+      const b = e.target.closest("[data-bfocus]");
+      if (!b) return;
+      const i = Number(b.dataset.bfocus);
+      if (state.build[i]) { state.build[i] = null; }
+      state.buildFocus = i;
+      renderBuild();
+    });
+    document.getElementById("buildGrid").addEventListener("click", e => {
+      const b = e.target.closest("[data-build-id]");
+      if (!b || b.disabled) return;
+      let i = state.build.indexOf(null);
+      if (i < 0) i = state.buildFocus;
+      state.build[i] = b.dataset.buildId;
+      state.buildFocus = Math.min(3, i + 1);
+      renderBuild();
+    });
+    document.getElementById("openBuiltBtn").onclick = () => {
+      const name = document.getElementById("newName").value.trim() || ("編成 " + (state.teams.length + 1));
+      state.teams.push({ name, chars: state.build.slice() });
+      enterTeam(state.teams.length - 1);
+    };
+
+    document.getElementById("teamThumbs").addEventListener("click", e => {
+      const b = e.target.closest("[data-slot]");
+      if (!b) return;
+      state.swapSlot = Number(b.dataset.slot);
+      state.selected = state.swapSlot;
+      renderTeam();
+      renderSwap();
+      openSheet("swapSheet");
+    });
+    document.getElementById("swapGrid").addEventListener("click", e => {
+      const b = e.target.closest("[data-swap-id]");
+      if (!b || b.disabled) return;
+      state.teams[state.active].chars[state.swapSlot] = b.dataset.swapId;
+      closeSheet("swapSheet");
+      renderTeam();
+    });
+    document.getElementById("clearSlotBtn").onclick = () => {
+      state.teams[state.active].chars[state.swapSlot] = null;
+      closeSheet("swapSheet");
+      renderTeam();
+    };
+
+    document.getElementById("shareOpenBtn").onclick = () => openSheet("shareKindSheet");
+    document.getElementById("shareThisBtn").onclick = () => {
+      closeSheet("shareKindSheet");
+      renderShareThis();
+      openSheet("shareThisSheet");
+    };
+    document.getElementById("shareAbyssBtn").onclick = () => {
+      closeSheet("shareKindSheet");
+      state.abyssStep = 0;
+      openSheet("abyssSheet");
+      renderAbyss();
+    };
+    document.getElementById("uidOn").onchange = () => {
+      document.getElementById("uidWarn").style.display = document.getElementById("uidOn").checked ? "block" : "none";
+    };
+    document.querySelectorAll("input[name=out]").forEach(r => {
+      r.onchange = () => {
+        document.getElementById("doShareBtn").textContent = r.value === "image" ? "画像を保存" : "コピーする";
+      };
+    });
+    document.getElementById("doShareBtn").onclick = () => {
+      const image = document.querySelector("input[name=out]:checked").value === "image";
+      const box = document.getElementById("shareResult");
+      if (image) {
+        box.style.display = "block";
+        box.textContent = "デモなので画像は作りません。本番ならここで今の編成カード画像が落ちる。";
+        toast("保存した想定");
+      } else {
+        box.style.display = "block";
+        box.textContent = "https://moonlit.wiki/s/demo12ab · 控え";
+        toast("コピーした");
+      }
+    };
+
+    document.getElementById("abyssBody").addEventListener("click", e => {
+      const b = e.target.closest("[data-abyss-team]");
+      if (!b) return;
+      state.abyss.parties[state.abyssStep - 1] = Number(b.dataset.abyssTeam);
+      renderAbyss();
+    });
+    document.getElementById("abyssBody").addEventListener("change", e => {
+      if (e.target.id === "abyssVer") state.abyss.ver = e.target.value;
+      if (e.target.id === "abyssDiff") state.abyss.diff = e.target.value;
+      if (e.target.id === "abyssTime") state.abyss.times[state.abyssStep - 1] = e.target.value;
+    });
+    document.getElementById("abyssBack").onclick = () => {
+      if (state.abyssStep === 0) return;
+      state.abyssStep -= 1;
+      renderAbyss();
+    };
+    document.getElementById("abyssNext").onclick = () => {
+      if (state.abyssStep < 4) { state.abyssStep += 1; renderAbyss(); return; }
+      toast("コピーした");
+      closeSheet("abyssSheet");
+    };
+
+    document.getElementById("openHistoryBtn").onclick = () => {
+      closeSheet("shareKindSheet");
+      document.getElementById("histList").innerHTML = state.history.map(h => `
+        <div class="row"><div class="grow"><b>${esc(h.name)}</b><span>${esc(h.kind)} · ${esc(h.when)}</span></div></div>
+      `).join("");
+      openSheet("histSheet");
+    };
+
+    document.querySelectorAll("[data-close]").forEach(b => {
+      b.addEventListener("click", () => closeSheet(b.dataset.close));
+    });
+    document.querySelectorAll(".sheet").forEach(s => {
+      s.addEventListener("click", e => { if (e.target === s) s.classList.remove("on"); });
+    });
+
+    renderSoloThumbs();
+  </script>
+</body>
+</html>

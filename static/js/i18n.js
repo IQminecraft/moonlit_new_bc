@@ -122,6 +122,10 @@
         '共有用のカード画像を生成します': 'Generate a shareable card image',
         '編成モード': 'Team mode',
         '通常モードに戻る': 'Back to normal mode',
+        'キャラ': 'Character',
+        '見る対象': 'View',
+        '単体カードを表示します': 'Show a single-character card',
+        '編成カードを表示します': 'Show a team card',
 
         // サーバー負荷パネル
         '使用CPU': 'CPU',
@@ -130,6 +134,10 @@
 
         // サイドバー
         'キャラクター': 'Character',
+        'バフ': 'Buffs',
+        'バフを選択': 'Choose buffs',
+        '缶詰知識': 'Canned Knowledge',
+        'スカーク伝説任務': "Skirk's Story Quest",
         'キャラクターと武器の設定': 'Character & weapon settings',
         '武器': 'Weapon',
         '差し替える武器を選択します': 'Select a weapon to swap in',

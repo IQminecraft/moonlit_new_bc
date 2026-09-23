@@ -28,6 +28,7 @@ from app.card.resonance import resonance_badges, parse_resonance_param
 from app.card.stat_calc import compute_manual_totals
 from app.card.calc_method import resolve_calc_method
 from app.card.growth import build_growth_panel, build_growth_from_fake
+from app.card.traveler_buffs import traveler_buffs_for
 from app.card.bg import hex_to_rgb, create_card_background, region_image_path
 from app.card.draw import (
     draw_figma_box, paste_mask_image,
@@ -362,7 +363,7 @@ def _attach_growth_panel(img, panel, bg_base_rgb, splash_path, element_type,
     return bg_full
 
 
-def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", resonance: str = None, light: str = "false", show_uid: str = "false", lang: str = "ja"):
+def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", resonance: str = None, light: str = "false", show_uid: str = "false", lang: str = "ja", traveler_buffs: str = None):
     _total_start = time.perf_counter()
 
     def _plog(msg: str) -> None:
@@ -677,6 +678,8 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             beta=beta,
             weapon_base_included_in_base_atk=weapon_base_included,
             resonance=resonance,
+            traveler_buffs=traveler_buffs_for(avatar_id, fake_char, traveler_buffs),
+            char_id=fake_char or avatar_id,
         )
 
         dmg_buff_val = "0%"
@@ -705,7 +708,11 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
         # fightPropMap['4'](基礎攻撃力) には武器基礎攻撃力が既に含まれるため、
         # weapon_base_included_in_base_atk=True で二重加算を防ぐ。
         # 共鳴なしの実キャラは fightPropMap の最終値を EM/ER に採用（丸め境界対策）。
+        from app.card.traveler_buffs import is_traveler_id, parse_traveler_buffs, HEX_KEYS
         _has_resonance = bool(parse_resonance_param(resonance))
+        _tb_raw = traveler_buffs_for(avatar_id, fake_char, traveler_buffs)
+        _tb = parse_traveler_buffs(_tb_raw) if is_traveler_id(fake_char or avatar_id) else set()
+        _has_tb_hex = bool(_tb & HEX_KEYS)
         totals = compute_manual_totals(
             base_hp=prop_map.get('1', 1),
             base_atk=prop_map.get('4', 1),
@@ -720,8 +727,11 @@ def _generate_card_image_sync(uid: str, avatar_id: str, calc_method: str, fake_c
             beta=beta,
             weapon_base_included_in_base_atk=True,
             resonance=resonance,
-            authoritative_em=None if _has_resonance else prop_map.get('28'),
-            authoritative_er=None if _has_resonance else prop_map.get('23'),
+            traveler_buffs=_tb_raw,
+            char_id=fake_char or avatar_id,
+            authoritative_atk=prop_map.get('2001'),
+            authoritative_em=prop_map.get('28'),
+            authoritative_er=None if (_has_resonance or _has_tb_hex) else prop_map.get('23'),
         )
 
         dmg_buff_val = "0%"

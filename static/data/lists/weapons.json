@@ -227,6 +227,18 @@
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
+  "11437": {
+    "enName": "New Bough",
+    "jaName": "新たなる枝",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11438": {
+    "enName": "Silver Light",
+    "jaName": "銀灯",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
   "11501": {
     "enName": "Aquila Favonia",
     "jaName": "風鷹剣",
@@ -332,6 +344,12 @@
   "11521": {
     "enName": "Exaiphanes Blade",
     "jaName": "星鋒の剣",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "11522": {
+    "enName": "Beyond the Chrysalis",
+    "jaName": "蝶の羽化",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_SWORD_ONE_HAND"
   },
@@ -1067,6 +1085,12 @@
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CATALYST"
   },
+  "14437": {
+    "enName": "Winter's Heavy Heart",
+    "jaName": "雪に沈む心",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_CATALYST"
+  },
   "14501": {
     "enName": "Skyward Atlas",
     "jaName": "天空の巻",
@@ -1178,6 +1202,12 @@
   "14523": {
     "enName": "Angelos' Heptades",
     "jaName": "塵と光の七つの誓約",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "14524": {
+    "enName": "Hymn of the Maelstrom",
+    "jaName": "旋流の讃美歌",
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_CATALYST"
   },
@@ -1400,6 +1430,12 @@
   "15436": {
     "enName": "Covenant of Frost and Snow",
     "jaName": "霜雪の契",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_BOW"
+  },
+  "15437": {
+    "enName": "Breezeborne Refrain",
+    "jaName": "風に遊ぶ弦",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_BOW"
   },
@@ -1666,5 +1702,17 @@
     "jaName": "無毀・デュランガルド",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "WEAPON_CLAYMORE"
+  },
+  "390002": {
+    "enName": "Exaiphanes Blade",
+    "jaName": "星鋒の剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
+  "390003": {
+    "enName": "Exaiphanes Blade",
+    "jaName": "星鋒の剣",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
   }
 }

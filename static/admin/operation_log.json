@@ -1,178 +1,5 @@
 [
   {
-    "at": "2026-08-05T14:37:17+09:00",
-    "action": "fetch_beta_nanoka_json",
-    "ok": true,
-    "message": "beta=6.7.54",
-    "extra": {
-      "source": "nanoka",
-      "ok": true,
-      "kind": "beta_json",
-      "live_version": "6.7",
-      "beta_version": "6.7.54",
-      "added_characters": [
-        "10000005-5",
-        "10000007-5",
-        "10000117-5",
-        "10000118-5",
-        "10000134",
-        "10000135",
-        "10000148",
-        "10000150"
-      ],
-      "added_weapons": [
-        "11435",
-        "11436",
-        "11520",
-        "11521",
-        "12435",
-        "12436",
-        "13435",
-        "13436",
-        "14435",
-        "14436",
-        "15435",
-        "15436",
-        "224001",
-        "224002",
-        "224003",
-        "224004",
-        "224005",
-        "224006",
-        "224007",
-        "224008",
-        "380003"
-      ],
-      "added_artifacts": [
-        "15047",
-        "15048"
-      ],
-      "lists": [
-        "characters.json",
-        "weapons.json",
-        "artifacts.json"
-      ]
-    }
-  },
-  {
-    "at": "2026-08-05T15:40:47+09:00",
-    "action": "admin_login",
-    "ok": true,
-    "message": "login ok from 127.0.0.1",
-    "extra": null
-  },
-  {
-    "at": "2026-08-08T17:03:33+09:00",
-    "action": "admin_login",
-    "ok": true,
-    "message": "login ok from 127.0.0.1",
-    "extra": null
-  },
-  {
-    "at": "2026-08-08T20:57:42+09:00",
-    "action": "admin_login",
-    "ok": true,
-    "message": "login ok from 127.0.0.1",
-    "extra": null
-  },
-  {
-    "at": "2026-08-08T20:57:42+09:00",
-    "action": "fetch_live_nanoka_costumes",
-    "ok": true,
-    "message": "costumes=2/2",
-    "extra": {
-      "source": "nanoka",
-      "ok": true,
-      "kind": "live_costume_assets",
-      "characters": 140,
-      "icons": 2,
-      "saved": 2
-    }
-  },
-  {
-    "at": "2026-08-08T21:03:12+09:00",
-    "action": "fetch_beta_nanoka_costumes",
-    "ok": true,
-    "message": "costumes=0/0",
-    "extra": {
-      "source": "nanoka",
-      "ok": true,
-      "kind": "beta_costume_assets",
-      "characters": 8,
-      "icons": 0,
-      "saved": 0
-    }
-  },
-  {
-    "at": "2026-08-08T21:03:23+09:00",
-    "action": "fetch_live_nanoka_costumes",
-    "ok": true,
-    "message": "costumes=2/2",
-    "extra": {
-      "source": "nanoka",
-      "ok": true,
-      "kind": "live_costume_assets",
-      "characters": 140,
-      "icons": 2,
-      "saved": 2
-    }
-  },
-  {
-    "at": "2026-08-08T21:08:29+09:00",
-    "action": "fetch_beta_nanoka_json",
-    "ok": true,
-    "message": "beta=6.7.54",
-    "extra": {
-      "source": "nanoka",
-      "ok": true,
-      "kind": "beta_json",
-      "live_version": "6.7",
-      "beta_version": "6.7.54",
-      "added_characters": [
-        "10000005-5",
-        "10000007-5",
-        "10000117-5",
-        "10000118-5",
-        "10000134",
-        "10000135",
-        "10000148",
-        "10000150"
-      ],
-      "added_weapons": [
-        "11435",
-        "11436",
-        "11520",
-        "11521",
-        "12435",
-        "12436",
-        "13435",
-        "13436",
-        "14435",
-        "14436",
-        "15435",
-        "15436",
-        "224001",
-        "224002",
-        "224003",
-        "224004",
-        "224005",
-        "224006",
-        "224007",
-        "224008",
-        "380003"
-      ],
-      "added_artifacts": [
-        "15047",
-        "15048"
-      ],
-      "lists": [
-        "characters.json",
-        "weapons.json",
-        "artifacts.json"
-      ]
-    }
-  },
-  {
     "at": "2026-08-08T21:08:31+09:00",
     "action": "fetch_beta_nanoka_assets",
     "ok": true,
@@ -1252,6 +1079,199 @@
     "action": "admin_login",
     "ok": true,
     "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-23T20:01:41+09:00",
+    "action": "admin_login",
+    "ok": true,
+    "message": "login ok from 127.0.0.1",
+    "extra": null
+  },
+  {
+    "at": "2026-09-23T20:07:35+09:00",
+    "action": "fetch_live_nanoka_json",
+    "ok": true,
+    "message": "live=7.1 scope=all",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "live_json",
+      "live_version": "7.1",
+      "beta_version": "7.1.50",
+      "scope": "all",
+      "character_count": 150,
+      "weapon_count": 286,
+      "artifact_list_count": 65,
+      "lists": [
+        "characters.json",
+        "weapons.json",
+        "artifacts.json"
+      ]
+    }
+  },
+  {
+    "at": "2026-09-23T20:08:01+09:00",
+    "action": "version_upgrade_live",
+    "ok": true,
+    "message": "live=7.1 new_chars=2 new_weapons=8 new_arts=0",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "version_upgrade_live",
+      "live_version": "7.1",
+      "beta_version": "7.1.50",
+      "scope": "all",
+      "character_count": 150,
+      "weapon_count": 286,
+      "artifact_list_count": 65,
+      "lists": [
+        "characters.json",
+        "weapons.json",
+        "artifacts.json"
+      ],
+      "assets": {
+        "ok": true,
+        "kind": "live_assets_new",
+        "new_characters": [
+          "10000140",
+          "10000143"
+        ],
+        "new_weapons": [
+          "11437",
+          "11438",
+          "11522",
+          "14437",
+          "14524",
+          "15437",
+          "390002",
+          "390003"
+        ],
+        "new_artifacts": [],
+        "characters": 2,
+        "weapons": 8,
+        "artifacts": 0
+      }
+    }
+  },
+  {
+    "at": "2026-09-23T20:11:11+09:00",
+    "action": "fetch_live_nanoka_json",
+    "ok": true,
+    "message": "live=7.1 scope=all",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "live_json",
+      "live_version": "7.1",
+      "beta_version": "7.1.50",
+      "scope": "all",
+      "character_count": 150,
+      "weapon_count": 286,
+      "artifact_list_count": 65,
+      "lists": [
+        "characters.json",
+        "weapons.json",
+        "artifacts.json"
+      ]
+    }
+  },
+  {
+    "at": "2026-09-23T20:11:11+09:00",
+    "action": "version_upgrade_live",
+    "ok": true,
+    "message": "live=7.1 new_chars=0 new_weapons=5 new_arts=0",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "version_upgrade_live",
+      "live_version": "7.1",
+      "beta_version": "7.1.50",
+      "scope": "all",
+      "character_count": 150,
+      "weapon_count": 286,
+      "artifact_list_count": 65,
+      "lists": [
+        "characters.json",
+        "weapons.json",
+        "artifacts.json"
+      ],
+      "assets": {
+        "ok": true,
+        "kind": "live_assets_new",
+        "new_characters": [],
+        "new_weapons": [
+          "14437",
+          "14524",
+          "15437",
+          "390002",
+          "390003"
+        ],
+        "new_artifacts": [],
+        "characters": 0,
+        "weapons": 5,
+        "artifacts": 0
+      }
+    }
+  },
+  {
+    "at": "2026-09-23T20:17:52+09:00",
+    "action": "fetch_beta_nanoka_json",
+    "ok": true,
+    "message": "beta=7.1.50 scope=all",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "beta_json",
+      "live_version": "7.1",
+      "beta_version": "7.1.50",
+      "scope": "all",
+      "added_characters": [
+        "10000136",
+        "10000137"
+      ],
+      "added_weapons": [
+        "14525",
+        "224101",
+        "224102"
+      ],
+      "added_artifacts": [],
+      "lists": [
+        "characters.json",
+        "weapons.json",
+        "artifacts.json"
+      ]
+    }
+  },
+  {
+    "at": "2026-09-23T20:18:07+09:00",
+    "action": "fetch_beta_nanoka_assets",
+    "ok": true,
+    "message": "chars=2 weapons=3",
+    "extra": {
+      "source": "nanoka",
+      "ok": true,
+      "kind": "beta_assets",
+      "characters": 2,
+      "character_ids": [
+        "10000136",
+        "10000137"
+      ],
+      "weapons": 3,
+      "weapon_ids": [
+        "14525",
+        "224101",
+        "224102"
+      ],
+      "artifacts": 0,
+      "artifact_ids": []
+    }
+  },
+  {
+    "at": "2026-09-23T20:42:27+09:00",
+    "action": "assets_nanoka_fetch",
+    "ok": true,
+    "message": "src=lunaris / nc new=5 fail=0 / pfp new=6 fail=0",
     "extra": null
   }
 ]

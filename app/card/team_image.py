@@ -299,6 +299,43 @@ def _draw_identity_row(img, data, col, beta):
     _composite_clipped(img, fade, round(x * SX_TEAM), round((y + _SPLASH_H - fade_h) * SY_TEAM))
 
 
+def _draw_talents(img, data, col, beta):
+    """スプラッシュ左下の天賦クラスタ（HTML .tc-splash .tc-talents、上=通常）。"""
+    skills = (data.get("skills") or [])[:3]
+    if not skills:
+        return
+    x = _col_x(col)
+    y = _Y_SPLASH
+    size = 36
+    gap = 5
+    n = len(skills)
+    cluster_h = n * size + max(0, n - 1) * gap
+    bx = x + 8
+    cy0 = y + _SPLASH_H - 8 - cluster_h
+    draw = ImageDraw.Draw(img)
+    lv_font = _font(19)
+    for i, s in enumerate(skills):
+        if not isinstance(s, dict):
+            continue
+        cy = cy0 + i * (size + gap)
+        draw_figma_box(
+            img, x=bx, y=cy, width=size, height=size, radius=9,
+            fill_color=(10, 12, 18, 199), outline_color=(255, 255, 255, 128),
+            outline_width=2, shadow=False,
+        )
+        icon = s.get("icon") or ""
+        if icon:
+            paste_figma_image(
+                img, icon, box_x=bx, box_y=cy,
+                box_width=size, box_height=size, radius=9, beta=beta,
+            )
+        lv = s.get("level")
+        ltxt = str(lv if lv is not None else 1)
+        lv_col = (125, 211, 252, 255) if s.get("boosted") else (255, 255, 255, 255)
+        _t(draw, text=ltxt, x=bx + size + 5, y=cy + (size - 19) / 2, font=lv_font, font_size=19,
+           align="left", fill_color=lv_col, stroke_width=2, stroke_fill=(0, 0, 0, 220))
+
+
 def _draw_badges(img, data, col, beta):
     """バッジ（swap）をスプラッシュ左上にチップ描画（HTML .tc-splash .chips）。"""
     badges = data.get("_badges") or []
@@ -707,6 +744,7 @@ def _render_team_datas(datas, configs, beta="false", lang="ja", substat_dots="1"
             t_col = time.perf_counter()
             _draw_identity_row(card, data, col, beta)
             _draw_badges(card, data, col, beta)
+            _draw_talents(card, data, col, beta)
             _draw_stats_row(card, data, col, beta)
             _draw_weapon_row(card, data, col, beta, lang)
 

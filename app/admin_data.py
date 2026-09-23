@@ -209,19 +209,43 @@ class DataManager:
                 "server.py と同じ階層、または PYTHONPATH に get_data_flask/convert を置いてください。"
             )
 
+    def _is_valid_webp(self, path: str) -> bool:
+        if not os.path.isfile(path) or os.path.getsize(path) < 32:
+            return False
+        try:
+            with open(path, "rb") as f:
+                head = f.read(16)
+        except OSError:
+            return False
+        return head.startswith(b"RIFF") and b"WEBP" in head
+
     def _download_webp(self, icon_name: str, dest_dir: str) -> bool:
         if not icon_name:
             return False
+        # テンプレ名・プレースホルダは 404 HTML になるので保存しない
+        if "{" in str(icon_name) or "}" in str(icon_name):
+            return False
         _ensure_dir(dest_dir)
         path = os.path.join(dest_dir, f"{icon_name}.webp")
-        if os.path.exists(path):
+        if self._is_valid_webp(path):
             return True
+        if os.path.exists(path):
+            try:
+                os.remove(path)
+            except OSError as e:
+                print(f"[admin_data] remove broken {path}: {e}")
+                return False
         url = f"https://static.nanoka.cc/assets/gi/{icon_name}.webp"
         try:
             r = requests.get(url, timeout=15)
             r.raise_for_status()
+            content = r.content or b""
+            ctype = (r.headers.get("Content-Type") or "").lower()
+            if not content.startswith(b"RIFF") or b"WEBP" not in content[:16]:
+                print(f"[admin_data] skip non-webp {icon_name}: ctype={ctype} size={len(content)}")
+                return False
             with open(path, "wb") as f:
-                f.write(r.content)
+                f.write(content)
             return True
         except Exception as e:
             print(f"[admin_data] download failed {icon_name}: {e}")
@@ -779,12 +803,61 @@ class DataManager:
             self.append_log("fetch_live_nanoka_costumes_missing", False, str(e))
             return result
 
+    def _clear_dir_contents(self, path: str) -> int:
+        """ディレクトリ直下のファイル・サブディレクトリを削除し、空フォルダ自体は残す。"""
+        if not os.path.isdir(path):
+            return 0
+        removed = 0
+        for name in os.listdir(path):
+            target = os.path.join(path, name)
+            try:
+                if os.path.isdir(target) and not os.path.islink(target):
+                    shutil.rmtree(target)
+                else:
+                    os.remove(target)
+                removed += 1
+            except Exception as e:
+                print(f"[clear beta] {target}: {e}")
+        return removed
+
+    def clear_beta_area(self) -> Dict[str, Any]:
+        """
+        バージョンアップ後の beta 領域を空にする。
+        static/beta/data と static/beta/assets の中身を消し、
+        次回 fetch 用の空ディレクトリだけ残す。
+        """
+        data_root = self.beta_dir()
+        assets_root = self.beta_assets()
+        removed_data = self._clear_dir_contents(data_root)
+        removed_assets = self._clear_dir_contents(assets_root)
+        for rel in (
+            ("characters",),
+            ("weapons",),
+            ("lists",),
+        ):
+            _ensure_dir(self.beta_dir(*rel))
+        for rel in (
+            ("artifacts",),
+            ("characters",),
+            ("leyline",),
+            ("skills",),
+            ("splash",),
+            ("weapons",),
+        ):
+            _ensure_dir(self.beta_assets(*rel))
+        return {
+            "ok": True,
+            "removed_data_entries": removed_data,
+            "removed_asset_entries": removed_assets,
+        }
+
     def version_upgrade_live(self) -> Dict[str, Any]:
         """
         バージョンアップ時: beta コピーではなく nanoka live から
         JSON（キャラ/武器/リスト）は全件再取得する。
         アセットは「新規追加された ID」のみ取得する（既存分は基本的に
         変更されないため、毎回の再ダウンロードを省く）。
+        live 取得が成功したら beta 領域を空にする。
         """
         # 取得前の既存 ID を控えておき、取得後に新規分を差分判定する
         old_chars = set(self._list_json_ids(self.live_dir("characters")))
@@ -793,6 +866,7 @@ class DataManager:
 
         json_res = self.fetch_live_nanoka_json()
         assets_res = None
+        beta_clear_res = None
         new_chars = new_weapons = new_arts = []
         if json_res.get("ok"):
             new_chars = sorted(set(self._list_json_ids(self.live_dir("characters"))) - old_chars)
@@ -800,24 +874,39 @@ class DataManager:
             art_list = _safe_json_load(self.live_dir("lists", "artifacts.json"), {}) or {}
             new_arts = sorted(set(art_list) - old_arts)
             assets_res = self._fetch_new_live_assets(new_chars, new_weapons, new_arts)
+            try:
+                beta_clear_res = self.clear_beta_area()
+            except Exception as e:
+                beta_clear_res = {"ok": False, "error": str(e), "traceback": traceback.format_exc()}
+                print(f"[version_upgrade_live] clear beta: {e}")
 
         state = self.get_state()
         state["last_promote"] = _now_iso()
         state["pending"] = {"characters": [], "weapons": [], "artifacts": []}
+        if json_res.get("ok"):
+            state["beta_version"] = None
+            state["last_beta_fetch"] = None
+            state["last_beta_assets_fetch"] = None
+            state["last_beta_costume_fetch"] = None
+            state["last_beta_costume_missing_fetch"] = None
         self._append_history(state, "version_upgrade_live", {
             "live_version": json_res.get("live_version"),
             "json_ok": json_res.get("ok"),
             "assets": assets_res,
+            "beta_cleared": beta_clear_res,
         })
         self.save_state(state)
 
         result = {**json_res, "kind": "version_upgrade_live"}
         if assets_res is not None:
             result["assets"] = assets_res
+        if beta_clear_res is not None:
+            result["beta_cleared"] = beta_clear_res
         self.append_log(
             "version_upgrade_live", bool(json_res.get("ok")),
             f"live={json_res.get('live_version')} new_chars={len(new_chars)} "
-            f"new_weapons={len(new_weapons)} new_arts={len(new_arts)}",
+            f"new_weapons={len(new_weapons)} new_arts={len(new_arts)}"
+            + (f" beta_cleared={beta_clear_res.get('ok')}" if beta_clear_res is not None else ""),
             result,
         )
         return result

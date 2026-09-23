@@ -18,7 +18,7 @@ from app.core.notify import report_error_to_discord
 from app.core.jsonio import write_bytes_atomic
 from app.routes.params import (
     clean_uid, clean_avatar_id, clean_calc_method_strict, clean_bool_str,
-    clean_base_prec, clean_substat_dots, clean_resonance, clean_bg_color,
+    clean_base_prec, clean_substat_dots, clean_resonance, clean_traveler_buffs, clean_bg_color,
     clean_token, clean_fake_char, clean_fake_weapon, clean_char_ids,
 )
 from app.card.sign import (
@@ -629,7 +629,7 @@ async def calc_method_defaults():
 
 
 @api_router.get("/api/card_data/{uid}/{avatar_id}")
-async def get_card_data(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", growth: str = "false", base_prec: str = "0", resonance: str = None, lang: str = "ja"):
+async def get_card_data(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", growth: str = "false", base_prec: str = "0", resonance: str = None, lang: str = "ja", traveler_buffs: str = None):
     uid = clean_uid(uid)
     avatar_id = clean_avatar_id(avatar_id)
     fake_char = clean_fake_char(fake_char)
@@ -638,10 +638,11 @@ async def get_card_data(uid: str, avatar_id: str, calc_method: str = "crit", fak
     growth = clean_bool_str(growth)
     base_prec = clean_base_prec(base_prec)
     resonance = clean_resonance(resonance)
+    traveler_buffs = clean_traveler_buffs(traveler_buffs)
     # 表示言語（ja / en）。en の場合は名前・聖遺物・ステータス等の表示名を英語で返す
     lang = "en" if str(lang or "").lower() == "en" else "ja"
     return await run_in_threadpool(
-        _get_card_data_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta, growth, base_prec, resonance, lang
+        _get_card_data_sync, uid, avatar_id, calc_method, fake_char, fake_weapon, beta, growth, base_prec, resonance, lang, traveler_buffs
     )
 
 
@@ -650,7 +651,7 @@ async def get_card_data(uid: str, avatar_id: str, calc_method: str = "crit", fak
 
 
 @api_router.get("/api/card_sign")
-async def card_sign(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", resonance: str = None, theme: str = None, light: str = "false", show_uid: str = "false", request: Request = None):
+async def card_sign(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", resonance: str = None, theme: str = None, light: str = "false", show_uid: str = "false", traveler_buffs: str = None, request: Request = None):
     """署名付きカード画像URLの発行（安価・IP毎レート制限付き）。
     このエンドポイントは画像生成も外部通信もしないため、
     ここへの集中攻撃はレート制限で吸収する。
@@ -669,6 +670,7 @@ async def card_sign(uid: str, avatar_id: str, calc_method: str = "crit", fake_ch
     base_prec = clean_base_prec(base_prec)
     substat_dots = clean_substat_dots(substat_dots)
     resonance = clean_resonance(resonance)
+    traveler_buffs = clean_traveler_buffs(traveler_buffs)
     bg_color = clean_bg_color(bg_color)
     bg_mode = clean_token(bg_mode, "背景モード")
     bg_region = clean_token(bg_region, "背景地域")
@@ -692,6 +694,7 @@ async def card_sign(uid: str, avatar_id: str, calc_method: str = "crit", fake_ch
         "base_prec": base_prec,
         "substat_dots": substat_dots,
         "resonance": resonance,
+        "traveler_buffs": traveler_buffs,
         "theme": theme,
         "light": light,
         "show_uid": show_uid,
@@ -1202,7 +1205,7 @@ async def api_team_share_image(request: Request):
 
 
 @api_router.get("/generate_card_image/{uid}/{avatar_id}/{calc_method}")
-async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", resonance: str = None, theme: str = None, light: str = "false", show_uid: str = "false", cache: str = "", card_exp: str = None, card_sig: str = None, lang: str = "ja", request: Request = None):
+async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_char: str = None, fake_weapon: str = None, beta: str = "false", bg_color: str = None, img_format: str = "png", bg_mode: str = None, bg_region: str = None, growth: str = "false", base_prec: str = "0", substat_dots: str = "1", resonance: str = None, theme: str = None, light: str = "false", show_uid: str = "false", cache: str = "", card_exp: str = None, card_sig: str = None, lang: str = "ja", traveler_buffs: str = None, request: Request = None):
     """カード画像生成。専用スレッドプールで同時実行数を制限し、超過分は列待ち。
     待ち行列が満杯のときは 503 を返す（デフォルトの threadpool は占有しない）。
     署名検証（安価）→ IPレート制限 → プール投入の順で、
@@ -1229,6 +1232,7 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
     base_prec = clean_base_prec(base_prec)
     substat_dots = clean_substat_dots(substat_dots)
     resonance = clean_resonance(resonance)
+    traveler_buffs = clean_traveler_buffs(traveler_buffs)
     bg_color = clean_bg_color(bg_color)
     bg_mode = clean_token(bg_mode, "背景モード")
     bg_region = clean_token(bg_region, "背景地域")
@@ -1251,6 +1255,7 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
             "base_prec": base_prec,
             "substat_dots": substat_dots,
             "resonance": resonance,
+            "traveler_buffs": traveler_buffs,
             "theme": theme,
             "light": light,
             "show_uid": show_uid,
@@ -1267,7 +1272,7 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
             "fake_char": fake_char, "fake_weapon": fake_weapon, "beta": beta,
             "bg_color": bg_color, "img_format": img_format, "bg_mode": bg_mode,
             "bg_region": bg_region, "growth": growth, "base_prec": base_prec, "substat_dots": substat_dots,
-            "resonance": resonance,
+            "resonance": resonance, "traveler_buffs": traveler_buffs,
         }
         # theme 未指定(glass)は従来キャッシュキーと同一にする（既存キャッシュを無効化しない）
         if theme:
@@ -1305,6 +1310,7 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
                 light,
                 show_uid,
                 lang,
+                traveler_buffs,
             )
         except HTTPException as he:
             if he.status_code >= 500:
@@ -1374,6 +1380,7 @@ async def generate_card_image(uid: str, avatar_id: str, calc_method: str, fake_c
             light,
             show_uid,
             lang,
+            traveler_buffs,
         )
     except HTTPException as he:
         if he.status_code >= 500:

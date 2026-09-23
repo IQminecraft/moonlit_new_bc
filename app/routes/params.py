@@ -64,6 +64,14 @@ def clean_resonance(value):
     return ",".join(keys) if keys else None
 
 
+def clean_traveler_buffs(value):
+    if value is None:
+        return None
+    from app.card.traveler_buffs import parse_traveler_buffs
+    keys = parse_traveler_buffs(value)
+    return ",".join(sorted(keys))
+
+
 def clean_bg_color(value):
     if value is None:
         return None

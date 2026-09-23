@@ -8,7 +8,7 @@
   "icon": "UI_AvatarIcon_Lauma",
   "crit_rate": 0.05,
   "crit_dmg": 0.5,
-  "elemental_mastery": 200,
+  "elemental_mastery": 200.0,
   "stats_modifier": {
     "hp": 10653.9424276,
     "atk": 254.96415188000003,

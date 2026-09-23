@@ -1021,6 +1021,20 @@
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_CROSSBOW"
   },
+  "10000140": {
+    "element": "Hydro",
+    "enName": "Vodyanitsa",
+    "jaName": "ヴォジャニーツァ",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000143": {
+    "element": "Anemo",
+    "enName": "Vesna",
+    "jaName": "ヴェスナ",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
   "10000148": {
     "element": "Electro",
     "enName": "Alyosha",

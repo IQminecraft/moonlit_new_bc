@@ -23,6 +23,7 @@ from app.card.calc_method import resolve_calc_method, get_default_calc_method
 from app.card.scorecard_splash import get_scorecard_splash_offset
 from app.card.growth import build_growth_panel, build_growth_from_fake
 from app.card.jsoncache import load_json_cached
+from app.card.traveler_buffs import HEX_KEYS, is_traveler_id, parse_traveler_buffs, traveler_buffs_for
 
 
 def _load_json_auto(path: str) -> dict:
@@ -92,7 +93,7 @@ def _build_char_list_from_showcase(showcase_data: dict, beta: str) -> list:
     return char_list
 
 
-def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", growth: str = "false", base_prec: str = "0", resonance: str = None, lang: str = "ja"):
+def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fake_char: str = None, fake_weapon: str = None, beta: str = "false", growth: str = "false", base_prec: str = "0", resonance: str = None, lang: str = "ja", traveler_buffs: str = None):
     if beta != "true":
         beta = "false"
     # 表示言語（"ja" / "en"）。カード画像生成は常に ja のまま。
@@ -276,6 +277,8 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
             beta=beta,
             weapon_base_included_in_base_atk=weapon_base_included,
             resonance=resonance,
+            traveler_buffs=traveler_buffs_for(avatar_id, fake_char, traveler_buffs),
+            char_id=fake_char or avatar_id,
         )
 
         dmg_buff_val = "0%"
@@ -302,6 +305,9 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
         # weapon_base_included_in_base_atk=True で二重加算を防ぐ。
         # 共鳴なしの実キャラは fightPropMap の最終値を EM/ER に採用（丸め境界対策）。
         _has_resonance = bool(parse_resonance_param(resonance))
+        _tb_raw = traveler_buffs_for(avatar_id, fake_char, traveler_buffs)
+        _tb = parse_traveler_buffs(_tb_raw) if is_traveler_id(fake_char or avatar_id) else set()
+        _has_tb_hex = bool(_tb & HEX_KEYS)
         totals = compute_manual_totals(
             base_hp=fight_prop.get('1', 1),
             base_atk=fight_prop.get('4', 1),
@@ -316,8 +322,11 @@ def _get_card_data_sync(uid: str, avatar_id: str, calc_method: str = "crit", fak
             beta=beta,
             weapon_base_included_in_base_atk=True,
             resonance=resonance,
-            authoritative_em=None if _has_resonance else fight_prop.get('28'),
-            authoritative_er=None if _has_resonance else fight_prop.get('23'),
+            traveler_buffs=_tb_raw,
+            char_id=fake_char or avatar_id,
+            authoritative_atk=fight_prop.get('2001'),
+            authoritative_em=fight_prop.get('28'),
+            authoritative_er=None if (_has_resonance or _has_tb_hex) else fight_prop.get('23'),
         )
 
         dmg_buff_val = "0%"

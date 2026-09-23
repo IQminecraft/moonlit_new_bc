@@ -1342,7 +1342,8 @@ def _generate_theme_card_image_sync(uid: str, avatar_id: str, calc_method: str, 
                                     beta: str = "false", base_prec: str = "0",
                                     substat_dots: str = "1", resonance: str = None,
                                     growth: str = "false", light: str = "false",
-                                    show_uid: str = "false", lang: str = "ja") -> bytes:
+                                    show_uid: str = "false", lang: str = "ja",
+                                    traveler_buffs: str = None) -> bytes:
     """cinema / scorecard テーマのカード画像を生成して PNG bytes を返す。"""
     t_total = time.perf_counter()
     theme = theme if theme in _THEMES else "cinema"
@@ -1362,7 +1363,8 @@ def _generate_theme_card_image_sync(uid: str, avatar_id: str, calc_method: str, 
 
     t0 = time.perf_counter()
     data = _get_card_data_sync(uid, avatar_id, calc_method, fake_char, fake_weapon,
-                               beta, growth, base_prec, resonance, lang=lang)
+                               beta, growth, base_prec, resonance, lang=lang,
+                               traveler_buffs=traveler_buffs)
     print(f"[Perf][theme] card_data: {(time.perf_counter() - t0) * 1000:.1f}ms", flush=True)
 
     t0 = time.perf_counter()

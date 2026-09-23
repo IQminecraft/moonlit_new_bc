@@ -1211,6 +1211,12 @@
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_CATALYST"
   },
+  "14525": {
+    "enName": "Weapon: Catalyst",
+    "jaName": "武器法器",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
   "15101": {
     "enName": "Hunter's Bow",
     "jaName": "狩猟弓",
@@ -1556,6 +1562,18 @@
   "224008": {
     "enName": "Specialized Frag Crystals within the Shadow Realm",
     "jaName": "闇域特化晶榴弾",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "ITEM_TPS_WEAPON"
+  },
+  "224101": {
+    "enName": "Sosruko's Flame",
+    "jaName": "",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "ITEM_TPS_WEAPON"
+  },
+  "224102": {
+    "enName": "Avisati's Mountain Hunt",
+    "jaName": "",
     "qualityType": "QUALITY_PURPLE",
     "weaponType": "ITEM_TPS_WEAPON"
   },

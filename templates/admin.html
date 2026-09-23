@@ -281,6 +281,7 @@
                 <p class="text-xs text-zinc-500 mt-2">
                     beta からのコピーは行いません。JSON（リスト含む）は nanoka live から全件取り直し、
                     アセットは新規追加された ID のみ取得します（既存分は基本的に変更されないため）。
+                    取得成功後は static/beta のデータとアセットを空にします。
                 </p>
             </div>
 
@@ -1781,7 +1782,9 @@
         }
 
         async function runAction(action) {
-            if (action === 'version_upgrade_live' || action === 'fetch_live_nanoka') {
+            if (action === 'version_upgrade_live') {
+                if (!confirm('Live データを nanoka から再取得し、成功したら beta フォルダを空にします。時間がかかることがあります。よろしいですか？')) return;
+            } else if (action === 'fetch_live_nanoka') {
                 if (!confirm('Live データを nanoka から再取得します。時間がかかることがあります。よろしいですか？')) return;
             }
             resultEl.textContent = `実行中: ${action} ...`;

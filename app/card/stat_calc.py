@@ -16,6 +16,7 @@ from app.card.stats import (
 )
 from app.card.set_buffs import apply_2set_buffs
 from app.card.resonance import apply_resonance_buffs
+from app.card.traveler_buffs import apply_traveler_base_bonus, apply_traveler_hex_buffs
 
 
 # ----------------------------------------------------------------
@@ -97,7 +98,9 @@ def get_char_base_stats(chardatas, level):
 def compute_manual_totals(*, base_hp, base_atk, base_def, base_crit_rate, base_crit_dmg,
                           base_em, weapon_stats_list, raw_artifacts, chardatas,
                           element_type, beta="false", weapon_base_included_in_base_atk=False,
-                          resonance=None, authoritative_em=None, authoritative_er=None):
+                          resonance=None, authoritative_em=None, authoritative_er=None,
+                          traveler_buffs=None, char_id=None,
+                          authoritative_atk=None):
     """手動計算で最終ステータスを導出する。
 
     base_atk の解釈:
@@ -120,9 +123,12 @@ def compute_manual_totals(*, base_hp, base_atk, base_def, base_crit_rate, base_c
 
     # 固有元素熟知（admin 管理）: レベル・突破に依存しない基礎熟知として
     # base_em に合算し、最終ステータス（total_em）へ反映する。
-    innate_em = get_innate_em(chardatas.get("id") if isinstance(chardatas, dict) else None)
+    if char_id is None and isinstance(chardatas, dict):
+        char_id = chardatas.get("id")
+    innate_em = get_innate_em(char_id)
     if innate_em:
         base_em = base_em + innate_em
+    base_hp, base_atk, base_em = apply_traveler_base_bonus(base_hp, base_atk, base_em, char_id, traveler_buffs)
 
     char_stats_mod = chardatas.get("stats_modifier", {}) or {} if isinstance(chardatas, dict) else {}
     extra_bonus = char_stats_mod.get("extra")
@@ -162,12 +168,16 @@ def compute_manual_totals(*, base_hp, base_atk, base_def, base_crit_rate, base_c
     set_ids = [a.get("flat", {}).get("setId", "") for a in raw_artifacts or []]
     apply_2set_buffs(stat_totals, set_ids, beta)
 
-    # 元素共鳴（単体カードで手動選択・最大2つ）をステータスへ反映する。
     apply_resonance_buffs(stat_totals, resonance)
 
     base_atk_eff = base_atk + weapon_base_atk
+    atk_before = base_atk_eff * (1 + stat_totals["atk_percent"]) + stat_totals["atk_flat"]
+    apply_traveler_hex_buffs(stat_totals, char_id, traveler_buffs)
+
     total_hp = base_hp * (1 + stat_totals["hp_percent"]) + stat_totals["hp_flat"]
     total_atk = base_atk_eff * (1 + stat_totals["atk_percent"]) + stat_totals["atk_flat"]
+    if authoritative_atk is not None:
+        total_atk = float(authoritative_atk) + (total_atk - atk_before)
     total_def = base_def * (1 + stat_totals["def_percent"]) + stat_totals["def_flat"]
     total_em = base_em + stat_totals["em"]
     total_crit_rate = base_crit_rate + stat_totals["crit_rate"]
@@ -177,9 +187,18 @@ def compute_manual_totals(*, base_hp, base_atk, base_def, base_crit_rate, base_c
     # 実キャラ（差し替えなし・共鳴なし）は enka の fightPropMap がゲーム本体の
     # 最終値（float32 蓄算込みの値）なので、元素熟知/チャージ効率はそれをそのまま
     # 使う。手動蓄算（float64）は境界値(.x5)でゲームと 1 つずれるため。
+    from app.card.traveler_buffs import is_traveler_id, parse_traveler_buffs, HEX_KEYS
+    tb_keys = parse_traveler_buffs(traveler_buffs) if is_traveler_id(char_id) else set()
+    hex_on = bool(tb_keys & HEX_KEYS)
     if authoritative_em is not None:
-        total_em = float(authoritative_em)
-    if authoritative_er is not None:
+        from app.card.traveler_buffs import SKIRK_EM
+        extra_em = 0.0
+        if is_traveler_id(char_id):
+            extra_em += SKIRK_EM
+            if "dendro" in tb_keys:
+                extra_em += 60.0
+        total_em = float(authoritative_em) + extra_em
+    if authoritative_er is not None and not hex_on:
         total_er = float(authoritative_er)
 
     buff_val = stat_totals["dmg_bonus_by_element"].get(element_type, 0.0)

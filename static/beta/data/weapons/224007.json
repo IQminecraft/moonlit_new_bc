@@ -1,7 +1,0 @@
-{
-  "name": "晶榴弾・氷",
-  "weapon_type": "ITEM_TPS_WEAPON",
-  "rarity": 4,
-  "icon": "UI_EquipIcon_Grenade_Ice",
-  "stats_modifier": {}
-}

@@ -1021,6 +1021,20 @@
     "qualityType": "QUALITY_ORANGE",
     "weaponType": "WEAPON_CROSSBOW"
   },
+  "10000136": {
+    "element": "Electro",
+    "enName": "Mitya",
+    "jaName": "ミティヤ",
+    "qualityType": "QUALITY_ORANGE",
+    "weaponType": "WEAPON_CATALYST"
+  },
+  "10000137": {
+    "element": "Electro",
+    "enName": "Valeriy",
+    "jaName": "バレリー",
+    "qualityType": "QUALITY_PURPLE",
+    "weaponType": "WEAPON_SWORD_ONE_HAND"
+  },
   "10000140": {
     "element": "Hydro",
     "enName": "Vodyanitsa",

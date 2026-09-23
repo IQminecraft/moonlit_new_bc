@@ -14,7 +14,7 @@
     "atk": 244.25677079999997,
     "def": 744.630992124,
     "extra": {
-      "fight_prop_element_mastery": 96
+      "fight_prop_element_mastery": 96.0
     }
   },
   "base_stats": {
